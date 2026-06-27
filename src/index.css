@@ -1,0 +1,140 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&family=IBM+Plex+Arabic:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "system-ui", "-apple-system", sans-serif;
+  --font-serif: "Playfair Display", "Georgia", "Cambria", serif;
+  --font-arabic: "Cairo", "IBM Plex Arabic", sans-serif;
+  
+  --color-gold-light: #F3E5AB;
+  --color-gold-base: #D4AF37;
+  --color-gold-dark: #AA7C11;
+  --color-gold-deep: #8B6508;
+  
+  --color-silver-light: #E0E0E0;
+  --color-silver-base: #C0C0C0;
+  --color-silver-dark: #A9A9A9;
+}
+
+/* Custom Base Styles for Luxury Black Theme */
+body {
+  background-color: #070707;
+  color: #FFFFFF;
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: #D4AF37 #070707;
+}
+
+/* Custom Gold and Silver Metalic Text Gradients */
+.text-gold-gradient {
+  background: linear-gradient(135deg, #FFF9E6 0%, #F5D061 30%, #D4AF37 50%, #AA7C11 85%, #8B6508 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-silver-gradient {
+  background: linear-gradient(135deg, #FFFFFF 0%, #E8E8E8 30%, #C0C0C0 50%, #909090 85%, #686868 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.bg-gold-gradient {
+  background: linear-gradient(135deg, #FFF9E6 0%, #F5D061 30%, #D4AF37 50%, #AA7C11 85%, #8B6508 100%);
+}
+
+.bg-silver-gradient {
+  background: linear-gradient(135deg, #FFFFFF 0%, #E8E8E8 30%, #C0C0C0 50%, #909090 85%, #686868 100%);
+}
+
+.bg-dark-gradient {
+  background: linear-gradient(180deg, #111111 0%, #070707 100%);
+}
+
+/* Premium Gold Glow & Border Shadows */
+.gold-glow {
+  box-shadow: 0 0 25px rgba(212, 175, 55, 0.15);
+}
+
+.gold-border-glow {
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.gold-border-glow:hover {
+  border: 1px solid rgba(212, 175, 55, 0.6);
+  box-shadow: 0 0 30px rgba(212, 175, 55, 0.12);
+}
+
+/* Silver Glow & Border Shadows */
+.silver-glow {
+  box-shadow: 0 0 25px rgba(192, 192, 192, 0.15);
+}
+
+.silver-border-glow {
+  border: 1px solid rgba(192, 192, 192, 0.2);
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.silver-border-glow:hover {
+  border: 1px solid rgba(192, 192, 192, 0.6);
+  box-shadow: 0 0 30px rgba(192, 192, 192, 0.12);
+}
+
+/* High-End Glassmorphism */
+.glass-premium {
+  background: rgba(17, 17, 17, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.glass-premium-gold {
+  background: rgba(17, 17, 17, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(212, 175, 55, 0.12);
+}
+
+.glass-premium-silver {
+  background: rgba(17, 17, 17, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(192, 192, 192, 0.12);
+}
+
+/* Premium Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #070707;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(212, 175, 55, 0.3);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 175, 55, 0.7);
+}
+
+/* Luxury Card Shimmer Animation */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer-mask {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 6s infinite linear;
+}
+
+.shimmer-mask-gold {
+  background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.08), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 5s infinite linear;
+}
+
