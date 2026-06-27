@@ -47,7 +47,7 @@ export default function OfficeSection({ currentLang }: OfficeSectionProps) {
   const regNo = settings?.dmcc_reg_no || "890317";
 
   const officeDetails = {
-    title: isAr ? "المقر الرئيسي للمؤسسة" : "Sovereign Headquarters",
+    title: isAr ? "المقر الرئيسي للمؤسسة" : "Corporate Headquarters",
     subtitle: isAr ? "مكتب التداول والمساندة الفنية - دبي" : "Dubai Physical Trading & Settlement Desk",
     addressLabel: isAr ? "العنوان" : "Vault Address",
     addressValue: address,
@@ -55,11 +55,11 @@ export default function OfficeSection({ currentLang }: OfficeSectionProps) {
     hoursValue: isAr 
       ? "الإثنين - الجمعة: ٩:٠٠ صباحاً - ٦:٠٠ مساءً (توقيت الخليج)" 
       : "Monday - Friday: 09:00 AM - 06:00 PM (GST)",
-    phoneLabel: isAr ? "رقم الهاتف المباشر" : "Direct Trading Desk",
+    phoneLabel: isAr ? "رقم الهاتف المباشر" : "Direct Bullion Desk",
     phoneValue: phone,
     emailLabel: isAr ? "البريد الإلكتروني المخصص" : "Secure Dispatch Email",
     emailValue: email,
-    complianceTitle: isAr ? "الامتثال والتصاريح الأمنية" : "Sovereign Compliance Status",
+    complianceTitle: isAr ? "الامتثال والتصاريح الأمنية" : "Compliance Status",
     complianceText: isAr 
       ? `مرخص ومسجل بالكامل تحت سلطة مركز دبي للسلع المتعددة (DMCC) برقم تسجيل ${regNo}. جميع المعاملات تخضع لقوانين مكافحة غسيل الأموال (AML) ومطابقة معايير البنك المركزي للإمارات.` 
       : `Fully registered and audit-compliant under DMCC registry license no. ${regNo}. All bullion procurement is cleared via stringent AML / KYC frameworks matching UAE Central Bank guidelines.`

@@ -125,7 +125,7 @@ export default function AIConcierge({ currentLang, onClose }: AIConciergeProps) 
               </h3>
               <div className="flex items-center gap-1.5 text-[10px] text-gray-400 font-mono">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span>PGR Dubai Trading Desk Online</span>
+                <span>PGR Dubai Bullion Desk Online</span>
               </div>
             </div>
           </div>
@@ -153,7 +153,7 @@ export default function AIConcierge({ currentLang, onClose }: AIConciergeProps) 
                     ? "bg-gold-dark/10 text-gold-base border-gold-base/30"
                     : "bg-white/[0.03] text-white border-white/10"
                 }`}>
-                  {isAI ? "PGR" : "VIP"}
+                  {isAI ? "PGR" : "Client"}
                 </div>
 
                 {/* Message Bubble Balloon */}

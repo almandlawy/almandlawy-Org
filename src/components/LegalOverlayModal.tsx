@@ -60,7 +60,7 @@ export default function LegalOverlayModal({ currentLang, onClose, defaultDoc = "
       icon: <ScrollText size={14} />,
       label_en: "Terms & Conditions",
       label_ar: "الشروط والأحكام",
-      content_en: `PGR UAE Standard Trading Terms & Sovereign Agreements
+      content_en: `PGR UAE Standard Trading Terms & Commercial Agreements
       
       1. Binding Nature & Market Rates
       By accessing our trading portals or requesting a bespoke quote, you acknowledge that precious metal spot rates fluctuate in real-time in accordance with global LBMA markets. Final prices are locked and legally confirmed exclusively via our official trader-executed contracts.
@@ -106,13 +106,13 @@ export default function LegalOverlayModal({ currentLang, onClose, defaultDoc = "
       icon: <FileText size={14} />,
       label_en: "Shipping & Transit Policy",
       label_ar: "سياسة الشحن والتأمين",
-      content_en: `Secured Custodial Shipping & Logistics Standards
+      content_en: `Secured Storage Shipping & Logistics Standards
       
-      1. Fully Insured Consignments
-      Every physical transport of gold and silver bullion dispatched by PGR UAE is 100% insured against loss, theft, and damage via global underwriters. We operate a highly trained private security courier fleet and partner exclusively with Brink's Global Services.
+      1. Fully Covered Consignments
+      Every physical transport of gold and silver bullion dispatched by PGR UAE is 100% covered against loss, theft, and damage via global underwriters. We operate a highly trained private security courier fleet and partner exclusively with Brink's Global Services.
 
       2. Dubai Storage & Customs Clearing
-      We manage full customs documentation, international clearance stamps, and sovereign export licenses for clients wishing to move assets out of Dubai into global financial hubs.`,
+      We manage full customs documentation, international clearance stamps, and official export licenses for clients wishing to move assets out of Dubai into global financial hubs.`,
       content_ar: `سياسة الشحن والنقل المؤمن والمصفح
       
       ١. الشحن المؤمن بنسبة ١٠٠٪

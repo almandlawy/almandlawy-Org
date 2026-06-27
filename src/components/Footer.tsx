@@ -70,7 +70,7 @@ export default function Footer({
             <p className="text-gray-500 text-[11px] leading-relaxed">
               {currentLang === "ar"
                 ? "مؤسسة بي جي آر لتجارة المعادن الثمينة ومقرها دبي. نوفر حلول تداول وادخار كلاسيكية بالجملة للمؤسسات وصناديق الاستثمار وكبار الشخصيات بأعلى معايير الأمان السويسري."
-                : "PGR UAE is an internationally accredited physical gold and silver wholesale bullion house headquartered in Dubai. Partnering with elite Swiss and global sovereign refineries."}
+                : "PGR UAE is an internationally accredited physical gold and silver wholesale bullion house headquartered in Dubai. Partnering with elite Swiss and global refineries."}
             </p>
             <div className="flex flex-col gap-2 pt-2 text-[11px]">
               <button 
@@ -85,7 +85,7 @@ export default function Footer({
                 className="hover:text-gold-base transition-colors flex items-center gap-1.5 cursor-pointer text-left font-mono"
               >
                 <Terminal size={12} className="text-gold-base/50" />
-                <span>{currentLang === "ar" ? "ديوان الإدارة والتحكم" : "Sovereign Portal Desk"}</span>
+                <span>{currentLang === "ar" ? "ديوان الإدارة والتحكم" : "Admin Portal Desk"}</span>
               </button>
               <button 
                 onClick={onOpenAdminPortal} 
@@ -105,7 +105,7 @@ export default function Footer({
             </h4>
             <ul className="space-y-2.5 text-[11px]">
               <li><button onClick={() => onNavigate("catalog")} className="hover:text-gold-base transition-colors cursor-pointer text-left">{currentLang === "ar" ? "سبائك الذهب المصكوكة" : "Minted Gold Bars (1g - 1kg)"}</button></li>
-              <li><button onClick={() => onNavigate("catalog")} className="hover:text-gold-base transition-colors cursor-pointer text-left">{currentLang === "ar" ? "مسكوكات الذهب والفضة السيادية" : "Sovereign Gold Coins"}</button></li>
+              <li><button onClick={() => onNavigate("catalog")} className="hover:text-gold-base transition-colors cursor-pointer text-left">{currentLang === "ar" ? "مسكوكات الذهب والفضة الاستثمارية" : "Investment Gold Coins"}</button></li>
               <li><button onClick={() => onNavigate("catalog")} className="hover:text-gold-base transition-colors cursor-pointer text-left">{currentLang === "ar" ? "سبائك الفضة الصب والصبابة" : "Cast Silver Bullion (1kg)"}</button></li>
               <li><button onClick={onOpenQuote} className="hover:text-gold-base transition-colors cursor-pointer text-left">{currentLang === "ar" ? "تصدير وتجارة الجملة الدولية" : "Wholesale Institutional Contracts"}</button></li>
               <li><button onClick={onOpenAIChat} className="hover:text-gold-base transition-colors cursor-pointer text-left">{currentLang === "ar" ? "ديوان المستشار المالي الرقمي" : "Bespoke Portfolio Hedging"}</button></li>

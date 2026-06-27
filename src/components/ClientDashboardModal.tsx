@@ -181,11 +181,11 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
     // Simulated login: logs in user as Sheikh Mansoor (seed) or creates an account
     const cleanEmail = loginEmail.trim().toLowerCase() || "guest.iraq@pgruae.com";
     const dummyUser = {
-      id: "cust-vip-1",
+      id: "cust-verified-1",
       email: cleanEmail,
-      name: cleanEmail.includes("vip") ? "Sheikh Mansoor Al-Maktoum" : "Al-Mansour Iraqi General Trading",
+      name: cleanEmail.includes("sheikh") ? "Sheikh Mansoor Al-Maktoum" : "Al-Mansour Iraqi General Trading",
       phone: loginPhone || "+971 50 999 8888",
-      role: "vip_customer",
+      role: "verified_customer",
       created_at: new Date().toISOString()
     };
 
@@ -549,7 +549,7 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
 
                       {/* Quick Demo Assist */}
                       <div className="p-3 bg-white/[0.01] border border-white/[0.03] rounded text-[11px] text-gray-500 space-y-1 font-sans">
-                        <div className="text-white font-medium">{isAr ? "الدخول التجريبي السريع المعتمد:" : "Vouched VIP Demo Account:"}</div>
+                        <div className="text-white font-medium">{isAr ? "الدخول التجريبي السريع المعتمد:" : "Vouched Demo Account:"}</div>
                         <div>{isAr ? "اضغط على زر الدخول أدناه للدخول الفوري كحساب مسجل مسبقاً (الشيخ منصور - دبي) للاطلاع الفوري على المحاكاة والتحقق." : "Leave fields blank or input any text to automatically log in and experience the full investor dashboard."}</div>
                       </div>
 
@@ -796,7 +796,7 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
                       <div className="flex justify-between items-center border-b border-white/[0.04] pb-2">
                         <div>
                           <h4 className="text-sm font-serif font-semibold text-white uppercase tracking-wider">
-                            {isAr ? "المحفظة الاستثمارية وامتلاك السبائك" : "Sovereign Bullion Ownership Tracker"}
+                            {isAr ? "المحفظة الاستثمارية وامتلاك السبائك" : "Bullion Ownership Tracker"}
                           </h4>
                           <p className="text-[10px] text-gray-500 font-mono">
                             {isAr ? "القيم السوقية التقديرية الحالية بناء على الأسعار الفورية" : "Estimated physical holding values based on real-time spot prices"}
@@ -951,7 +951,7 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
                         <p className="text-[11px] text-gray-400 leading-normal mt-1">
                           {isAr 
                             ? "خاضع للتراخيص والموافقات التنظيمية. قريباً فقط. لا يتم قبول أي تبرعات أو أموال نقدية أو ادخارات خارجية تحت هذا المسمى حالياً."
-                            : "Subject to complete licensing and regulatory approvals. Not currently active or accepting deposits. Designed to offer compliant custody solutions."}
+                            : "Subject to complete licensing and regulatory approvals. Not currently active or accepting deposits. Designed to offer compliant storage solutions."}
                         </p>
                       </div>
 
@@ -1263,7 +1263,7 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
                                         rel="noopener noreferrer"
                                         className="inline-flex items-center gap-1.5 px-4 py-2 rounded bg-[#c5a85c] hover:bg-amber-600 text-black font-semibold uppercase tracking-wider text-[10px] transition-all cursor-pointer font-sans"
                                       >
-                                        <span>{isAr ? "انقر هنا للسداد الآمن" : "Proceed to Secure Payment"}</span>
+                                        <span>{isAr ? "انقر هنا للسداد" : "Proceed to Payment"}</span>
                                         <ArrowRight size={12} />
                                       </a>
                                     ) : (
@@ -1456,7 +1456,7 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
 
                         {buybackSuccess && (
                           <div className="p-2.5 bg-emerald-950/20 border border-emerald-900/40 text-emerald-400 text-xs rounded">
-                            {isAr ? "تم إرسال طلب تسعير إعادة الشراء الفوري بنجاح! سيتم التواصل للتأكيد." : "Buyback quote dispatched to secure trading desk!"}
+                            {isAr ? "تم إرسال طلب تسعير إعادة الشراء الفوري بنجاح! سيتم التواصل للتأكيد." : "Buyback quote dispatched to secure desk!"}
                           </div>
                         )}
 

@@ -128,7 +128,7 @@ export default function QuoteForm({ currentLang, prefilledProduct, onClose }: Qu
               </div>
 
               <div className="p-4 rounded bg-[#070707] border border-white/[0.02] text-[11px] font-mono text-gray-500 max-w-sm mx-auto space-y-1">
-                <div>PGR UAE Trading Desk Division</div>
+                <div>PGR UAE Bullion Division</div>
                 <div>Dubai Marina DMCC Precinct, UAE</div>
                 <div>{settings?.desk_email || "desk@pgruae.com"}</div>
               </div>

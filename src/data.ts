@@ -12,7 +12,7 @@ export const BRANDS = [
   { name: "Argor-Heraeus", origin: "Switzerland", description: "Globally acclaimed precious metals provider certified by major international exchanges." },
   { name: "Perth Mint", origin: "Australia", description: "Australia's official bullion producer, iconic for official legal tender gold and silver coins." },
   { name: "Royal Canadian Mint", origin: "Canada", description: "Famous for the Maple Leaf series featuring industry-leading anti-counterfeiting laser technology." },
-  { name: "Royal Mint", origin: "United Kingdom", description: "The sovereign mint of the UK with over 1,100 years of historic security and design heritage." }
+  { name: "Royal Mint", origin: "United Kingdom", description: "The official mint of the UK with over 1,100 years of historic security and design heritage." }
 ];
 
 export const PRODUCTS: Product[] = [
@@ -92,7 +92,7 @@ export const PRODUCTS: Product[] = [
       metal: "gold",
       dimensions: "15.0 mm x 25.4 mm",
       thickness: "1.6 mm",
-      packaging: "Sovereign Assay blister card",
+      packaging: "Official Assay blister card",
       serial_number: true
     },
     image_placeholder: "gold_bar",
@@ -165,8 +165,8 @@ export const PRODUCTS: Product[] = [
     availability: "Available on Order",
     certificate_en: "LBMA Good Delivery Certificate & Hard Box Serialized",
     certificate_ar: "شهادة معتمدة من جمعية سوق لندن ومحفوظة في علبة فاخرة مرقمة",
-    description_en: "The ultimate standard of sovereign and institutional wealth preservation. Hand-poured in Switzerland, this 1kg bar of pure gold offers the tightest spread and lowest premium.",
-    description_ar: "المعيار الأسمى للثروات السيادية والمؤسساتية وصناديق التحوط الفاخرة. سبيكة مصبوبة بعناية في سويسرا بوزن ١٠٠٠ جرام تضمن لك أفضل أسعار شراء وأقل هوامش ربحية للجرام الواحد.",
+    description_en: "The ultimate standard of institutional wealth preservation. Hand-poured in Switzerland, this 1kg bar of pure gold offers the tightest spread and lowest premium.",
+    description_ar: "المعيار الأسمى للثروات الكبرى والمؤسساتية وصناديق التحوط الفاخرة. سبيكة مصبوبة بعناية في سويسرا بوزن ١٠٠٠ جرام تضمن لك أفضل أسعار شراء وأقل هوامش ربحية للجرام الواحد.",
     technical_specs: {
       weight_grams: 1000,
       purity: "Au 99.99%",
@@ -302,8 +302,8 @@ export const PRODUCTS: Product[] = [
     country_en: "United States",
     country_ar: "الولايات المتحدة",
     availability: "In Stock",
-    certificate_en: "US Treasury Backed Sovereign Weight & Purity Guarantee",
-    certificate_ar: "مضمونة الوزن والنقاوة من الخزانة الأمريكية مباشرة",
+    certificate_en: "US Treasury Backed Weight & Purity Verification",
+    certificate_ar: "موثقة الوزن والنقاوة من الخزانة الأمريكية مباشرة",
     description_en: "A historic classic. The American Eagle is minted in durable Crown Gold (alloyed with silver and copper for hardwearing scratch resistance) and backed by the United States government.",
     description_ar: "العملة الكلاسيكية الأشهر على الإطلاق. تُصك بذهب عيار ٢٢ قيراطاً لزيادة الصلابة ومقاومة الخدوش الفضية مع الحفاظ التام على محتوى أونصة واحدة كاملة من الذهب الخالص.",
     technical_specs: {
@@ -358,8 +358,8 @@ export const PRODUCTS: Product[] = [
     country_en: "United Kingdom",
     country_ar: "المملكة المتحدة",
     availability: "In Stock",
-    certificate_en: "Sovereign Backed & High Security Anti-Counterfeit Verification",
-    certificate_ar: "مضمونة سيادياً وتحتوي على خطوط مجهرية مانعة للتزييف",
+    certificate_en: "Government Backed & High Security Anti-Counterfeit Verification",
+    certificate_ar: "موثقة رسمياً وتحتوي على خطوط مجهرية مانعة للتزييف",
     description_en: "Strikingly beautiful and secure, the Britannia 1oz Silver Coin features the iconic figure standing firm amidst wind and waves, a legendary symbol of resilience and premium trade.",
     description_ar: "إحدى أجمل العملات الفضية العالمية وأكثرها تعقيداً في التصميم. تحمل الرمز الشهير لبريتانيا شامخة أمام عواصف البحر، ما يجعلها ملاذاً آمناً وأنيقاً.",
     technical_specs: {
@@ -385,8 +385,8 @@ export const PRODUCTS: Product[] = [
     country_en: "Canada",
     country_ar: "كندا",
     availability: "In Stock",
-    certificate_en: "Sovereign 1oz Coin with Royal Bullion DNA technology",
-    certificate_ar: "عملة سيادية نقاوة ٩٩٩٩ مع ميزة الحمض النووي السبيكي DNA",
+    certificate_en: "Standard 1oz Coin with Royal Bullion DNA technology",
+    certificate_ar: "عملة معتمدة نقاوة ٩٩٩٩ مع ميزة الحمض النووي السبيكي DNA",
     description_en: "Boasting unparalleled purity at 99.99% (four-nines) fine silver, the Canadian Silver Maple Leaf is an essential component of any physical silver reserve.",
     description_ar: "تحظى عملة ورقة القيقب بنقاوة لا تضاهى تصل إلى ٩٩.٩٩٪ من الفضة الخالصة (أربعة تسعات)، وتعتبر خيار الادخار الأقوى لجامعي الفضة والمحافظ الاستثمارية.",
     technical_specs: {
@@ -413,14 +413,14 @@ export const WHY_US_ITEMS = [
   {
     title_en: "Wholesale Global Solutions",
     title_ar: "حلول تداول بالجملة وعالمية",
-    desc_en: "We offer tailored, highly competitive direct pricing for institutional bullion procurement, private funds, high-volume trading, and sovereign reserves.",
-    desc_ar: "نقدم تسعيراً مباشراً وتنافسياً مخصصاً لعمليات شراء السبائك الكبرى للمؤسسات، الصناديق الخاصة، تداول الكميات الضخمة، والاحتياطيات السيادية."
+    desc_en: "We offer tailored, highly competitive direct pricing for institutional bullion procurement, private funds, high-volume trading, and institutional reserves.",
+    desc_ar: "نقدم تسعيراً مباشراً وتنافسياً مخصصاً لعمليات شراء السبائك الكبرى للمؤسسات، الصناديق الخاصة، تداول الكميات الضخمة، والاحتياطيات المؤسسية."
   },
   {
     title_en: "Secure Global Vaulting",
     title_ar: "تخزين وشحن عالمي آمن",
-    desc_en: "Fully insured door-to-door transit via high-security logistics (Brink's / Transguard) with direct storage options in UAE premium, certified vaults.",
-    desc_ar: "شحن مؤمن بالكامل من الباب إلى الباب عبر كبرى شركات الأمن (برينكس / ترانسجارد) مع خيارات تخزين مباشر في أرقى الخزائن المؤمنة والمعتمدة في دبي."
+    desc_en: "Fully covered door-to-door transit via high-security logistics (Brink's / Transguard) with direct storage options in UAE premium, certified vaults.",
+    desc_ar: "شحن مغطى بالكامل من الباب إلى الباب عبر كبرى شركات الأمن (برينكس / ترانسجارد) مع خيارات تخزين مباشر في أرقى الخزائن المؤمنة والمعتمدة في دبي."
   },
   {
     title_en: "Absolute Pricing Transparency",

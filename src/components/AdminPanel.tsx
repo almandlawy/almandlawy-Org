@@ -147,7 +147,7 @@ export default function AdminPanel({ currentLang, onClose, isModal = false }: Ad
     title_ar: "",
     content_en: "",
     content_ar: "",
-    author: "PGR Trading Desk",
+    author: "PGR Desk",
     featured: false,
     seo_title: "",
     seo_description: ""
@@ -374,7 +374,7 @@ export default function AdminPanel({ currentLang, onClose, isModal = false }: Ad
         const match = quotes.find(q => q.id === quoteId);
         if (match) {
           await dbService.orders.create({
-            customer_id: match.customer_id || "cust-vip-1",
+            customer_id: match.customer_id || "cust-verified-1",
             total_amount: parseFloat(match.weight || "100") * (match.metalInterest === "silver" ? 1.1 : 78.5),
             currency: "USD",
             shipping_method: "Office Pickup",
@@ -508,7 +508,7 @@ export default function AdminPanel({ currentLang, onClose, isModal = false }: Ad
       await dbService.blog.create(newBlogPost as any);
       setNewBlogPost({
         slug: "", category: "Market Report", title_en: "", title_ar: "",
-        content_en: "", content_ar: "", author: "PGR Trading Desk",
+        content_en: "", content_ar: "", author: "PGR Desk",
         featured: false, seo_title: "", seo_description: ""
       });
       triggerSuccessMessage("Research dispatch published!");
@@ -619,10 +619,10 @@ export default function AdminPanel({ currentLang, onClose, isModal = false }: Ad
               <ShieldCheck size={28} />
             </div>
             <h3 className="text-xl font-serif text-white tracking-wide">
-              {isAr ? "بوابة الإدارة لـ PGR UAE" : "PGR UAE Sovereign Panel"}
+              {isAr ? "بوابة الإدارة لـ PGR UAE" : "PGR UAE Admin Panel"}
             </h3>
             <p className="text-xs text-gray-400 font-mono uppercase tracking-widest">
-              {isAr ? "ديوان المراقبة والتداول المالي" : "Sovereign Command & Market Control"}
+              {isAr ? "ديوان المراقبة والتداول المالي" : "Command & Market Control"}
             </p>
           </div>
 
@@ -714,7 +714,7 @@ export default function AdminPanel({ currentLang, onClose, isModal = false }: Ad
               onClick={handlePanelClose}
               className="text-xs text-gray-500 hover:text-white underline cursor-pointer font-mono"
             >
-              {isAr ? "العودة إلى الموقع الرئيسي" : "Return to Sovereign Terminal"}
+              {isAr ? "العودة إلى الموقع الرئيسي" : "Return to Main Terminal"}
             </button>
           </div>
         </div>
@@ -727,8 +727,8 @@ export default function AdminPanel({ currentLang, onClose, isModal = false }: Ad
     { id: "dashboard", label: "Dashboard", labelAr: "لوحة التحكم" },
     { id: "products", label: "Catalog Entries", labelAr: "كتالوج المنتجات" },
     { id: "quotes", label: "Quote Requests", labelAr: "طلبات الأسعار" },
-    { id: "orders", label: "Sovereign Orders", labelAr: "الأوامر الصادرة" },
-    { id: "customers", label: "VIP Investors", labelAr: "المستثمرون" },
+    { id: "orders", label: "Orders Management", labelAr: "الأوامر الصادرة" },
+    { id: "customers", label: "Investors", labelAr: "المستثمرون" },
     { id: "kyc", label: "KYC Compliance", labelAr: "امتثال KYC" },
     { id: "iraq_delivery", label: "Iraq Logistics", labelAr: "لوجستيات العراق" },
     { id: "pickup_points", label: "Pickup Terminals", labelAr: "مراكز الاستلام" },
@@ -760,7 +760,7 @@ export default function AdminPanel({ currentLang, onClose, isModal = false }: Ad
         <div className="w-full md:w-64 bg-[#0d0d0e] border-b md:border-b-0 md:border-r border-white/[0.05] flex flex-col shrink-0 overflow-y-auto h-auto md:h-full">
           <div className="p-5 border-b border-white/[0.05]">
             <span className="text-[10px] font-mono text-gold-base uppercase tracking-[0.2em] font-bold block mb-1">
-              {isAr ? "بوابة الإدارة المركزية" : "Sovereign Command Deck"}
+              {isAr ? "بوابة الإدارة المركزية" : "Command Deck"}
             </span>
             <h3 className="text-sm font-serif font-semibold text-white tracking-wide">
               PGR UAE & Iraq Admin
@@ -834,7 +834,7 @@ export default function AdminPanel({ currentLang, onClose, isModal = false }: Ad
           {loading ? (
             <div className="flex h-full items-center justify-center text-xs font-mono text-gold-base uppercase">
               <RefreshCw className="animate-spin text-gold-base mr-2" size={16} />
-              <span>{isAr ? "جاري تحميل البيانات السيادية..." : "Compiling Secure Datasets..."}</span>
+              <span>{isAr ? "جاري تحميل البيانات..." : "Compiling Secure Datasets..."}</span>
             </div>
           ) : (
             <div className="space-y-6">
@@ -854,7 +854,7 @@ export default function AdminPanel({ currentLang, onClose, isModal = false }: Ad
                       <p className="text-xl font-serif text-white font-bold mt-1">${stats.totalVolumeUSD.toLocaleString()}</p>
                     </div>
                     <div className="p-4 bg-[#0d0d0e] border border-white/[0.03] rounded">
-                      <span className="text-[10px] text-gray-500 uppercase">VIP Investors</span>
+                      <span className="text-[10px] text-gray-500 uppercase">Investors</span>
                       <p className="text-xl font-serif text-gold-base font-bold mt-1">{stats.activeInvestorsCount} Accounts</p>
                     </div>
                     <div className="p-4 bg-[#0d0d0e] border border-white/[0.03] rounded">
@@ -1543,8 +1543,8 @@ export default function AdminPanel({ currentLang, onClose, isModal = false }: Ad
               {activeSection === "orders" && (
                 <div className="space-y-6">
                   <div>
-                    <h4 className="text-lg font-serif text-white">Sovereign Custody & Order Registry</h4>
-                    <p className="text-xs text-gray-500 font-mono uppercase">Control active client purchase invoices, custody vaults, and holding contracts</p>
+                    <h4 className="text-lg font-serif text-white">Order Registry</h4>
+                    <p className="text-xs text-gray-500 font-mono uppercase">Control active client purchase invoices and holding contracts</p>
                   </div>
 
                   <div className="bg-[#0d0d0e] border border-white/[0.03] rounded-sm overflow-hidden font-mono text-xs">
@@ -1553,7 +1553,7 @@ export default function AdminPanel({ currentLang, onClose, isModal = false }: Ad
                         <thead className="bg-[#111112] text-gray-400 border-b border-white/[0.03]">
                           <tr>
                             <th className="p-4">Order ID</th>
-                            <th className="p-4">Client VIP</th>
+                            <th className="p-4">Client</th>
                             <th className="p-4">Total Value</th>
                             <th className="p-4">Method / Destination</th>
                             <th className="p-4">Status & Payment</th>
@@ -1630,8 +1630,8 @@ export default function AdminPanel({ currentLang, onClose, isModal = false }: Ad
               {activeSection === "customers" && (
                 <div className="space-y-6">
                   <div>
-                    <h4 className="text-lg font-serif text-white">VIP Investors Account Directories</h4>
-                    <p className="text-xs text-gray-500 font-mono uppercase">Private client profiles, registered investment portfolios, and total balances</p>
+                    <h4 className="text-lg font-serif text-white">Investors Account Directories</h4>
+                    <p className="text-xs text-gray-500 font-mono uppercase">Client profiles, registered investment portfolios, and total balances</p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
@@ -1782,7 +1782,7 @@ export default function AdminPanel({ currentLang, onClose, isModal = false }: Ad
               {activeSection === "pickup_points" && (
                 <div className="space-y-6">
                   <div>
-                    <h4 className="text-lg font-serif text-white">Sovereign Vault Handover Terminals</h4>
+                    <h4 className="text-lg font-serif text-white">Vault Handover Terminals</h4>
                     <p className="text-xs text-gray-500 font-mono uppercase">Control secure bullion pickup locations across Iraq and UAE DMCC Freezone</p>
                   </div>
 
@@ -2015,7 +2015,7 @@ export default function AdminPanel({ currentLang, onClose, isModal = false }: Ad
                         <thead className="bg-[#111112] text-gray-400 border-b border-white/[0.03]">
                           <tr>
                             <th className="p-4">Request ID</th>
-                            <th className="p-4">VIP Client ID</th>
+                            <th className="p-4">Client ID</th>
                             <th className="p-4">Metal Details</th>
                             <th className="p-4">Payout Estimated (USD)</th>
                             <th className="p-4">Status</th>
@@ -2226,7 +2226,7 @@ export default function AdminPanel({ currentLang, onClose, isModal = false }: Ad
               {activeSection === "settings" && (
                 <div className="space-y-6">
                   <div>
-                    <h4 className="text-lg font-serif text-white">Sovereign Settings & Support Matrices</h4>
+                    <h4 className="text-lg font-serif text-white">Settings & Support Matrices</h4>
                     <p className="text-xs text-gray-500 font-mono uppercase">Control trade hotlines, DMCC registration numbers and office addresses</p>
                   </div>
 

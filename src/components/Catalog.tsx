@@ -127,7 +127,7 @@ export default function Catalog({
           <p className="text-sm text-gray-400">
             {currentLang === "ar" 
               ? "استعرض مجموعتنا الشاملة من سبائك ومسكوكات الذهب والفضة عالية النقاوة. جميع المنتجات تأتي من مصافٍ مصنفة عالمياً (LBMA)."
-              : "Explore our collection of high-purity gold and silver bars and sovereign coins. Sourced exclusively from LBMA-certified international refineries."}
+              : "Explore our collection of high-purity gold and silver bars and investment coins. Sourced exclusively from LBMA-certified international refineries."}
           </p>
         </div>
 

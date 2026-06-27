@@ -161,14 +161,14 @@ export default function Header({
           {/* Action Center (Bespoke Advisor, Lang, Inquiry) */}
           <div className="flex items-center gap-2 md:gap-4">
             
-            {/* VIP Client Desk (Tracker) */}
+            {/* Customer Dashboard (Tracker) */}
             <button
               onClick={onOpenClientDashboard}
               className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded bg-white/[0.02] border border-white/[0.05] hover:border-[#c5a85c]/30 text-[11px] text-gray-300 transition-colors cursor-pointer uppercase font-mono"
-              title={currentLang === "ar" ? "ديوان كبار العملاء" : "Client Portal"}
+              title={currentLang === "ar" ? "ديوان العملاء" : "Customer Dashboard"}
             >
               <ShieldCheck size={13} className="text-[#c5a85c]" />
-              <span>{currentLang === "ar" ? "ديوان العملاء" : "Client Desk"}</span>
+              <span>{currentLang === "ar" ? "ديوان العملاء" : "Customer Dashboard"}</span>
             </button>
 
             {/* Admin Command Desk */}
@@ -257,7 +257,7 @@ export default function Header({
                 className="py-2.5 bg-white/[0.02] border border-white/[0.05] text-gray-300 rounded flex items-center justify-center gap-1.5"
               >
                 <ShieldCheck size={13} className="text-[#c5a85c]" />
-                <span>{currentLang === "ar" ? "ديوان العملاء" : "Client Desk"}</span>
+                <span>{currentLang === "ar" ? "ديوان العملاء" : "Customer Dashboard"}</span>
               </button>
               {isAdmin && (
                 <button

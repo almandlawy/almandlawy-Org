@@ -121,7 +121,7 @@ export default function ProductDetailModal({
     // Create and download a simulated text file representing a secure receipt
     const content = `=====================================================
 PGR UAE PRECIOUS METALS TRADING - DUBAI MARINA
-OFFICIAL SOVEREIGN PORTFOLIO ADVISORY SERVICE
+OFFICIAL PORTFOLIO ADVISORY SERVICE
 =====================================================
 Document: ${docName}
 Reference SKU: ${activeProduct.id}
@@ -390,7 +390,7 @@ Phone: ${phone}
                   <div className="space-y-2 animate-fadeIn text-xs font-mono">
                     {[
                       { name: "Official Assay Report (PDF)", file: "PGR_Assay_Report.pdf" },
-                      { name: "PGR Custody Agreement (PDF)", file: "PGR_Vault_Custody_Guide.pdf" },
+                      { name: "PGR Storage Agreement (PDF)", file: "PGR_Vault_Storage_Guide.pdf" },
                       { name: "Dubai Bullion Advantage (PDF)", file: "Dubai_Gold_Advantage_Guide.pdf" }
                     ].map((doc, idx) => (
                       <div key={idx} className="p-2.5 rounded bg-[#161618] border border-white/[0.02] flex items-center justify-between gap-3">

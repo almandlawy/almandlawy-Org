@@ -67,8 +67,8 @@ export default function IraqTrustBadge({ currentLang }: IraqTrustBadgeProps) {
       <div className="bg-amber-950/20 border border-amber-900/30 rounded p-3 text-[11px] text-amber-500/90 leading-relaxed">
         <strong>{isAr ? "ملاحظة هامة:" : "Regulatory Notice:"} </strong>
         {isAr 
-          ? "قد يتطلب شحن المعادن الثمينة مستندات جمركية، فواتير رسمية، وتصاريح استيراد حسب قوانين بلد المقصد. لا تقدم PGR أي وعود بعوائد ثابتة أو مضمونة." 
-          : "Procurement and transit of precious metals are subject to customs documentation, official declarations, and destination regulations. PGR does not promise fixed or guaranteed returns."}
+          ? "قد يتطلب شحن المعادن الثمينة مستندات جمركية، فواتير رسمية، وتصاريح استيراد حسب قوانين بلد المقصد. لا تقدم PGR أي وعود بعوائد ثابتة." 
+          : "Procurement and transit of precious metals are subject to customs documentation, official declarations, and destination regulations. PGR does not promise fixed returns."}
       </div>
     </div>
   );

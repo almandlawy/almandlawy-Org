@@ -80,7 +80,7 @@ export default function BlogSection({ currentLang }: BlogSectionProps) {
           <div className="space-y-3">
             <span className="text-gold-base font-mono uppercase text-xs tracking-[0.3em] font-semibold flex items-center gap-2">
               <BookOpen size={12} />
-              {isAr ? "مركز الأبحاث والتحليل المالي" : "Sovereign Market Commentary"}
+              {isAr ? "مركز الأبحاث والتحليل المالي" : "Market Commentary"}
             </span>
             <h2 className="text-3xl sm:text-4xl font-serif tracking-tight text-white font-medium">
               {isAr ? "ديوان أبحاث المعادن الثمينة" : "Precious Metals Advisory & Intelligence"}
@@ -253,7 +253,7 @@ export default function BlogSection({ currentLang }: BlogSectionProps) {
               <div className="bg-[#121315]/80 p-4 rounded border border-white/[0.03] font-mono text-[10px] text-gray-500 leading-relaxed">
                 {isAr 
                   ? "إخلاء مسؤولية: كافة التحليلات والتقارير الصادرة عن PGR UAE هي لأغراض تثقيفية واستراتيجية فقط، ولا تعد نصيحة مالية أو استثمارية رسمية لبيع أو شراء الأسهم أو العقود." 
-                  : "DISCLAIMER: Sovereign reports published by PGR UAE are prepared for elite portfolio context and strategic information purposes only. They do not constitute formal investment advice or brokerage solicitation."}
+                  : "DISCLAIMER: Reports published by PGR UAE are prepared for elite portfolio context and strategic information purposes only. They do not constitute formal investment advice or brokerage solicitation."}
               </div>
 
             </div>

@@ -135,7 +135,7 @@ const seedLocalStorage = () => {
   const initialOrders = [
     {
       id: "PGR-ORD-10924",
-      customer_id: "cust-vip-1",
+      customer_id: "cust-verified-1",
       created_at: "2026-06-15T14:32:00Z",
       status: "Delivered",
       total_amount: 118400.0,
@@ -150,7 +150,7 @@ const seedLocalStorage = () => {
     },
     {
       id: "PGR-ORD-11530",
-      customer_id: "cust-vip-1",
+      customer_id: "cust-verified-1",
       created_at: "2026-06-25T11:05:00Z",
       status: "Quoted",
       total_amount: 326500.0,
@@ -174,13 +174,13 @@ const seedLocalStorage = () => {
       category: "Gold News",
       title_en: "The Dubai Gold Advantage: Complete 2026 Tax & VAT Guide",
       title_ar: "ميزة ذهب دبي: الدليل الكامل للضرائب وضريبة القيمة مضافة لعام ٢٠٢٦",
-      content_en: "Dubai remains the premier globally accredited precious metals hub. Under UAE Federal Tax Law, physical investment gold with a purity of 99.5% or above is subject to 0% Value Added Tax (VAT). This exemption, combined with zero corporate and personal income taxes in the DMCC zone, offers international portfolio holders a dramatic 5-10% cost hedge compared to European and North American channels. PGR UAE provides complete custom-cleared transport directly to our secure, insured vaults.",
+      content_en: "Dubai remains the premier globally accredited precious metals hub. Under UAE Federal Tax Law, physical investment gold with a purity of 99.5% or above is subject to 0% Value Added Tax (VAT). This exemption, combined with zero corporate and personal income taxes in the DMCC zone, offers international portfolio holders a dramatic 5-10% cost hedge compared to European and North American channels. PGR UAE provides complete custom-cleared transport directly to our secure, covered vaults.",
       content_ar: "تظل دبي العاصمة العالمية الأبرز لتجارة المعادن الثمينة. بموجب قانون الضرائب الاتحادي لدولة الإمارات، تخضع سبائك الذهب الاستثمارية التي تبلغ نقاوتها ٩٩.٥٪ أو أكثر لضريبة القيمة المضافة بنسبة ٠٪. هذا الإعفاء، بالإضافة لعدم وجود ضرائب دخل في منطقة DMCC، يوفر ميزة مالية تبلغ ٥-١٠٪ مقارنة بالدول الغربية.",
       author: "PGR Advisory Board",
       published_at: "2026-06-01",
       featured: true,
       seo_title: "Dubai Gold Tax & VAT Free Investment Guide 2026",
-      seo_description: "Learn why physical gold bullion is 0% VAT in Dubai UAE and how sovereign investors structure their portfolios under DMCC zone laws."
+      seo_description: "Learn why physical gold bullion is 0% VAT in Dubai UAE and how institutional investors structure their portfolios under DMCC zone laws."
     },
     {
       id: "blog-2",
@@ -188,7 +188,7 @@ const seedLocalStorage = () => {
       category: "Investment",
       title_en: "Macroeconomic Inflation Hedging: Silver vs. Gold in 2026",
       title_ar: "التحوط من التضخم الكلي: الفضة مقابل الذهب في عام ٢٠٢٦",
-      content_en: "As global currencies face continued quantitative easing, institutional desks are shifting into physical bullion allocations. While gold represents supreme stability and sovereign wealth, silver is showing extreme upside leverage due to skyrocketing demand in solar photovoltaic arrays and high-frequency military chips. This article explores the optimal 80/20 physical distribution model structured by PGR UAE's trading desks.",
+      content_en: "As global currencies face continued quantitative easing, institutional desks are shifting into physical bullion allocations. While gold represents supreme stability and generational wealth, silver is showing extreme upside leverage due to skyrocketing demand in solar photovoltaic arrays and high-frequency military chips. This article explores the optimal 80/20 physical distribution model structured by PGR UAE's bullion desks.",
       content_ar: "مع استمرار التسهيل الكمي في العملات العالمية، تتجه الصناديق الاستثمارية نحو تملك المعادن الثمينة الحرة. يمثل الذهب قمة الاستقرار والأمان، بينما تظهر الفضة عوائد قوية بفضل الطلب الصناعي المتزايد في الألواح الشمسية والرقائق الذكية.",
       author: "Desk Chief Executive",
       published_at: "2026-06-12",
@@ -209,17 +209,17 @@ const seedLocalStorage = () => {
 
   // 10. Current active user profile
   getOrSet("pgr_user", {
-    id: "cust-vip-1",
-    email: "vip.investor@dubaimarina.ae",
+    id: "cust-verified-1",
+    email: "verified.investor@dubaimarina.ae",
     name: "Sheikh Mansoor Al-Maktoum",
     phone: "+971 50 999 8888",
-    company: "Sovereign Asset Holdings Ltd",
+    company: "Elite Asset Holdings Ltd",
     addresses: [
       { id: "add-1", label: "Primary Vault Marina", address: "Penthouse 45, Marina Heights, Dubai Marina, UAE" },
       { id: "add-2", label: "DMCC Storage Center", address: "Vault Block B, Almas Tower, DMCC Precinct, Dubai" }
     ],
     wishlist: ["gb-1kg", "gc-britannia"],
-    role: "vip_customer", // or "admin"
+    role: "verified_customer", // or "admin"
     created_at: "2026-01-01T00:00:00Z"
   });
 
@@ -266,16 +266,16 @@ const seedLocalStorage = () => {
   // 14. KYC profiles and Documents
   getOrSet("pgr_kyc_profiles", [
     {
-      id: "cust-vip-1",
+      id: "cust-verified-1",
       full_name: "Sheikh Mansoor Al-Maktoum",
       phone: "+971 50 999 8888",
       whatsapp: "+971 50 999 8888",
-      email: "vip.investor@dubaimarina.ae",
+      email: "verified.investor@dubaimarina.ae",
       country: "UAE",
       city: "Dubai",
       nationality: "Emirati",
       dob: "1985-05-15",
-      source_of_funds_declaration: "Sovereign Trading Cashflow",
+      source_of_funds_declaration: "Trading Cashflow",
       agreement_accepted: true,
       privacy_consent: true,
       status: "Verified",
@@ -296,7 +296,7 @@ const seedLocalStorage = () => {
   getOrSet("pgr_iraq_delivery_requests", [
     {
       id: "del-1",
-      customer_id: "cust-vip-1",
+      customer_id: "cust-verified-1",
       order_id: "PGR-ORD-10924",
       governorate: "Baghdad",
       address_details: "Al-Mansour District, Block 12, Street 15",
@@ -311,7 +311,7 @@ const seedLocalStorage = () => {
   getOrSet("pgr_investment_accounts", [
     {
       id: "inv-gold",
-      customer_id: "cust-vip-1",
+      customer_id: "cust-verified-1",
       metal: "gold",
       weight_grams: 250,
       average_purchase_price_usd: 75.40,
@@ -322,7 +322,7 @@ const seedLocalStorage = () => {
     },
     {
       id: "inv-silver",
-      customer_id: "cust-vip-1",
+      customer_id: "cust-verified-1",
       metal: "silver",
       weight_grams: 2000,
       average_purchase_price_usd: 0.92,
@@ -337,7 +337,7 @@ const seedLocalStorage = () => {
   getOrSet("pgr_buyback_requests", [
     {
       id: "buy-1",
-      customer_id: "cust-vip-1",
+      customer_id: "cust-verified-1",
       metal: "gold",
       weight_grams: 50,
       purity: "Au 99.99%",
