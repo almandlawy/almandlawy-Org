@@ -44,33 +44,31 @@ export default function Hero({ currentLang, onScrollToCatalog, onScrollToMarket,
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.02] border border-white/[0.05] mb-8 animate-fadeIn" style={{ animationDelay: "100ms" }}>
           <span className="h-1.5 w-1.5 rounded-full bg-gold-base"></span>
           <span className="text-[10px] md:text-[11px] uppercase tracking-[0.3em] text-gray-400 font-mono">
-            {currentLang === "ar" ? "دبي، الإمارات العربية المتحدة" : "Dubai, United Arab Emirates"}
+            {currentLang === "ar" ? "بوابة الذهب والمعادن الثمينة" : "Precious Metals Portal"}
           </span>
-          <span className="text-[9px] bg-gold-base/10 text-gold-base px-2 py-0.5 rounded font-mono font-semibold">DMCC</span>
         </div>
 
         {/* Dynamic Typography Bilingual Headlines */}
         <div className="max-w-4xl space-y-6">
-          <h1 className="text-4xl sm:text-5xl md:text-7xl font-serif tracking-tight text-white leading-[1.1] animate-fadeIn">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif tracking-tight text-white leading-[1.1] animate-fadeIn">
             {currentLang === "ar" ? (
-              <span className="font-arabic leading-snug tracking-normal block">
-                استثمر <span className="text-gold-gradient font-bold">بالذهب والفضة</span> بثقة مطلقة
+              <span className="font-arabic leading-snug tracking-normal block font-medium">
+                بوابة <span className="text-gold-gradient font-bold">PGR UAE</span> للمعادن الثمينة
               </span>
             ) : (
               <span>
-                Invest in <span className="text-gold-gradient font-semibold">Gold & Silver</span> <br className="hidden md:block" />
-                with Absolute Confidence
+                PGR UAE <span className="text-gold-gradient font-semibold">Precious Metals</span>
               </span>
             )}
           </h1>
 
-          <p className="max-w-3xl mx-auto text-sm sm:text-base md:text-lg text-gray-400 font-sans tracking-wide leading-relaxed animate-fadeIn" style={{ animationDelay: "300ms" }}>
+          <p className="max-w-3xl mx-auto text-sm sm:text-base md:text-lg text-gray-300 font-sans tracking-wide leading-relaxed animate-fadeIn" style={{ animationDelay: "300ms" }}>
             {currentLang === "ar" ? (
-              <span className="font-arabic text-gold-light/90">
-                PGR UAE للمعادن الثمينة - منتجات الذهب والفضة للإمارات والعراق - اطلب، تحقق، أكد، واستلم سبائكك بدعم احترافي.
+              <span className="font-arabic">
+                الذهب والفضة للإمارات والعراق — شراء، تخزين، تتبع، وتوصيل بدعم احترافي كامل.
               </span>
             ) : (
-              "PGR UAE Precious Metals - Gold & Silver Products for UAE and Iraq - Request, verify, confirm, and receive your bullion with professional support."
+              "Gold & Silver for UAE and Iraq — Buy, Store, Track, Deliver with full professional support."
             )}
           </p>
         </div>
@@ -79,17 +77,17 @@ export default function Hero({ currentLang, onScrollToCatalog, onScrollToMarket,
         <div className="flex flex-wrap justify-center items-center gap-x-6 gap-y-2 mt-8 text-[11px] md:text-[12px] uppercase tracking-widest text-gold-light/80 font-mono">
           <span className="flex items-center gap-1.5">
             <Shield size={12} className="text-gold-base" />
-            {currentLang === "ar" ? "تسليم آمن ومؤمن" : "Secure Insured Delivery"}
+            {currentLang === "ar" ? "تأكيد السعر قبل الدفع" : "Price confirmed before payment"}
           </span>
           <span className="hidden sm:inline text-white/20">•</span>
           <span className="flex items-center gap-1.5">
             <Award size={12} className="text-gold-base" />
-            {currentLang === "ar" ? "أسعار دولية مباشرة" : "LBMA Good Delivery Rates"}
+            {currentLang === "ar" ? "تأكيد فوري عبر واتساب" : "WhatsApp Confirmation"}
           </span>
           <span className="hidden sm:inline text-white/20">•</span>
           <span className="flex items-center gap-1.5">
             <MapPin size={12} className="text-gold-base" />
-            {currentLang === "ar" ? "تداول بالجملة والمؤسسات" : "DMCC Sovereign Trading"}
+            {currentLang === "ar" ? "خيارات التوصيل للإمارات والعراق" : "Delivery options to UAE and Iraq"}
           </span>
         </div>
 

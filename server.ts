@@ -3,6 +3,7 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
+import { createClient } from "@supabase/supabase-js";
 
 dotenv.config();
 
@@ -10,6 +11,11 @@ const app = express();
 const PORT = 3000;
 
 app.use(express.json());
+
+// Initialize backend Supabase client
+const supabaseUrl = process.env.VITE_SUPABASE_URL || "";
+const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || "";
+const supabase = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
 
 // Initialize Gemini SDK with custom User-Agent as requested by gemini-api skill
 let ai: GoogleGenAI | null = null;
@@ -101,7 +107,7 @@ app.get("/api/prices", (req, res) => {
 });
 
 // Post Custom Inquiry / Quote request
-app.post("/api/quote", (req, res) => {
+app.post("/api/quote", async (req, res) => {
   try {
     const { name, email, phone, company, metalInterest, productCategory, weight, message, sourceLanguage } = req.body;
     
@@ -110,7 +116,30 @@ app.post("/api/quote", (req, res) => {
     }
 
     const inquiryId = "PGR-" + Math.floor(100000 + Math.random() * 900000);
-    console.log(`[INQUIRY RECORDED] Reference: ${inquiryId}`, req.body);
+    const newQuote = {
+      id: inquiryId,
+      name,
+      email,
+      phone,
+      company: company || "",
+      metal_interest: metalInterest || "both",
+      product_category: productCategory || "General Bullion Consultation",
+      weight_preference: weight || "",
+      message: message || "",
+      status: "Pending",
+      created_at: new Date().toISOString()
+    };
+
+    if (supabase) {
+      const { error } = await supabase.from("quote_requests").insert(newQuote);
+      if (error) {
+        console.error("Failed to save quote request to Supabase:", error);
+      } else {
+        console.log(`[INQUIRY SAVED TO SUPABASE] ID: ${inquiryId}`);
+      }
+    } else {
+      console.log(`[INQUIRY RECORDED (LOCAL SIM)] Reference: ${inquiryId}`, req.body);
+    }
 
     res.json({
       success: true,

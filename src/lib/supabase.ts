@@ -427,7 +427,8 @@ export const dbService = {
     save: async (product: any) => {
       if (isLive && supabase) {
         const { data, error } = await supabase.from("products").upsert(product).select();
-        if (!error && data) return data[0];
+        if (error) throw new Error(error.message || JSON.stringify(error));
+        if (data) return data[0];
       }
       const list = mockDb.get("pgr_products");
       const index = list.findIndex((p: any) => p.id === product.id);
@@ -487,6 +488,21 @@ export const dbService = {
       if (index > -1) {
         orders[index].status = status;
         if (totalAmount !== undefined) orders[index].total_amount = totalAmount;
+        mockDb.set("pgr_orders", orders);
+        return orders[index];
+      }
+      return null;
+    },
+    update: async (orderId: string, updates: any) => {
+      if (isLive && supabase) {
+        const { data, error } = await supabase.from("orders").update(updates).eq("id", orderId).select();
+        if (error) throw new Error(error.message);
+        if (data) return data[0];
+      }
+      const orders = mockDb.get("pgr_orders");
+      const index = orders.findIndex((o: any) => o.id === orderId);
+      if (index > -1) {
+        orders[index] = { ...orders[index], ...updates };
         mockDb.set("pgr_orders", orders);
         return orders[index];
       }
@@ -789,6 +805,69 @@ export const dbService = {
       // Local fallback check
       const adminList = mockDb.get("pgr_admin_users") || ["almandlawy112@gmail.com", "admin@pgruae.com"];
       return adminList.map((e: string) => e.toLowerCase()).includes(email.trim().toLowerCase());
+    }
+  },
+
+  auth: {
+    signInWithGoogle: async (redirectToUrl?: string) => {
+      const redirect = redirectToUrl || window.location.origin;
+      if (isLive && supabase) {
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: {
+            redirectTo: redirect
+          }
+        });
+        if (error) throw error;
+      } else {
+        // Mock Google login as an admin
+        const mockGoogleUser = {
+          id: "google-mock-user-1",
+          email: "almandlawy112@gmail.com",
+          name: "Abbas Al-Mandlawy",
+          role: "admin",
+          created_at: new Date().toISOString()
+        };
+        mockDb.auth.setUser(mockGoogleUser);
+        return mockGoogleUser;
+      }
+    },
+    logout: async () => {
+      if (isLive && supabase) {
+        await supabase.auth.signOut();
+      }
+      mockDb.auth.logout();
+    }
+  },
+
+  storage: {
+    uploadProductImage: async (file: File): Promise<string> => {
+      if (isLive && supabase) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+        const filePath = `products/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("product-images")
+          .upload(filePath, file);
+
+        if (uploadError) {
+          throw new Error(uploadError.message);
+        }
+
+        const { data } = supabase.storage
+          .from("product-images")
+          .getPublicUrl(filePath);
+
+        return data.publicUrl;
+      }
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          resolve(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+      });
     }
   }
 };

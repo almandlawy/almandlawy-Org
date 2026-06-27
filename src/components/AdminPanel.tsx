@@ -9,7 +9,7 @@ import {
   X, LayoutDashboard, Coins, Users, ClipboardList, Check, 
   RefreshCw, Layers, ShieldCheck, Truck, MapPin, 
   TrendingUp, Undo, Box, Award, FileText, BookOpen, Settings, 
-  Eye, Trash2, Plus, Edit, ShieldAlert, Mail, Phone, Clock, FileCheck, CheckCircle
+  Eye, Trash2, Plus, Edit, ShieldAlert, Mail, Phone, Clock, FileCheck, CheckCircle, LogOut
 } from "lucide-react";
 import { dbService, mockDb } from "../lib/supabase";
 import { Product } from "../types";
@@ -43,8 +43,6 @@ export default function AdminPanel({ currentLang, onClose, isModal = false }: Ad
 
   // Authentication & Authorization States
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
-  const [authEmail, setAuthEmail] = useState("");
-  const [authPasscode, setAuthPasscode] = useState("");
   const [authErrorMsg, setAuthErrorMsg] = useState("");
   const [checkingAuth, setCheckingAuth] = useState(true);
 
@@ -77,6 +75,26 @@ export default function AdminPanel({ currentLang, onClose, isModal = false }: Ad
 
   // Product CRUD states
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  const handleProductImageUpload = async (file: File, isEdit: boolean) => {
+    setUploadingImage(true);
+    try {
+      const publicUrl = await dbService.storage.uploadProductImage(file);
+      if (isEdit) {
+        setEditingProduct(prev => prev ? { ...prev, image_url: publicUrl } : null);
+      } else {
+        setNewProduct(prev => ({ ...prev, image_url: publicUrl }));
+      }
+      triggerSuccessMessage("Product image uploaded successfully!");
+    } catch (err) {
+      console.error(err);
+      triggerErrorMessage(err instanceof Error ? err.message : "Failed to upload image");
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   const [newProduct, setNewProduct] = useState({
     id: "",
     name_en: "",
@@ -136,8 +154,13 @@ export default function AdminPanel({ currentLang, onClose, isModal = false }: Ad
   });
 
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
-  // Check authentication status on mount
+  const triggerErrorMessage = (msg: string) => {
+    setActionError(msg);
+    setTimeout(() => setActionError(null), 7000);
+  };
+
   useEffect(() => {
     const checkInitialAuth = async () => {
       setCheckingAuth(true);
@@ -147,14 +170,18 @@ export default function AdminPanel({ currentLang, onClose, isModal = false }: Ad
           const isAuthorized = await dbService.adminUsers.checkEmail(currentUser.email);
           if (isAuthorized) {
             setIsAdminLoggedIn(true);
+            setAuthErrorMsg("");
           } else {
-            // Keep logged-in status false, display permission denied warning
+            setIsAdminLoggedIn(false);
             setAuthErrorMsg(
               isAr 
                 ? "تم رفض الدخول. صلاحية الإدارة مطلوبة." 
                 : "Access denied. Admin permission required."
             );
           }
+        } else {
+          setIsAdminLoggedIn(false);
+          setAuthErrorMsg(""); // Clear error message when not logged in at all!
         }
       } catch (err) {
         console.error("Initial admin auth verification failed:", err);
@@ -212,68 +239,14 @@ export default function AdminPanel({ currentLang, onClose, isModal = false }: Ad
     setTimeout(() => setActionSuccess(null), 3000);
   };
 
-  // 1. ADMIN SECURE LOGIN SUBMIT
-  const handleAdminLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setAuthErrorMsg("");
-
-    const email = authEmail.trim().toLowerCase();
-    if (!email) {
-      setAuthErrorMsg(isAr ? "الرجاء إدخال البريد الإلكتروني" : "Please enter your admin email");
-      return;
-    }
-
-    // A. EMERGENCY FALLBACK PASSCODE AUTH
-    if (authPasscode === "PGRUAE2026") {
-      const emergencyUser = {
-        id: "admin-emergency-root",
-        email: email,
-        name: "Root Emergency Admin",
-        phone: "+971 50 999 0000",
-        role: "admin",
-        created_at: new Date().toISOString()
-      };
-      mockDb.auth.setUser(emergencyUser);
-      setIsAdminLoggedIn(true);
-      triggerSuccessMessage("Root Emergency Bypassed Access Granted.");
-      await loadAdminData();
-      return;
-    }
-
-    // B. MAIN SUPABASE EMAIL CHECK AUTH
+  const handleAdminLogout = async () => {
     try {
-      const isAuthorized = await dbService.adminUsers.checkEmail(email);
-      if (isAuthorized) {
-        const authenticatedUser = {
-          id: `admin-${Date.now()}`,
-          email: email,
-          name: email.split("@")[0].toUpperCase(),
-          phone: "+971 4 445 8888",
-          role: "admin",
-          created_at: new Date().toISOString()
-        };
-        mockDb.auth.setUser(authenticatedUser);
-        setIsAdminLoggedIn(true);
-        triggerSuccessMessage("Admin Panel Authenticated Successfully.");
-        await loadAdminData();
-      } else {
-        setAuthErrorMsg(
-          isAr 
-            ? "تم رفض الدخول. صلاحية الإدارة مطلوبة." 
-            : "Access denied. Admin permission required."
-        );
-      }
+      await dbService.auth.logout();
     } catch (err) {
-      console.error("Auth process database checking error:", err);
-      setAuthErrorMsg(isAr ? "فشل الاتصال بخادم الأمان للتحقق" : "Failed to connect to security server for check.");
+      console.error("Admin logout error:", err);
     }
-  };
-
-  const handleAdminLogout = () => {
     mockDb.auth.setUser(null);
     setIsAdminLoggedIn(false);
-    setAuthEmail("");
-    setAuthPasscode("");
     setAuthErrorMsg("");
   };
 
@@ -352,6 +325,7 @@ export default function AdminPanel({ currentLang, onClose, isModal = false }: Ad
       await loadAdminData();
     } catch (err) {
       console.error(err);
+      triggerErrorMessage(err instanceof Error ? err.message : "Failed to add product to database");
     }
   };
 
@@ -376,6 +350,7 @@ export default function AdminPanel({ currentLang, onClose, isModal = false }: Ad
       await loadAdminData();
     } catch (err) {
       console.error(err);
+      triggerErrorMessage(err instanceof Error ? err.message : "Failed to save product edits");
     }
   };
 
@@ -433,6 +408,29 @@ export default function AdminPanel({ currentLang, onClose, isModal = false }: Ad
       await loadAdminData();
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleUpdateOrderPaymentLink = async (orderId: string, link: string) => {
+    try {
+      await dbService.orders.update(orderId, { payment_link: link });
+      triggerSuccessMessage(`Payment link saved for Order ${orderId}`);
+      await loadAdminData();
+    } catch (err) {
+      console.error(err);
+      triggerErrorMessage(err instanceof Error ? err.message : "Failed to update payment link");
+    }
+  };
+
+  const handleToggleOrderPaymentStatus = async (orderId: string, currentStatus: string) => {
+    try {
+      const newStatus = currentStatus === "Paid" ? "Pending" : "Paid";
+      await dbService.orders.update(orderId, { payment_status: newStatus });
+      triggerSuccessMessage(`Order ${orderId} payment marked as ${newStatus}`);
+      await loadAdminData();
+    } catch (err) {
+      console.error(err);
+      triggerErrorMessage(err instanceof Error ? err.message : "Failed to change payment status");
     }
   };
 
@@ -592,8 +590,25 @@ export default function AdminPanel({ currentLang, onClose, isModal = false }: Ad
     }
   };
 
+  // SCREEN O: RENDER LOADING SPINNER WHILE AUTHENTICATING
+  if (checkingAuth) {
+    return (
+      <div className="fixed inset-0 z-50 bg-[#070707] flex items-center justify-center p-4">
+        <div className="text-center space-y-4">
+          <RefreshCw className="animate-spin text-gold-base mx-auto" size={40} />
+          <p className="text-sm font-mono text-gray-400 uppercase tracking-widest animate-pulse">
+            {isAr ? "جاري التحقق من الصلاحيات الأمنية..." : "Verifying Secure Credentials..."}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   // SCREEN A: RENDER UNLOGGED AUTH FORM OR ACCESS DENIED
   if (!isAdminLoggedIn) {
+    const currentUser = mockDb.auth.getUser();
+    const isLoggedButNotAdmin = currentUser !== null;
+
     return (
       <div className="fixed inset-0 z-50 bg-[#070707] flex items-center justify-center p-4 overflow-y-auto" style={{ direction: isAr ? "rtl" : "ltr" }}>
         <div className="w-full max-w-md bg-[#0d0d0e] border border-white/[0.05] rounded-sm p-6 sm:p-8 space-y-6 shadow-2xl relative z-10">
@@ -611,66 +626,93 @@ export default function AdminPanel({ currentLang, onClose, isModal = false }: Ad
             </p>
           </div>
 
-          {/* Error Message */}
-          {authErrorMsg && (
-            <div className="p-4 bg-red-950/25 border border-red-900/40 rounded flex items-start gap-2.5 text-xs text-red-300 font-mono">
-              <ShieldAlert size={16} className="shrink-0 text-red-500 mt-0.5" />
-              <div>
-                <p className="font-bold">{isAr ? "تم رفض الدخول" : "ACCESS DENIED"}</p>
-                <p className="opacity-90">{authErrorMsg}</p>
+          {isLoggedButNotAdmin ? (
+            <div className="space-y-6">
+              <div className="p-4 bg-red-950/25 border border-red-900/40 rounded flex items-start gap-2.5 text-xs text-red-300 font-mono">
+                <ShieldAlert size={16} className="shrink-0 text-red-500 mt-0.5" />
+                <div>
+                  <p className="font-bold">{isAr ? "تم رفض الدخول" : "ACCESS DENIED"}</p>
+                  <p className="opacity-90">{authErrorMsg}</p>
+                </div>
+              </div>
+
+              <div className="p-3 bg-white/[0.01] border border-white/[0.03] rounded text-[11px] text-gray-400 leading-relaxed font-sans space-y-2">
+                <p>
+                  {isAr 
+                    ? `لقد قمت بتسجيل الدخول باستخدام البريد الإلكتروني: ${currentUser.email} ولكن هذا الحساب ليس لديه الصلاحيات الإدارية المطلوبة للوصول.`
+                    : `You are currently logged in with the email: ${currentUser.email} but this account does not possess the administrator permissions required for access.`}
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={async () => {
+                    await dbService.auth.logout();
+                    setIsAdminLoggedIn(false);
+                    setAuthErrorMsg("");
+                  }}
+                  className="flex-1 py-3 bg-red-900 hover:bg-red-800 text-white font-semibold rounded uppercase tracking-wider text-xs transition-all cursor-pointer font-sans flex items-center justify-center gap-1.5"
+                >
+                  <LogOut size={13} />
+                  {isAr ? "تسجيل الخروج والتبديل" : "Sign Out & Switch Account"}
+                </button>
               </div>
             </div>
+          ) : (
+            <>
+              {/* Error Message */}
+              {authErrorMsg && (
+                <div className="p-4 bg-red-950/25 border border-red-900/40 rounded flex items-start gap-2.5 text-xs text-red-300 font-mono">
+                  <ShieldAlert size={16} className="shrink-0 text-red-500 mt-0.5" />
+                  <div>
+                    <p className="font-bold">{isAr ? "تم رفض الدخول" : "ACCESS DENIED"}</p>
+                    <p className="opacity-90">{authErrorMsg}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Continue with Google */}
+              <div className="space-y-3">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      setCheckingAuth(true);
+                      const resultUser = await dbService.auth.signInWithGoogle();
+                      if (resultUser) {
+                        const isAuthorized = await dbService.adminUsers.checkEmail(resultUser.email);
+                        if (isAuthorized) {
+                          setIsAdminLoggedIn(true);
+                          setAuthErrorMsg("");
+                          await loadAdminData();
+                        } else {
+                          setAuthErrorMsg(
+                            isAr 
+                              ? "تم رفض الدخول. صلاحية الإدارة مطلوبة." 
+                              : "Access denied. Admin permission required."
+                          );
+                        }
+                      }
+                    } catch (err) {
+                      setAuthErrorMsg(isAr ? "فشل تسجيل الدخول باستخدام Google" : "Google Sign-In failed.");
+                    } finally {
+                      setCheckingAuth(false);
+                    }
+                  }}
+                  className="w-full py-3 bg-white text-black hover:bg-gray-100 font-semibold rounded uppercase tracking-wider text-xs transition-all cursor-pointer font-sans flex items-center justify-center gap-2 border border-white/10"
+                >
+                  <span>{isAr ? "المتابعة باستخدام Google" : "Continue with Google"}</span>
+                </button>
+
+              </div>
+            </>
           )}
-
-          {/* Login Fields */}
-          <form onSubmit={handleAdminLogin} className="space-y-4 font-mono text-xs">
-            <div className="space-y-1">
-              <label className="text-gray-400 block uppercase tracking-wider text-[10px]">
-                {isAr ? "البريد الإلكتروني للإدارة" : "Administrator Email Address"}
-              </label>
-              <div className="relative">
-                <input
-                  type="email"
-                  required
-                  placeholder="e.g., admin@pgruae.com"
-                  value={authEmail}
-                  onChange={(e) => setAuthEmail(e.target.value)}
-                  className="w-full bg-[#111] border border-white/10 rounded px-3 py-2.5 text-white outline-none focus:border-gold-base"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-gray-400 block uppercase tracking-wider text-[10px]">
-                {isAr ? "كلمة المرور / الرمز الاحتياطي" : "Access Token / Emergency Key"}
-              </label>
-              <input
-                type="password"
-                placeholder="••••••••••••"
-                value={authPasscode}
-                onChange={(e) => setAuthPasscode(e.target.value)}
-                className="w-full bg-[#111] border border-white/10 rounded px-3 py-2.5 text-white outline-none focus:border-gold-base"
-              />
-              <span className="text-[10px] text-gray-500 block leading-tight">
-                {isAr 
-                  ? "سيقوم النظام بالتحقق من وجود بريدك في جدول Supabase `admin_users`. في حالات الطوارئ فقط، استخدم الرمز الاحتياطي." 
-                  : "Verification queries Supabase `admin_users`. Emergency passcode bypasses DB check."}
-              </span>
-            </div>
-
-            <button
-              type="submit"
-              className="w-full py-3 bg-[#c5a85c] hover:bg-amber-600 text-black font-semibold rounded uppercase tracking-wider text-xs transition-all cursor-pointer font-sans"
-            >
-              {isAr ? "دخول الإدارة الآمن" : "Authenticate & Control"}
-            </button>
-          </form>
 
           {/* Home Link */}
           <div className="text-center pt-2">
             <button
               onClick={handlePanelClose}
-              className="text-xs text-gray-500 hover:text-white underline cursor-pointer"
+              className="text-xs text-gray-500 hover:text-white underline cursor-pointer font-mono"
             >
               {isAr ? "العودة إلى الموقع الرئيسي" : "Return to Sovereign Terminal"}
             </button>
@@ -779,6 +821,13 @@ export default function AdminPanel({ currentLang, onClose, isModal = false }: Ad
             <div className="fixed bottom-4 right-4 z-50 bg-[#111112] border border-gold-base/30 text-gold-light px-4 py-3 rounded shadow-xl font-mono text-xs flex items-center gap-2 animate-bounce">
               <CheckCircle size={14} className="text-gold-base" />
               <span>{actionSuccess}</span>
+            </div>
+          )}
+
+          {actionError && (
+            <div className="fixed bottom-4 right-4 z-50 bg-[#161111] border border-red-500/30 text-red-400 px-4 py-3 rounded shadow-xl font-mono text-xs flex items-center gap-2 animate-pulse">
+              <ShieldAlert size={14} className="text-red-500 animate-spin" />
+              <span>{actionError}</span>
             </div>
           )}
 
@@ -1003,15 +1052,63 @@ export default function AdminPanel({ currentLang, onClose, isModal = false }: Ad
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div className="space-y-1">
-                          <label className="text-gray-400 block uppercase text-[9px]">Image URL (Optional)</label>
-                          <input
-                            type="text"
-                            placeholder="https://images.unsplash.com/..."
-                            value={newProduct.image_url}
-                            onChange={(e) => setNewProduct({ ...newProduct, image_url: e.target.value })}
-                            className="w-full bg-black border border-white/10 rounded px-3 py-2 text-white outline-none"
-                          />
+                        <div className="space-y-1 sm:col-span-1">
+                          <label className="text-gray-400 block uppercase text-[9px]">Product Image (Upload / URL)</label>
+                          <div className="flex flex-col gap-2">
+                            {/* Drag & Drop Upload box */}
+                            <div 
+                              className="border border-dashed border-white/10 hover:border-gold-base/50 rounded p-3 text-center bg-black/40 cursor-pointer transition-colors relative flex flex-col items-center justify-center min-h-[90px]"
+                              onDragOver={(e) => e.preventDefault()}
+                              onDrop={(e) => {
+                                e.preventDefault();
+                                const file = e.dataTransfer.files?.[0];
+                                if (file) handleProductImageUpload(file, false);
+                              }}
+                              onClick={() => {
+                                const el = document.getElementById("new-prod-file-input");
+                                el?.click();
+                              }}
+                            >
+                              <input 
+                                id="new-prod-file-input"
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) handleProductImageUpload(file, false);
+                                }}
+                              />
+                              {uploadingImage ? (
+                                <div className="text-[10px] text-gold-base flex items-center gap-1.5 animate-pulse">
+                                  <RefreshCw size={12} className="animate-spin" />
+                                  <span>Uploading to Storage...</span>
+                                </div>
+                              ) : newProduct.image_url ? (
+                                <div className="flex items-center gap-2 w-full text-left">
+                                  <img 
+                                    src={newProduct.image_url} 
+                                    alt="Preview" 
+                                    className="w-10 h-10 object-cover rounded border border-white/10 shrink-0"
+                                  />
+                                  <span className="text-[9px] text-gray-400 truncate flex-1">Image Uploaded Successfully</span>
+                                </div>
+                              ) : (
+                                <div className="text-[9px] text-gray-500">
+                                  <span>Drag & Drop or <span className="text-gold-base font-semibold">Browse</span></span>
+                                  <span className="block text-[8px] text-gray-600 mt-0.5">Saves to product-images bucket</span>
+                                </div>
+                              )}
+                            </div>
+                            {/* Option to paste URL directly */}
+                            <input
+                              type="text"
+                              placeholder="Or paste image URL directly..."
+                              value={newProduct.image_url}
+                              onChange={(e) => setNewProduct({ ...newProduct, image_url: e.target.value })}
+                              className="w-full bg-black border border-white/10 rounded px-2.5 py-1.5 text-white outline-none text-[10px]"
+                            />
+                          </div>
                         </div>
                         <div className="space-y-1">
                           <label className="text-gray-400 block uppercase text-[9px]">Certificate Document URL</label>
@@ -1210,13 +1307,62 @@ export default function AdminPanel({ currentLang, onClose, isModal = false }: Ad
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-1">
-                          <label className="text-gray-400 block uppercase text-[9px]">Image URL</label>
-                          <input
-                            type="text"
-                            value={editingProduct.image_url || ""}
-                            onChange={(e) => setEditingProduct({ ...editingProduct, image_url: e.target.value })}
-                            className="w-full bg-black border border-white/10 rounded px-3 py-2 text-white outline-none"
-                          />
+                          <label className="text-gray-400 block uppercase text-[9px]">Product Image (Upload / URL)</label>
+                          <div className="flex flex-col gap-2">
+                            {/* Drag & Drop Upload box */}
+                            <div 
+                              className="border border-dashed border-white/10 hover:border-gold-base/50 rounded p-3 text-center bg-black/40 cursor-pointer transition-colors relative flex flex-col items-center justify-center min-h-[90px]"
+                              onDragOver={(e) => e.preventDefault()}
+                              onDrop={(e) => {
+                                e.preventDefault();
+                                const file = e.dataTransfer.files?.[0];
+                                if (file) handleProductImageUpload(file, true);
+                              }}
+                              onClick={() => {
+                                const el = document.getElementById("edit-prod-file-input");
+                                el?.click();
+                              }}
+                            >
+                              <input 
+                                id="edit-prod-file-input"
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) handleProductImageUpload(file, true);
+                                }}
+                              />
+                              {uploadingImage ? (
+                                <div className="text-[10px] text-gold-base flex items-center gap-1.5 animate-pulse">
+                                  <RefreshCw size={12} className="animate-spin" />
+                                  <span>Uploading to Storage...</span>
+                                </div>
+                              ) : editingProduct.image_url ? (
+                                <div className="flex items-center gap-2 w-full text-left">
+                                  <img 
+                                    src={editingProduct.image_url} 
+                                    alt="Preview" 
+                                    className="w-10 h-10 object-cover rounded border border-white/10 shrink-0"
+                                  />
+                                  <span className="text-[9px] text-gray-400 truncate flex-1">Image Uploaded Successfully</span>
+                                </div>
+                              ) : (
+                                <div className="text-[9px] text-gray-500">
+                                  <span>Drag & Drop or <span className="text-gold-base font-semibold">Browse</span></span>
+                                  <span className="block text-[8px] text-gray-600 mt-0.5">Saves to product-images bucket</span>
+                                </div>
+                              )}
+                            </div>
+                            {/* Option to paste URL directly */}
+                            <input
+                              type="text"
+                              placeholder="Or paste image URL directly..."
+                              value={editingProduct.image_url || ""}
+                              onChange={(e) => setEditingProduct({ ...editingProduct, image_url: e.target.value })}
+                              className="w-full bg-black border border-white/10 rounded px-2.5 py-1.5 text-white outline-none text-[10px]"
+                            />
+                          </div>
                         </div>
                         <div className="space-y-1">
                           <label className="text-gray-400 block uppercase text-[9px]">Certificate PDF Link</label>
@@ -1410,7 +1556,8 @@ export default function AdminPanel({ currentLang, onClose, isModal = false }: Ad
                             <th className="p-4">Client VIP</th>
                             <th className="p-4">Total Value</th>
                             <th className="p-4">Method / Destination</th>
-                            <th className="p-4">Status</th>
+                            <th className="p-4">Status & Payment</th>
+                            <th className="p-4">Manual Payment Link</th>
                             <th className="p-4">Logistics State Controls</th>
                           </tr>
                         </thead>
@@ -1424,8 +1571,38 @@ export default function AdminPanel({ currentLang, onClose, isModal = false }: Ad
                                 <p className="text-white">{o.shipping_method}</p>
                                 <p className="text-gray-500 text-[10px]">{o.shipping_address}</p>
                               </td>
+                              <td className="p-4 space-y-2">
+                                <div>
+                                  <span className="px-2 py-0.5 rounded bg-amber-950/20 text-gold-light uppercase text-[10px]">{o.status}</span>
+                                </div>
+                                <div>
+                                  <button
+                                    onClick={() => handleToggleOrderPaymentStatus(o.id, o.payment_status)}
+                                    className={`px-2 py-0.5 rounded text-[9px] font-semibold border transition-all cursor-pointer ${
+                                      o.payment_status === "Paid"
+                                        ? "bg-green-950/30 text-green-400 border-green-500/25"
+                                        : "bg-red-950/30 text-red-400 border-red-500/25 animate-pulse"
+                                    }`}
+                                  >
+                                    {o.payment_status === "Paid" ? "● PAID" : "● UNPAID (PENDING)"}
+                                  </button>
+                                </div>
+                              </td>
                               <td className="p-4">
-                                <span className="px-2 py-0.5 rounded bg-amber-950/20 text-gold-light uppercase">{o.status}</span>
+                                <div className="flex gap-1.5 items-center max-w-[240px]">
+                                  <input
+                                    type="text"
+                                    placeholder="Paste manual checkout/payment link..."
+                                    defaultValue={o.payment_link || ""}
+                                    onBlur={(e) => handleUpdateOrderPaymentLink(o.id, e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter") {
+                                        handleUpdateOrderPaymentLink(o.id, (e.target as HTMLInputElement).value);
+                                      }
+                                    }}
+                                    className="bg-black border border-white/10 rounded px-2 py-1 text-[11px] text-white outline-none flex-1 font-mono"
+                                  />
+                                </div>
                               </td>
                               <td className="p-4">
                                 <select

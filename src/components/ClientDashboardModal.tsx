@@ -36,6 +36,7 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
   const [forgotSent, setForgotSent] = useState(false);
   const [magicSent, setMagicSent] = useState(false);
   const [whatsappSent, setWhatsappSent] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   // Onboarding Form
   const [onboardName, setOnboardName] = useState("");
@@ -155,6 +156,22 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
       if (cert) setVerifiedCert(cert);
     });
   }, []);
+
+  const handleGoogleLogin = async () => {
+    try {
+      setGoogleLoading(true);
+      await dbService.auth.signInWithGoogle();
+      const activeUser = mockDb.auth.getUser();
+      if (activeUser) {
+        setUser(activeUser);
+        loadUserData(activeUser);
+      }
+    } catch (err) {
+      console.error("Google Sign-In failed:", err);
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
 
   // Handle Login submission
   const handleLogin = (e: React.FormEvent) => {
@@ -481,76 +498,94 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
 
                 {/* LOGIN FORM */}
                 {authMode === "login" && (
-                  <form onSubmit={handleLogin} className="space-y-4">
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-mono text-gray-400 block uppercase">{isAr ? "البريد الإلكتروني" : "Secure Client Email"}</label>
-                      <input
-                        type="email"
-                        value={loginEmail}
-                        onChange={(e) => setLoginEmail(e.target.value)}
-                        placeholder="e.g., trader.iraq@pgruae.com"
-                        className="w-full bg-[#111] border border-white/[0.08] focus:border-gold-base rounded py-2.5 px-3 text-xs text-white outline-none"
-                      />
+                  <div className="space-y-4 text-xs font-mono">
+                    {/* Google Sign-In */}
+                    <button
+                      type="button"
+                      disabled={googleLoading}
+                      onClick={handleGoogleLogin}
+                      className="w-full py-2.5 bg-white text-black hover:bg-gray-100 font-sans font-semibold text-xs uppercase tracking-wider rounded transition-all cursor-pointer flex items-center justify-center gap-2 border border-white/10 disabled:opacity-50"
+                    >
+                      <span>{googleLoading ? (isAr ? "جاري التحميل..." : "Authenticating...") : (isAr ? "المتابعة باستخدام Google" : "Continue with Google")}</span>
+                    </button>
+
+                    <div className="relative flex py-2 items-center">
+                      <div className="flex-grow border-t border-white/5"></div>
+                      <span className="flex-shrink mx-4 text-gray-500 text-[9px] uppercase font-mono">{isAr ? "أو البريد الإلكتروني" : "Or Client Account"}</span>
+                      <div className="flex-grow border-t border-white/5"></div>
                     </div>
 
-                    <div className="space-y-1">
-                      <div className="flex justify-between items-center">
-                        <label className="text-[10px] font-mono text-gray-400 block uppercase">{isAr ? "كلمة المرور" : "Private Key / Password"}</label>
-                        <button 
-                          type="button" 
-                          onClick={() => { setForgotSent(true); setTimeout(() => setForgotSent(false), 5000); }} 
-                          className="text-[10px] text-gold-base hover:underline"
+                    <form onSubmit={handleLogin} className="space-y-4 font-mono text-xs">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-mono text-gray-400 block uppercase">{isAr ? "البريد الإلكتروني" : "Secure Client Email"}</label>
+                        <input
+                          type="email"
+                          value={loginEmail}
+                          onChange={(e) => setLoginEmail(e.target.value)}
+                          placeholder="e.g., trader.iraq@pgruae.com"
+                          className="w-full bg-[#111] border border-white/[0.08] focus:border-gold-base rounded py-2.5 px-3 text-xs text-white outline-none"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <div className="flex justify-between items-center">
+                          <label className="text-[10px] font-mono text-gray-400 block uppercase">{isAr ? "كلمة المرور" : "Private Key / Password"}</label>
+                          <button 
+                            type="button" 
+                            onClick={() => { setForgotSent(true); setTimeout(() => setForgotSent(false), 5000); }} 
+                            className="text-[10px] text-gold-base hover:underline"
+                          >
+                            {isAr ? "نسيت كلمة المرور؟" : "Forgot Private Key?"}
+                          </button>
+                        </div>
+                        <input
+                          type="password"
+                          value={loginPassword}
+                          onChange={(e) => setLoginPassword(e.target.value)}
+                          placeholder="••••••••••••"
+                          className="w-full bg-[#111] border border-white/[0.08] focus:border-gold-base rounded py-2.5 px-3 text-xs text-white outline-none"
+                        />
+                      </div>
+
+                      {/* Quick Demo Assist */}
+                      <div className="p-3 bg-white/[0.01] border border-white/[0.03] rounded text-[11px] text-gray-500 space-y-1 font-sans">
+                        <div className="text-white font-medium">{isAr ? "الدخول التجريبي السريع المعتمد:" : "Vouched VIP Demo Account:"}</div>
+                        <div>{isAr ? "اضغط على زر الدخول أدناه للدخول الفوري كحساب مسجل مسبقاً (الشيخ منصور - دبي) للاطلاع الفوري على المحاكاة والتحقق." : "Leave fields blank or input any text to automatically log in and experience the full investor dashboard."}</div>
+                      </div>
+
+                      {/* Other auth options */}
+                      <div className="grid grid-cols-2 gap-2 pt-2 text-[10px] text-gray-400">
+                        <button
+                          type="button"
+                          onClick={() => { setMagicSent(true); setTimeout(() => setMagicSent(false), 5000); }}
+                          className="p-2 border border-white/[0.04] rounded hover:bg-white/[0.02] text-center"
                         >
-                          {isAr ? "نسيت كلمة المرور؟" : "Forgot Private Key?"}
+                          {magicSent ? (isAr ? "تم إرسال الرابط" : "Magic Link Dispatched") : (isAr ? "طلب رابط سحري للبريد" : "Request Magic Link")}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setWhatsappSent(true); setTimeout(() => setWhatsappSent(false), 5000); }}
+                          className="p-2 border border-white/[0.04] rounded hover:bg-white/[0.02] text-center"
+                        >
+                          {whatsappSent ? (isAr ? "تم إرسال الطلب" : "WhatsApp Confirmed") : (isAr ? "تسجيل عبر واتساب" : "WhatsApp OTP Entry")}
                         </button>
                       </div>
-                      <input
-                        type="password"
-                        value={loginPassword}
-                        onChange={(e) => setLoginPassword(e.target.value)}
-                        placeholder="••••••••••••"
-                        className="w-full bg-[#111] border border-white/[0.08] focus:border-gold-base rounded py-2.5 px-3 text-xs text-white outline-none"
-                      />
-                    </div>
 
-                    {/* Quick Demo Assist */}
-                    <div className="p-3 bg-white/[0.01] border border-white/[0.03] rounded text-[11px] text-gray-500 space-y-1">
-                      <div className="text-white font-medium">{isAr ? "الدخول التجريبي السريع المعتمد:" : "Vouched VIP Demo Account:"}</div>
-                      <div>{isAr ? "اضغط على زر الدخول أدناه للدخول الفوري كحساب مسجل مسبقاً (الشيخ منصور - دبي) للاطلاع الفوري على المحاكاة والتحقق." : "Leave fields blank or input any text to automatically log in and experience the full investor dashboard."}</div>
-                    </div>
+                      {forgotSent && (
+                        <div className="p-2.5 bg-amber-950/20 border border-amber-900/40 text-amber-500 text-[10px] rounded font-sans">
+                          {isAr ? "تم إرسال رابط استعادة الرمز السري لبريدك المسجل." : "Secure reset token dispatched to certified mail."}
+                        </div>
+                      )}
 
-                    {/* Other auth options */}
-                    <div className="grid grid-cols-2 gap-2 pt-2 text-[10px] text-gray-400">
                       <button
-                        type="button"
-                        onClick={() => { setMagicSent(true); setTimeout(() => setMagicSent(false), 5000); }}
-                        className="p-2 border border-white/[0.04] rounded hover:bg-white/[0.02] text-center"
+                        type="submit"
+                        className="w-full py-3 bg-gold-base hover:bg-amber-600 text-black font-sans font-semibold text-xs uppercase tracking-wider rounded transition-colors cursor-pointer flex items-center justify-center gap-1"
                       >
-                        {magicSent ? (isAr ? "تم إرسال الرابط" : "Magic Link Dispatched") : (isAr ? "طلب رابط سحري للبريد" : "Request Magic Link")}
+                        <Lock size={12} />
+                        {isAr ? "دخول آمن للبوابة" : "Authorize Portal Session"}
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => { setWhatsappSent(true); setTimeout(() => setWhatsappSent(false), 5000); }}
-                        className="p-2 border border-white/[0.04] rounded hover:bg-white/[0.02] text-center"
-                      >
-                        {whatsappSent ? (isAr ? "تم إرسال الطلب" : "WhatsApp Confirmed") : (isAr ? "تسجيل عبر واتساب" : "WhatsApp OTP Entry")}
-                      </button>
-                    </div>
-
-                    {forgotSent && (
-                      <div className="p-2.5 bg-amber-950/20 border border-amber-900/40 text-amber-500 text-[10px] rounded">
-                        {isAr ? "تم إرسال رابط استعادة الرمز السري لبريدك المسجل." : "Secure reset token dispatched to certified mail."}
-                      </div>
-                    )}
-
-                    <button
-                      type="submit"
-                      className="w-full py-3 bg-gold-base hover:bg-amber-600 text-black font-sans font-semibold text-xs uppercase tracking-wider rounded transition-colors cursor-pointer flex items-center justify-center gap-1"
-                    >
-                      <Lock size={12} />
-                      {isAr ? "دخول آمن للبوابة" : "Authorize Portal Session"}
-                    </button>
-                  </form>
+                    </form>
+                  </div>
                 )}
 
                 {/* ONBOARDING FORM */}
@@ -1197,6 +1232,47 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
                                     );
                                   })}
                                 </div>
+                              </div>
+
+                              {/* Payment Section */}
+                              <div className="pt-3 border-t border-white/[0.04] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <div className="space-y-1">
+                                  <span className="text-gray-400 block text-[9px] uppercase tracking-wider">{isAr ? "حالة الدفع ورابط السداد" : "PAYMENT STATUS & CHECKOUT"}</span>
+                                  <div className="flex items-center gap-2">
+                                    <span className={`px-2 py-0.5 text-[9px] font-bold rounded ${
+                                      order.payment_status === "Paid"
+                                        ? "bg-green-950/40 text-green-400 border border-green-500/10"
+                                        : "bg-red-950/40 text-red-400 border border-red-500/10"
+                                    }`}>
+                                      {order.payment_status === "Paid" 
+                                        ? (isAr ? "● تم الدفع (مؤكد)" : "● PAID & SECURED") 
+                                        : (isAr ? "● بانتظار الدفع" : "● PENDING PAYMENT")}
+                                    </span>
+                                    <span className="text-[10px] text-gray-500">
+                                      {isAr ? "تأكيد السعر المباشر قبل السداد" : "Price confirmed before payment checkout"}
+                                    </span>
+                                  </div>
+                                </div>
+                                
+                                {order.payment_status !== "Paid" && (
+                                  <div>
+                                    {order.payment_link ? (
+                                      <a
+                                        href={order.payment_link}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded bg-[#c5a85c] hover:bg-amber-600 text-black font-semibold uppercase tracking-wider text-[10px] transition-all cursor-pointer font-sans"
+                                      >
+                                        <span>{isAr ? "انقر هنا للسداد الآمن" : "Proceed to Secure Payment"}</span>
+                                        <ArrowRight size={12} />
+                                      </a>
+                                    ) : (
+                                      <span className="text-[10px] text-gray-400 italic block py-2">
+                                        {isAr ? "بانتظار تعيين بوابة الدفع من الإدارة" : "Direct transfer gateway awaiting activation"}
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
                               </div>
                             </div>
                           ))

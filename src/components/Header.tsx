@@ -115,9 +115,11 @@ export default function Header({
           </div>
         </div>
         <div className="hidden md:flex items-center gap-4">
-          <span className="text-gray-500 text-[10px]">DMCC Registered No: {settings?.dmcc_reg_no || "890317"}</span>
+          <span className="text-gray-500 text-[10px]">
+            {currentLang === "ar" ? "خدمات المعادن الثمينة الاحترافية" : "Professional Precious Metals Services"}
+          </span>
           <span className="text-gold-base hover:underline cursor-pointer flex items-center gap-1" onClick={onOpenQuote}>
-            {currentLang === "ar" ? "طلب تسعير مباشر" : "Bespoke Institutional Inquiry"} <ArrowRight size={10} />
+            {currentLang === "ar" ? "طلب تسعير" : "Request Quote"} <ArrowRight size={10} />
           </span>
         </div>
       </div>
@@ -131,7 +133,7 @@ export default function Header({
               PGR <span className="text-gold-base">UAE</span>
             </span>
             <span className="text-[8px] md:text-[9px] uppercase tracking-[0.45em] text-gray-400 mt-1 leading-none">
-              Precious Metals Trading
+              Precious Metals Services
             </span>
           </div>
 
@@ -170,7 +172,7 @@ export default function Header({
             </button>
 
             {/* Admin Command Desk */}
-            {isAdmin ? (
+            {isAdmin && (
               <button
                 onClick={onOpenAdminPortal}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-amber-950/25 border border-[#c5a85c]/40 hover:border-[#c5a85c] text-[11px] text-[#c5a85c] font-semibold transition-colors cursor-pointer uppercase font-mono"
@@ -179,15 +181,6 @@ export default function Header({
               >
                 <Terminal size={12} className="text-[#c5a85c]" />
                 <span>{currentLang === "ar" ? "لوحة الإدارة" : "Admin Panel"}</span>
-              </button>
-            ) : (
-              <button
-                onClick={onOpenAdminPortal}
-                className="hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded bg-white/[0.01] border border-white/[0.03] hover:border-[#c5a85c]/20 text-[11px] text-gray-400 transition-colors cursor-pointer uppercase font-mono"
-                title="Admin Terminal"
-              >
-                <Terminal size={12} className="text-[#c5a85c]/60" />
-                <span>{currentLang === "ar" ? "التحكم" : "Admin"}</span>
               </button>
             )}
 
@@ -266,7 +259,7 @@ export default function Header({
                 <ShieldCheck size={13} className="text-[#c5a85c]" />
                 <span>{currentLang === "ar" ? "ديوان العملاء" : "Client Desk"}</span>
               </button>
-              {isAdmin ? (
+              {isAdmin && (
                 <button
                   onClick={() => {
                     onOpenAdminPortal();
@@ -276,17 +269,6 @@ export default function Header({
                 >
                   <Terminal size={12} className="text-[#c5a85c]" />
                   <span>{currentLang === "ar" ? "لوحة الإدارة" : "Admin Panel"}</span>
-                </button>
-              ) : (
-                <button
-                  onClick={() => {
-                    onOpenAdminPortal();
-                    setMobileMenuOpen(false);
-                  }}
-                  className="py-2.5 bg-white/[0.02] border border-white/[0.05] text-gray-400 rounded flex items-center justify-center gap-1.5"
-                >
-                  <Terminal size={12} className="text-[#c5a85c]/60" />
-                  <span>{currentLang === "ar" ? "التحكم" : "Admin"}</span>
                 </button>
               )}
             </div>

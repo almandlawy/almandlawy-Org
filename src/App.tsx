@@ -18,10 +18,10 @@ import AdminPortalModal from "./components/AdminPortalModal";
 import LegalOverlayModal from "./components/LegalOverlayModal";
 import IraqTrustBadge from "./components/IraqTrustBadge";
 import Footer from "./components/Footer";
-import { DebugPanel } from "./components/DebugPanel";
 import { LiveMarketRates, Product } from "./types";
 import { WHY_US_ITEMS, BRANDS } from "./data";
 import { Shield, Sparkles, Building, Truck, Landmark, Award } from "lucide-react";
+import { isLive, supabase, mockDb } from "./lib/supabase";
 
 export default function App() {
   const [currentLang, setCurrentLang] = useState<"en" | "ar">("ar");
@@ -39,6 +39,79 @@ export default function App() {
   const [isClientDashboardOpen, setIsClientDashboardOpen] = useState(false);
   const [isAdminPortalOpen, setIsAdminPortalOpen] = useState(false);
   const [activeLegalDoc, setActiveLegalDoc] = useState<string | null>(null);
+
+  // Listen for Supabase Authentication changes
+  useEffect(() => {
+    if (isLive && supabase) {
+      // 1. Get initial session
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session && session.user) {
+          handleUserLogin(session.user);
+        }
+      });
+
+      // 2. Listen for auth changes
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+        if (session && session.user) {
+          await handleUserLogin(session.user);
+        } else if (event === "SIGNED_OUT") {
+          mockDb.auth.logout();
+        }
+      });
+
+      return () => subscription.unsubscribe();
+    }
+  }, []);
+
+  const handleUserLogin = async (supabaseUser: any) => {
+    const email = supabaseUser.email;
+    const fullName = supabaseUser.user_metadata?.full_name || supabaseUser.email?.split("@")[0] || "Accredited Investor";
+    const avatarUrl = supabaseUser.user_metadata?.avatar_url || "";
+    
+    // Store user session in mockDb.auth so standard pages load it instantly
+    const mappedUser = {
+      id: supabaseUser.id,
+      email: email,
+      name: fullName,
+      role: email === "almandlawy112@gmail.com" ? "admin" : "customer",
+      created_at: supabaseUser.created_at || new Date().toISOString()
+    };
+    mockDb.auth.setUser(mappedUser);
+
+    // Save/update user profile in supabase 'customers' table as requested!
+    try {
+      const { data: existingCustomer } = await supabase!
+        .from("customers")
+        .select("*")
+        .eq("email", email)
+        .single();
+
+      const customerProfile = {
+        id: supabaseUser.id,
+        full_name: fullName,
+        email: email,
+        avatar_url: avatarUrl,
+        provider: supabaseUser.app_metadata?.provider || "google",
+        last_login: new Date().toISOString()
+      };
+
+      if (existingCustomer) {
+        await supabase!
+          .from("customers")
+          .update(customerProfile)
+          .eq("id", supabaseUser.id);
+      } else {
+        await supabase!
+          .from("customers")
+          .insert({
+            ...customerProfile,
+            created_at: new Date().toISOString()
+          });
+      }
+    } catch (err) {
+      console.error("Failed to upsert customer profile to Supabase:", err);
+    }
+  };
 
   // Check for direct admin route on mount
   useEffect(() => {
@@ -362,9 +435,6 @@ export default function App() {
           onClose={() => setIsAIChatOpen(false)}
         />
       )}
-
-      {/* Luxury Database Connection Debug Panel */}
-      <DebugPanel currentLang={currentLang} />
 
     </div>
   );

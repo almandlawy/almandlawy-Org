@@ -194,9 +194,9 @@ Phone: ${phone}
                 >
                   <img
                     src={
-                      isGold
+                      activeProduct.image_url || (isGold
                         ? "/src/assets/images/gold_bar_luxury_1782445126673.jpg"
-                        : "/src/assets/images/silver_bar_luxury_1782445139922.jpg"
+                        : "/src/assets/images/silver_bar_luxury_1782445139922.jpg")
                     }
                     alt={activeProduct.name_en}
                     referrerPolicy="no-referrer"
@@ -430,9 +430,9 @@ Phone: ${phone}
                           <div className="h-10 w-10 rounded bg-black/40 border border-white/[0.03] overflow-hidden shrink-0 flex items-center justify-center">
                             <img
                               src={
-                                rel.technical_specs.metal === "gold"
+                                rel.image_url || (rel.technical_specs.metal === "gold"
                                   ? "/src/assets/images/gold_bar_luxury_1782445126673.jpg"
-                                  : "/src/assets/images/silver_bar_luxury_1782445139922.jpg"
+                                  : "/src/assets/images/silver_bar_luxury_1782445139922.jpg")
                               }
                               alt={rel.name_en}
                               className="h-full w-full object-cover"

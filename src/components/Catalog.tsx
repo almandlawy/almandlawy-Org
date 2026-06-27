@@ -106,8 +106,9 @@ export default function Catalog({
     const nameMatch = product.name_en.toLowerCase().includes(query) || product.name_ar.includes(query);
     const manufacturerMatch = product.manufacturer.toLowerCase().includes(query);
     const countryMatch = product.country_en.toLowerCase().includes(query);
+    const isPublished = product.published !== false;
 
-    return matchesCategory && (nameMatch || manufacturerMatch || countryMatch);
+    return isPublished && matchesCategory && (nameMatch || manufacturerMatch || countryMatch);
   });
 
   return (
@@ -186,9 +187,9 @@ export default function Catalog({
                   {/* Real generated high-resolution assets linked dynamically based on category */}
                   <img
                     src={
-                      isGold
+                      product.image_url || (isGold
                         ? "/src/assets/images/gold_bar_luxury_1782445126673.jpg"
-                        : "/src/assets/images/silver_bar_luxury_1782445139922.jpg"
+                        : "/src/assets/images/silver_bar_luxury_1782445139922.jpg")
                     }
                     alt={product.name_en}
                     referrerPolicy="no-referrer"
