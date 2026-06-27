@@ -9,7 +9,7 @@ import {
   Sparkles, QrCode, LogOut, DollarSign, Calculator, FileText, 
   Upload, UserCheck, MapPin, Lock, PlusCircle, ArrowRight, TrendingUp 
 } from "lucide-react";
-import { dbService, mockDb } from "../lib/supabase";
+import { dbService, mockDb, isProduction, isLive, supabase } from "../lib/supabase";
 import IraqTrustBadge from "./IraqTrustBadge";
 import { LiveMarketRates } from "../types";
 
@@ -174,8 +174,47 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
   };
 
   // Handle Login submission
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (isProduction || isLive) {
+      if (!loginEmail) {
+        alert(isAr ? "الرجاء إدخال البريد الإلكتروني" : "Please enter your email");
+        return;
+      }
+      if (!loginPassword) {
+        alert(isAr ? "الرجاء إدخال كلمة المرور" : "Please enter your password");
+        return;
+      }
+      try {
+        setGoogleLoading(true);
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: loginEmail.trim().toLowerCase(),
+          password: loginPassword,
+        });
+        if (error) {
+          alert(isAr ? `خطأ في تسجيل الدخول: ${error.message}` : `Authentication error: ${error.message}`);
+          return;
+        }
+        if (data && data.user) {
+          const u = {
+            id: data.user.id,
+            email: data.user.email || "",
+            name: data.user.user_metadata?.full_name || data.user.email?.split("@")[0] || "Accredited Investor",
+            role: data.user.email === "almandlawy112@gmail.com" ? "admin" : "customer",
+            created_at: data.user.created_at || new Date().toISOString()
+          };
+          setUser(u);
+          loadUserData(u);
+        }
+      } catch (err: any) {
+        alert(err.message || err);
+      } finally {
+        setGoogleLoading(false);
+      }
+      return;
+    }
+
     if (!loginEmail && !loginPhone) return;
 
     // Simulated login: logs in user as Sheikh Mansoor (seed) or creates an account
@@ -195,9 +234,67 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
   };
 
   // Handle Onboarding registration
-  const handleOnboard = (e: React.FormEvent) => {
+  const handleOnboard = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!onboardEmail || !onboardName) return;
+
+    if (isProduction || isLive) {
+      try {
+        setGoogleLoading(true);
+        // Supabase signUp requires a password. We generate a one-time random password or let them use a default/reset link.
+        // Let's use a secure randomized password and let the user know.
+        const generatedPassword = "PgrUserPass!" + Math.random().toString(36).substring(2, 10);
+        const { data, error } = await supabase.auth.signUp({
+          email: onboardEmail.trim().toLowerCase(),
+          password: generatedPassword,
+          options: {
+            data: {
+              full_name: onboardName,
+              phone: onboardPhone,
+              company: onboardCompany
+            }
+          }
+        });
+
+        if (error) {
+          alert(isAr ? `خطأ في التسجيل: ${error.message}` : `Registration error: ${error.message}`);
+          return;
+        }
+
+        if (data && data.user) {
+          const u = {
+            id: data.user.id,
+            email: data.user.email || "",
+            name: onboardName,
+            role: "customer",
+            created_at: data.user.created_at || new Date().toISOString()
+          };
+          setUser(u);
+
+          // Save default empty KYC profile
+          await dbService.kyc.save(data.user.id, {
+            id: data.user.id,
+            full_name: onboardName,
+            phone: onboardPhone,
+            email: onboardEmail.trim().toLowerCase(),
+            status: "Not submitted",
+            country: onboardType === "iraqi" ? "Iraq" : "UAE",
+            city: onboardType === "iraqi" ? "Baghdad" : "Dubai"
+          });
+
+          loadUserData(u);
+          setOnboardSuccessMsg(isAr 
+            ? "تم إنشاء الحساب بنجاح! يرجى مراجعة بريدك لتأكيد التسجيل." 
+            : "Account created successfully! Please confirm your email registration."
+          );
+        }
+      } catch (err: any) {
+        alert(err.message || err);
+      } finally {
+        setGoogleLoading(false);
+      }
+      return;
+    }
 
     const dummyUser = {
       id: `cust-onb-${Math.floor(Math.random() * 90000 + 10000)}`,
@@ -442,7 +539,7 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
               <div className="md:col-span-5 space-y-6 flex flex-col justify-center border-b md:border-b-0 md:border-r border-white/[0.05] pb-6 md:pb-0 md:pr-8">
                 <div>
                   <span className="text-[10px] font-mono text-gold-base uppercase tracking-widest block mb-1">
-                    {isAr ? "بوابة المستثمر الموثقة" : "ACCREDITED INVESTOR GATEWAY"}
+                    {isAr ? "لوحة تحكم العميل" : "CUSTOMER DASHBOARD"}
                   </span>
                   <h2 className="text-2xl font-serif text-white tracking-wide">
                     {isAr ? "الهوية الرقمية وبوابة التداول" : "Digital ID & Sourcing Portal"}
@@ -548,10 +645,12 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
                       </div>
 
                       {/* Quick Demo Assist */}
-                      <div className="p-3 bg-white/[0.01] border border-white/[0.03] rounded text-[11px] text-gray-500 space-y-1 font-sans">
-                        <div className="text-white font-medium">{isAr ? "الدخول التجريبي السريع المعتمد:" : "Vouched Demo Account:"}</div>
-                        <div>{isAr ? "اضغط على زر الدخول أدناه للدخول الفوري كحساب مسجل مسبقاً (الشيخ منصور - دبي) للاطلاع الفوري على المحاكاة والتحقق." : "Leave fields blank or input any text to automatically log in and experience the full investor dashboard."}</div>
-                      </div>
+                      {!isProduction && !isLive && (
+                        <div className="p-3 bg-white/[0.01] border border-white/[0.03] rounded text-[11px] text-gray-500 space-y-1 font-sans">
+                          <div className="text-white font-medium">{isAr ? "الدخول التجريبي السريع المعتمد:" : "Vouched Demo Account:"}</div>
+                          <div>{isAr ? "اضغط على زر الدخول أدناه للدخول الفوري كحساب مسجل مسبقاً (الشيخ منصور - دبي) للاطلاع الفوري على المحاكاة والتحقق." : "Leave fields blank or input any text to automatically log in and experience the full investor dashboard."}</div>
+                        </div>
+                      )}
 
                       {/* Other auth options */}
                       <div className="grid grid-cols-2 gap-2 pt-2 text-[10px] text-gray-400">
@@ -762,10 +861,10 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
                 {/* Side Navigation Menu */}
                 <div className="md:col-span-3 bg-[#080809] border-r border-white/[0.04] p-4 space-y-1">
                   {[
-                    { id: "performance", icon: <TrendingUp size={14} />, label_en: "Bullion Ownership", label_ar: "امتلاك السبائك وأدائها" },
-                    { id: "verification", icon: <ShieldCheck size={14} />, label_en: "Digital Verification (KYC)", label_ar: "التحقق من الهوية" },
-                    { id: "orders", icon: <Truck size={14} />, label_en: "Quotes & Secure Delivery", label_ar: "الطلبات والتوصيل للعراق" },
-                    { id: "buyback", icon: <DollarSign size={14} />, label_en: "Request Buyback Quote", label_ar: "طلب إعادة الشراء" },
+                    { id: "performance", icon: <TrendingUp size={14} />, label_en: "My Products", label_ar: "منتجاتي / سبائكي" },
+                    { id: "verification", icon: <ShieldCheck size={14} />, label_en: "Customer Verification (KYC)", label_ar: "التحقق من الهوية" },
+                    { id: "orders", icon: <Truck size={14} />, label_en: "My Orders & My Quotes", label_ar: "طلباتي وعروض الأسعار" },
+                    { id: "buyback", icon: <DollarSign size={14} />, label_en: "Request Buyback", label_ar: "طلب إعادة الشراء" },
                     { id: "assay", icon: <QrCode size={14} />, label_en: "Assay Certificate Vault", label_ar: "شهادات الفحص والأصالة" }
                   ].map((tab) => (
                     <button
@@ -796,37 +895,48 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
                       <div className="flex justify-between items-center border-b border-white/[0.04] pb-2">
                         <div>
                           <h4 className="text-sm font-serif font-semibold text-white uppercase tracking-wider">
-                            {isAr ? "المحفظة الاستثمارية وامتلاك السبائك" : "Bullion Ownership Tracker"}
+                            {isAr ? "منتجاتي وسبائكي المقتناة" : "My Products & Bullion Tracker"}
                           </h4>
                           <p className="text-[10px] text-gray-500 font-mono">
-                            {isAr ? "القيم السوقية التقديرية الحالية بناء على الأسعار الفورية" : "Estimated physical holding values based on real-time spot prices"}
+                            {isAr ? "القيم السوقية الحقيقية لسبائكك المقتناة بناء على الأسعار الفورية الفعالة" : "True market valuation of your verified physical gold & silver bullion"}
                           </p>
                         </div>
                       </div>
 
                       {/* STATS TILES */}
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 gap-4">
                         <div className="bg-[#111] border border-white/[0.03] p-4 rounded space-y-1">
-                          <span className="text-[10px] font-mono text-gray-400 uppercase tracking-widest block">{isAr ? "إجمالي القيمة السوقية" : "TOTAL VALUATION"}</span>
+                          <span className="text-[10px] font-mono text-gray-400 uppercase tracking-widest block">{isAr ? "إجمالي قيمة المنتجات المعتمدة" : "TOTAL VALUATION (MY PRODUCTS)"}</span>
                           <span className="text-xl font-sans font-bold text-white block">
-                            {portfolio.length > 0 
-                              ? convertAmount(portfolio.reduce((sum, item) => sum + item.current_market_value_usd, 0)) 
-                              : convertAmount(21005.00)}
-                          </span>
-                        </div>
-                        <div className="bg-[#111] border border-white/[0.03] p-4 rounded space-y-1">
-                          <span className="text-[10px] font-mono text-gray-400 uppercase tracking-widest block">{isAr ? "معدل الأداء اليومي" : "DAILY CHANGE"}</span>
-                          <span className="text-xl font-sans font-bold text-emerald-400 block">
-                            +0.23% (+$48.50)
-                          </span>
-                        </div>
-                        <div className="bg-[#111] border border-white/[0.03] p-4 rounded space-y-1">
-                          <span className="text-[10px] font-mono text-gray-400 uppercase tracking-widest block">{isAr ? "الأرباح/الخسائر غير المحققة" : "UNREALIZED VALUE DELTA"}</span>
-                          <span className="text-xl font-sans font-bold text-[#c5a85c] block">
-                            +$305.00 (+1.45%)
+                            {convertAmount(portfolio.reduce((sum, item) => sum + (item.current_market_value_usd || 0), 0))}
                           </span>
                         </div>
                       </div>
+
+                      {/* Empty State Banner */}
+                      {portfolio.length === 0 && orderList.length === 0 && (
+                        <div className="p-6 bg-amber-500/5 border border-gold-base/10 rounded flex flex-col md:flex-row items-center justify-between gap-4">
+                          <div className="space-y-1 text-center md:text-left">
+                            <h5 className="text-sm font-sans font-semibold text-gold-base">
+                              {isAr ? "لا توجد لديك منتجات مؤكدة حالياً." : "You do not have any confirmed products yet."}
+                            </h5>
+                            <p className="text-xs text-gray-400 font-sans">
+                              {isAr ? "اطلب عرض سعر للبدء في تملك سبائك الذهب والفضة والاستفادة من خدمات الخزانة الآمنة." : "Request a quote to start acquiring gold & silver bullion and utilizing our premium vaulting."}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              onClose();
+                              const el = document.getElementById("quote-trigger");
+                              if (el) el.click();
+                            }}
+                            className="px-4 py-2 bg-gold-base hover:bg-amber-600 text-black rounded font-sans font-semibold text-xs tracking-wider uppercase transition-colors shrink-0 cursor-pointer"
+                          >
+                            {isAr ? "اطلب عرض سعر للبدء" : "Request a quote to start"}
+                          </button>
+                        </div>
+                      )}
 
                       {/* PHYSICAL BULLION TABLE */}
                       <div className="bg-[#111] border border-white/[0.03] rounded overflow-hidden">

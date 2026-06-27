@@ -42,10 +42,12 @@ if (isUrlConfigured && isKeyConfigured) {
   }
 }
 
-export const isLive = isUrlConfigured && isKeyConfigured && initializedSuccessfully;
+export const isProduction = typeof window !== "undefined" && window.location.hostname.includes("pgruae.com");
+
+export const isLive = isProduction ? true : (isUrlConfigured && isKeyConfigured && initializedSuccessfully);
 
 // 2. Initialize Supabase client
-export const supabase = isLive ? supabaseClient : null;
+export const supabase = isLive ? (supabaseClient || (isUrlConfigured && isKeyConfigured ? createClient(supabaseUrl, supabaseAnonKey) : null)) : null;
 
 export const configStatus = {
   urlConfigured: isUrlConfigured ? "YES" : "NO",
@@ -208,20 +210,24 @@ const seedLocalStorage = () => {
   ]);
 
   // 10. Current active user profile
-  getOrSet("pgr_user", {
-    id: "cust-verified-1",
-    email: "verified.investor@dubaimarina.ae",
-    name: "Sheikh Mansoor Al-Maktoum",
-    phone: "+971 50 999 8888",
-    company: "Elite Asset Holdings Ltd",
-    addresses: [
-      { id: "add-1", label: "Primary Vault Marina", address: "Penthouse 45, Marina Heights, Dubai Marina, UAE" },
-      { id: "add-2", label: "DMCC Storage Center", address: "Vault Block B, Almas Tower, DMCC Precinct, Dubai" }
-    ],
-    wishlist: ["gb-1kg", "gc-britannia"],
-    role: "verified_customer", // or "admin"
-    created_at: "2026-01-01T00:00:00Z"
-  });
+  if (!isProduction) {
+    getOrSet("pgr_user", {
+      id: "cust-verified-1",
+      email: "verified.investor@dubaimarina.ae",
+      name: "Sheikh Mansoor Al-Maktoum",
+      phone: "+971 50 999 8888",
+      company: "Elite Asset Holdings Ltd",
+      addresses: [
+        { id: "add-1", label: "Primary Vault Marina", address: "Penthouse 45, Marina Heights, Dubai Marina, UAE" },
+        { id: "add-2", label: "DMCC Storage Center", address: "Vault Block B, Almas Tower, DMCC Precinct, Dubai" }
+      ],
+      wishlist: ["gb-1kg", "gc-britannia"],
+      role: "verified_customer", // or "admin"
+      created_at: "2026-01-01T00:00:00Z"
+    });
+  } else {
+    localStorage.removeItem("pgr_user");
+  }
 
   // 11. Global Admin Settings (fees, markups)
   getOrSet("pgr_settings", {
@@ -361,20 +367,50 @@ if (typeof window !== "undefined") {
 export const mockDb = {
   get: (key: string) => {
     if (typeof window === "undefined") return [];
+    if (isProduction) {
+      const privateKeys = [
+        "pgr_user",
+        "pgr_orders",
+        "pgr_kyc_profiles",
+        "pgr_iraq_delivery_requests",
+        "pgr_investment_accounts",
+        "pgr_buyback_requests",
+        "pgr_quote_requests",
+        "pgr_notifications"
+      ];
+      if (privateKeys.includes(key)) {
+        if (key === "pgr_user") return null;
+        return [];
+      }
+    }
     return JSON.parse(localStorage.getItem(key) || "[]");
   },
   set: (key: string, data: any) => {
     if (typeof window === "undefined") return;
+    if (isProduction) {
+      const privateKeys = [
+        "pgr_user",
+        "pgr_orders",
+        "pgr_kyc_profiles",
+        "pgr_iraq_delivery_requests",
+        "pgr_investment_accounts",
+        "pgr_buyback_requests",
+        "pgr_quote_requests",
+        "pgr_notifications"
+      ];
+      if (privateKeys.includes(key)) return;
+    }
     localStorage.setItem(key, JSON.stringify(data));
   },
 
   // Auth Operations
   auth: {
     getUser: () => {
-      if (typeof window === "undefined") return null;
+      if (typeof window === "undefined" || isProduction) return null;
       return JSON.parse(localStorage.getItem("pgr_user") || "null");
     },
     setUser: (userData: any) => {
+      if (isProduction) return;
       localStorage.setItem("pgr_user", JSON.stringify(userData));
     },
     logout: () => {
@@ -670,6 +706,14 @@ export const dbService = {
 
   kyc: {
     get: async (customerId: string) => {
+      if (isLive && supabase) {
+        try {
+          const { data, error } = await supabase.from("kyc_profiles").select("*").eq("id", customerId).maybeSingle();
+          if (!error && data) return data;
+        } catch (err) {
+          console.error("Failed to fetch KYC profile from Supabase:", err);
+        }
+      }
       const list = mockDb.get("pgr_kyc_profiles") || [];
       return list.find((p: any) => p.id === customerId) || {
         id: customerId,
@@ -689,6 +733,14 @@ export const dbService = {
       };
     },
     save: async (customerId: string, profile: any) => {
+      if (isLive && supabase) {
+        try {
+          const { data, error } = await supabase.from("kyc_profiles").upsert({ ...profile, id: customerId }).select();
+          if (!error && data) return data[0];
+        } catch (err) {
+          console.error("Failed to save KYC profile to Supabase:", err);
+        }
+      }
       const list = mockDb.get("pgr_kyc_profiles") || [];
       const index = list.findIndex((p: any) => p.id === customerId);
       const updatedProfile = { ...profile, id: customerId };
@@ -704,12 +756,30 @@ export const dbService = {
       return dbService.kyc.save(profile.id, profile);
     },
     listAll: async () => {
+      if (isLive && supabase) {
+        try {
+          const { data, error } = await supabase.from("kyc_profiles").select("*");
+          if (!error && data) return data;
+        } catch (err) {
+          console.error("Failed to list KYC profiles from Supabase:", err);
+        }
+      }
       return mockDb.get("pgr_kyc_profiles") || [];
     }
   },
 
   iraqDelivery: {
     list: async (customerId?: string) => {
+      if (isLive && supabase) {
+        try {
+          let query = supabase.from("iraq_delivery_requests").select("*");
+          if (customerId) query = query.eq("customer_id", customerId);
+          const { data, error } = await query;
+          if (!error && data) return data;
+        } catch (err) {
+          console.error("Failed to fetch Iraq deliveries from Supabase:", err);
+        }
+      }
       const list = mockDb.get("pgr_iraq_delivery_requests") || [];
       if (customerId) {
         return list.filter((r: any) => r.customer_id === customerId);
@@ -717,6 +787,14 @@ export const dbService = {
       return list;
     },
     create: async (request: any) => {
+      if (isLive && supabase) {
+        try {
+          const { data, error } = await supabase.from("iraq_delivery_requests").insert(request).select();
+          if (!error && data) return data[0];
+        } catch (err) {
+          console.error("Failed to create Iraq delivery on Supabase:", err);
+        }
+      }
       const list = mockDb.get("pgr_iraq_delivery_requests") || [];
       request.id = request.id || `del-${Date.now()}`;
       request.created_at = request.created_at || new Date().toISOString();
@@ -726,6 +804,14 @@ export const dbService = {
       return request;
     },
     updateStatus: async (id: string, status: string) => {
+      if (isLive && supabase) {
+        try {
+          const { data, error } = await supabase.from("iraq_delivery_requests").update({ status }).eq("id", id).select();
+          if (!error && data) return data[0];
+        } catch (err) {
+          console.error("Failed to update Iraq delivery status on Supabase:", err);
+        }
+      }
       const list = mockDb.get("pgr_iraq_delivery_requests") || [];
       const index = list.findIndex((r: any) => r.id === id);
       if (index > -1) {
@@ -739,10 +825,26 @@ export const dbService = {
 
   investment: {
     getAccounts: async (customerId: string) => {
+      if (isLive && supabase) {
+        try {
+          const { data, error } = await supabase.from("investment_accounts").select("*").eq("customer_id", customerId);
+          if (!error && data) return data;
+        } catch (err) {
+          console.error("Failed to fetch investment accounts from Supabase:", err);
+        }
+      }
       const list = mockDb.get("pgr_investment_accounts") || [];
       return list.filter((a: any) => a.customer_id === customerId);
     },
     saveAccount: async (account: any) => {
+      if (isLive && supabase) {
+        try {
+          const { data, error } = await supabase.from("investment_accounts").upsert(account).select();
+          if (!error && data) return data[0];
+        } catch (err) {
+          console.error("Failed to save investment account to Supabase:", err);
+        }
+      }
       const list = mockDb.get("pgr_investment_accounts") || [];
       const index = list.findIndex((a: any) => a.id === account.id);
       if (index > -1) {
@@ -755,12 +857,30 @@ export const dbService = {
       return account;
     },
     listAll: async () => {
+      if (isLive && supabase) {
+        try {
+          const { data, error } = await supabase.from("investment_accounts").select("*");
+          if (!error && data) return data;
+        } catch (err) {
+          console.error("Failed to list all investment accounts from Supabase:", err);
+        }
+      }
       return mockDb.get("pgr_investment_accounts") || [];
     }
   },
 
   buyback: {
     list: async (customerId?: string) => {
+      if (isLive && supabase) {
+        try {
+          let query = supabase.from("buyback_requests").select("*");
+          if (customerId) query = query.eq("customer_id", customerId);
+          const { data, error } = await query;
+          if (!error && data) return data;
+        } catch (err) {
+          console.error("Failed to fetch buybacks from Supabase:", err);
+        }
+      }
       const list = mockDb.get("pgr_buyback_requests") || [];
       if (customerId) {
         return list.filter((r: any) => r.customer_id === customerId);
@@ -768,6 +888,14 @@ export const dbService = {
       return list;
     },
     create: async (request: any) => {
+      if (isLive && supabase) {
+        try {
+          const { data, error } = await supabase.from("buyback_requests").insert(request).select();
+          if (!error && data) return data[0];
+        } catch (err) {
+          console.error("Failed to create buyback request on Supabase:", err);
+        }
+      }
       const list = mockDb.get("pgr_buyback_requests") || [];
       request.id = request.id || `buy-${Date.now()}`;
       request.created_at = request.created_at || new Date().toISOString();
@@ -777,6 +905,16 @@ export const dbService = {
       return request;
     },
     updateStatus: async (id: string, status: string, estimatedPayout?: number) => {
+      if (isLive && supabase) {
+        try {
+          const updates: any = { status };
+          if (estimatedPayout !== undefined) updates.estimated_payout_usd = estimatedPayout;
+          const { data, error } = await supabase.from("buyback_requests").update(updates).eq("id", id).select();
+          if (!error && data) return data[0];
+        } catch (err) {
+          console.error("Failed to update buyback request status on Supabase:", err);
+        }
+      }
       const list = mockDb.get("pgr_buyback_requests") || [];
       const index = list.findIndex((r: any) => r.id === id);
       if (index > -1) {

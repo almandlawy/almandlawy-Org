@@ -15,6 +15,7 @@ import OfficeSection from "./components/OfficeSection";
 import BlogSection from "./components/BlogSection";
 import ClientDashboardModal from "./components/ClientDashboardModal";
 import AdminPortalModal from "./components/AdminPortalModal";
+import AdminPanel from "./components/AdminPanel";
 import LegalOverlayModal from "./components/LegalOverlayModal";
 import IraqTrustBadge from "./components/IraqTrustBadge";
 import Footer from "./components/Footer";
@@ -38,6 +39,7 @@ export default function App() {
   // Custom Client & Admin portals & Legal Overlays
   const [isClientDashboardOpen, setIsClientDashboardOpen] = useState(false);
   const [isAdminPortalOpen, setIsAdminPortalOpen] = useState(false);
+  const [isAdminRoute, setIsAdminRoute] = useState(false);
   const [activeLegalDoc, setActiveLegalDoc] = useState<string | null>(null);
 
   // Listen for Supabase Authentication changes
@@ -118,6 +120,7 @@ export default function App() {
     if (typeof window !== "undefined") {
       const path = window.location.pathname;
       if (path === "/admin" || path === "/admin/") {
+        setIsAdminRoute(true);
         setIsAdminPortalOpen(true);
       }
     }
@@ -178,6 +181,20 @@ export default function App() {
     }
     handleScrollToSection("catalog");
   };
+
+  if (isAdminRoute) {
+    return (
+      <AdminPanel
+        currentLang={currentLang}
+        onClose={() => {
+          setIsAdminRoute(false);
+          setIsAdminPortalOpen(false);
+          window.history.pushState({}, "", "/");
+        }}
+        isModal={false}
+      />
+    );
+  }
 
   return (
     <div className={`min-h-screen text-white bg-[#070707] selection:bg-gold-base selection:text-black overflow-hidden relative ${
