@@ -57,6 +57,13 @@ export interface Product {
   technical_specs: TechnicalSpecifications;
   image_placeholder: "gold_bar" | "silver_bar" | "gold_coin" | "silver_coin";
   premium_multiplier: number; // Applied to spot price for realistic pricing on request estimations
+  brand?: string;
+  price?: number;
+  price_mode?: "spot" | "fixed";
+  image_url?: string;
+  stock_status?: "In Stock" | "Out of Stock" | "Pre-order";
+  certificate_url?: string;
+  published?: boolean;
 }
 
 export interface ChatMessage {

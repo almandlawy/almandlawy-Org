@@ -87,6 +87,14 @@ export default function Footer({
                 <Terminal size={12} className="text-gold-base/50" />
                 <span>{currentLang === "ar" ? "ديوان الإدارة والتحكم" : "Sovereign Portal Desk"}</span>
               </button>
+              <button 
+                onClick={onOpenAdminPortal} 
+                className="hover:text-gold-base transition-colors flex items-center gap-1.5 cursor-pointer text-left font-mono font-bold text-white/90 border border-white/5 bg-white/[0.02] px-2 py-1 rounded mt-1"
+                id="footer-admin-login-btn"
+              >
+                <Terminal size={11} className="text-[#c5a85c]" />
+                <span>{currentLang === "ar" ? "دخول الإدارة" : "Admin Login"}</span>
+              </button>
             </div>
           </div>
 

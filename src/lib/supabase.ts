@@ -347,6 +347,9 @@ const seedLocalStorage = () => {
       created_at: "2026-06-21T09:15:00Z"
     }
   ]);
+
+  // 18. Admin Users emails
+  getOrSet("pgr_admin_users", ["almandlawy112@gmail.com", "admin@pgruae.com"]);
 };
 
 // Seed initial localStorage items on import
@@ -536,6 +539,16 @@ export const dbService = {
       }
       const certs = mockDb.get("pgr_certificates");
       return certs.find((c: any) => c.serial_number.toLowerCase() === serial.trim().toLowerCase()) || null;
+    },
+    listAll: async () => {
+      return mockDb.get("pgr_certificates") || [];
+    },
+    create: async (cert: any) => {
+      const list = mockDb.get("pgr_certificates") || [];
+      cert.id = cert.id || `cert-${Date.now()}`;
+      list.unshift(cert);
+      mockDb.set("pgr_certificates", list);
+      return cert;
     }
   },
 
@@ -558,6 +571,9 @@ export const dbService = {
       }
       mockDb.set("pgr_blog", posts);
       return post;
+    },
+    create: async (post: any) => {
+      return dbService.blog.save(post);
     }
   },
 
@@ -626,6 +642,9 @@ export const dbService = {
       mockDb.set("pgr_pickup_points", list);
       return point;
     },
+    create: async (point: any) => {
+      return dbService.pickupPoints.save(point);
+    },
     delete: async (id: string) => {
       const list = mockDb.get("pgr_pickup_points") || [];
       mockDb.set("pgr_pickup_points", list.filter((p: any) => p.id !== id));
@@ -664,6 +683,9 @@ export const dbService = {
       }
       mockDb.set("pgr_kyc_profiles", list);
       return updatedProfile;
+    },
+    update: async (profile: any) => {
+      return dbService.kyc.save(profile.id, profile);
     },
     listAll: async () => {
       return mockDb.get("pgr_kyc_profiles") || [];
@@ -748,6 +770,25 @@ export const dbService = {
         return list[index];
       }
       return null;
+    }
+  },
+
+  adminUsers: {
+    checkEmail: async (email: string): Promise<boolean> => {
+      if (isLive && supabase) {
+        try {
+          const { data, error } = await supabase
+            .from("admin_users")
+            .select("email")
+            .eq("email", email.trim().toLowerCase());
+          if (!error && data && data.length > 0) return true;
+        } catch (err) {
+          console.error("Failed to check admin_users in Supabase:", err);
+        }
+      }
+      // Local fallback check
+      const adminList = mockDb.get("pgr_admin_users") || ["almandlawy112@gmail.com", "admin@pgruae.com"];
+      return adminList.map((e: string) => e.toLowerCase()).includes(email.trim().toLowerCase());
     }
   }
 };

@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from "react";
 import { Globe, MessageSquare, Coins, ArrowRight, Menu, X, ShieldCheck, Terminal } from "lucide-react";
 import { LiveMarketRates } from "../types";
-import { dbService } from "../lib/supabase";
+import { dbService, mockDb } from "../lib/supabase";
 
 interface HeaderProps {
   currentLang: "en" | "ar";
@@ -33,6 +33,26 @@ export default function Header({
 }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [settings, setSettings] = useState<any>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const checkAdmin = async () => {
+      try {
+        const user = mockDb.auth.getUser();
+        if (user && user.email) {
+          const authorized = await dbService.adminUsers.checkEmail(user.email);
+          setIsAdmin(authorized);
+        } else {
+          setIsAdmin(false);
+        }
+      } catch (err) {
+        console.error("Error checking admin in header:", err);
+      }
+    };
+    checkAdmin();
+    const interval = setInterval(checkAdmin, 2500);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -150,14 +170,26 @@ export default function Header({
             </button>
 
             {/* Admin Command Desk */}
-            <button
-              onClick={onOpenAdminPortal}
-              className="hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded bg-white/[0.01] border border-white/[0.03] hover:border-[#c5a85c]/20 text-[11px] text-gray-400 transition-colors cursor-pointer uppercase font-mono"
-              title="Admin Terminal"
-            >
-              <Terminal size={12} className="text-[#c5a85c]/60" />
-              <span>{currentLang === "ar" ? "التحكم" : "Admin"}</span>
-            </button>
+            {isAdmin ? (
+              <button
+                onClick={onOpenAdminPortal}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-amber-950/25 border border-[#c5a85c]/40 hover:border-[#c5a85c] text-[11px] text-[#c5a85c] font-semibold transition-colors cursor-pointer uppercase font-mono"
+                title={currentLang === "ar" ? "لوحة الإدارة" : "Admin Panel"}
+                id="header-admin-portal-btn"
+              >
+                <Terminal size={12} className="text-[#c5a85c]" />
+                <span>{currentLang === "ar" ? "لوحة الإدارة" : "Admin Panel"}</span>
+              </button>
+            ) : (
+              <button
+                onClick={onOpenAdminPortal}
+                className="hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded bg-white/[0.01] border border-white/[0.03] hover:border-[#c5a85c]/20 text-[11px] text-gray-400 transition-colors cursor-pointer uppercase font-mono"
+                title="Admin Terminal"
+              >
+                <Terminal size={12} className="text-[#c5a85c]/60" />
+                <span>{currentLang === "ar" ? "التحكم" : "Admin"}</span>
+              </button>
+            )}
 
             {/* Language Toggle */}
             <button
@@ -234,16 +266,29 @@ export default function Header({
                 <ShieldCheck size={13} className="text-[#c5a85c]" />
                 <span>{currentLang === "ar" ? "ديوان العملاء" : "Client Desk"}</span>
               </button>
-              <button
-                onClick={() => {
-                  onOpenAdminPortal();
-                  setMobileMenuOpen(false);
-                }}
-                className="py-2.5 bg-white/[0.02] border border-white/[0.05] text-gray-400 rounded flex items-center justify-center gap-1.5"
-              >
-                <Terminal size={12} className="text-[#c5a85c]/60" />
-                <span>{currentLang === "ar" ? "التحكم" : "Admin"}</span>
-              </button>
+              {isAdmin ? (
+                <button
+                  onClick={() => {
+                    onOpenAdminPortal();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="py-2.5 bg-amber-950/20 border border-[#c5a85c]/30 text-[#c5a85c] font-semibold rounded flex items-center justify-center gap-1.5"
+                >
+                  <Terminal size={12} className="text-[#c5a85c]" />
+                  <span>{currentLang === "ar" ? "لوحة الإدارة" : "Admin Panel"}</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    onOpenAdminPortal();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="py-2.5 bg-white/[0.02] border border-white/[0.05] text-gray-400 rounded flex items-center justify-center gap-1.5"
+                >
+                  <Terminal size={12} className="text-[#c5a85c]/60" />
+                  <span>{currentLang === "ar" ? "التحكم" : "Admin"}</span>
+                </button>
+              )}
             </div>
 
             <div className="flex flex-col gap-2 pt-2">

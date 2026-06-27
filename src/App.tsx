@@ -40,6 +40,16 @@ export default function App() {
   const [isAdminPortalOpen, setIsAdminPortalOpen] = useState(false);
   const [activeLegalDoc, setActiveLegalDoc] = useState<string | null>(null);
 
+  // Check for direct admin route on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const path = window.location.pathname;
+      if (path === "/admin" || path === "/admin/") {
+        setIsAdminPortalOpen(true);
+      }
+    }
+  }, []);
+
   // Active category filter for Catalog (for smooth scrolling filter options from Hero)
   const [catalogCategoryFilter, setCatalogCategoryFilter] = useState<string>("all");
 
