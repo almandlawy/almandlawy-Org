@@ -27,6 +27,7 @@ export default function Catalog({
   const [products, setProducts] = React.useState<Product[]>([]);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [selectedFilter, setSelectedFilter] = React.useState<string>(selectedCategoryFilter || "all");
+  const [sortBy, setSortBy] = React.useState<"default" | "price_asc" | "price_desc" | "weight_asc" | "weight_desc" | "name_asc">("default");
   const [isProductsFetchFailed, setIsProductsFetchFailed] = React.useState(false);
   const [isPriceTimeout, setIsPriceTimeout] = React.useState(false);
 
@@ -134,6 +135,28 @@ export default function Catalog({
     }
   });
 
+  // Sort products dynamically
+  const sortedProducts = React.useMemo(() => {
+    return [...filteredProducts].sort((a, b) => {
+      if (sortBy === "price_asc" || sortBy === "price_desc") {
+        const priceA = calculateIndicativePrice(a) || a.price || 0;
+        const priceB = calculateIndicativePrice(b) || b.price || 0;
+        return sortBy === "price_asc" ? priceA - priceB : priceB - priceA;
+      }
+      if (sortBy === "weight_asc" || sortBy === "weight_desc") {
+        const weightA = a.technical_specs?.weight_grams || (a.technical_specs?.weight_oz ? a.technical_specs.weight_oz * 31.1035 : 0);
+        const weightB = b.technical_specs?.weight_grams || (b.technical_specs?.weight_oz ? b.technical_specs.weight_oz * 31.1035 : 0);
+        return sortBy === "weight_asc" ? weightA - weightB : weightB - weightA;
+      }
+      if (sortBy === "name_asc") {
+        const nameA = currentLang === "ar" ? a.name_ar : a.name_en;
+        const nameB = currentLang === "ar" ? b.name_ar : b.name_en;
+        return nameA.localeCompare(nameB, currentLang === "ar" ? "ar" : "en");
+      }
+      return 0; // Default order
+    });
+  }, [filteredProducts, sortBy, rates, selectedCurrency, currentLang]);
+
   return (
     <section className="py-24 px-4 md:px-8 bg-[#0a0a0a] border-t border-white/[0.03]" id="catalog" style={{ direction: currentLang === "ar" ? "rtl" : "ltr" }}>
       <div className="max-w-7xl mx-auto space-y-12">
@@ -187,7 +210,10 @@ export default function Catalog({
                 {["all", "gold_bars", "silver_bars", "gold_coins", "silver_coins"].map((filterId) => (
                   <button
                     key={filterId}
-                    onClick={() => setSelectedFilter(filterId)}
+                    onClick={() => {
+                      setSelectedFilter(filterId);
+                      setSortBy("default");
+                    }}
                     className={`px-4 py-2 rounded-sm text-xs uppercase tracking-wider font-semibold transition-all duration-300 cursor-pointer border ${
                       selectedFilter === filterId
                         ? "bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.08)]"
@@ -201,21 +227,51 @@ export default function Catalog({
 
               {/* Premium Search Box */}
               <div className="relative max-w-md w-full">
-                <Search size={16} className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                <Search size={16} className={`absolute ${currentLang === "ar" ? "right-3.5" : "left-3.5"} top-1/2 transform -translate-y-1/2 text-gray-500`} />
                 <input
                   type="text"
                   placeholder={currentLang === "ar" ? "ابحث بالوزن، المصفاة أو اسم المنتج..." : "Search by weight, mint, manufacturer..."}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-[#111111]/80 rounded-sm border border-white/[0.05] focus:border-gold-base/50 focus:ring-1 focus:ring-gold-base/50 outline-none text-xs text-white placeholder-gray-500 transition-all font-sans"
+                  className={`w-full ${currentLang === "ar" ? "pr-10 pl-4" : "pl-10 pr-4"} py-2.5 bg-[#111111]/80 rounded-sm border border-white/[0.05] focus:border-gold-base/50 focus:ring-1 focus:ring-gold-base/50 outline-none text-xs text-white placeholder-gray-500 transition-all font-sans`}
                   style={{ direction: currentLang === "ar" ? "rtl" : "ltr", textAlign: currentLang === "ar" ? "right" : "left" }}
                 />
               </div>
             </div>
 
+            {/* Catalog Info & Sorting Sub-Bar */}
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 text-xs font-sans py-2">
+              <div className="text-gray-400 flex items-center gap-2 font-mono uppercase tracking-wider text-[11px]">
+                <span className="h-2 w-2 rounded-full bg-gold-base animate-pulse"></span>
+                {currentLang === "ar" ? (
+                  <span>تم العثور على <strong className="text-white font-semibold font-mono">{sortedProducts.length}</strong> منتجاً فاخراً</span>
+                ) : (
+                  <span>Found <strong className="text-white font-semibold font-mono">{sortedProducts.length}</strong> premium bullion products</span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-3">
+                <span className="text-gray-400 text-[11px] font-mono uppercase tracking-wider">
+                  {currentLang === "ar" ? "ترتيب حسب:" : "Sort By:"}
+                </span>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as any)}
+                  className="bg-[#111111] border border-white/[0.08] text-white rounded-sm px-3 py-1.5 outline-none text-xs focus:border-gold-base cursor-pointer transition-colors font-mono"
+                >
+                  <option value="default">{currentLang === "ar" ? "الافتراضي" : "Default"}</option>
+                  <option value="price_asc">{currentLang === "ar" ? "السعر: من الأقل للأعلى" : "Price: Low to High"}</option>
+                  <option value="price_desc">{currentLang === "ar" ? "السعر: من الأعلى للأقل" : "Price: High to Low"}</option>
+                  <option value="weight_asc">{currentLang === "ar" ? "الوزن: من الأقل للأعلى" : "Weight: Low to High"}</option>
+                  <option value="weight_desc">{currentLang === "ar" ? "الوزن: من الأعلى للأقل" : "Weight: High to Low"}</option>
+                  <option value="name_asc">{currentLang === "ar" ? "الاسم" : "Name"}</option>
+                </select>
+              </div>
+            </div>
+
             {/* Product Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredProducts.map((product) => {
+              {sortedProducts.map((product) => {
                 const isGold = product?.technical_specs?.metal === "gold" || product?.category?.includes("gold");
                 const isCoin = product?.category?.includes("coin") || false;
                 const indicativePrice = calculateIndicativePrice(product);

@@ -115,22 +115,50 @@ const seedLocalStorage = () => {
   if (typeof window === "undefined") return;
 
   const getOrSet = (key: string, defaultVal: any) => {
-    if (!safeStorage.getItem(key)) {
+    const existing = safeStorage.getItem(key);
+    if (!existing) {
       safeStorage.setItem(key, JSON.stringify(defaultVal));
     }
   };
 
-  // 1. Products & Inventory
-  getOrSet("pgr_products", PRODUCTS);
-  
-  const initialInventory = PRODUCTS.map(p => ({
-    product_id: p.id,
-    sku: p.id.toUpperCase() + "-MINT",
-    barcode: "729000" + Math.floor(100000 + Math.random() * 900000),
-    stock: p.id.includes("1kg") ? 4 : Math.floor(10 + Math.random() * 40),
-    reserved: 0
-  }));
-  getOrSet("pgr_inventory", initialInventory);
+  // Check if we already have products and if it's the old/limited list (e.g., < 15 items)
+  let existingProductsRaw = safeStorage.getItem("pgr_products");
+  let shouldSeedProducts = !existingProductsRaw;
+  if (existingProductsRaw) {
+    try {
+      const parsed = JSON.parse(existingProductsRaw);
+      if (Array.isArray(parsed) && parsed.length < 15) {
+        shouldSeedProducts = true;
+      }
+    } catch (e) {
+      shouldSeedProducts = true;
+    }
+  }
+
+  if (shouldSeedProducts) {
+    safeStorage.setItem("pgr_products", JSON.stringify(PRODUCTS));
+    
+    const initialInventory = PRODUCTS.map(p => ({
+      product_id: p.id,
+      sku: p.id.toUpperCase() + "-MINT",
+      barcode: "729000" + Math.floor(100000 + Math.random() * 900000),
+      stock: p.id.includes("1kg") ? 4 : Math.floor(10 + Math.random() * 40),
+      reserved: 0
+    }));
+    safeStorage.setItem("pgr_inventory", JSON.stringify(initialInventory));
+  } else {
+    // 1. Products & Inventory
+    getOrSet("pgr_products", PRODUCTS);
+    
+    const initialInventory = PRODUCTS.map(p => ({
+      product_id: p.id,
+      sku: p.id.toUpperCase() + "-MINT",
+      barcode: "729000" + Math.floor(100000 + Math.random() * 900000),
+      stock: p.id.includes("1kg") ? 4 : Math.floor(10 + Math.random() * 40),
+      reserved: 0
+    }));
+    getOrSet("pgr_inventory", initialInventory);
+  }
 
   // 2. Categories
   getOrSet("pgr_categories", [
