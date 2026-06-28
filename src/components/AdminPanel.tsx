@@ -77,7 +77,7 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
     trade_phone: "+971 4 445 8888",
     office_address_en: "Almas Tower, West Trade Zone, Dubai Marina, Dubai, United Arab Emirates",
     office_address_ar: "برج الماس، منطقة التداول الحرة، دبي مارينا، دبي، الإمارات العربية المتحدة",
-    dmcc_reg_no: "890317",
+    trade_license_no: "890317",
     manual_gold_usd_oz: 2365.40,
     manual_silver_usd_oz: 29.85,
     usd_aed_rate: 3.6725,
@@ -698,7 +698,7 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
         trade_phone: settings.trade_phone,
         office_address_en: settings.office_address_en,
         office_address_ar: settings.office_address_ar,
-        dmcc_reg_no: settings.dmcc_reg_no,
+        trade_license_no: settings.trade_license_no,
         manual_gold_usd_oz: Number(settings.manual_gold_usd_oz || 2365.40),
         manual_silver_usd_oz: Number(settings.manual_silver_usd_oz || 29.85),
         usd_aed_rate: Number(settings.usd_aed_rate || 3.6725),
@@ -2596,8 +2596,8 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                         <label className="text-gray-500 block uppercase text-[9px]">Official Trade Registration Number</label>
                         <input
                           type="text"
-                          value={settings.dmcc_reg_no}
-                          onChange={(e) => setSettings({ ...settings, dmcc_reg_no: e.target.value })}
+                          value={settings.trade_license_no}
+                          onChange={(e) => setSettings({ ...settings, trade_license_no: e.target.value })}
                           className="w-full bg-black border border-white/10 rounded px-3 py-2 text-white outline-none"
                         />
                       </div>

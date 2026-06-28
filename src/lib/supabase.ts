@@ -323,7 +323,7 @@ const seedLocalStorage = () => {
     trade_phone: "+971 4 445 8888",
     office_address_en: "Almas Tower, West Trade Zone, Dubai Marina, Dubai, United Arab Emirates",
     office_address_ar: "برج الماس، منطقة التداول الحرة، دبي مارينا، دبي، الإمارات العربية المتحدة",
-    dmcc_reg_no: "890317",
+    trade_license_no: "890317",
     manual_gold_usd_oz: 2365.40,
     manual_silver_usd_oz: 29.85,
     usd_aed_rate: 3.6725,
@@ -348,8 +348,8 @@ const seedLocalStorage = () => {
       city_ar: "بغداد",
       address_en: "Al-Mansour District, Near Baghdad Mall",
       address_ar: "حي المنصور، بالقرب من بغداد مول",
-      phone: "+964 770 123 4567",
-      whatsapp: "+964 770 123 4567",
+      phone: "+971559688837",
+      whatsapp: "+971559688837",
       working_hours_en: "Sun - Thu: 10:00 AM - 4:00 PM AST",
       working_hours_ar: "الأحد - الخميس: ١٠:٠٠ صباحاً - ٤:٠٠ مساءً",
       maps_link: "https://maps.google.com",
@@ -409,32 +409,9 @@ const seedLocalStorage = () => {
     safeStorage.removeItem("pgr_iraq_delivery_requests");
   }
 
-  // 16. Bullion Ownership / Investment Accounts
+  // 16. Bullion Ownership records (admin-managed only, no demo seeds)
   if (!isProduction) {
-    getOrSet("pgr_investment_accounts", [
-      {
-        id: "inv-gold",
-        customer_id: "cust-verified-1",
-        metal: "gold",
-        weight_grams: 250,
-        average_purchase_price_usd: 75.40,
-        total_purchase_amount_usd: 18850.00,
-        current_market_value_usd: 19125.00,
-        daily_change_percent: 0.28,
-        monthly_change_percent: 1.45
-      },
-      {
-        id: "inv-silver",
-        customer_id: "cust-verified-1",
-        metal: "silver",
-        weight_grams: 2000,
-        average_purchase_price_usd: 0.92,
-        total_purchase_amount_usd: 1840.00,
-        current_market_value_usd: 1880.00,
-        daily_change_percent: -0.15,
-        monthly_change_percent: 2.10
-      }
-    ]);
+    getOrSet("pgr_investment_accounts", []);
   } else {
     safeStorage.removeItem("pgr_investment_accounts");
   }

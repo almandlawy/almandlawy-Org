@@ -91,7 +91,7 @@ let serverSettings = {
   trade_phone: "+971 4 445 8888",
   office_address_en: "Almas Tower, West Trade Zone, Dubai Marina, Dubai, United Arab Emirates",
   office_address_ar: "برج الماس، منطقة التداول الحرة، دبي مارينا، دبي، الإمارات العربية المتحدة",
-  dmcc_reg_no: "890317",
+    trade_license_no: "890317",
   manual_gold_usd_oz: 2365.40,
   manual_silver_usd_oz: 29.85,
   usd_aed_rate: 3.6725,

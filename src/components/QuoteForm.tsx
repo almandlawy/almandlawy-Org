@@ -198,7 +198,7 @@ export default function QuoteForm({ currentLang, prefilledProduct, onClose }: Qu
                     <input
                       type="tel"
                       required
-                      placeholder="+971 50 000 0000"
+                      placeholder="+971559688837"
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       className="w-full bg-[#161616] border border-white/[0.04] focus:border-gold-base rounded-sm py-2 px-3 text-white outline-none text-left"
