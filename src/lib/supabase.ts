@@ -68,6 +68,44 @@ export const configStatus = {
     : "Connected to live database."
 };
 
+// Safe storage wrapper that falls back to in-memory dictionary if localStorage throws SecurityError or is unavailable
+const memoryStorage: Record<string, string> = {};
+
+const safeStorage = {
+  getItem: (key: string): string | null => {
+    try {
+      if (typeof window !== "undefined" && window.localStorage) {
+        return localStorage.getItem(key);
+      }
+    } catch (e) {
+      console.warn("Storage access blocked, using memory fallback:", e);
+    }
+    return memoryStorage[key] || null;
+  },
+  setItem: (key: string, value: string): void => {
+    try {
+      if (typeof window !== "undefined" && window.localStorage) {
+        localStorage.setItem(key, value);
+        return;
+      }
+    } catch (e) {
+      console.warn("Storage access blocked, using memory fallback:", e);
+    }
+    memoryStorage[key] = value;
+  },
+  removeItem: (key: string): void => {
+    try {
+      if (typeof window !== "undefined" && window.localStorage) {
+        localStorage.removeItem(key);
+        return;
+      }
+    } catch (e) {
+      console.warn("Storage access blocked, using memory fallback:", e);
+    }
+    delete memoryStorage[key];
+  }
+};
+
 // =========================================================================
 // LOCAL SIMULATION ENGINE (LocalStorage-backed database matching all requested tables)
 // =========================================================================
@@ -77,8 +115,8 @@ const seedLocalStorage = () => {
   if (typeof window === "undefined") return;
 
   const getOrSet = (key: string, defaultVal: any) => {
-    if (!localStorage.getItem(key)) {
-      localStorage.setItem(key, JSON.stringify(defaultVal));
+    if (!safeStorage.getItem(key)) {
+      safeStorage.setItem(key, JSON.stringify(defaultVal));
     }
   };
 
@@ -178,7 +216,7 @@ const seedLocalStorage = () => {
     ];
     getOrSet("pgr_orders", initialOrders);
   } else {
-    localStorage.removeItem("pgr_orders");
+    safeStorage.removeItem("pgr_orders");
   }
 
   // 7. Blog Posts (CMS)
@@ -223,7 +261,7 @@ const seedLocalStorage = () => {
       { id: "notif-2", title_en: "Secure Logins Active", title_ar: "نظام تسجيل الدخول الآمن", content_en: "FaceID / Authenticator connection is active for your premium account.", content_ar: "تم تنشيط ميزة الحماية لربط الحساب الآمن.", created_at: "2026-06-20T08:00:00Z", unread: false }
     ]);
   } else {
-    localStorage.removeItem("pgr_notifications");
+    safeStorage.removeItem("pgr_notifications");
   }
 
   // 10. Current active user profile
@@ -243,7 +281,7 @@ const seedLocalStorage = () => {
       created_at: "2026-01-01T00:00:00Z"
     });
   } else {
-    localStorage.removeItem("pgr_user");
+    safeStorage.removeItem("pgr_user");
   }
 
   // 11. Global Admin Settings (fees, markups)
@@ -316,7 +354,7 @@ const seedLocalStorage = () => {
       }
     ]);
   } else {
-    localStorage.removeItem("pgr_kyc_profiles");
+    safeStorage.removeItem("pgr_kyc_profiles");
   }
 
   // 15. Iraq Delivery Requests
@@ -335,7 +373,7 @@ const seedLocalStorage = () => {
       }
     ]);
   } else {
-    localStorage.removeItem("pgr_iraq_delivery_requests");
+    safeStorage.removeItem("pgr_iraq_delivery_requests");
   }
 
   // 16. Bullion Ownership / Investment Accounts
@@ -365,7 +403,7 @@ const seedLocalStorage = () => {
       }
     ]);
   } else {
-    localStorage.removeItem("pgr_investment_accounts");
+    safeStorage.removeItem("pgr_investment_accounts");
   }
 
   // 17. Buyback Requests
@@ -384,7 +422,7 @@ const seedLocalStorage = () => {
       }
     ]);
   } else {
-    localStorage.removeItem("pgr_buyback_requests");
+    safeStorage.removeItem("pgr_buyback_requests");
   }
 
   // 18. Admin Users emails
@@ -416,7 +454,7 @@ export const mockDb = {
         return [];
       }
     }
-    return JSON.parse(localStorage.getItem(key) || "[]");
+    return JSON.parse(safeStorage.getItem(key) || "[]");
   },
   set: (key: string, data: any) => {
     if (typeof window === "undefined") return;
@@ -433,21 +471,21 @@ export const mockDb = {
       ];
       if (privateKeys.includes(key)) return;
     }
-    localStorage.setItem(key, JSON.stringify(data));
+    safeStorage.setItem(key, JSON.stringify(data));
   },
 
   // Auth Operations
   auth: {
     getUser: () => {
       if (typeof window === "undefined" || isProduction) return null;
-      return JSON.parse(localStorage.getItem("pgr_user") || "null");
+      return JSON.parse(safeStorage.getItem("pgr_user") || "null");
     },
     setUser: (userData: any) => {
       if (isProduction) return;
-      localStorage.setItem("pgr_user", JSON.stringify(userData));
+      safeStorage.setItem("pgr_user", JSON.stringify(userData));
     },
     logout: () => {
-      localStorage.removeItem("pgr_user");
+      safeStorage.removeItem("pgr_user");
     }
   },
 
@@ -499,6 +537,129 @@ export const getRedirectUrl = () => {
   return "https://pgruae.com";
 };
 
+// Bidirectional mappers for product to resolve table field mismatches in Supabase
+export const mapDbProductToFrontend = (dbProd: any): any => {
+  if (!dbProd) return null;
+  const isGold = dbProd.metal_type === "gold" || dbProd.category?.includes("gold") || false;
+  return {
+    id: dbProd.id,
+    name_en: dbProd.name || "",
+    name_ar: dbProd.arabic_name || dbProd.name || "",
+    category: dbProd.category || (isGold ? "gold_bars" : "silver_bars"),
+    weight_label: `${dbProd.weight_grams || 100} Grams`,
+    purity: dbProd.purity || "999.9",
+    manufacturer: dbProd.brand || "PAMP Suisse",
+    country_en: isGold ? "Switzerland" : "Switzerland",
+    country_ar: isGold ? "سويسرا" : "سويسرا",
+    availability: dbProd.availability || "In Stock",
+    certificate_en: "Assay Certificate Certified",
+    certificate_ar: "شهادة معتمدة",
+    description_en: dbProd.description || "High-Purity Bullion Bar",
+    description_ar: dbProd.arabic_description || "سبائك عالية النقاء والجودة",
+    technical_specs: {
+      weight_grams: Number(dbProd.weight_grams) || 100,
+      purity: dbProd.purity || "999.9",
+      metal: (dbProd.metal_type || (isGold ? "gold" : "silver")) as "gold" | "silver"
+    },
+    image_placeholder: (isGold ? "gold_bar" : "silver_bar") as any,
+    premium_multiplier: 1.025,
+    brand: dbProd.brand || "PAMP Suisse",
+    price: Number(dbProd.price) || 0,
+    price_mode: (dbProd.price_mode || "spot") as "spot" | "fixed",
+    image_url: dbProd.image_url || undefined,
+    stock_status: dbProd.stock_status || "In Stock",
+    certificate_url: dbProd.certificate_url || undefined,
+    published: dbProd.published !== undefined ? dbProd.published : true
+  };
+};
+
+export const isUUID = (val: any): boolean => {
+  if (typeof val !== "string") return false;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+};
+
+export const mapFrontendProductToDb = (product: any): any => {
+  if (!product) return null;
+  const metalType = product.technical_specs?.metal || (product.category?.includes("gold") ? "gold" : "silver");
+  const weightGrams = Number(product.technical_specs?.weight_grams) || 
+                      Number(product.weight_label?.replace(/[^0-9.]/g, "")) || 100;
+  
+  const rawSlug = product.id || product.name_en || "product";
+  const slug = String(rawSlug)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+
+  const payload: any = {
+    name: product.name_en || "",
+    arabic_name: product.name_ar || product.name_en || "",
+    slug: slug,
+    category: product.category || "gold_bars",
+    brand: product.brand || product.manufacturer || "PAMP Suisse",
+    metal_type: metalType,
+    weight_grams: weightGrams,
+    purity: product.purity || "999.9",
+    price: Number(product.price) || 0,
+    price_mode: product.price_mode || "spot",
+    currency: "AED",
+    image_url: product.image_url || "",
+    availability: product.availability || "In Stock",
+    stock_status: product.stock_status || "In Stock",
+    stock_quantity: 25,
+    description: product.description_en || "",
+    arabic_description: product.description_ar || "",
+    certificate_url: product.certificate_url || "",
+    published: product.published !== undefined ? product.published : true
+  };
+
+  if (product.category_id && isUUID(product.category_id)) {
+    payload.category_id = product.category_id;
+  } else if (product.category && isUUID(product.category)) {
+    payload.category_id = product.category;
+  }
+
+  // Ensure ONLY the strictly allowed DB fields are returned (plus id/category_id if present/valid)
+  const allowedKeys = [
+    "id",
+    "name",
+    "arabic_name",
+    "slug",
+    "category",
+    "brand",
+    "metal_type",
+    "weight_grams",
+    "purity",
+    "price",
+    "price_mode",
+    "currency",
+    "image_url",
+    "availability",
+    "stock_status",
+    "stock_quantity",
+    "description",
+    "arabic_description",
+    "certificate_url",
+    "published"
+  ];
+
+  if (payload.category_id && isUUID(payload.category_id)) {
+    allowedKeys.push("category_id");
+  }
+
+  const sanitizedPayload: any = {};
+  for (const key of allowedKeys) {
+    if (key === "id") {
+      if (product.id) {
+        sanitizedPayload.id = product.id;
+      }
+    } else if (payload[key] !== undefined) {
+      sanitizedPayload[key] = payload[key];
+    }
+  }
+
+  return sanitizedPayload;
+};
+
 // =========================================================================
 // UNIVERSAL DATA ACCESS LAYER (dbService)
 // Transparently routes queries to Live Supabase (if connected) or Local Storage
@@ -508,15 +669,45 @@ export const dbService = {
     list: async (): Promise<Product[]> => {
       if (isLive && supabase) {
         const { data, error } = await supabase.from("products").select("*");
-        if (!error && data) return data as Product[];
+        if (!error && data) {
+          return data.map(row => mapDbProductToFrontend(row));
+        }
       }
       return mockDb.get("pgr_products");
     },
     save: async (product: any) => {
       if (isLive && supabase) {
-        const { data, error } = await supabase.from("products").upsert(product).select();
+        const dbPayload = mapFrontendProductToDb(product);
+        
+        // Map category slug or text to category_id if not already present
+        if (!dbPayload.category_id && dbPayload.category) {
+          try {
+            const { data: catData } = await supabase
+              .from("categories")
+              .select("id")
+              .or(`slug.eq."${dbPayload.category}",name.ilike.%${dbPayload.category}%`);
+            
+            if (catData && catData.length > 0) {
+              dbPayload.category_id = catData[0].id;
+            } else {
+              // Try fallback to the first category in the database
+              const { data: firstCat } = await supabase
+                .from("categories")
+                .select("id")
+                .limit(1);
+              if (firstCat && firstCat.length > 0) {
+                dbPayload.category_id = firstCat[0].id;
+              }
+            }
+          } catch (e) {
+            console.error("Failed to map category to category_id:", e);
+          }
+        }
+
+        console.log("PRODUCT_SAVE_PAYLOAD", dbPayload);
+        const { data, error } = await supabase.from("products").upsert(dbPayload).select();
         if (error) throw new Error(error.message || JSON.stringify(error));
-        if (data) return data[0];
+        if (data) return mapDbProductToFrontend(data[0]);
       }
       const list = mockDb.get("pgr_products");
       const index = list.findIndex((p: any) => p.id === product.id);

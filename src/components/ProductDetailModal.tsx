@@ -7,7 +7,7 @@ import React, { useState, useEffect } from "react";
 import { X, ShieldCheck, Phone, CheckCircle, Mail, AlertTriangle, FileText, ZoomIn, Download, Check, ExternalLink, Award } from "lucide-react";
 import { Product, LiveMarketRates } from "../types";
 import { PRODUCTS } from "../data";
-import { dbService } from "../lib/supabase";
+import { dbService, isProduction } from "../lib/supabase";
 
 interface ProductDetailModalProps {
   currentLang: "en" | "ar";
@@ -156,7 +156,7 @@ Phone: ${phone}
   };
 
   // Find up to 3 related products of the same metal type
-  const relatedProducts = (products.length > 0 ? products : PRODUCTS).filter(
+  const relatedProducts = (products.length > 0 ? products : (isProduction ? [] : PRODUCTS)).filter(
     (p) => p.technical_specs.metal === activeProduct.technical_specs.metal && p.id !== activeProduct.id
   ).slice(0, 3);
 

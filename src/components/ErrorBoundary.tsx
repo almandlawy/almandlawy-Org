@@ -37,7 +37,7 @@ export default class ErrorBoundary extends React.Component<Props, State> {
       const isAr = typeof window !== "undefined" && (
         window.navigator.language.startsWith("ar") || 
         document.documentElement.dir === "rtl" ||
-        document.getElementById("pgr-root-container")?.className.includes("font-arabic")
+        (document.getElementById("pgr-root-container")?.className || "").includes("font-arabic")
       );
 
       return (
