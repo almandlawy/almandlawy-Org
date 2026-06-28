@@ -122,7 +122,7 @@ export default function Footer({
               <li><button onClick={() => onOpenLegalDoc("terms")} className="hover:text-gold-base transition-colors cursor-pointer text-left">{currentLang === "ar" ? "شروط وأحكام التداول" : "Trading Terms & Conditions"}</button></li>
               <li><button onClick={() => onOpenLegalDoc("privacy")} className="hover:text-gold-base transition-colors cursor-pointer text-left">{currentLang === "ar" ? "سياسة خصوصية البيانات" : "Privacy & Data Directive"}</button></li>
               <li><button onClick={() => onOpenLegalDoc("shipping")} className="hover:text-gold-base transition-colors cursor-pointer text-left">{currentLang === "ar" ? "سياسة الشحن والتأمين" : "Shipping & Transit Insurance"}</button></li>
-              <li><span className="text-gray-500">{currentLang === "ar" ? "الاعتماد الفني:" : "Assay Standard:"} {currentLang === "ar" ? "مصافي معتمدة دولياً" : "Certified Good Delivery Refiners"}</span></li>
+              <li><span className="text-gray-500">{currentLang === "ar" ? "الاعتماد الفني:" : "Assay Standard:"} {currentLang === "ar" ? "مصافي معتمدة دولياً" : "Certified International Refiners"}</span></li>
             </ul>
           </div>
 

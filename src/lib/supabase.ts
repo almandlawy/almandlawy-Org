@@ -238,7 +238,7 @@ const seedLocalStorage = () => {
         shipping_address: "PGR Vault Gateway Office, Dubai Marina",
         billing_address: "PGR Vault Gateway Office, Dubai Marina",
         items: [
-          { product_id: "gb-1kg", quantity: 1, unit_price: 326500.0, product_name: "PAMP Suisse 1kg Good Delivery Gold Bar" }
+          { product_id: "gb-1kg", quantity: 1, unit_price: 326500.0, product_name: "PAMP Suisse 1kg Certified Gold Bar" }
         ]
       }
     ];
@@ -255,13 +255,13 @@ const seedLocalStorage = () => {
       category: "Gold News",
       title_en: "The Dubai Gold Advantage: Complete 2026 Tax & VAT Guide",
       title_ar: "ميزة ذهب دبي: الدليل الكامل للضرائب وضريبة القيمة مضافة لعام ٢٠٢٦",
-      content_en: "Dubai remains the premier globally accredited precious metals hub. Under UAE Federal Tax Law, physical investment gold with a purity of 99.5% or above is subject to 0% Value Added Tax (VAT). This exemption, combined with zero corporate and personal income taxes in the DMCC zone, offers international portfolio holders a dramatic 5-10% cost hedge compared to European and North American channels. PGR UAE provides complete custom-cleared transport directly to our secure, covered vaults.",
-      content_ar: "تظل دبي العاصمة العالمية الأبرز لتجارة المعادن الثمينة. بموجب قانون الضرائب الاتحادي لدولة الإمارات، تخضع سبائك الذهب الاستثمارية التي تبلغ نقاوتها ٩٩.٥٪ أو أكثر لضريبة القيمة المضافة بنسبة ٠٪. هذا الإعفاء، بالإضافة لعدم وجود ضرائب دخل في منطقة DMCC، يوفر ميزة مالية تبلغ ٥-١٠٪ مقارنة بالدول الغربية.",
+      content_en: "Dubai remains the premier globally accredited precious metals hub. Under UAE Federal Tax Law, physical investment gold with a purity of 99.5% or above is subject to 0% Value Added Tax (VAT). This exemption, combined with zero corporate and personal income taxes in the region, offers international portfolio holders a dramatic 5-10% cost hedge compared to European and North American channels. PGR UAE provides complete custom-cleared transport directly to our secure, covered vaults.",
+      content_ar: "تظل دبي العاصمة العالمية الأبرز لتجارة المعادن الثمينة. بموجب قانون الضرائب الاتحادي لدولة الإمارات، تخضع سبائك الذهب الاستثمارية التي تبلغ نقاوتها ٩٩.٥٪ أو أكثر لضريبة القيمة المضافة بنسبة ٠٪. هذا الإعفاء، بالإضافة لعدم وجود ضرائب دخل في المنطقة، يوفر ميزة مالية تبلغ ٥-١٠٪ مقارنة بالدول الغربية.",
       author: "PGR Advisory Board",
       published_at: "2026-06-01",
       featured: true,
       seo_title: "Dubai Gold Tax & VAT Free Investment Guide 2026",
-      seo_description: "Learn why physical gold bullion is 0% VAT in Dubai UAE and how institutional investors structure their portfolios under DMCC zone laws."
+      seo_description: "Learn why physical gold bullion is 0% VAT in Dubai UAE and how institutional investors structure their portfolios under UAE laws."
     },
     {
       id: "blog-2",
@@ -302,7 +302,7 @@ const seedLocalStorage = () => {
       company: "Elite Asset Holdings Ltd",
       addresses: [
         { id: "add-1", label: "Primary Vault Marina", address: "Penthouse 45, Marina Heights, Dubai Marina, UAE" },
-        { id: "add-2", label: "DMCC Storage Center", address: "Vault Block B, Almas Tower, DMCC Precinct, Dubai" }
+        { id: "add-2", label: "Premium Storage Center", address: "Vault Block B, Almas Tower, DMCC Precinct, Dubai" }
       ],
       wishlist: ["gb-1kg", "gc-britannia"],
       role: "verified_customer", // or "admin"

@@ -19,7 +19,7 @@ export default function AIConcierge({ currentLang, onClose }: AIConciergeProps) 
       role: "assistant",
       content: currentLang === "ar"
         ? "مرحباً بك في مجلس PGR الاستشاري المالي الرقمي. أنا مستشارك المالي التنفيذي المخصص للمعادن الثمينة بدبي. كيف يمكنني مساعدة جنابك اليوم في إدارة وتأمين ثروتك بالسبائك الحرة؟"
-        : "Welcome to PGR UAE Precious Metals Advisory Chamber. I am your Executive Bullion Consultant, representing our Dubai desk. How may I assist your portfolio today regarding physical asset allocation, tax-free DMCC vaulting, or wholesale trading?",
+        : "Welcome to PGR UAE Precious Metals Advisory Chamber. I am your Executive Bullion Consultant, representing our Dubai desk. How may I assist your portfolio today regarding physical asset allocation, tax-free secure vaulting, or wholesale trading?",
       timestamp: new Date().toLocaleTimeString()
     }
   ]);
@@ -183,7 +183,7 @@ export default function AIConcierge({ currentLang, onClose }: AIConciergeProps) 
                 <span className="h-1.5 w-1.5 rounded-full bg-gold-base animate-bounce" style={{ animationDelay: "100ms" }} />
                 <span className="h-1.5 w-1.5 rounded-full bg-gold-base animate-bounce" style={{ animationDelay: "200ms" }} />
                 <span className="h-1.5 w-1.5 rounded-full bg-gold-base animate-bounce" style={{ animationDelay: "300ms" }} />
-                <span>Syncing DMCC desk...</span>
+                <span>Syncing PGR desk...</span>
               </div>
             </div>
           )}
@@ -238,7 +238,7 @@ export default function AIConcierge({ currentLang, onClose }: AIConciergeProps) 
           </form>
           
           <div className="text-[9px] text-gray-600 font-mono text-center">
-            Investment advice provided by PGR artificial intelligence node. Standard DMCC terms apply.
+            Consultation provided by PGR artificial intelligence node. Standard terms and conditions apply.
           </div>
         </div>
 

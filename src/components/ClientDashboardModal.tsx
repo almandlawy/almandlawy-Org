@@ -587,7 +587,7 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
                 <div className="space-y-3 pt-2">
                   <div className="flex items-center gap-2 text-xs text-gray-300">
                     <ShieldCheck size={16} className="text-gold-base" />
-                    <span>{isAr ? "ممتثل لضوابط مركز دبي للسلع (DMCC)" : "DMCC Regulatory Standards Compliant"}</span>
+                    <span>{isAr ? "ممتثل لضوابط الفحص الفني الدولية" : "International Assay Standards Compliant"}</span>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-gray-300">
                     <Truck size={16} className="text-gold-base" />
@@ -816,7 +816,7 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
                       <strong>{isAr ? "إقرار تنظيم مكافحة غسيل الأموال:" : "Regulatory AML Declaration:"}</strong>{" "}
                       {isAr 
                         ? "بالنقر على التسجيل، أقر بأنني سألتزم بمتطلبات التحقق والهوية الرقمية وتقديم مصادر الأموال الحقيقية عند طلب سبائك المعادن الثمينة بقيمة مرتفعة."
-                        : "By onboarding, I declare compliance with UAE Central Bank & DMCC physical gold sourcing rules, including verified ID uploads and legal proof of funds statements."}
+                        : "By onboarding, I declare compliance with UAE Central Bank & legal physical gold sourcing rules, including verified ID uploads and legal proof of funds statements."}
                     </div>
 
                     {onboardSuccessMsg && (
@@ -1724,7 +1724,7 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
                                 <QrCode size={30} className="text-black" />
                               </div>
                               <div className="text-[9px] text-gray-500 leading-tight">
-                                <div>SCAN TO VALIDATE AGAINST DMCC DATABASE RECORD</div>
+                                <div>SCAN TO VALIDATE PRODUCT CERTIFICATE RECORD</div>
                                 <span className="text-[#c5a85c]">{verifiedCert.qr_code}</span>
                               </div>
                             </div>

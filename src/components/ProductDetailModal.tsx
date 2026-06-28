@@ -127,8 +127,8 @@ Assay Metal: ${activeProduct.technical_specs.metal.toUpperCase()}
 Fineness: ${activeProduct.purity}
 Timestamp: ${new Date().toUTCString()}
 
-Under DMCC Clearing Regulations, physical bullion products
-originating from certified Refiners (Good Delivery Standard)
+Under applicable UAE fiscal regulations, physical investment precious metals
+originating from certified Refiners (International Standard)
 are subject to 0% VAT in the United Arab Emirates.
 
 This document serves as an official technical guide.
@@ -379,7 +379,7 @@ Phone: ${phone}
                     <p className="text-gray-400 leading-relaxed text-[11px] font-sans">
                       {currentLang === "ar"
                         ? "كافة المصافي المعتمدة لدينا مدرجة في القوائم الرسمية المعتمدة للمصافي العالمية. يتم نقش الرقم التسلسلي الفريد بدقة على وجه كل سبيكة للتأكد المطلق من أصالتها."
-                        : "Our represented Swiss and international mints adhere to stringent Good Delivery rules. Every single product has an individualized laser seal engraved into its face."}
+                        : "Our represented Swiss and international mints adhere to stringent recognized international purity standards. Every single product has an individualized laser seal engraved into its face."}
                     </p>
                     <div className="pt-2 border-t border-white/[0.02] flex justify-between items-center text-[10px]">
                       <span className="text-gray-500">SECURE VAULT SERIAL:</span>

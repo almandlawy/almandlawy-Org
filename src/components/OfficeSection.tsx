@@ -61,8 +61,8 @@ export default function OfficeSection({ currentLang }: OfficeSectionProps) {
     emailValue: email,
     complianceTitle: isAr ? "الامتثال والتصاريح الأمنية" : "Compliance Status",
     complianceText: isAr 
-      ? `مرخص ومسجل بالكامل تحت سلطة مركز دبي للسلع المتعددة (DMCC) برقم تسجيل ${regNo}. جميع المعاملات تخضع لقوانين مكافحة غسيل الأموال (AML) ومطابقة معايير البنك المركزي للإمارات.` 
-      : `Fully registered and audit-compliant under DMCC registry license no. ${regNo}. All bullion procurement is cleared via stringent AML / KYC frameworks matching UAE Central Bank guidelines.`
+      ? `ممتثل للضوابط والتدقيق القانوني بالكامل بموجب ترخيص رقم ${regNo}. جميع المعاملات تخضع لقوانين مكافحة غسيل الأموال (AML) ومطابقة معايير البنك المركزي للإمارات.` 
+      : `Fully compliant under commercial license no. ${regNo}. All bullion procurement is cleared via stringent AML / KYC frameworks matching UAE Central Bank guidelines.`
   };
 
   return (
