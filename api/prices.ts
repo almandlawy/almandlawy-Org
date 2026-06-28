@@ -32,27 +32,56 @@ function isGoldApiKeyFormat(value: string): boolean {
   return /^goldapi-[a-z0-9]+-io$/i.test(value.trim());
 }
 
+function isMetalPriceApiKeyFormat(value: string): boolean {
+  return /^[a-f0-9]{32}$/i.test(value.trim());
+}
+
+function getMetalPriceApiKey(): string {
+  const fromEnv = process.env.METAL_PRICE_API_KEY?.trim() || "";
+  if (fromEnv) return fromEnv;
+
+  const goldEnv = process.env.GOLD_API_KEY?.trim() || "";
+  if (goldEnv && isMetalPriceApiKeyFormat(goldEnv) && !isGoldApiKeyFormat(goldEnv)) {
+    return goldEnv;
+  }
+
+  return "";
+}
+
 function resolveProviderConfig() {
   const rawProvider = process.env.METAL_PRICE_PROVIDER?.trim() || "";
   const provider = normalizeProvider(rawProvider);
   const goldApiKey = process.env.GOLD_API_KEY?.trim() || "";
-  const metalPriceApiKey = process.env.METAL_PRICE_API_KEY?.trim() || "";
+  const metalPriceApiKey = getMetalPriceApiKey();
+
+  // MetalpriceAPI key takes priority over a stale goldapi provider setting
+  if (metalPriceApiKey) {
+    return {
+      providerId: "metalpriceapi" as ProviderId,
+      providerName: "MetalpriceAPI",
+      apiKey: metalPriceApiKey,
+      providerEnv: "metalpriceapi",
+      fallbackMetalPriceKey: metalPriceApiKey
+    };
+  }
 
   if (provider === "metalpriceapi" || provider === "metalprice") {
     return {
       providerId: "metalpriceapi" as ProviderId,
       providerName: "MetalpriceAPI",
-      apiKey: metalPriceApiKey || goldApiKey || null,
-      providerEnv: "metalpriceapi"
+      apiKey: metalPriceApiKey || null,
+      providerEnv: "metalpriceapi",
+      fallbackMetalPriceKey: metalPriceApiKey || null
     };
   }
 
-  if (provider === "goldapi") {
+  if (provider === "goldapi" && goldApiKey && isGoldApiKeyFormat(goldApiKey)) {
     return {
       providerId: "goldapi" as ProviderId,
       providerName: "GoldAPI.io",
-      apiKey: goldApiKey || null,
-      providerEnv: "goldapi"
+      apiKey: goldApiKey,
+      providerEnv: "goldapi",
+      fallbackMetalPriceKey: process.env.METAL_PRICE_API_KEY?.trim() || null
     };
   }
 
@@ -61,25 +90,18 @@ function resolveProviderConfig() {
       providerId: "goldapi" as ProviderId,
       providerName: "GoldAPI.io",
       apiKey: goldApiKey || rawProvider,
-      providerEnv: "goldapi"
+      providerEnv: "goldapi",
+      fallbackMetalPriceKey: process.env.METAL_PRICE_API_KEY?.trim() || null
     };
   }
 
-  if (metalPriceApiKey) {
-    return {
-      providerId: "metalpriceapi" as ProviderId,
-      providerName: "MetalpriceAPI",
-      apiKey: metalPriceApiKey,
-      providerEnv: "metalpriceapi"
-    };
-  }
-
-  if (goldApiKey) {
+  if (goldApiKey && isGoldApiKeyFormat(goldApiKey)) {
     return {
       providerId: "goldapi" as ProviderId,
       providerName: "GoldAPI.io",
       apiKey: goldApiKey,
-      providerEnv: "goldapi"
+      providerEnv: "goldapi",
+      fallbackMetalPriceKey: process.env.METAL_PRICE_API_KEY?.trim() || null
     };
   }
 
@@ -87,8 +109,18 @@ function resolveProviderConfig() {
     providerId: null,
     providerName: "None",
     apiKey: null,
-    providerEnv: provider || null
+    providerEnv: provider || null,
+    fallbackMetalPriceKey: null
   };
+}
+
+function isGoldApiQuotaError(errors?: Array<{ metal: string; status: number; error: string }>) {
+  if (!errors?.length) return false;
+  return errors.some(
+    (e) =>
+      e.status === 403 &&
+      /quota exceeded|monthly api quota/i.test(e.error)
+  );
 }
 
 function buildRequestQuoteResponse(opts: {
@@ -315,6 +347,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const config = resolveProviderConfig();
     const isLiveConfigured = !!config.providerId && !!config.apiKey;
+    let providerName = config.providerName;
+    let providerEnv = config.providerEnv;
 
     if (!config.providerId || !config.apiKey) {
       return res.status(200).json(
@@ -340,19 +374,46 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           ? await fetchMetalPriceApiSpots(config.apiKey, controller.signal)
           : await fetchGoldApiSpots(config.apiKey, controller.signal);
     } catch (err: any) {
-      console.error(`${config.providerName} price fetch failed:`, err);
-      return res.status(200).json(
-        buildRequestQuoteResponse({
-          provider: config.providerName,
-          has_api_key: true,
-          is_live_configured: true,
-          provider_attempted: true,
-          provider_status: "error",
-          provider_error_type: "api_failed",
-          provider_env: config.providerEnv,
-          provider_errors: err?.provider_errors
-        })
-      );
+      const canFallback =
+        config.providerId === "goldapi" &&
+        config.fallbackMetalPriceKey &&
+        isGoldApiQuotaError(err?.provider_errors);
+
+      if (canFallback) {
+        try {
+          spots = await fetchMetalPriceApiSpots(config.fallbackMetalPriceKey!, controller.signal);
+          providerName = "MetalpriceAPI";
+          providerEnv = "metalpriceapi";
+        } catch (fallbackErr: any) {
+          console.error("MetalpriceAPI fallback failed:", fallbackErr);
+          return res.status(200).json(
+            buildRequestQuoteResponse({
+              provider: "MetalpriceAPI",
+              has_api_key: true,
+              is_live_configured: true,
+              provider_attempted: true,
+              provider_status: "error",
+              provider_error_type: "api_failed",
+              provider_env: "metalpriceapi",
+              provider_errors: fallbackErr?.provider_errors || err?.provider_errors
+            })
+          );
+        }
+      } else {
+        console.error(`${config.providerName} price fetch failed:`, err);
+        return res.status(200).json(
+          buildRequestQuoteResponse({
+            provider: config.providerName,
+            has_api_key: true,
+            is_live_configured: true,
+            provider_attempted: true,
+            provider_status: "error",
+            provider_error_type: "api_failed",
+            provider_env: config.providerEnv,
+            provider_errors: err?.provider_errors
+          })
+        );
+      }
     } finally {
       clearTimeout(timeoutId);
     }
@@ -363,7 +424,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       status: "success",
       is_live_configured: true,
       source_status: "live",
-      provider: config.providerName,
+      provider: providerName,
       gold_usd_per_oz: spots.gold,
       silver_usd_per_oz: spots.silver,
       platinum_usd_per_oz: spots.platinum,
@@ -373,7 +434,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       has_api_key: true,
       provider_attempted: true,
       provider_status: "live",
-      provider_env: config.providerEnv,
+      provider_env: providerEnv,
       provider_errors: spots.provider_errors?.length ? spots.provider_errors : undefined,
       timestamp: new Date().toISOString(),
       base_usd: currentSpots,
