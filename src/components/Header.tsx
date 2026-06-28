@@ -194,13 +194,13 @@ export default function Header({
               </span>
             </button>
 
-            {/* AI Advisor Button */}
+            {/* AI Assistant Button */}
             <button
               onClick={onOpenAIChat}
               className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded bg-gradient-to-r from-gold-dark/20 to-gold-base/10 border border-gold-base/30 hover:border-gold-base text-[12px] tracking-wider uppercase text-gold-light font-medium transition-all duration-300 cursor-pointer shadow-[0_0_15px_rgba(212,175,55,0.1)]"
             >
               <MessageSquare size={13} className="animate-pulse text-gold-base" />
-              <span>{currentLang === "ar" ? "المستشار الذكي" : "Executive AI Advisor"}</span>
+              <span>{currentLang === "ar" ? "مساعد المنتجات وطلبات التسعير" : "Product & Quote Assistant"}</span>
             </button>
 
             {/* Custom Quote Request */}
@@ -272,7 +272,7 @@ export default function Header({
             </div>
 
             <div className="flex flex-col gap-2 pt-2">
-              {/* Mobile AI Advisor Button */}
+              {/* Mobile AI Assistant Button */}
               <button
                 onClick={() => {
                   onOpenAIChat();
@@ -281,7 +281,7 @@ export default function Header({
                 className="flex justify-center items-center gap-2 px-4 py-3 rounded bg-gold-dark/10 border border-gold-base/30 text-[13px] tracking-wider uppercase text-gold-light font-medium"
               >
                 <MessageSquare size={14} className="text-gold-base" />
-                <span>{currentLang === "ar" ? "المستشار الذكي" : "Executive AI Advisor"}</span>
+                <span>{currentLang === "ar" ? "مساعد المنتجات وطلبات التسعير" : "Product & Quote Assistant"}</span>
               </button>
 
               {/* Mobile Quote Button */}

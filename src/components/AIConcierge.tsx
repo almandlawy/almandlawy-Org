@@ -18,8 +18,8 @@ export default function AIConcierge({ currentLang, onClose }: AIConciergeProps) 
       id: "init",
       role: "assistant",
       content: currentLang === "ar"
-        ? "مرحباً بك في مجلس PGR الاستشاري المالي الرقمي. أنا مستشارك المالي التنفيذي المخصص للمعادن الثمينة بدبي. كيف يمكنني مساعدة جنابك اليوم في إدارة وتأمين ثروتك بالسبائك الحرة؟"
-        : "Welcome to PGR UAE Precious Metals Advisory Chamber. I am your Executive Bullion Consultant, representing our Dubai desk. How may I assist your portfolio today regarding physical asset allocation, tax-free secure vaulting, or wholesale trading?",
+        ? "مرحباً بك في مساعد المنتجات وطلبات التسعير من PGR UAE. أنا مساعدك الرقمي للإجابة عن تفاصيل المنتجات وتنسيق طلبات التسعير وخيارات التوصيل. كيف يمكنني مساعدتك اليوم؟"
+        : "Welcome to PGR UAE Product & Quote Assistant. I am your digital assistant here to help you with product details, requesting quotes, coordination of delivery options, or WhatsApp contact. How may I help you today?",
       timestamp: new Date().toLocaleTimeString()
     }
   ]);
@@ -70,7 +70,7 @@ export default function AIConcierge({ currentLang, onClose }: AIConciergeProps) 
       const assistantMsg: ChatMessage = {
         id: "ai-" + Math.random(),
         role: "assistant",
-        content: data.text || "I was unable to synchronize with our Dubai advisory node. Please contact our desk directly via email or WhatsApp.",
+        content: data.text || "I was unable to synchronize with our Dubai support desk. Please contact us directly via email or WhatsApp.",
         timestamp: new Date().toLocaleTimeString()
       };
 
@@ -80,8 +80,8 @@ export default function AIConcierge({ currentLang, onClose }: AIConciergeProps) 
         id: "err-" + Math.random(),
         role: "assistant",
         content: currentLang === "ar"
-          ? "المعذرة، واجهنا صعوبة في الاتصال بخادم الاستشارات في دبي. يمكنك الاستفسار مباشرة عبر واتساب PGR على 971500000000+."
-          : "We encountered a minor communication lag with our Dubai trading server. Please feel free to initiate a direct query via PGR WhatsApp at +971500000000.",
+          ? "المعذرة، واجهنا صعوبة في الاتصال بخدمات PGR في دبي. يمكنك تقديم طلب تسعير أو الاستفسار مباشرة عبر واتساب PGR على 971559688837+."
+          : "We encountered a minor communication lag with our Dubai server. Please feel free to request a quote or initiate a direct query via PGR WhatsApp at +971559688837.",
         timestamp: new Date().toLocaleTimeString()
       };
       setMessages((prev) => [...prev, errorMsg]);
@@ -121,7 +121,7 @@ export default function AIConcierge({ currentLang, onClose }: AIConciergeProps) 
             </div>
             <div>
               <h3 className="text-sm md:text-base font-serif font-semibold text-white tracking-wider uppercase">
-                {currentLang === "ar" ? "ديوان الاستشارات الذكي" : "Executive Advisor Node"}
+                {currentLang === "ar" ? "مساعد المنتجات وطلبات التسعير" : "Product & Quote Assistant"}
               </h3>
               <div className="flex items-center gap-1.5 text-[10px] text-gray-400 font-mono">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -196,7 +196,7 @@ export default function AIConcierge({ currentLang, onClose }: AIConciergeProps) 
           <div className="space-y-1.5">
             <span className="text-[10px] font-mono text-gray-500 uppercase tracking-widest flex items-center gap-1">
               <HelpCircle size={10} />
-              {currentLang === "ar" ? "مواضيع مقترحة للاستثمار" : "Recommended Advisory Queries"}
+              {currentLang === "ar" ? "مواضيع مقترحة للاستفسار" : "Recommended Queries"}
             </span>
             <div className="flex flex-wrap gap-1.5">
               {suggestions.map((sug, idx) => (
@@ -223,7 +223,7 @@ export default function AIConcierge({ currentLang, onClose }: AIConciergeProps) 
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder={currentLang === "ar" ? "تحدث مع المستشار المالي بخصوص سبائك دبي..." : "Ask PGR Advisor about bullion specs..."}
+              placeholder={currentLang === "ar" ? "اسأل مساعد PGR بخصوص مواصفات المنتجات..." : "Ask PGR Assistant about product specs..."}
               className="flex-1 bg-[#161616] border border-white/[0.04] focus:border-gold-base/50 focus:ring-1 focus:ring-gold-base/50 rounded-sm py-3 pl-4 pr-12 outline-none text-xs text-white"
               style={{ direction: currentLang === "ar" ? "rtl" : "ltr", textAlign: currentLang === "ar" ? "right" : "left" }}
             />
@@ -238,7 +238,7 @@ export default function AIConcierge({ currentLang, onClose }: AIConciergeProps) 
           </form>
           
           <div className="text-[9px] text-gray-600 font-mono text-center">
-            Consultation provided by PGR artificial intelligence node. Standard terms and conditions apply.
+            Product specifications provided by PGR artificial intelligence. Standard terms and conditions apply.
           </div>
         </div>
 

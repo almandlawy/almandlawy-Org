@@ -75,8 +75,8 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
     whatsapp_hotline: "+971559688837",
     desk_email: "desk@pgruae.com",
     trade_phone: "+971 4 445 8888",
-    office_address_en: "Almas Tower, DMCC Precinct, Dubai Marina, Dubai, United Arab Emirates",
-    office_address_ar: "برج الماس، منطقة مركز دبي للسلع المتعددة (DMCC)، دبي مارينا، دبي، الإمارات العربية المتحدة",
+    office_address_en: "Almas Tower, West Trade Zone, Dubai Marina, Dubai, United Arab Emirates",
+    office_address_ar: "برج الماس، منطقة التداول الحرة، دبي مارينا، دبي، الإمارات العربية المتحدة",
     dmcc_reg_no: "890317",
     manual_gold_usd_oz: 2365.40,
     manual_silver_usd_oz: 29.85,
@@ -2015,7 +2015,7 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                 <div className="space-y-6">
                   <div>
                     <h4 className="text-lg font-serif text-white">Vault Handover Terminals</h4>
-                    <p className="text-xs text-gray-500 font-mono uppercase">Control secure bullion pickup locations across Iraq and UAE DMCC Freezone</p>
+                    <p className="text-xs text-gray-500 font-mono uppercase">Control secure bullion pickup locations across Iraq and UAE Freezone</p>
                   </div>
 
                   {/* Add Pickup Point */}
@@ -2535,7 +2535,7 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                 <div className="space-y-6">
                   <div>
                     <h4 className="text-lg font-serif text-white">Settings & Support Matrices</h4>
-                    <p className="text-xs text-gray-500 font-mono uppercase">Control trade hotlines, DMCC registration numbers and office addresses</p>
+                    <p className="text-xs text-gray-500 font-mono uppercase">Control trade hotlines, official registration numbers and office addresses</p>
                   </div>
 
                   <form onSubmit={handleSavePricingConfig} className="p-5 bg-[#0d0d0e] rounded border border-white/[0.03] space-y-4 text-xs font-mono">
@@ -2593,7 +2593,7 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1">
-                        <label className="text-gray-500 block uppercase text-[9px]">DMCC Trade Registration Number</label>
+                        <label className="text-gray-500 block uppercase text-[9px]">Official Trade Registration Number</label>
                         <input
                           type="text"
                           value={settings.dmcc_reg_no}

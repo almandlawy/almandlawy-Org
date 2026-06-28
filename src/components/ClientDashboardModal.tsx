@@ -794,7 +794,7 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
                             type="text"
                             value={onboardCompany}
                             onChange={(e) => setOnboardCompany(e.target.value)}
-                            placeholder="e.g., DMCC-REG-55291"
+                            placeholder="e.g., REG-55291"
                             className="w-full bg-[#111] border border-white/[0.08] focus:border-gold-base rounded py-2 px-3 text-xs text-white outline-none"
                           />
                         </div>

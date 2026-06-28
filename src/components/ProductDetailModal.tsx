@@ -118,7 +118,7 @@ export default function ProductDetailModal({
     // Create and download a simulated text file representing a secure receipt
     const content = `=====================================================
 PGR UAE PRECIOUS METALS TRADING - DUBAI MARINA
-OFFICIAL PORTFOLIO ADVISORY SERVICE
+OFFICIAL PRODUCT & QUOTE DESK SERVICE
 =====================================================
 Document: ${docName}
 Reference SKU: ${activeProduct.id}

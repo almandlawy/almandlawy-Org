@@ -173,8 +173,8 @@ export default function Footer({
               <span className="text-white block font-medium">{currentLang === "ar" ? "مقر دبي الرئيسي" : "Dubai Head Office"}</span>
               <span className="text-gray-500">
                 {currentLang === "ar" 
-                  ? (settings?.office_address_ar || "برج الماس، منطقة مركز دبي للسلع المتعددة (DMCC)، دبي مارينا، دبي، الإمارات العربية المتحدة")
-                  : (settings?.office_address_en || "Almas Tower, DMCC Precinct, Dubai Marina, Dubai, UAE")}
+                  ? (settings?.office_address_ar || "برج الماس، منطقة التداول الحرة، دبي مارينا، دبي، الإمارات العربية المتحدة")
+                  : (settings?.office_address_en || "Almas Tower, West Trade Zone, Dubai Marina, Dubai, UAE")}
               </span>
             </div>
           </div>

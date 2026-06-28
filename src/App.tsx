@@ -425,7 +425,7 @@ export default function App() {
         <button
           onClick={() => setIsAIChatOpen(true)}
           className="h-12 w-12 bg-gradient-to-r from-gold-dark to-gold-base text-black rounded-full flex items-center justify-center shadow-[0_4px_25px_rgba(212,175,55,0.35)] hover:scale-105 transform transition-all cursor-pointer"
-          title="Executive AI Advisor Desk"
+          title="Product & Quote Assistant Desk"
         >
           <Sparkles size={20} />
         </button>

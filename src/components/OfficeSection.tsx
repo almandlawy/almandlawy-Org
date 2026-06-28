@@ -37,12 +37,12 @@ export default function OfficeSection({ currentLang }: OfficeSectionProps) {
   }, []);
 
   const address = isAr 
-    ? (settings?.office_address_ar || "برج الماس، منطقة مركز دبي للسلع المتعددة (DMCC)، دبي مارينا، دبي، الإمارات العربية المتحدة")
-    : (settings?.office_address_en || "Almas Tower, DMCC Precinct, Dubai Marina, Dubai, United Arab Emirates");
+    ? (settings?.office_address_ar || "برج الماس، منطقة التداول الحرة، دبي مارينا، دبي، الإمارات العربية المتحدة")
+    : (settings?.office_address_en || "Almas Tower, West Trade Zone, Dubai Marina, Dubai, United Arab Emirates");
   
   const phone = settings?.trade_phone || "+971 4 445 8888";
   const email = settings?.desk_email || "desk@pgruae.com";
-  const whatsapp = settings?.whatsapp_hotline || "+971509998888";
+  const whatsapp = settings?.whatsapp_hotline || "+971559688837";
   const whatsappCleaned = whatsapp.replace(/[^0-9]/g, "");
   const regNo = settings?.dmcc_reg_no || "890317";
 
@@ -203,7 +203,7 @@ export default function OfficeSection({ currentLang }: OfficeSectionProps) {
                     {isAr ? "برج الماس دبي" : "Almas Tower, Dubai"}
                   </h5>
                   <p className="text-[10px] text-gray-400 font-sans">
-                    {isAr ? "مركز دبي للسلع المتعددة، دبي مارينا" : "DMCC Precinct, Dubai Marina"}
+                    {isAr ? "منطقة التداول الحرة، دبي مارينا" : "Free Trade Zone, Dubai Marina"}
                   </p>
                 </div>
                 <a 

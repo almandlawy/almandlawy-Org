@@ -89,8 +89,8 @@ let serverSettings = {
   whatsapp_hotline: "+971559688837",
   desk_email: "desk@pgruae.com",
   trade_phone: "+971 4 445 8888",
-  office_address_en: "Almas Tower, DMCC Precinct, Dubai Marina, Dubai, United Arab Emirates",
-  office_address_ar: "برج الماس، منطقة مركز دبي للسلع المتعددة (DMCC)، دبي مارينا، دبي، الإمارات العربية المتحدة",
+  office_address_en: "Almas Tower, West Trade Zone, Dubai Marina, Dubai, United Arab Emirates",
+  office_address_ar: "برج الماس، منطقة التداول الحرة، دبي مارينا، دبي، الإمارات العربية المتحدة",
   dmcc_reg_no: "890317",
   manual_gold_usd_oz: 2365.40,
   manual_silver_usd_oz: 29.85,
@@ -457,8 +457,8 @@ app.post("/api/quote", async (req, res) => {
       success: true,
       inquiryId,
       message: sourceLanguage === "ar" 
-        ? "لقد تم تسجيل طلب عرض السعر بنجاح. سيتواصل معك أحد مستشارينا التنفيذيين خلال ٢٤ ساعة."
-        : "Your bespoke quote request has been cataloged successfully. A PGR Executive Advisor will initiate contact within 24 hours.",
+        ? "لقد تم تسجيل طلب عرض السعر بنجاح. سيتواصل معك أحد ممثلي مكتب طلبات التسعير لدينا قريباً."
+        : "Your bespoke quote request has been cataloged successfully. A PGR Product & Quote Desk Representative will contact you shortly.",
       timestamp: new Date().toISOString()
     });
   } catch (err: any) {
@@ -478,8 +478,8 @@ app.post("/api/chat", async (req, res) => {
   if (!ai) {
     const lastUserMsg = messages[messages.length - 1]?.content || "";
     const responseText = userLanguage === "ar"
-      ? `شكراً لتواصلك مع PGR ومقرنا في دبي. في الوقت الحالي، خدمة المساعدة الذكية غير متصلة مؤقتاً بالإنترنت. يرجى التواصل معنا مباشرة عبر الواتساب على 971500000000+ للحصول على استشارتك الفورية لبيع وشراء سبائك الذهب والفضة.`
-      : `Thank you for contacting PGR Precious Metals, Dubai. Our AI advisor is currently operating in offline refinement mode. Please contact our trading desk directly via WhatsApp at +971500000000 for instant, high-volume bullion transaction support.`;
+      ? `شكراً لتواصلك مع PGR ومقرنا في دبي. في الوقت الحالي، مساعد المنتجات وطلبات التسعير غير متصل مؤقتاً بالإنترنت. يرجى التواصل معنا مباشرة عبر الواتساب على 971559688837+ لتأكيد الأسعار وتفاصيل المنتجات.`
+      : `Thank you for contacting PGR Precious Metals, Dubai. Our Product & Quote Assistant is currently offline. Please contact our support desk directly via WhatsApp at +971559688837 for instant product pricing and quote confirmations.`;
     
     return res.json({ text: responseText, isFallback: true });
   }
@@ -488,18 +488,28 @@ app.post("/api/chat", async (req, res) => {
     // Compile previous message format for Gemini
     // We only take the last 5 messages to avoid token bloat and maintain crisp responsiveness.
     const recentMessages = messages.slice(-6);
-    const systemPrompt = `You are the Lead Investment Advisor & Executive Precious Metals Concierge for PGR UAE Precious Metals (pgruae.com), headquartered in Dubai, United Arab Emirates.
-PGR UAE is an ultra-premium institution. We deal exclusively in physical physical Gold Bullion, Silver Bullion, Gold Coins, Silver Coins, and Wholesale Trading. 
-Our target market consists of High-Net-Worth Individuals (HNWIs), institutional investors, corporate funds, sovereign wealth portfolios, and international wholesalers.
+    const systemPrompt = `You are the Lead Product & Quote Assistant for PGR UAE Precious Metals (pgruae.com), headquartered in Dubai, United Arab Emirates.
+PGR UAE is an ultra-premium institution. We deal exclusively in physical Gold Bullion, Silver Bullion, Gold Coins, Silver Coins, and Wholesale Trading. 
+Our target market consists of High-Net-Worth Individuals (HNWIs), institutional investors, corporate funds, and international wholesalers.
 
-PGR UAE is a premium global wholesale trading desk, partnered with world-famous authorized brands including PAMP Suisse, Valcambi, Metalor, Argor-Heraeus, Perth Mint, Royal Canadian Mint, and the Royal Mint. We are a trusted trading house and delivery partner, not a manufacturer.
+PGR UAE is a premium global wholesale trading house, partnered with world-famous authorized brands including PAMP Suisse, Valcambi, Metalor, Argor-Heraeus, Perth Mint, Royal Canadian Mint, and the Royal Mint. We are a trusted trading house and delivery partner, not a manufacturer.
 
-Core Tenets of PGR Advisor:
-1. Brand & Tone: You speak with extreme elegance, professional composure, absolute integrity, and precision. You are sophisticated and prestigious, yet humble and helpful, mirroring brands like Rolex, Patek Philippe, and Rolls Royce.
-2. Dubai Advantage: Dubai is the 'City of Gold'. Inform clients that physical investment-grade gold bars (99.5%+ purity) are 0% VAT in the UAE. UAE holds a major geopolitical and logistic advantage for secure storage and transport.
-3. Capabilities: We handle wholesale contracts, secure shipping worldwide, DMCC-standard compliance, secure vaults in Dubai, customs processing, and custom corporate orders.
+CRITICAL COMPLIANCE RULES:
+1. You MUST NOT give investment advice, financial advisory statements, guaranteed returns, or financial promises of any kind. 
+2. You MUST NOT use terms like "guaranteed profit", "fixed returns", "investment guarantee", "risk-free", "insured investment".
+3. You should only help with:
+   * product details (purity, weight, brand, specs)
+   * request quote (guiding them to the form)
+   * WhatsApp contact (+971559688837)
+   * delivery options (UAE and Iraq secured delivery)
+   * price confirmation before payment (indicative reference pricing, confirmed before order settlement)
+
+Core Tenets of PGR Assistant:
+1. Brand & Tone: You speak with extreme elegance, professional composure, absolute integrity, and precision. You are sophisticated and prestigious, yet humble and helpful.
+2. Dubai Advantage: Dubai is the 'City of Gold'. Inform clients that physical investment-grade gold bars (99.5%+ purity) are subject to 0% VAT in the UAE under local guidelines. UAE holds a major geopolitical and logistic advantage for secure transport.
+3. Capabilities: We handle wholesale requests, secure shipping/courier handling, secure product storage options in Dubai, customs processing, and custom corporate orders.
 4. Response Language: Match the user's language. If they query in Arabic, respond in immaculate, premium Gulf Arabic (الفصحى الراقية). If in English, use refined, elegant business English.
-5. No fake data: We deal with real bullion transactions. Always advise them that physical metals represent ultimate asset protection. If they ask to make a purchase, guide them to use our 'Request Bespoke Quote' form or click 'WhatsApp Order' to chat live with our executive desk.
+5. No fake data: We deal with real bullion transactions. If they ask to make a purchase, guide them to use our 'Request Quote' form or click 'WhatsApp Order' (+971559688837) to chat live with our desk.
 
 Keep responses relatively concise (2-3 paragraphs), extremely elegant, well-structured, and formatted in clean Markdown.`;
 
@@ -519,11 +529,11 @@ Keep responses relatively concise (2-3 paragraphs), extremely elegant, well-stru
       }
     });
 
-    const outputText = response.text || "I apologize. I was unable to compile an advisory statement at this moment. Please connect with our Dubai office.";
+    const outputText = response.text || "I apologize. I was unable to compile a product statement at this moment. Please connect with our Dubai office.";
     res.json({ text: outputText });
   } catch (err: any) {
-    console.error("AI Advisor generation error:", err);
-    res.status(500).json({ error: "Our advisory node is experiencing momentary luxury delays. Please proceed with live support.", details: err.message });
+    console.error("AI Assistant generation error:", err);
+    res.status(500).json({ error: "Our assistant node is experiencing momentary delay. Please proceed with live support.", details: err.message });
   }
 });
 

@@ -80,15 +80,15 @@ export default function BlogSection({ currentLang }: BlogSectionProps) {
           <div className="space-y-3">
             <span className="text-gold-base font-mono uppercase text-xs tracking-[0.3em] font-semibold flex items-center gap-2">
               <BookOpen size={12} />
-              {isAr ? "مركز الأبحاث والتحليل المالي" : "Market Commentary"}
+              {isAr ? "التعليق والتحليل الفني للمنتجات" : "Market Commentary"}
             </span>
             <h2 className="text-3xl sm:text-4xl font-serif tracking-tight text-white font-medium">
-              {isAr ? "ديوان أبحاث المعادن الثمينة" : "Precious Metals Advisory & Intelligence"}
+              {isAr ? "مركز معلومات وأخبار المعادن الثمينة" : "Precious Metals Market Analysis"}
             </h2>
             <p className="text-sm text-gray-400 max-w-xl">
               {isAr 
-                ? "تقارير ودراسات تحليلية دورية تصدر عن خبراء مكتب التداول لدراسة الاقتصاد الكلي وسياسة التحوط في دبي." 
-                : "Authoritative macroeconomic research and localized regulatory insights compiled by our Dubai executive bullion desk."}
+                ? "تقارير ودراسات تحليلية دورية حول حركة أسعار الذهب والفضة وخيارات التوصيل في الإمارات والعراق." 
+                : "Precious metals analysis and localized delivery updates compiled by our Dubai executive bullion desk."}
             </p>
           </div>
 

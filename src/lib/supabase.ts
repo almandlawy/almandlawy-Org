@@ -302,7 +302,7 @@ const seedLocalStorage = () => {
       company: "Elite Asset Holdings Ltd",
       addresses: [
         { id: "add-1", label: "Primary Vault Marina", address: "Penthouse 45, Marina Heights, Dubai Marina, UAE" },
-        { id: "add-2", label: "Premium Storage Center", address: "Vault Block B, Almas Tower, DMCC Precinct, Dubai" }
+        { id: "add-2", label: "Premium Storage Center", address: "Vault Block B, Almas Tower, West Trade Zone, Dubai" }
       ],
       wishlist: ["gb-1kg", "gc-britannia"],
       role: "verified_customer", // or "admin"
@@ -321,8 +321,8 @@ const seedLocalStorage = () => {
     whatsapp_hotline: "+971559688837",
     desk_email: "desk@pgruae.com",
     trade_phone: "+971 4 445 8888",
-    office_address_en: "Almas Tower, DMCC Precinct, Dubai Marina, Dubai, United Arab Emirates",
-    office_address_ar: "برج الماس، منطقة مركز دبي للسلع المتعددة (DMCC)، دبي مارينا، دبي، الإمارات العربية المتحدة",
+    office_address_en: "Almas Tower, West Trade Zone, Dubai Marina, Dubai, United Arab Emirates",
+    office_address_ar: "برج الماس، منطقة التداول الحرة، دبي مارينا، دبي، الإمارات العربية المتحدة",
     dmcc_reg_no: "890317",
     manual_gold_usd_oz: 2365.40,
     manual_silver_usd_oz: 29.85,

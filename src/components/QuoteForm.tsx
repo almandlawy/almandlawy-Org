@@ -129,7 +129,7 @@ export default function QuoteForm({ currentLang, prefilledProduct, onClose }: Qu
 
               <div className="p-4 rounded bg-[#070707] border border-white/[0.02] text-[11px] font-mono text-gray-500 max-w-sm mx-auto space-y-1">
                 <div>PGR UAE Bullion Division</div>
-                <div>Dubai Marina DMCC Precinct, UAE</div>
+                <div>Dubai Marina Trade Zone Precinct, UAE</div>
                 <div>{settings?.desk_email || "desk@pgruae.com"}</div>
               </div>
 
@@ -153,7 +153,7 @@ export default function QuoteForm({ currentLang, prefilledProduct, onClose }: Qu
                 <p className="text-xs text-gray-400">
                   {currentLang === "ar"
                     ? "يرجى إدخال معلوماتك لتخصيص محفظتك وحجز سبائك الذهب المعفاة من القيمة المضافة من مكاتبنا بالمنطقة الحرة بدبي."
-                    : "Fill in your specifications below to initialize custom allocations and tax-exempt physical gold lots in Dubai Marina DMCC."}
+                    : "Fill in your specifications below to initialize custom allocations and tax-exempt physical gold lots in Dubai Marina Free Zone."}
                 </p>
               </div>
 

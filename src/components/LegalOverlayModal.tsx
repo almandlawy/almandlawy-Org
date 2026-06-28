@@ -197,8 +197,8 @@ export default function LegalOverlayModal({ currentLang, onClose, defaultDoc = "
               <ShieldCheck size={14} className="text-[#c5a85c]" />
               <span>
                 {isAr 
-                  ? "تم تحديث هذه السياسات وتطبيقها قانونياً بموافقة سلطة مركز دبي للسلع المتعددة لعام ٢٠٢٦." 
-                  : "These policies are legally synchronized and approved under DMCC framework protocols for 2026."}
+                  ? "تم تحديث هذه السياسات وتطبيقها قانونياً بموجب الأنظمة واللوائح السارية لعام ٢٠٢٦." 
+                  : "These policies are legally synchronized and approved under applicable regulatory framework protocols for 2026."}
               </span>
             </div>
 
