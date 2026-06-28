@@ -82,14 +82,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    if (sourceStatus === "quote" || !goldSpot || !silverSpot) {
-      return res.status(200).json({
-        status: "success",
-        is_live_configured: false,
-        rates: null,
-        source_status: "Request Quote Only",
-        timestamp: new Date().toISOString()
-      });
+    // Fallback to reference points if live pricing is down or unconfigured
+    if (!goldSpot || !silverSpot) {
+      goldSpot = METAL_SPOTS.gold;
+      silverSpot = METAL_SPOTS.silver;
+      sourceStatus = "reference";
     }
 
     const currentSpots = {
@@ -120,10 +117,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     return res.status(200).json({
       status: "success",
-      is_live_configured: true,
+      is_live_configured: sourceStatus === "live",
       timestamp: new Date().toISOString(),
       base_usd: currentSpots,
-      source_status: "Verified Exchange Feed",
+      source_status: sourceStatus === "live" ? "Verified Exchange Feed" : "Indicative Reference Only",
       rates
     });
 

@@ -219,25 +219,17 @@ app.get("/api/prices", async (req, res) => {
       }
     }
     
-    // Fallback to manual admin price
+    // Fallback to manual admin price or default reference points
     if (!goldSpot || !silverSpot) {
       if (serverSettings.manual_gold_usd_oz && serverSettings.manual_silver_usd_oz) {
         goldSpot = serverSettings.manual_gold_usd_oz;
         silverSpot = serverSettings.manual_silver_usd_oz;
         sourceStatus = "fallback";
       } else {
-        sourceStatus = "quote";
+        goldSpot = METAL_SPOTS.gold;
+        silverSpot = METAL_SPOTS.silver;
+        sourceStatus = "reference";
       }
-    }
-    
-    if (sourceStatus === "quote") {
-      return res.json({
-        status: "success",
-        is_live_configured: false,
-        rates: null,
-        source_status: "Request Quote Only",
-        timestamp: new Date().toISOString()
-      });
     }
     
     const currentSpots = {
