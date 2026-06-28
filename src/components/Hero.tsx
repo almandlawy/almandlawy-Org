@@ -5,6 +5,7 @@
 
 import React from "react";
 import { ChevronDown, ArrowRight, Shield, Award, MapPin } from "lucide-react";
+import dubaiSkylineImg from "../assets/images/dubai_skyline_gold_1782445111463.jpg";
 
 interface HeroProps {
   currentLang: "en" | "ar";
@@ -19,7 +20,7 @@ export default function Hero({ currentLang, onScrollToCatalog, onScrollToMarket,
       {/* Background Image with Deep Luxury Shadows */}
       <div className="absolute inset-0 z-0">
         <img
-          src="/src/assets/images/dubai_skyline_gold_1782445111463.jpg"
+          src={dubaiSkylineImg}
           alt="Dubai Skyline Gold"
           referrerPolicy="no-referrer"
           className="w-full h-full object-cover opacity-35 scale-105 transform transition-transform duration-1000"
