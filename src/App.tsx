@@ -165,8 +165,12 @@ export default function App() {
       const response = await fetch("/api/prices");
       if (response.ok) {
         const data = await response.json();
-        if (data.status === "success" && data.rates) {
-          setRates(data.rates);
+        if (data.status === "success") {
+          if (data.source_status === "request_quote") {
+            setRates(null);
+          } else if (data.rates) {
+            setRates(data.rates);
+          }
         } else {
           console.warn("Backend price compilation failed, keeping local premium reference rates.");
         }

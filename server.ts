@@ -65,10 +65,10 @@ try {
 // Base Precious Metals Spot Prices (in USD per Troy Ounce)
 // These represent highly accurate reference points for June 2026.
 const METAL_SPOTS = {
-  gold: 2365.40,      // USD per Ounce
-  silver: 29.85,      // USD per Ounce
-  platinum: 965.20,   // USD per Ounce
-  palladium: 1012.10  // USD per Ounce
+  gold: 4120.50,      // USD per Ounce
+  silver: 48.20,      // USD per Ounce
+  platinum: 1080.00,   // USD per Ounce
+  palladium: 1120.00  // USD per Ounce
 };
 
 // Currency Exchange Rates (1 USD to target currency)
@@ -192,64 +192,151 @@ app.get("/api/prices", async (req, res) => {
     let provider_status: "live" | "fallback" | "error" = "fallback";
     let provider_error_type: "api_failed" | undefined = undefined;
     let sourceStatus = "reference";
+    let providerName = "GoldAPI.io";
     
     if (isLiveEnabled && has_api_key) {
       provider_attempted = true;
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
-        
-        const url = `https://api.metalpriceapi.com/v1/latest?api_key=${apiKey}&base=USD&currencies=XAU,XAG,XPT,XPD`;
-        const apiRes = await fetch(url, { signal: controller.signal });
-        clearTimeout(timeoutId);
-        
-        if (apiRes.ok) {
-          const apiData = await apiRes.json();
-          if (apiData && apiData.rates) {
-            if (apiData.rates.XAU) {
-              const val = apiData.rates.XAU;
-              goldSpot = val < 1 ? 1 / val : val;
-            }
-            if (apiData.rates.XAG) {
-              const val = apiData.rates.XAG;
-              silverSpot = val < 1 ? 1 / val : val;
-            }
-            if (apiData.rates.XPT) {
-              const val = apiData.rates.XPT;
-              platinumSpot = val < 1 ? 1 / val : val;
-            }
-            if (apiData.rates.XPD) {
-              const val = apiData.rates.XPD;
-              palladiumSpot = val < 1 ? 1 / val : val;
-            }
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-            if (goldSpot && silverSpot) {
-              sourceStatus = "live";
-              provider_status = "live";
-            } else {
-              sourceStatus = "fallback";
-              provider_status = "error";
-              provider_error_type = "api_failed";
-            }
-          } else {
-            sourceStatus = "fallback";
-            provider_status = "error";
-            provider_error_type = "api_failed";
-          }
-        } else {
-          sourceStatus = "fallback";
-          provider_status = "error";
-          provider_error_type = "api_failed";
+      try {
+        // Attempt 1: GoldAPI.io
+        const metals = ["XAU", "XAG", "XPT", "XPD"];
+        const results = await Promise.all(
+          metals.map(async (metal) => {
+            const apiRes = await fetch(`https://www.goldapi.io/api/${metal}/USD`, {
+              headers: {
+                "x-access-token": apiKey!,
+                "Content-Type": "application/json"
+              },
+              signal: controller.signal
+            });
+            if (!apiRes.ok) throw new Error(`GoldAPI.io returned status ${apiRes.status}`);
+            const data = await apiRes.json();
+            const p = Number(data.price);
+            if (isNaN(p) || p <= 0) throw new Error("Invalid goldapi.io price response");
+            return { metal, price: p };
+          })
+        );
+
+        const goldObj = results.find(r => r.metal === "XAU");
+        const silverObj = results.find(r => r.metal === "XAG");
+        const platinumObj = results.find(r => r.metal === "XPT");
+        const palladiumObj = results.find(r => r.metal === "XPD");
+
+        if (goldObj && silverObj) {
+          goldSpot = goldObj.price;
+          silverSpot = silverObj.price;
+          platinumSpot = platinumObj ? platinumObj.price : null;
+          palladiumSpot = palladiumObj ? palladiumObj.price : null;
+          providerName = "GoldAPI.io";
+          provider_status = "live";
+          sourceStatus = "live";
         }
-      } catch (apiErr) {
-        console.warn("Secure Fetch Warning: Live prices route fell back due to a network or timeout event.");
-        sourceStatus = "fallback";
+      } catch (errIo) {
+        console.warn("GoldAPI.io failed on server, attempting goldapi.net as secondary fallback...", errIo);
+        try {
+          // Attempt 2: goldapi.net
+          const metals = ["XAU", "XAG", "XPT", "XPD"];
+          const results = await Promise.all(
+            metals.map(async (metal) => {
+              const apiRes = await fetch(`https://app.goldapi.net/price/${metal}/USD?x-api-key=${apiKey}`, {
+                signal: controller.signal
+              });
+              if (!apiRes.ok) throw new Error(`goldapi.net returned status ${apiRes.status}`);
+              const data = await apiRes.json();
+              const p = Number(data.price || data.price_oz || data.value || data.spot || data.rate);
+              if (isNaN(p) || p <= 0) throw new Error("Invalid goldapi.net price response");
+              return { metal, price: p };
+            })
+          );
+
+          const goldObj = results.find(r => r.metal === "XAU");
+          const silverObj = results.find(r => r.metal === "XAG");
+          const platinumObj = results.find(r => r.metal === "XPT");
+          const palladiumObj = results.find(r => r.metal === "XPD");
+
+          if (goldObj && silverObj) {
+            goldSpot = goldObj.price;
+            silverSpot = silverObj.price;
+            platinumSpot = platinumObj ? platinumObj.price : null;
+            palladiumSpot = palladiumObj ? palladiumObj.price : null;
+            providerName = "goldapi.net";
+            provider_status = "live";
+            sourceStatus = "live";
+          }
+        } catch (errNet) {
+          console.warn("goldapi.net failed on server, attempting metalpriceapi.com as tertiary fallback...", errNet);
+          try {
+            // Attempt 3: metalpriceapi.com
+            const apiRes = await fetch(`https://api.metalpriceapi.com/v1/latest?api_key=${apiKey}&base=USD&currencies=XAU,XAG,XPT,XPD`, {
+              signal: controller.signal
+            });
+            if (apiRes.ok) {
+              const apiData = await apiRes.json();
+              if (apiData && apiData.rates) {
+                const xau = apiData.rates.XAU;
+                const xag = apiData.rates.XAG;
+                const xpt = apiData.rates.XPT;
+                const xpd = apiData.rates.XPD;
+
+                const gPrice = xau < 1 ? 1 / xau : xau;
+                const sPrice = xag < 1 ? 1 / xag : xag;
+                const pPrice = xpt ? (xpt < 1 ? 1 / xpt : xpt) : null;
+                const pdPrice = xpd ? (xpd < 1 ? 1 / xpd : xpd) : null;
+
+                if (gPrice && sPrice) {
+                  goldSpot = gPrice;
+                  silverSpot = sPrice;
+                  platinumSpot = pPrice;
+                  palladiumSpot = pdPrice;
+                  providerName = "Metal Price API";
+                  provider_status = "live";
+                  sourceStatus = "live";
+                }
+              }
+            }
+          } catch (errMetal) {
+            console.error("All live market price providers failed on server.", errMetal);
+          }
+        }
+      } finally {
+        clearTimeout(timeoutId);
+      }
+
+      // If key was present but all attempts failed, set correct error and request_quote status
+      if (!goldSpot || !silverSpot) {
+        sourceStatus = "request_quote";
         provider_status = "error";
         provider_error_type = "api_failed";
       }
     }
     
-    // Fallback to manual admin price or default reference points
+    const usdAed = serverSettings.usd_aed_rate || 3.6725;
+
+    // Build the final response payload for server
+    if (sourceStatus === "request_quote") {
+      return res.json({
+        status: "success",
+        is_live_configured: true,
+        source_status: "request_quote",
+        provider: providerName,
+        gold_usd_per_oz: null,
+        silver_usd_per_oz: null,
+        platinum_usd_per_oz: null,
+        palladium_usd_per_oz: null,
+        usd_aed: usdAed,
+        updated_at: new Date().toISOString(),
+        has_api_key,
+        provider_attempted,
+        provider_status,
+        provider_error_type,
+        timestamp: new Date().toISOString(),
+        rates: null
+      });
+    }
+
+    // Fallback to manual admin price or default reference points if completely unconfigured (no API key)
     if (!goldSpot || !silverSpot) {
       if (serverSettings.manual_gold_usd_oz && serverSettings.manual_silver_usd_oz) {
         goldSpot = serverSettings.manual_gold_usd_oz;
@@ -261,10 +348,8 @@ app.get("/api/prices", async (req, res) => {
         silverSpot = METAL_SPOTS.silver;
         platinumSpot = METAL_SPOTS.platinum;
         palladiumSpot = METAL_SPOTS.palladium;
-        if (!has_api_key) {
-          sourceStatus = "reference";
-          provider_status = "fallback";
-        }
+        sourceStatus = "reference";
+        provider_status = "fallback";
       }
     }
     
@@ -277,7 +362,6 @@ app.get("/api/prices", async (req, res) => {
     
     const OUNCE_TO_GRAM = 31.1034768;
     const rates: Record<string, any> = {};
-    const usdAed = serverSettings.usd_aed_rate || 3.6725;
     
     const exchangeRates = {
       ...EXCHANGE_RATES,
@@ -305,7 +389,7 @@ app.get("/api/prices", async (req, res) => {
       status: "success",
       is_live_configured,
       source_status: sourceStatus,
-      provider: "Metal Price API",
+      provider: providerName,
       gold_usd_per_oz: currentSpots.gold,
       silver_usd_per_oz: currentSpots.silver,
       platinum_usd_per_oz: currentSpots.platinum,
