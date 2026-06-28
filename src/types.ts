@@ -73,18 +73,108 @@ export interface ChatMessage {
   timestamp: string;
 }
 
+export type QuoteStatus =
+  | "awaiting_confirmation"
+  | "price_confirmed"
+  | "awaiting_payment"
+  | "rejected"
+  | "cancelled"
+  | "order_created"
+  | "Pending"
+  | "Approved"
+  | "Rejected";
+
+export type OrderStatus =
+  | "awaiting_confirmation"
+  | "price_confirmed"
+  | "awaiting_payment"
+  | "paid"
+  | "processing"
+  | "ready_for_delivery"
+  | "delivered"
+  | "cancelled"
+  | "Quoted"
+  | "Awaiting Payment"
+  | "Paid / In Vault"
+  | "Shipped"
+  | "Delivered";
+
+export type PaymentStatus = "unpaid" | "pending_review" | "paid" | "Pending" | "Paid";
+
 export interface QuoteRequest {
   id?: string;
   name: string;
   email: string;
   phone: string;
   company?: string;
-  metalInterest: "gold" | "silver" | "both";
+  metalInterest?: "gold" | "silver" | "both";
   productCategory?: string;
   weightPreference?: string;
   message?: string;
-  status?: "Pending" | "Approved" | "Rejected";
+  status?: QuoteStatus;
   created_at?: string;
+}
+
+export interface QuoteRequestRecord {
+  id?: string;
+  customer_id?: string;
+  name: string;
+  email: string;
+  phone: string;
+  company?: string;
+  product_id?: string;
+  product_name?: string;
+  quantity?: number;
+  metal_interest?: "gold" | "silver" | "both";
+  weight_preference?: string;
+  message?: string;
+  status?: QuoteStatus;
+  confirmed_price?: number;
+  currency?: string;
+  admin_notes?: string;
+  quote_expiry?: string;
+  created_at?: string;
+}
+
+export interface OrderRecord {
+  id?: string;
+  customer_id?: string;
+  quote_id?: string;
+  product_id?: string;
+  product_name?: string;
+  quantity?: number;
+  status?: OrderStatus;
+  confirmed_price?: number;
+  currency?: string;
+  payment_status?: PaymentStatus;
+  payment_link?: string;
+  bank_transfer_details?: string;
+  payment_receipt_url?: string;
+  delivery_status?: string;
+  invoice_url?: string;
+  certificate_url?: string;
+  admin_notes?: string;
+  quote_expiry?: string;
+  shipping_method?: string;
+  shipping_address?: string;
+  items?: Array<{ product_id?: string; product_name?: string; quantity?: number; unit_price?: number }>;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface CustomerProfile {
+  id?: string;
+  auth_user_id?: string;
+  full_name: string;
+  email: string;
+  phone?: string;
+  country?: string;
+  city?: string;
+  preferred_language?: "en" | "ar";
+  company_name?: string;
+  delivery_destination?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface KYCDocument {
