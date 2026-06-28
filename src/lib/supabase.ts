@@ -662,6 +662,28 @@ export const mapFrontendProductToDb = (product: any): any => {
     categoryVal = "gold";
   }
 
+  // Sanitize availability to strictly comply with 'products_availability_check' (e.g. In Stock, Out of Stock, Available on Order)
+  let dbAvailability = "In Stock";
+  const origAvail = String(product.availability || "").trim();
+  if (origAvail === "Available on Order" || origAvail === "متوفر عند الطلب") {
+    dbAvailability = "Available on Order";
+  } else if (origAvail === "Out of Stock" || origAvail === "غير متوفر") {
+    dbAvailability = "Out of Stock";
+  } else {
+    dbAvailability = "In Stock"; // Handles 'In Stock', 'Limited Stock', 'متوفر', 'كمية محدودة'
+  }
+
+  // Sanitize stock_status as well
+  let dbStockStatus = "In Stock";
+  const origStatus = String(product.stock_status || "").trim();
+  if (origStatus === "Available on Order" || origStatus === "متوفر عند الطلب") {
+    dbStockStatus = "Available on Order";
+  } else if (origStatus === "Out of Stock" || origStatus === "غير متوفر") {
+    dbStockStatus = "Out of Stock";
+  } else {
+    dbStockStatus = "In Stock";
+  }
+
   const payload: any = {
     name: product.name_en || "",
     arabic_name: product.name_ar || product.name_en || "",
@@ -676,8 +698,8 @@ export const mapFrontendProductToDb = (product: any): any => {
     price_mode: product.price_mode || "spot",
     currency: "AED",
     image_url: product.image_url || "",
-    availability: product.availability || "In Stock",
-    stock_status: product.stock_status || "In Stock",
+    availability: dbAvailability,
+    stock_status: dbStockStatus,
     stock_quantity: 25,
     description: product.description_en || "",
     arabic_description: product.description_ar || "",
