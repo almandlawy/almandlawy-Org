@@ -14,6 +14,7 @@ interface LiveMarketProps {
   onChangeCurrency: (currency: string) => void;
   onRefresh: () => void;
   isRefreshing: boolean;
+  onOpenQuote?: () => void;
 }
 
 export default function LiveMarket({
@@ -22,7 +23,8 @@ export default function LiveMarket({
   selectedCurrency,
   onChangeCurrency,
   onRefresh,
-  isRefreshing
+  isRefreshing,
+  onOpenQuote
 }: LiveMarketProps) {
   // We keep a history of the last 15 prices for each metal to draw stunning dynamic glowing SVG sparklines!
   const [history, setHistory] = React.useState<Record<string, number[]>>({
@@ -130,47 +132,49 @@ export default function LiveMarket({
           <div className="space-y-3">
             <span className="text-gold-base font-mono uppercase text-xs tracking-[0.25em] font-semibold flex items-center gap-2">
               <Sparkles size={12} />
-              {currentLang === "ar" ? "شاشات أسعار دبي للذهب" : "Dubai Wholesale Spot Index"}
+              {currentLang === "ar" ? "لوحة الأسعار الاسترشادية للمعادن الثمينة" : "Indicative Precious Metals Price Board"}
             </span>
             <h2 className="text-3xl sm:text-4xl font-serif tracking-tight text-white font-medium">
-              {currentLang === "ar" ? "أسعار التداول المباشرة" : "Live Market Metal Feed"}
+              {currentLang === "ar" ? "لوحة الأسعار الاسترشادية للمعادن الثمينة" : "Indicative Precious Metals Price Board"}
             </h2>
             <p className="text-sm text-gray-400 max-w-xl">
               {currentLang === "ar" 
-                ? "تسعير فوري ومباشر يتبع بورصات السلع المتعددة بدبي. نضمن لك شفافية مطلقة وهوامش مطابقة للأسعار العالمية." 
-                : "Dynamic institutional precious metals spot feed. Sourced directly from Dubai commodities exchange tickers with sub-second accuracy."}
+                ? "أسعار استرشادية للذهب والفضة. يتم تأكيد السعر النهائي قبل الدفع حسب توفر المنتج وحركة السوق." 
+                : "Indicative gold and silver reference prices. Final price is confirmed before payment based on product availability and market movement."}
             </p>
           </div>
 
           {/* Currency Switcher & Refresh buttons */}
           <div className="flex flex-wrap items-center gap-3">
-            {/* Currencies Toggle Menu */}
-            <div className="flex bg-[#111111]/80 rounded border border-white/[0.05] p-1">
-              {currencies.map((cur) => (
-                <button
-                  key={cur}
-                  onClick={() => onChangeCurrency(cur)}
-                  className={`px-3 py-1.5 rounded-sm text-xs font-semibold tracking-wider transition-all cursor-pointer ${
-                    selectedCurrency === cur
-                      ? "bg-gold-base text-black shadow-[0_0_12px_rgba(212,175,55,0.2)]"
-                      : "text-gray-400 hover:text-white"
-                  }`}
-                >
-                  {cur}
-                </button>
-              ))}
-            </div>
+            {rates && (
+              <div className="flex bg-[#111111]/80 rounded border border-white/[0.05] p-1">
+                {currencies.map((cur) => (
+                  <button
+                    key={cur}
+                    onClick={() => onChangeCurrency(cur)}
+                    className={`px-3 py-1.5 rounded-sm text-xs font-semibold tracking-wider transition-all cursor-pointer ${
+                      selectedCurrency === cur
+                        ? "bg-gold-base text-black shadow-[0_0_12px_rgba(212,175,55,0.2)]"
+                        : "text-gray-400 hover:text-white"
+                    }`}
+                  >
+                    {cur}
+                  </button>
+                ))}
+              </div>
+            )}
 
-            {/* Refresh Node */}
-            <button
-              onClick={onRefresh}
-              className={`p-2.5 rounded bg-white/[0.02] border border-white/[0.05] hover:border-gold-base/30 text-gray-400 hover:text-white transition-colors cursor-pointer ${
-                isRefreshing ? "animate-spin text-gold-base" : ""
-              }`}
-              title="Force market sync"
-            >
-              <RefreshCw size={14} />
-            </button>
+            {rates && (
+              <button
+                onClick={onRefresh}
+                className={`p-2.5 rounded bg-white/[0.02] border border-white/[0.05] hover:border-gold-base/30 text-gray-400 hover:text-white transition-colors cursor-pointer ${
+                  isRefreshing ? "animate-spin text-gold-base" : ""
+                }`}
+                title="Force market sync"
+              >
+                <RefreshCw size={14} />
+              </button>
+            )}
           </div>
         </div>
 
@@ -186,8 +190,8 @@ export default function LiveMarket({
 
             // Setup border flash effect
             let flashClass = "border-white/[0.04]";
-            if (flash === "up") flashClass = "border-emerald-500/50 shadow-[0_0_20px_rgba(16,185,129,0.1)]";
-            if (flash === "down") flashClass = "border-rose-500/50 shadow-[0_0_20px_rgba(244,63,94,0.1)]";
+            if (rates && flash === "up") flashClass = "border-emerald-500/50 shadow-[0_0_20px_rgba(16,185,129,0.1)]";
+            if (rates && flash === "down") flashClass = "border-rose-500/50 shadow-[0_0_20px_rgba(244,63,94,0.1)]";
 
             return (
               <div
@@ -213,65 +217,85 @@ export default function LiveMarket({
                       {isGold ? "999.9 Purity" : isSilver ? "999.0 Purity" : "999.5 Purity"}
                     </span>
                   </div>
-                  <span className={`text-xs font-mono font-semibold px-2 py-0.5 rounded-sm ${
-                    isPositive ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"
-                  }`}>
-                    {changePct}
-                  </span>
+                  {rates && (
+                    <span className={`text-xs font-mono font-semibold px-2 py-0.5 rounded-sm ${
+                      isPositive ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"
+                    }`}>
+                      {changePct}
+                    </span>
+                  )}
                 </div>
 
                 {/* Spot Prices Details */}
                 <div className="space-y-2">
                   <div className="text-xs text-gray-500 font-mono uppercase tracking-widest">
-                    {currentLang === "ar" ? "سعر الأونصة المباشر" : "Spot Price per Ounce"}
+                    {currentLang === "ar" ? "سعر الأونصة الاسترشادي" : "Indicative Price per Ounce"}
                   </div>
-                  <div className="flex items-baseline gap-1.5">
-                    <span className={`text-3xl font-serif tracking-tight font-medium transition-colors ${
-                      isGold ? "text-gold-gradient" : isSilver ? "text-silver-gradient" : "text-white"
-                    }`}>
-                      {metalPrice.ounce ? metalPrice.ounce.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "..."}
-                    </span>
-                    <span className="text-xs text-gray-400 font-mono font-medium">{selectedCurrency}</span>
-                  </div>
+                  {rates ? (
+                    <>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className={`text-3xl font-serif tracking-tight font-medium transition-colors ${
+                          isGold ? "text-gold-gradient" : isSilver ? "text-silver-gradient" : "text-white"
+                        }`}>
+                          {metalPrice.ounce ? metalPrice.ounce.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "..."}
+                        </span>
+                        <span className="text-xs text-gray-400 font-mono font-medium">{selectedCurrency}</span>
+                      </div>
 
-                  <div className="flex justify-between items-center pt-3 border-t border-white/[0.03] text-xs font-mono">
-                    <span className="text-gray-500">
-                      {currentLang === "ar" ? "سعر الجرام" : "Rate per Gram (g)"}
-                    </span>
-                    <span className="text-gray-300 font-medium">
-                      {metalPrice.gram ? metalPrice.gram.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 }) : "..."} {selectedCurrency}
-                    </span>
-                  </div>
+                      <div className="flex justify-between items-center pt-3 border-t border-white/[0.03] text-xs font-mono">
+                        <span className="text-gray-500">
+                          {currentLang === "ar" ? "سعر الجرام" : "Rate per Gram (g)"}
+                        </span>
+                        <span className="text-gray-300 font-medium">
+                          {metalPrice.gram ? metalPrice.gram.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 }) : "..."} {selectedCurrency}
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="space-y-3 pt-1">
+                      <button
+                        onClick={onOpenQuote}
+                        className="w-full text-center py-2 bg-gold-base/10 hover:bg-gold-base/20 border border-gold-base/20 hover:border-gold-base/40 text-gold-base text-xs font-mono font-semibold uppercase rounded transition-all cursor-pointer"
+                      >
+                        {currentLang === "ar" ? "طلب عرض سعر" : "Request Quote"}
+                      </button>
+                      <span className="text-[10px] text-gray-400 block font-sans">
+                        {currentLang === "ar" ? "يتم تأكيد السعر قبل الدفع" : "Price confirmed before payment"}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* High-End Sparkling Vector Graph */}
-                <div className="pt-2 h-[75px] w-full flex items-end">
-                  <svg className="overflow-visible w-full h-[70px] pointer-events-none">
-                    {/* Glowing drop-shadow filters */}
-                    <defs>
-                      <linearGradient id={`grad-${metal}`} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor={isGold ? "#D4AF37" : isSilver ? "#C0C0C0" : "#FFFFFF"} stopOpacity="0.15" />
-                        <stop offset="100%" stopColor={isGold ? "#D4AF37" : isSilver ? "#C0C0C0" : "#FFFFFF"} stopOpacity="0.0" />
-                      </linearGradient>
-                    </defs>
-                    
-                    {/* Glowing sparkline line */}
-                    <path
-                      d={generateSparklineSvgPath(history[metal] || [], 280, 70)}
-                      fill="none"
-                      stroke={isGold ? "#D4AF37" : isSilver ? "#C0C0C0" : "#E2E2E2"}
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="transition-all duration-300"
-                    />
-                  </svg>
-                </div>
+                {rates && (
+                  <div className="pt-2 h-[75px] w-full flex items-end">
+                    <svg className="overflow-visible w-full h-[70px] pointer-events-none">
+                      {/* Glowing drop-shadow filters */}
+                      <defs>
+                        <linearGradient id={`grad-${metal}`} x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor={isGold ? "#D4AF37" : isSilver ? "#C0C0C0" : "#FFFFFF"} stopOpacity="0.15" />
+                          <stop offset="100%" stopColor={isGold ? "#D4AF37" : isSilver ? "#C0C0C0" : "#FFFFFF"} stopOpacity="0.0" />
+                        </linearGradient>
+                      </defs>
+                      
+                      {/* Glowing sparkline line */}
+                      <path
+                        d={generateSparklineSvgPath(history[metal] || [], 280, 70)}
+                        fill="none"
+                        stroke={isGold ? "#D4AF37" : isSilver ? "#C0C0C0" : "#E2E2E2"}
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="transition-all duration-300"
+                      />
+                    </svg>
+                  </div>
+                )}
 
                 {/* Technical Footnote */}
-                <div className="flex justify-between text-[10px] font-mono text-gray-600">
-                  <span>LBMA Standard</span>
-                  <span>{currentLang === "ar" ? "مؤمن بالكامل" : "100% Asset-Backed"}</span>
+                <div className="flex justify-between text-[10px] font-mono text-gray-600 pt-2 border-t border-white/[0.03]">
+                  <span>{currentLang === "ar" ? "مرجع السوق الاسترشادي" : "Indicative market reference"}</span>
+                  <span>{currentLang === "ar" ? "يتم تأكيد السعر قبل الدفع" : "Price confirmed before payment"}</span>
                 </div>
               </div>
             );
@@ -284,12 +308,16 @@ export default function LiveMarket({
             <span className="h-2 w-2 rounded-full bg-gold-base animate-pulse"></span>
             <span>
               {currentLang === "ar" 
-                ? "شاشة الذهب PGR مرتبطة مع شبكة DMCC وتخضع لأسعار بورصة دبي للذهب والسلع (DGCX)."
-                : "Prices reflect international bullion markets and are synchronized with DMCC & DGCX clearing hubs."}
+                ? "يتم التحقق من تفاصيل المنتج قبل الطلب. يتم التحديث عند توفر مصدر التسعير."
+                : "Product details verified before order. Updated when pricing source is available."}
             </span>
           </div>
           <div className="text-gray-500">
-            {currentLang === "ar" ? "آخر تحديث: قبل ثوانٍ قليلة" : "Last synchronized: Seconds ago"}
+            {rates ? (
+              currentLang === "ar" ? "آخر تحديث: قبل ثوانٍ قليلة" : "Last synchronized: Seconds ago"
+            ) : (
+              currentLang === "ar" ? "اطلب عرض سعر للحصول على السعر النهائي" : "Request quote for final price"
+            )}
           </div>
         </div>
 

@@ -63,7 +63,7 @@ export default function LegalOverlayModal({ currentLang, onClose, defaultDoc = "
       content_en: `PGR UAE Standard Trading Terms & Commercial Agreements
       
       1. Binding Nature & Market Rates
-      By accessing our trading portals or requesting a bespoke quote, you acknowledge that precious metal spot rates fluctuate in real-time in accordance with global LBMA markets. Final prices are locked and legally confirmed exclusively via our official trader-executed contracts.
+      By accessing our trading portals or requesting a bespoke quote, you acknowledge that precious metal spot rates fluctuate in real-time in accordance with global bullion markets. Final prices are locked and legally confirmed exclusively via our official trader-executed contracts.
 
       2. Order Commitments & Settlement
       Once a quote is formally accepted and locked, the client enters into a binding contract. Settlements must be completed via certified bank transfer, secure credit cards, or physical office draft within 24 hours of price confirmation. PGR UAE reserves the right to cancel un-settled allocations.
@@ -73,7 +73,7 @@ export default function LegalOverlayModal({ currentLang, onClose, defaultDoc = "
       content_ar: `الشروط والأحكام العامة لتداولات PGR في دولة الإمارات
       
       ١. ارتباط الأسعار بالبورصة اللحظية
-      عند تصفح الكتالوج أو طلب مقايسة سعر استرشادية، يقر العميل بأن أسعار المعادن الثمينة تتغير لحظياً طبقاً للبورصة العالمية للذهب بلندن (LBMA). السعر النهائي والملزم يتم اعتماده حصرياً عبر الفواتير الرسمية الصادرة من مكتب التداول.
+      عند تصفح الكتالوج أو طلب مقايسة سعر استرشادية، يقر العميل بأن أسعار المعادن الثمينة تتغير لحظياً طبقاً للأسواق العالمية للمعادن الثمينة. السعر النهائي والملزم يتم اعتماده حصرياً عبر الفواتير الرسمية الصادرة من مكتب التداول.
 
       ٢. الالتزامات المالية والتسويات
       عند قبول عرض السعر واعتماده، يدخل العميل في التزام تعاقدي ملزم. يجب إتمام التسوية المالية بالكامل خلال ٢٤ ساعة عبر تحويل بنكي رسمي أو دفع نقدي معتمد في المقر الرئيسي لبرج الماس.

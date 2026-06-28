@@ -122,7 +122,7 @@ export default function Footer({
               <li><button onClick={() => onOpenLegalDoc("terms")} className="hover:text-gold-base transition-colors cursor-pointer text-left">{currentLang === "ar" ? "شروط وأحكام التداول" : "Trading Terms & Conditions"}</button></li>
               <li><button onClick={() => onOpenLegalDoc("privacy")} className="hover:text-gold-base transition-colors cursor-pointer text-left">{currentLang === "ar" ? "سياسة خصوصية البيانات" : "Privacy & Data Directive"}</button></li>
               <li><button onClick={() => onOpenLegalDoc("shipping")} className="hover:text-gold-base transition-colors cursor-pointer text-left">{currentLang === "ar" ? "سياسة الشحن والتأمين" : "Shipping & Transit Insurance"}</button></li>
-              <li><span className="text-gray-500">{currentLang === "ar" ? "الاعتماد الفني:" : "Assay Standard:"} LBMA Good Delivery Refiners</span></li>
+              <li><span className="text-gray-500">{currentLang === "ar" ? "الاعتماد الفني:" : "Assay Standard:"} {currentLang === "ar" ? "مصافي معتمدة دولياً" : "Certified Good Delivery Refiners"}</span></li>
             </ul>
           </div>
 
@@ -187,7 +187,7 @@ export default function Footer({
             <div>
               <span className="text-white block font-medium">{currentLang === "ar" ? "مكتب التداول الهاتفي" : "Desk Direct Hotline"}</span>
               <span className="text-gray-500">
-                {settings?.trade_phone || "+971 4 445 8888"} • {settings?.whatsapp_hotline || "+971 50 999 8888"}
+                {settings?.trade_phone || "+971 4 445 8888"} • {settings?.whatsapp_hotline || "+971 55 968 8837"}
               </span>
             </div>
           </div>

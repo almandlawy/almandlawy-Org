@@ -172,8 +172,8 @@ export default function Catalog({
           </h2>
           <p className="text-sm text-gray-400">
             {currentLang === "ar" 
-              ? "استعرض مجموعتنا الشاملة من سبائك ومسكوكات الذهب والفضة عالية النقاوة. جميع المنتجات تأتي من مصافٍ مصنفة عالمياً (LBMA)."
-              : "Explore our collection of high-purity gold and silver bars and investment coins. Sourced exclusively from LBMA-certified international refineries."}
+              ? "استعرض مجموعتنا الشاملة من سبائك ومسكوكات الذهب والفضة عالية النقاوة. جميع المنتجات تأتي من مصافٍ معتمدة عالمياً."
+              : "Explore our collection of high-purity gold and silver bars and investment coins. Sourced exclusively from certified international refineries."}
           </p>
         </div>
 
@@ -349,7 +349,9 @@ export default function Catalog({
                           <span className="text-[10px] text-gray-500 font-mono block uppercase">
                             {product.price_mode === "fixed"
                               ? (currentLang === "ar" ? "السعر الثابت المعتمد" : "Confirmed Fixed Price")
-                              : (currentLang === "ar" ? "سعر استرشادي مباشر" : "Indicative Live Price")}
+                              : rates
+                                ? (currentLang === "ar" ? "سعر استرشادي" : "Indicative Price")
+                                : (currentLang === "ar" ? "السعر عند الطلب" : "Price on Request")}
                           </span>
                           {product.price_mode === "fixed" ? (
                             <span className="text-sm font-mono font-semibold text-white">
@@ -359,17 +361,22 @@ export default function Catalog({
                                   <span className="text-[10px] text-gold-base">{selectedCurrency}</span>
                                 </>
                               ) : (
-                                <span className="text-xs text-gold-base font-mono font-medium">
-                                  {currentLang === "ar" ? "طلب عرض سعر" : "Request Quote"}
-                                </span>
+                                <div className="flex flex-col gap-0.5">
+                                  <span className="text-[11px] text-gold-base font-semibold leading-tight block">
+                                    {currentLang === "ar" ? "طلب عرض سعر" : "Request Quote"}
+                                  </span>
+                                  <span className="text-[9px] text-gray-400 font-medium leading-none block">
+                                    {currentLang === "ar" ? "يتم تأكيد السعر قبل الدفع" : "Price confirmed before payment"}
+                                  </span>
+                                </div>
                               )}
                             </span>
-                          ) : indicativePrice ? (
+                          ) : rates && indicativePrice ? (
                             <span className="text-sm font-mono font-semibold text-white">
                               {indicativePrice.toLocaleString(undefined, { maximumFractionDigits: 2 })}{" "}
                               <span className="text-[10px] text-gold-base">{selectedCurrency}</span>
                             </span>
-                          ) : isPriceTimeout ? (
+                          ) : (
                             <div className="flex flex-col gap-0.5">
                               <span className="text-[11px] text-gold-base font-semibold leading-tight block">
                                 {currentLang === "ar" ? "طلب عرض سعر" : "Request Quote"}
@@ -378,10 +385,6 @@ export default function Catalog({
                                 {currentLang === "ar" ? "يتم تأكيد السعر قبل الدفع" : "Price confirmed before payment"}
                               </span>
                             </div>
-                          ) : (
-                            <span className="text-xs text-gold-base font-mono font-medium animate-pulse">
-                              {currentLang === "ar" ? "جاري تحميل البيانات..." : "Loading live data..."}
-                            </span>
                           )}
                         </div>
 

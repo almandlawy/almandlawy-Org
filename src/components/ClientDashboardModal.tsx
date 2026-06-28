@@ -248,7 +248,7 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
       id: "cust-verified-1",
       email: cleanEmail,
       name: cleanEmail.includes("sheikh") ? "Sheikh Mansoor Al-Maktoum" : "Al-Mansour Iraqi General Trading",
-      phone: loginPhone || "+971 50 999 8888",
+      phone: loginPhone || "+971 55 968 8837",
       role: "verified_customer",
       created_at: new Date().toISOString()
     };
@@ -1650,7 +1650,7 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
                             {isAr ? "ديوان فحص شهادات أصالة السبائك" : "Secure Physical Assay Verification"}
                           </h4>
                           <p className="text-[10px] text-gray-500 font-mono">
-                            {isAr ? "التحقق الفني والأمني من الأرقام التسلسلية لسبائك المعادن الثمينة الصادرة" : "Audit physical bullion barcodes against active LBMA refiner registries"}
+                            {isAr ? "التحقق الفني والأمني من الأرقام التسلسلية لسبائك المعادن الثمينة الصادرة" : "Audit physical bullion barcodes against active refiner registries"}
                           </p>
                         </div>
                       </div>

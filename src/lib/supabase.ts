@@ -55,8 +55,8 @@ export const isProduction = typeof window !== "undefined" && window.location.hos
 
 export const isLive = isProduction ? true : (isUrlConfigured && isKeyConfigured && initializedSuccessfully);
 
-// 2. Initialize Supabase client
-export const supabase = isLive ? (supabaseClient || (isUrlConfigured && isKeyConfigured ? createClient(supabaseUrl, supabaseAnonKey, supabaseOptions) : null)) : null;
+// 2. Initialize Supabase client safely using the pre-initialized instance
+export const supabase = isLive ? supabaseClient : null;
 
 export const configStatus = {
   urlConfigured: isUrlConfigured ? "YES" : "NO",
@@ -298,7 +298,7 @@ const seedLocalStorage = () => {
       id: "cust-verified-1",
       email: "verified.investor@dubaimarina.ae",
       name: "Sheikh Mansoor Al-Maktoum",
-      phone: "+971 50 999 8888",
+      phone: "+971 55 968 8837",
       company: "Elite Asset Holdings Ltd",
       addresses: [
         { id: "add-1", label: "Primary Vault Marina", address: "Penthouse 45, Marina Heights, Dubai Marina, UAE" },
@@ -318,7 +318,7 @@ const seedLocalStorage = () => {
     silver_markup_pct: 1.5,
     spread_usd: 12.0, // Spread between bid and ask
     premium_markup_pct: 2.0, // Wholesale processing premium fee
-    whatsapp_hotline: "+971509998888",
+    whatsapp_hotline: "+971559688837",
     desk_email: "desk@pgruae.com",
     trade_phone: "+971 4 445 8888",
     office_address_en: "Almas Tower, DMCC Precinct, Dubai Marina, Dubai, United Arab Emirates",
@@ -358,8 +358,8 @@ const seedLocalStorage = () => {
       {
         id: "cust-verified-1",
         full_name: "Sheikh Mansoor Al-Maktoum",
-        phone: "+971 50 999 8888",
-        whatsapp: "+971 50 999 8888",
+        phone: "+971 55 968 8837",
+        whatsapp: "+971 55 968 8837",
         email: "verified.investor@dubaimarina.ae",
         country: "UAE",
         city: "Dubai",

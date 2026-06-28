@@ -217,6 +217,7 @@ export default function App() {
         onChangeCurrency={setSelectedCurrency}
         onRefresh={fetchRates}
         isRefreshing={isRefreshing}
+        onOpenQuote={() => setIsQuoteOpen(true)}
       />
 
       {/* Specialized Positioning Section for Iraq & UAE */}
@@ -315,8 +316,8 @@ export default function App() {
             </h3>
             <p className="text-xs text-gray-500 max-w-xl mx-auto leading-relaxed">
               {currentLang === "ar"
-                ? "نحن وكيل وموزع معتمد لكبرى مصافي الذهب العالمية الحاصلة على شهادة تسليم بورصة لندن (Good Delivery)."
-                : "Authorized logistics and trading conduit for world-renowned LBMA-certified gold refineries."}
+                ? "نحن وكيل وموزع معتمد لكبرى مصافي الذهب العالمية المعتمدة."
+                : "Authorized logistics and trading conduit for world-renowned certified gold refineries."}
             </p>
           </div>
 
@@ -356,7 +357,11 @@ export default function App() {
       <div className="fixed bottom-6 right-6 z-40 flex flex-col gap-3">
         {/* Quick WhatsApp Advisor Link */}
         <a
-          href="https://wa.me/971509998888"
+          href={`https://wa.me/971559688837?text=${encodeURIComponent(
+            currentLang === "ar"
+              ? "مرحباً، أريد طلب عرض سعر من PGR UAE للذهب أو الفضة."
+              : "Hello, I would like to request a quote from PGR UAE for gold or silver products."
+          )}`}
           target="_blank"
           rel="noopener noreferrer"
           className="h-12 w-12 bg-emerald-500 hover:bg-emerald-400 text-white rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(16,185,129,0.3)] hover:scale-105 transform transition-all"

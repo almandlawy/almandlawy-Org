@@ -93,14 +93,11 @@ export default function ProductDetailModal({
 
   // Pre-compile the WhatsApp message depending on selected language
   const getWhatsAppLink = () => {
-    const pName = currentLang === "ar" ? activeProduct.name_ar : activeProduct.name_en;
     const baseMsg = currentLang === "ar"
-      ? `مرحباً PGR دبي للذهب، أود الاستفسار عن شراء: ${pName} (رمز: ${activeProduct.id}). يرجى تزويدي بأفضل تسعير متوفر للكميات بالجملة حالياً وشروط التسليم.`
-      : `Hello PGR UAE Gold Trading, I am interested in placing an order/inquiry for the product: ${pName} (Ref: ${activeProduct.id}). Kindly supply your best wholesale rate for volume purchase and secure Dubai vault collection.`;
+      ? "مرحباً، أريد طلب عرض سعر من PGR UAE للذهب أو الفضة."
+      : "Hello, I would like to request a quote from PGR UAE for gold or silver products.";
     
-    const rawNumber = settings?.whatsapp_hotline || "+971509998888";
-    const cleanedNumber = rawNumber.replace(/[^0-9]/g, "");
-    return `https://wa.me/${cleanedNumber}?text=${encodeURIComponent(baseMsg)}`;
+    return `https://wa.me/971559688837?text=${encodeURIComponent(baseMsg)}`;
   };
 
   // Interactive Zoom handler
@@ -131,7 +128,7 @@ Fineness: ${activeProduct.purity}
 Timestamp: ${new Date().toUTCString()}
 
 Under DMCC Clearing Regulations, physical bullion products
-originating from LBMA Refiners (Good Delivery Standard)
+originating from certified Refiners (Good Delivery Standard)
 are subject to 0% VAT in the United Arab Emirates.
 
 This document serves as an official technical guide.
@@ -254,8 +251,8 @@ Phone: ${phone}
                   </span>
                   <p className="text-[11px] text-gray-500 leading-relaxed font-mono">
                     {currentLang === "ar"
-                      ? "هذا المنتج مختوم ورقياً ومحمي بالكامل برقم تسلسلي معتمد دولياً من جمعية لندن (LBMA)."
-                      : "Sourced with tamper-proof assay documentation. Directly verifiable by global refiner assays and physical LBMA vault clearings."}
+                      ? "هذا المنتج مختوم ورقياً ومحمي بالكامل برقم تسلسلي معتمد دولياً."
+                      : "Sourced with tamper-proof assay documentation. Directly verifiable by global refiner assays and physical vault clearings."}
                   </p>
                 </div>
               </div>
@@ -320,7 +317,7 @@ Phone: ${phone}
                 <div className="flex border-b border-white/[0.03] text-xs font-mono overflow-x-auto whitespace-nowrap">
                   {[
                     { id: "specs", label_en: "Attributes", label_ar: "المواصفات" },
-                    { id: "cert", label_en: "LBMA & Cert", label_ar: "شهادة الأصالة" },
+                    { id: "cert", label_en: "Assay & Cert", label_ar: "شهادة الأصالة" },
                     { id: "downloads", label_en: "Downloads", label_ar: "التحميلات" },
                     { id: "related", label_en: "Related", label_ar: "المنتجات المماثلة" }
                   ].map((tab) => (
@@ -370,19 +367,19 @@ Phone: ${phone}
                   </div>
                 )}
 
-                {/* Tab 2: LBMA standards & custom vault link */}
+                {/* Tab 2: Assay standards & custom vault link */}
                 {activeTab === "cert" && (
                   <div className="p-4 rounded border border-white/[0.02] bg-[#161618] text-xs font-mono space-y-3 animate-fadeIn">
                     <div className="flex items-center gap-2 text-gold-base">
                       <Award size={14} />
                       <span className="font-semibold uppercase tracking-wider">
-                        {currentLang === "ar" ? "معايير التسليم الجيد بلندن (LBMA)" : "LBMA Good Delivery Standard"}
+                        {currentLang === "ar" ? "معايير الجودة الدولية المعتمدة" : "International Quality Standards"}
                       </span>
                     </div>
                     <p className="text-gray-400 leading-relaxed text-[11px] font-sans">
                       {currentLang === "ar"
-                        ? "كافة المصافي المعتمدة لدينا مدرجة في القائمة الرسمية لجمعية لندن للمعادن الثمينة. يتم نقش الرقم التسلسلي الفريد بدقة على وجه كل سبيكة للتأكد المطلق من أصالتها."
-                        : "Our represented Swiss and international mints adhere to stringent London Good Delivery rules. Every single product has an individualized laser seal engraved into its face."}
+                        ? "كافة المصافي المعتمدة لدينا مدرجة في القوائم الرسمية المعتمدة للمصافي العالمية. يتم نقش الرقم التسلسلي الفريد بدقة على وجه كل سبيكة للتأكد المطلق من أصالتها."
+                        : "Our represented Swiss and international mints adhere to stringent Good Delivery rules. Every single product has an individualized laser seal engraved into its face."}
                     </p>
                     <div className="pt-2 border-t border-white/[0.02] flex justify-between items-center text-[10px]">
                       <span className="text-gray-500">SECURE VAULT SERIAL:</span>

@@ -72,7 +72,7 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
     silver_markup_pct: 1.5,
     spread_usd: 12.0,
     premium_markup_pct: 2.0,
-    whatsapp_hotline: "+971509998888",
+    whatsapp_hotline: "+971559688837",
     desk_email: "desk@pgruae.com",
     trade_phone: "+971 4 445 8888",
     office_address_en: "Almas Tower, DMCC Precinct, Dubai Marina, Dubai, United Arab Emirates",
