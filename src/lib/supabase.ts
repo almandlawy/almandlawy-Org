@@ -134,39 +134,43 @@ const seedLocalStorage = () => {
   getOrSet("pgr_quote_requests", []);
 
   // 6. Orders
-  const initialOrders = [
-    {
-      id: "PGR-ORD-10924",
-      customer_id: "cust-verified-1",
-      created_at: "2026-06-15T14:32:00Z",
-      status: "Delivered",
-      total_amount: 118400.0,
-      currency: "AED",
-      shipping_method: "Dubai Delivery",
-      payment_method: "Bank Transfer",
-      shipping_address: "Penthouse 45, Marina Heights, Dubai Marina",
-      billing_address: "Penthouse 45, Marina Heights, Dubai Marina",
-      items: [
-        { product_id: "gb-100g", quantity: 4, unit_price: 29600.0, product_name: "PAMP Suisse 100g Cast Gold Bar" }
-      ]
-    },
-    {
-      id: "PGR-ORD-11530",
-      customer_id: "cust-verified-1",
-      created_at: "2026-06-25T11:05:00Z",
-      status: "Quoted",
-      total_amount: 326500.0,
-      currency: "AED",
-      shipping_method: "Office Pickup",
-      payment_method: "Cash Office",
-      shipping_address: "PGR Vault Gateway Office, Dubai Marina",
-      billing_address: "PGR Vault Gateway Office, Dubai Marina",
-      items: [
-        { product_id: "gb-1kg", quantity: 1, unit_price: 326500.0, product_name: "PAMP Suisse 1kg Good Delivery Gold Bar" }
-      ]
-    }
-  ];
-  getOrSet("pgr_orders", initialOrders);
+  if (!isProduction) {
+    const initialOrders = [
+      {
+        id: "PGR-ORD-10924",
+        customer_id: "cust-verified-1",
+        created_at: "2026-06-15T14:32:00Z",
+        status: "Delivered",
+        total_amount: 118400.0,
+        currency: "AED",
+        shipping_method: "Dubai Delivery",
+        payment_method: "Bank Transfer",
+        shipping_address: "Penthouse 45, Marina Heights, Dubai Marina",
+        billing_address: "Penthouse 45, Marina Heights, Dubai Marina",
+        items: [
+          { product_id: "gb-100g", quantity: 4, unit_price: 29600.0, product_name: "PAMP Suisse 100g Cast Gold Bar" }
+        ]
+      },
+      {
+        id: "PGR-ORD-11530",
+        customer_id: "cust-verified-1",
+        created_at: "2026-06-25T11:05:00Z",
+        status: "Quoted",
+        total_amount: 326500.0,
+        currency: "AED",
+        shipping_method: "Office Pickup",
+        payment_method: "Cash Office",
+        shipping_address: "PGR Vault Gateway Office, Dubai Marina",
+        billing_address: "PGR Vault Gateway Office, Dubai Marina",
+        items: [
+          { product_id: "gb-1kg", quantity: 1, unit_price: 326500.0, product_name: "PAMP Suisse 1kg Good Delivery Gold Bar" }
+        ]
+      }
+    ];
+    getOrSet("pgr_orders", initialOrders);
+  } else {
+    localStorage.removeItem("pgr_orders");
+  }
 
   // 7. Blog Posts (CMS)
   getOrSet("pgr_blog", [
@@ -204,10 +208,14 @@ const seedLocalStorage = () => {
   getOrSet("pgr_contact_messages", []);
 
   // 9. Notifications
-  getOrSet("pgr_notifications", [
-    { id: "notif-1", title_en: "Bespoke Quote Update", title_ar: "تحديث على مقايسة السعر", content_en: "Your quote request for 1kg PAMP Gold Bar has been approved by the Trader Desk.", content_ar: "تمت الموافقة على طلب التسعير الخاص بك لسبيكة ١ كيلو ذهب من مكتب التداول.", created_at: "2026-06-25T11:10:00Z", unread: true },
-    { id: "notif-2", title_en: "Secure Logins Active", title_ar: "نظام تسجيل الدخول الآمن", content_en: "FaceID / Authenticator connection is active for your premium account.", content_ar: "تم تنشيط ميزة الحماية لربط الحساب الآمن.", created_at: "2026-06-20T08:00:00Z", unread: false }
-  ]);
+  if (!isProduction) {
+    getOrSet("pgr_notifications", [
+      { id: "notif-1", title_en: "Bespoke Quote Update", title_ar: "تحديث على مقايسة السعر", content_en: "Your quote request for 1kg PAMP Gold Bar has been approved by the Trader Desk.", content_ar: "تمت الموافقة على طلب التسعير الخاص بك لسبيكة ١ كيلو ذهب من مكتب التداول.", created_at: "2026-06-25T11:10:00Z", unread: true },
+      { id: "notif-2", title_en: "Secure Logins Active", title_ar: "نظام تسجيل الدخول الآمن", content_en: "FaceID / Authenticator connection is active for your premium account.", content_ar: "تم تنشيط ميزة الحماية لربط الحساب الآمن.", created_at: "2026-06-20T08:00:00Z", unread: false }
+    ]);
+  } else {
+    localStorage.removeItem("pgr_notifications");
+  }
 
   // 10. Current active user profile
   if (!isProduction) {
@@ -270,89 +278,105 @@ const seedLocalStorage = () => {
   ]);
 
   // 14. KYC profiles and Documents
-  getOrSet("pgr_kyc_profiles", [
-    {
-      id: "cust-verified-1",
-      full_name: "Sheikh Mansoor Al-Maktoum",
-      phone: "+971 50 999 8888",
-      whatsapp: "+971 50 999 8888",
-      email: "verified.investor@dubaimarina.ae",
-      country: "UAE",
-      city: "Dubai",
-      nationality: "Emirati",
-      dob: "1985-05-15",
-      source_of_funds_declaration: "Trading Cashflow",
-      agreement_accepted: true,
-      privacy_consent: true,
-      status: "Verified",
-      documents: [
-        {
-          id: "doc-1",
-          type: "Emirates ID",
-          number: "784-1985-1234567-1",
-          status: "Verified",
-          updated_at: "2026-01-02T10:00:00Z"
-        }
-      ],
-      verified_at: "2026-01-02T12:00:00Z"
-    }
-  ]);
+  if (!isProduction) {
+    getOrSet("pgr_kyc_profiles", [
+      {
+        id: "cust-verified-1",
+        full_name: "Sheikh Mansoor Al-Maktoum",
+        phone: "+971 50 999 8888",
+        whatsapp: "+971 50 999 8888",
+        email: "verified.investor@dubaimarina.ae",
+        country: "UAE",
+        city: "Dubai",
+        nationality: "Emirati",
+        dob: "1985-05-15",
+        source_of_funds_declaration: "Trading Cashflow",
+        agreement_accepted: true,
+        privacy_consent: true,
+        status: "Verified",
+        documents: [
+          {
+            id: "doc-1",
+            type: "Emirates ID",
+            number: "784-1985-1234567-1",
+            status: "Verified",
+            updated_at: "2026-01-02T10:00:00Z"
+          }
+        ],
+        verified_at: "2026-01-02T12:00:00Z"
+      }
+    ]);
+  } else {
+    localStorage.removeItem("pgr_kyc_profiles");
+  }
 
   // 15. Iraq Delivery Requests
-  getOrSet("pgr_iraq_delivery_requests", [
-    {
-      id: "del-1",
-      customer_id: "cust-verified-1",
-      order_id: "PGR-ORD-10924",
-      governorate: "Baghdad",
-      address_details: "Al-Mansour District, Block 12, Street 15",
-      phone: "+964 770 123 4567",
-      status: "Delivered",
-      created_at: "2026-06-16T08:00:00Z",
-      customs_docs_status: "Approved"
-    }
-  ]);
+  if (!isProduction) {
+    getOrSet("pgr_iraq_delivery_requests", [
+      {
+        id: "del-1",
+        customer_id: "cust-verified-1",
+        order_id: "PGR-ORD-10924",
+        governorate: "Baghdad",
+        address_details: "Al-Mansour District, Block 12, Street 15",
+        phone: "+964 770 123 4567",
+        status: "Delivered",
+        created_at: "2026-06-16T08:00:00Z",
+        customs_docs_status: "Approved"
+      }
+    ]);
+  } else {
+    localStorage.removeItem("pgr_iraq_delivery_requests");
+  }
 
   // 16. Bullion Ownership / Investment Accounts
-  getOrSet("pgr_investment_accounts", [
-    {
-      id: "inv-gold",
-      customer_id: "cust-verified-1",
-      metal: "gold",
-      weight_grams: 250,
-      average_purchase_price_usd: 75.40,
-      total_purchase_amount_usd: 18850.00,
-      current_market_value_usd: 19125.00,
-      daily_change_percent: 0.28,
-      monthly_change_percent: 1.45
-    },
-    {
-      id: "inv-silver",
-      customer_id: "cust-verified-1",
-      metal: "silver",
-      weight_grams: 2000,
-      average_purchase_price_usd: 0.92,
-      total_purchase_amount_usd: 1840.00,
-      current_market_value_usd: 1880.00,
-      daily_change_percent: -0.15,
-      monthly_change_percent: 2.10
-    }
-  ]);
+  if (!isProduction) {
+    getOrSet("pgr_investment_accounts", [
+      {
+        id: "inv-gold",
+        customer_id: "cust-verified-1",
+        metal: "gold",
+        weight_grams: 250,
+        average_purchase_price_usd: 75.40,
+        total_purchase_amount_usd: 18850.00,
+        current_market_value_usd: 19125.00,
+        daily_change_percent: 0.28,
+        monthly_change_percent: 1.45
+      },
+      {
+        id: "inv-silver",
+        customer_id: "cust-verified-1",
+        metal: "silver",
+        weight_grams: 2000,
+        average_purchase_price_usd: 0.92,
+        total_purchase_amount_usd: 1840.00,
+        current_market_value_usd: 1880.00,
+        daily_change_percent: -0.15,
+        monthly_change_percent: 2.10
+      }
+    ]);
+  } else {
+    localStorage.removeItem("pgr_investment_accounts");
+  }
 
   // 17. Buyback Requests
-  getOrSet("pgr_buyback_requests", [
-    {
-      id: "buy-1",
-      customer_id: "cust-verified-1",
-      metal: "gold",
-      weight_grams: 50,
-      purity: "Au 99.99%",
-      status: "Completed",
-      estimated_payout_usd: 3780.00,
-      exchange_rate_iqd: 1310.0,
-      created_at: "2026-06-21T09:15:00Z"
-    }
-  ]);
+  if (!isProduction) {
+    getOrSet("pgr_buyback_requests", [
+      {
+        id: "buy-1",
+        customer_id: "cust-verified-1",
+        metal: "gold",
+        weight_grams: 50,
+        purity: "Au 99.99%",
+        status: "Completed",
+        estimated_payout_usd: 3780.00,
+        exchange_rate_iqd: 1310.0,
+        created_at: "2026-06-21T09:15:00Z"
+      }
+    ]);
+  } else {
+    localStorage.removeItem("pgr_buyback_requests");
+  }
 
   // 18. Admin Users emails
   getOrSet("pgr_admin_users", ["almandlawy112@gmail.com", "admin@pgruae.com"]);
@@ -445,6 +469,25 @@ export const mockDb = {
       }
     };
   }
+};
+
+export const getRedirectUrl = () => {
+  if (typeof window !== "undefined") {
+    const origin = window.location.origin;
+    const pathname = window.location.pathname;
+
+    if (origin.includes("pgruae.com") && pathname.startsWith("/admin")) {
+      return "https://pgruae.com/admin";
+    }
+
+    if (origin.includes("pgruae.com")) {
+      return "https://pgruae.com";
+    }
+
+    return origin + pathname;
+  }
+
+  return "https://pgruae.com";
 };
 
 // =========================================================================
@@ -948,7 +991,7 @@ export const dbService = {
 
   auth: {
     signInWithGoogle: async (redirectToUrl?: string) => {
-      const redirect = redirectToUrl || window.location.origin;
+      const redirect = redirectToUrl || getRedirectUrl();
       if (isLive && supabase) {
         const { error } = await supabase.auth.signInWithOAuth({
           provider: "google",

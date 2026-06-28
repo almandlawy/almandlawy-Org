@@ -146,11 +146,36 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
   };
 
   useEffect(() => {
-    const activeUser = mockDb.auth.getUser();
-    if (activeUser) {
-      setUser(activeUser);
-      loadUserData(activeUser);
-    }
+    const initUser = async () => {
+      if ((isProduction || isLive) && supabase) {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session && session.user) {
+            const u = {
+              id: session.user.id,
+              email: session.user.email || "",
+              name: session.user.user_metadata?.full_name || session.user.email?.split("@")[0] || "Accredited Investor",
+              role: session.user.email === "almandlawy112@gmail.com" ? "admin" : "customer",
+              created_at: session.user.created_at || new Date().toISOString()
+            };
+            setUser(u);
+            await loadUserData(u);
+            return;
+          }
+        } catch (err) {
+          console.error("Failed to fetch Supabase session on modal mount:", err);
+        }
+      }
+      
+      const activeUser = mockDb.auth.getUser();
+      if (activeUser) {
+        setUser(activeUser);
+        loadUserData(activeUser);
+      }
+    };
+
+    initUser();
+
     // Pre-verify certificate for immediate display
     dbService.certificates.verify("PAMP-882941").then(cert => {
       if (cert) setVerifiedCert(cert);
@@ -343,7 +368,14 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
   };
 
   // Handle logout
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    if ((isProduction || isLive) && supabase) {
+      try {
+        await supabase.auth.signOut();
+      } catch (err) {
+        console.error("Failed to sign out from Supabase:", err);
+      }
+    }
     mockDb.auth.logout();
     setUser(null);
     setKycProfile(null);

@@ -39,7 +39,6 @@ export default function App() {
   // Custom Client & Admin portals & Legal Overlays
   const [isClientDashboardOpen, setIsClientDashboardOpen] = useState(false);
   const [isAdminPortalOpen, setIsAdminPortalOpen] = useState(false);
-  const [isAdminRoute, setIsAdminRoute] = useState(false);
   const [activeLegalDoc, setActiveLegalDoc] = useState<string | null>(null);
 
   // Listen for Supabase Authentication changes
@@ -115,17 +114,6 @@ export default function App() {
     }
   };
 
-  // Check for direct admin route on mount
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const path = window.location.pathname;
-      if (path === "/admin" || path === "/admin/") {
-        setIsAdminRoute(true);
-        setIsAdminPortalOpen(true);
-      }
-    }
-  }, []);
-
   // Active category filter for Catalog (for smooth scrolling filter options from Hero)
   const [catalogCategoryFilter, setCatalogCategoryFilter] = useState<string>("all");
 
@@ -182,18 +170,12 @@ export default function App() {
     handleScrollToSection("catalog");
   };
 
+  const isAdminRoute =
+    window.location.pathname === "/admin" ||
+    window.location.pathname.startsWith("/admin/");
+
   if (isAdminRoute) {
-    return (
-      <AdminPanel
-        currentLang={currentLang}
-        onClose={() => {
-          setIsAdminRoute(false);
-          setIsAdminPortalOpen(false);
-          window.history.pushState({}, "", "/");
-        }}
-        isModal={false}
-      />
-    );
+    return <AdminPanel currentLang={currentLang} />;
   }
 
   return (

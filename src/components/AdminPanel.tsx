@@ -11,11 +11,11 @@ import {
   TrendingUp, Undo, Box, Award, FileText, BookOpen, Settings, 
   Eye, Trash2, Plus, Edit, ShieldAlert, Mail, Phone, Clock, FileCheck, CheckCircle, LogOut
 } from "lucide-react";
-import { dbService, mockDb } from "../lib/supabase";
+import { dbService, mockDb, isLive, supabase, getRedirectUrl } from "../lib/supabase";
 import { Product } from "../types";
 
 interface AdminPanelProps {
-  currentLang: "en" | "ar";
+  currentLang?: "en" | "ar";
   onClose?: () => void;
   isModal?: boolean;
 }
@@ -36,7 +36,7 @@ type AdminSection =
   | "blog"
   | "settings";
 
-export default function AdminPanel({ currentLang, onClose, isModal = false }: AdminPanelProps) {
+export default function AdminPanel({ currentLang = "ar", onClose, isModal = false }: AdminPanelProps) {
   const isAr = currentLang === "ar";
   const [activeSection, setActiveSection] = useState<AdminSection>("dashboard");
   const [loading, setLoading] = useState(false);
@@ -165,6 +165,21 @@ export default function AdminPanel({ currentLang, onClose, isModal = false }: Ad
     const checkInitialAuth = async () => {
       setCheckingAuth(true);
       try {
+        if (isLive && supabase) {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session && session.user) {
+            const email = session.user.email || "";
+            const mappedUser = {
+              id: session.user.id,
+              email: email,
+              name: session.user.user_metadata?.full_name || session.user.email?.split("@")[0] || "Accredited Investor",
+              role: email === "almandlawy112@gmail.com" ? "admin" : "customer",
+              created_at: session.user.created_at || new Date().toISOString()
+            };
+            mockDb.auth.setUser(mappedUser);
+          }
+        }
+
         const currentUser = mockDb.auth.getUser();
         if (currentUser && currentUser.email) {
           const isAuthorized = await dbService.adminUsers.checkEmail(currentUser.email);
@@ -678,19 +693,28 @@ export default function AdminPanel({ currentLang, onClose, isModal = false }: Ad
                   onClick={async () => {
                     try {
                       setCheckingAuth(true);
-                      const resultUser = await dbService.auth.signInWithGoogle();
-                      if (resultUser) {
-                        const isAuthorized = await dbService.adminUsers.checkEmail(resultUser.email);
-                        if (isAuthorized) {
-                          setIsAdminLoggedIn(true);
-                          setAuthErrorMsg("");
-                          await loadAdminData();
-                        } else {
-                          setAuthErrorMsg(
-                            isAr 
-                              ? "تم رفض الدخول. صلاحية الإدارة مطلوبة." 
-                              : "Access denied. Admin permission required."
-                          );
+                      if (isLive && supabase) {
+                        await supabase.auth.signInWithOAuth({
+                          provider: "google",
+                          options: {
+                            redirectTo: getRedirectUrl()
+                          }
+                        });
+                      } else {
+                        const resultUser = await dbService.auth.signInWithGoogle();
+                        if (resultUser) {
+                          const isAuthorized = await dbService.adminUsers.checkEmail(resultUser.email);
+                          if (isAuthorized) {
+                            setIsAdminLoggedIn(true);
+                            setAuthErrorMsg("");
+                            await loadAdminData();
+                          } else {
+                            setAuthErrorMsg(
+                              isAr 
+                                ? "تم رفض الدخول. صلاحية الإدارة مطلوبة." 
+                                : "Access denied. Admin permission required."
+                            );
+                          }
                         }
                       }
                     } catch (err) {
