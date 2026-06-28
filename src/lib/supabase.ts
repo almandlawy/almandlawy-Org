@@ -541,11 +541,30 @@ export const getRedirectUrl = () => {
 export const mapDbProductToFrontend = (dbProd: any): any => {
   if (!dbProd) return null;
   const isGold = dbProd.metal_type === "gold" || dbProd.category?.includes("gold") || false;
+  
+  let frontendCategory = "gold_bars";
+  const dbCat = String(dbProd.category || "").toLowerCase();
+  if (dbCat === "coin") {
+    frontendCategory = isGold ? "gold_coins" : "silver_coins";
+  } else if (dbCat === "silver") {
+    frontendCategory = "silver_bars";
+  } else if (dbCat === "gold") {
+    frontendCategory = "gold_bars";
+  } else {
+    if (dbCat.includes("coin")) {
+      frontendCategory = isGold ? "gold_coins" : "silver_coins";
+    } else if (dbCat.includes("silver")) {
+      frontendCategory = "silver_bars";
+    } else {
+      frontendCategory = "gold_bars";
+    }
+  }
+
   return {
     id: dbProd.id,
     name_en: dbProd.name || "",
     name_ar: dbProd.arabic_name || dbProd.name || "",
-    category: dbProd.category || (isGold ? "gold_bars" : "silver_bars"),
+    category: frontendCategory,
     weight_label: `${dbProd.weight_grams || 100} Grams`,
     purity: dbProd.purity || "999.9",
     manufacturer: dbProd.brand || "PAMP Suisse",
@@ -605,11 +624,21 @@ export const mapFrontendProductToDb = (product: any): any => {
     }
   }
 
+  let categoryVal = "gold";
+  const catLower = String(product.category || "").toLowerCase();
+  if (catLower.includes("coin") || catLower.includes("عملات")) {
+    categoryVal = "coin";
+  } else if (catLower.includes("silver") || catLower.includes("فضة")) {
+    categoryVal = "silver";
+  } else if (catLower.includes("gold") || catLower.includes("ذهب")) {
+    categoryVal = "gold";
+  }
+
   const payload: any = {
     name: product.name_en || "",
     arabic_name: product.name_ar || product.name_en || "",
     slug: slug,
-    category: product.category || "gold_bars",
+    category: categoryVal,
     brand: product.brand || product.manufacturer || "PAMP Suisse",
     metal_type: metalType,
     weight: weight,
