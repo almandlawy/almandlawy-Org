@@ -288,26 +288,39 @@ Phone: ${phone}
               {/* Dynamic Indicative Market Valuation */}
               <div className="p-4 rounded-sm bg-[#161616]/70 border border-white/[0.04] space-y-2">
                 <div className="flex justify-between items-center text-xs font-mono text-gray-400">
-                  <span>{currentLang === "ar" ? "التسعير الاسترشادي المباشر" : "Estimated Retail Valuation"}</span>
-                  <span className="text-[10px] bg-white/[0.04] px-1.5 py-0.5 rounded text-gray-400">SPOT + PREMIUM</span>
+                  <span>{currentLang === "ar" ? "التسعير الاسترشادي" : "Indicative market reference"}</span>
+                  {getLivePrice() && (
+                    <span className="text-[10px] bg-white/[0.04] px-1.5 py-0.5 rounded text-gray-400">SPOT + PREMIUM</span>
+                  )}
                 </div>
 
-                <div className="flex items-baseline justify-between">
-                  <div className="flex items-baseline gap-1">
-                    <span className={`text-2xl md:text-3xl font-serif font-medium ${isGold ? "text-gold-gradient" : "text-silver-gradient"}`}>
-                      {getLivePrice() || "..."}
+                {getLivePrice() ? (
+                  <div className="flex items-baseline justify-between">
+                    <div className="flex items-baseline gap-1">
+                      <span className={`text-2xl md:text-3xl font-serif font-medium ${isGold ? "text-gold-gradient" : "text-silver-gradient"}`}>
+                        {getLivePrice()}
+                      </span>
+                      <span className="text-xs text-gray-400 font-mono font-medium">{selectedCurrency}</span>
+                    </div>
+                    <span className="text-[10px] text-gray-500 font-mono">
+                      {currentLang === "ar" ? "مرجع استرشادي" : "Indicative reference"}
                     </span>
-                    <span className="text-xs text-gray-400 font-mono font-medium">{selectedCurrency}</span>
                   </div>
-                  <span className="text-[10px] text-emerald-400 font-mono font-semibold">
-                    {currentLang === "ar" ? "محدث تلقائياً" : "Live synchronized"}
-                  </span>
-                </div>
+                ) : (
+                  <div className="space-y-2">
+                    <span className="text-lg font-serif font-medium text-gold-base block">
+                      {currentLang === "ar" ? "طلب عرض سعر" : "Request Quote"}
+                    </span>
+                    <span className="text-[10px] text-gray-400 font-mono block">
+                      {currentLang === "ar" ? "يتم تأكيد السعر قبل الدفع" : "Price confirmed before payment"}
+                    </span>
+                  </div>
+                )}
 
                 <div className="text-[10px] font-mono text-gray-600 leading-relaxed pt-2 border-t border-white/[0.03]">
                   {currentLang === "ar"
-                    ? "ملاحظة: تختلف الأسعار النهائية للصفقات الكبرى والمستندات الجمركية بالجملة. اطلب عرض السعر لمعرفة الأسعار اللحظية الدقيقة."
-                    : "Indicative spot pricing only. Wholesale procurement, custom imports, and larger bullion allotments are structured individually via customized quotes."}
+                    ? "تفاصيل المنتج يتم التحقق منها قبل الطلب. اطلب عرض سعر للحصول على السعر النهائي المؤكد."
+                    : "Product details verified before order. Request a quote for your confirmed final price."}
                 </div>
               </div>
 

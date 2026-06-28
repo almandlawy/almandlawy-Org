@@ -68,7 +68,7 @@ export default function IraqTrustBadge({ currentLang }: IraqTrustBadgeProps) {
         <strong>{isAr ? "ملاحظة هامة:" : "Regulatory Notice:"} </strong>
         {isAr 
           ? "قد يتطلب شحن المعادن الثمينة مستندات جمركية، فواتير رسمية، وتصاريح استيراد حسب قوانين بلد المقصد. لا تقدم PGR أي وعود بعوائد ثابتة." 
-          : "Procurement and transit of precious metals are subject to customs documentation, official declarations, and destination regulations. PGR does not promise fixed returns."}
+          : "Procurement and transit of precious metals are subject to customs documentation, official declarations, and destination regulations. Price confirmed before payment."}
       </div>
     </div>
   );

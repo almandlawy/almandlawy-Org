@@ -506,9 +506,9 @@ export const PRODUCTS: Product[] = [
   // --- GOLD COINS (12 Products) ---
   // ==========================================
   {
-    id: "gc-sovereign",
-    name_en: "Royal Mint Gold Sovereign Coin 7.98g",
-    name_ar: "عملة السوفرين الذهبية الملكية ٧.٩٨ جرام",
+    id: "gc-royal-mint-7g",
+    name_en: "Royal Mint Gold Coin 7.98g",
+    name_ar: "مسكوكة ذهب رويال مينت ٧.٩٨ جرام",
     category: "gold_coins",
     weight_label: "7.98 Grams (22 Karat)",
     purity: "22 Karat (91.67% Gold, Crown Alloy)",
@@ -518,7 +518,7 @@ export const PRODUCTS: Product[] = [
     availability: "In Stock",
     certificate_en: "Official UK Legal Tender Backed by HM Treasury",
     certificate_ar: "عملة قانونية معتمدة ومدعومة من الخزانة البريطانية",
-    description_en: "The historic Sovereign coin, depicting Saint George slaying the dragon. Exceptionally liquid and highly historical.",
+    description_en: "The historic Royal Mint gold coin, depicting Saint George slaying the dragon. Exceptionally liquid and highly historical.",
     description_ar: "العملة الملكية التاريخية الأشهر في العالم بنقش القديس جورج والتنين. تزن ٧.٩٨ جرام (محتواها الذهبي الصافي هو ٧.٣٢ جرام).",
     technical_specs: { weight_grams: 7.988, purity: "91.67% Au (22k)", metal: "gold", dimensions: "Diameter 22.05 mm", thickness: "1.52 mm", packaging: "Protective acrylic capsule", serial_number: false },
     image_placeholder: "gold_coin",
@@ -950,27 +950,27 @@ export const PRODUCTS: Product[] = [
 
 export const WHY_US_ITEMS = [
   {
-    title_en: "International Institutional Compliance",
-    title_ar: "امتثال مؤسسي بمعايير دولية",
-    desc_en: "Operating in the heart of Dubai, the absolute global epicentre of precious metals trading, with strict international standards of compliance.",
-    desc_ar: "نعمل من قلب دبي، العاصمة العالمية لتداول الذهب والمعادن الثمينة، بامتثال تام للأنظمة المرعية والاعتمادات الدولية."
+    title_en: "Request Quote",
+    title_ar: "طلب عرض سعر",
+    desc_en: "Every product inquiry starts with a formal quote. Final pricing is confirmed before payment based on availability and market conditions.",
+    desc_ar: "كل استفسار عن منتج يبدأ بطلب تسعير رسمي. يتم تأكيد السعر النهائي قبل الدفع وفق التوفر وظروف السوق."
   },
   {
-    title_en: "Wholesale Global Solutions",
-    title_ar: "حلول تداول بالجملة وعالمية",
-    desc_en: "We offer tailored, highly competitive direct pricing for institutional bullion procurement, private funds, high-volume trading, and institutional reserves.",
-    desc_ar: "نقدم تسعيراً مباشراً وتنافسياً مخصصاً لعمليات شراء السبائك الكبرى للمؤسسات، الصناديق الخاصة، تداول الكميات الضخمة، والاحتياطيات المؤسسية."
+    title_en: "Product Details Verified",
+    title_ar: "تفاصيل المنتج موثقة",
+    desc_en: "Product specifications, weight, purity, and brand are verified before order confirmation.",
+    desc_ar: "يتم التحقق من مواصفات المنتج والوزن والنقاوة والعلامة التجارية قبل تأكيد الطلب."
   },
   {
-    title_en: "Secure Global Vaulting",
-    title_ar: "تخزين وشحن عالمي آمن",
-    desc_en: "Fully covered door-to-door transit via high-security logistics (Brink's / Transguard) with direct storage options in UAE premium, certified vaults.",
-    desc_ar: "شحن مغطى بالكامل من الباب إلى الباب عبر كبرى شركات الأمن (برينكس / ترانسجارد) مع خيارات تخزين مباشر في أرقى الخزائن المؤمنة والمعتمدة في دبي."
+    title_en: "Delivery Options to UAE and Iraq",
+    title_ar: "خيارات التوصيل للإمارات والعراق",
+    desc_en: "Secure product handling with delivery and pickup options to UAE and Iraq, subject to verification and customs requirements.",
+    desc_ar: "معالجة آمنة للمنتجات مع خيارات التوصيل والاستلام للإمارات والعراق، وفق التحقق والمتطلبات الجمركية."
   },
   {
-    title_en: "Absolute Pricing Transparency",
-    title_ar: "شفافية مطلقة في التسعير",
-    desc_en: "PGR UAE is founded on absolute transparency. Our digital rates align directly with global gold/silver spot tickers with zero hidden broker premiums.",
-    desc_ar: "تأسست بي جي آر على مبدأ الشفافية الكاملة. أسعارنا الرقمية تتبع شاشات التداول العالمية مباشرة بدون أي رسوم وساطة خفية."
+    title_en: "Customer Dashboard",
+    title_ar: "لوحة العميل",
+    desc_en: "Track quote requests, confirmed orders, delivery status, payment links, and product certificates when available.",
+    desc_ar: "تتبع طلبات التسعير والطلبات المؤكدة وحالة التوصيل وروابط الدفع وشهادات المنتج عند توفرها."
   }
 ];

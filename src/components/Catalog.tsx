@@ -4,7 +4,7 @@
  */
 
 import React from "react";
-import { Search, Filter, ShieldCheck, ChevronRight, Sparkles, AlertCircle } from "lucide-react";
+import { Search, Filter, ShieldCheck, ChevronRight, Sparkles, AlertCircle, MessageCircle } from "lucide-react";
 import { Product, MetalCategory, LiveMarketRates } from "../types";
 import { PRODUCTS } from "../data";
 import { dbService, isProduction } from "../lib/supabase";
@@ -139,10 +139,31 @@ export default function Catalog({
     }
   };
 
+  const getProductImage = (product: Product, isGold: boolean, isCoin: boolean) => {
+    if (product.image_url) return product.image_url;
+    if (isCoin) return isGold ? "/gold_bar_luxury_1782445126673.jpg" : "/silver_bar_luxury_1782445139922.jpg";
+    return isGold ? "/gold_bar_luxury_1782445126673.jpg" : "/silver_bar_luxury_1782445139922.jpg";
+  };
+
+  const getWhatsAppLink = (product: Product) => {
+    const name = currentLang === "ar" ? product.name_ar : product.name_en;
+    const msg = currentLang === "ar"
+      ? `مرحباً، أريد طلب عرض سعر لمنتج: ${name}`
+      : `Hello, I would like to request a quote for: ${name}`;
+    return `https://wa.me/971559688837?text=${encodeURIComponent(msg)}`;
+  };
+
+  const isTestProduct = (product: Product) => {
+    const id = (product.id || "").toLowerCase();
+    const name = `${product.name_en || ""} ${product.name_ar || ""}`.toLowerCase();
+    return id.includes("test") || name.includes("test") || id.includes("demo") || name.includes("demo");
+  };
+
   // Filter products based on search query and category pill selection
   const filteredProducts = (products.length > 0 ? products : PRODUCTS).filter((product) => {
     try {
       if (!product) return false;
+      if (isTestProduct(product)) return false;
       const matchesCategory = selectedFilter === "all" || product.category === selectedFilter;
       
       const query = searchQuery.toLowerCase();
@@ -188,7 +209,7 @@ export default function Catalog({
         <div className="text-center space-y-4 max-w-2xl mx-auto">
           <span className="text-gold-base font-mono uppercase text-xs tracking-[0.3em] font-semibold flex items-center justify-center gap-2">
             <Sparkles size={11} />
-            {currentLang === "ar" ? "المجموعة المعتمدة دولياً" : "Accredited Investment Portfolio"}
+            {currentLang === "ar" ? "المجموعة المعتمدة دولياً" : "Certified Product Collection"}
           </span>
           <h2 className="text-3xl sm:text-4xl font-serif tracking-tight text-white font-medium">
             {currentLang === "ar" ? "كتالوج السبائك والمعادن الثمينة" : "Precious Metals Catalog"}
@@ -314,18 +335,12 @@ export default function Catalog({
                       
                       {/* Real generated high-resolution assets linked dynamically based on category */}
                       <img
-                        src={
-                          product.image_url || (isGold
-                            ? "/gold_bar_luxury_1782445126673.jpg"
-                            : "/silver_bar_luxury_1782445139922.jpg")
-                        }
+                        src={getProductImage(product, isGold, isCoin)}
                         alt={product.name_en || "Bullion product"}
                         referrerPolicy="no-referrer"
                         onError={(e) => {
                           e.currentTarget.onerror = null;
-                          e.currentTarget.src = isGold
-                            ? "/gold_bar_luxury_1782445126673.jpg"
-                            : "/silver_bar_luxury_1782445139922.jpg";
+                          e.currentTarget.src = getProductImage(product, isGold, isCoin);
                         }}
                         className="w-full h-full object-contain opacity-60 group-hover:opacity-80 transition-all duration-1000 scale-100 group-hover:scale-105 z-0"
                       />
@@ -367,55 +382,68 @@ export default function Catalog({
                       </div>
 
                       {/* Dynamic Pricing Estimate & CTA */}
-                      <div className="pt-4 border-t border-white/[0.03] flex justify-between items-center">
-                        <div>
-                          <span className="text-[10px] text-gray-500 font-mono block uppercase">
-                            {product.price_mode === "fixed"
-                              ? (currentLang === "ar" ? "السعر الثابت المعتمد" : "Confirmed Fixed Price")
-                              : rates
-                                ? (currentLang === "ar" ? "سعر استرشادي" : "Indicative Price")
-                                : (currentLang === "ar" ? "السعر عند الطلب" : "Price on Request")}
-                          </span>
-                          {product.price_mode === "fixed" ? (
-                            <span className="text-sm font-mono font-semibold text-white">
-                              {product.price && product.price > 0 ? (
-                                <>
-                                  {product.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}{" "}
-                                  <span className="text-[10px] text-gold-base">{selectedCurrency}</span>
-                                </>
-                              ) : (
-                                <div className="flex flex-col gap-0.5">
-                                  <span className="text-[11px] text-gold-base font-semibold leading-tight block">
-                                    {currentLang === "ar" ? "طلب عرض سعر" : "Request Quote"}
-                                  </span>
-                                  <span className="text-[9px] text-gray-400 font-medium leading-none block">
-                                    {currentLang === "ar" ? "يتم تأكيد السعر قبل الدفع" : "Price confirmed before payment"}
-                                  </span>
-                                </div>
-                              )}
+                      <div className="pt-4 border-t border-white/[0.03] space-y-3">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <span className="text-[10px] text-gray-500 font-mono block uppercase">
+                              {product.price_mode === "fixed"
+                                ? (currentLang === "ar" ? "السعر المعتمد" : "Confirmed Price")
+                                : rates
+                                  ? (currentLang === "ar" ? "سعر استرشادي" : "Indicative Price")
+                                  : (currentLang === "ar" ? "السعر عند الطلب" : "Price on Request")}
                             </span>
-                          ) : rates && indicativePrice ? (
-                            <span className="text-sm font-mono font-semibold text-white">
-                              {indicativePrice.toLocaleString(undefined, { maximumFractionDigits: 2 })}{" "}
-                              <span className="text-[10px] text-gold-base">{selectedCurrency}</span>
-                            </span>
-                          ) : (
-                            <div className="flex flex-col gap-0.5">
-                              <span className="text-[11px] text-gold-base font-semibold leading-tight block">
-                                {currentLang === "ar" ? "طلب عرض سعر" : "Request Quote"}
+                            {product.price_mode === "fixed" ? (
+                              <span className="text-sm font-mono font-semibold text-white">
+                                {product.price && product.price > 0 ? (
+                                  <>
+                                    {product.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}{" "}
+                                    <span className="text-[10px] text-gold-base">{selectedCurrency}</span>
+                                  </>
+                                ) : (
+                                  <div className="flex flex-col gap-0.5">
+                                    <span className="text-[11px] text-gold-base font-semibold leading-tight block">
+                                      {currentLang === "ar" ? "طلب عرض سعر" : "Request Quote"}
+                                    </span>
+                                    <span className="text-[9px] text-gray-400 font-medium leading-none block">
+                                      {currentLang === "ar" ? "يتم تأكيد السعر قبل الدفع" : "Price confirmed before payment"}
+                                    </span>
+                                  </div>
+                                )}
                               </span>
-                              <span className="text-[9px] text-gray-400 font-medium leading-none block">
-                                {currentLang === "ar" ? "يتم تأكيد السعر قبل الدفع" : "Price confirmed before payment"}
+                            ) : rates && indicativePrice ? (
+                              <span className="text-sm font-mono font-semibold text-white">
+                                {indicativePrice.toLocaleString(undefined, { maximumFractionDigits: 2 })}{" "}
+                                <span className="text-[10px] text-gold-base">{selectedCurrency}</span>
                               </span>
-                            </div>
-                          )}
+                            ) : (
+                              <div className="flex flex-col gap-0.5">
+                                <span className="text-[11px] text-gold-base font-semibold leading-tight block">
+                                  {currentLang === "ar" ? "طلب عرض سعر" : "Request Quote"}
+                                </span>
+                                <span className="text-[9px] text-gray-400 font-medium leading-none block">
+                                  {currentLang === "ar" ? "يتم تأكيد السعر قبل الدفع" : "Price confirmed before payment"}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+
+                          <button className={`p-1.5 rounded-full bg-white/[0.02] border border-white/[0.06] group-hover:bg-gold-base group-hover:border-gold-base transition-all duration-300 ${
+                            currentLang === "ar" ? "rotate-180" : ""
+                          }`}>
+                            <ChevronRight size={14} className="text-white group-hover:text-black transition-colors" />
+                          </button>
                         </div>
 
-                        <button className={`p-1.5 rounded-full bg-white/[0.02] border border-white/[0.06] group-hover:bg-gold-base group-hover:border-gold-base transition-all duration-300 ${
-                          currentLang === "ar" ? "rotate-180" : ""
-                        }`}>
-                          <ChevronRight size={14} className="text-white group-hover:text-black transition-colors" />
-                        </button>
+                        <a
+                          href={getWhatsAppLink(product)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="flex items-center justify-center gap-2 w-full py-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 hover:border-emerald-500/40 text-emerald-400 text-[10px] font-mono font-semibold uppercase rounded transition-all"
+                        >
+                          <MessageCircle size={12} />
+                          {currentLang === "ar" ? "واتساب" : "WhatsApp"}
+                        </a>
                       </div>
                     </div>
                   </div>

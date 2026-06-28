@@ -196,14 +196,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    // Fallback to updated realistic reference points if completely unconfigured (no API key)
+    // No API key or provider unavailable — never return fake fallback prices
     if (!goldSpot || !silverSpot) {
-      goldSpot = METAL_SPOTS.gold;
-      silverSpot = METAL_SPOTS.silver;
-      platinumSpot = METAL_SPOTS.platinum;
-      palladiumSpot = METAL_SPOTS.palladium;
-      sourceStatus = "reference";
-      provider_status = "fallback";
+      return res.status(200).json({
+        status: "success",
+        is_live_configured: has_api_key,
+        source_status: "request_quote",
+        provider: providerName,
+        gold_usd_per_oz: null,
+        silver_usd_per_oz: null,
+        platinum_usd_per_oz: null,
+        palladium_usd_per_oz: null,
+        usd_aed: usdaed,
+        updated_at: new Date().toISOString(),
+        has_api_key,
+        provider_attempted,
+        provider_status: has_api_key ? "error" : "fallback",
+        provider_error_type: has_api_key ? "api_failed" : undefined,
+        timestamp: new Date().toISOString(),
+        rates: null
+      });
     }
 
     const currentSpots = {
