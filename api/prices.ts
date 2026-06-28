@@ -11,16 +11,25 @@ const EXCHANGE_RATES = {
 const OUNCE_TO_GRAM = 31.1034768;
 const GOLDAPI_METALS = ["XAU", "XAG", "XPT", "XPD"] as const;
 
+function normalizeProvider(value: string | undefined): string {
+  return (value || "")
+    .trim()
+    .replace(/^["']|["']$/g, "")
+    .toLowerCase();
+}
+
 function buildRequestQuoteResponse(opts: {
   provider: string;
   has_api_key: boolean;
+  is_live_configured: boolean;
   provider_attempted: boolean;
   provider_status: "live" | "fallback" | "error";
   provider_error_type?: "api_failed";
+  provider_env?: string | null;
 }) {
   return {
     status: "success",
-    is_live_configured: opts.has_api_key,
+    is_live_configured: opts.is_live_configured,
     source_status: "request_quote",
     provider: opts.provider,
     gold_usd_per_oz: null,
@@ -33,6 +42,7 @@ function buildRequestQuoteResponse(opts: {
     provider_attempted: opts.provider_attempted,
     provider_status: opts.provider_status,
     provider_error_type: opts.provider_error_type,
+    provider_env: opts.provider_env ?? null,
     timestamp: new Date().toISOString(),
     rates: null
   };
@@ -94,19 +104,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const provider = process.env.METAL_PRICE_PROVIDER || "";
-    const goldApiKey = process.env.GOLD_API_KEY;
+    const rawProvider = process.env.METAL_PRICE_PROVIDER;
+    const provider = normalizeProvider(rawProvider);
+    const goldApiKey = process.env.GOLD_API_KEY?.trim();
     const providerName = "GoldAPI.io";
-    const isGoldApiProvider = provider === "goldapi";
-    const has_api_key = isGoldApiProvider && !!goldApiKey;
+    // Use goldapi when explicitly set, or when GOLD_API_KEY exists and provider is unset
+    const isGoldApiProvider = provider === "goldapi" || (!provider && !!goldApiKey);
+    const isLiveConfigured = isGoldApiProvider && !!goldApiKey;
 
     if (!isGoldApiProvider || !goldApiKey) {
       return res.status(200).json(
         buildRequestQuoteResponse({
           provider: providerName,
           has_api_key: !!goldApiKey,
+          is_live_configured: isLiveConfigured,
           provider_attempted: false,
-          provider_status: "fallback"
+          provider_status: "fallback",
+          provider_env: provider || null
         })
       );
     }
@@ -129,9 +143,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         buildRequestQuoteResponse({
           provider: providerName,
           has_api_key: true,
+          is_live_configured: true,
           provider_attempted: true,
           provider_status: "error",
-          provider_error_type: "api_failed"
+          provider_error_type: "api_failed",
+          provider_env: provider || "goldapi"
         })
       );
     } finally {
@@ -178,6 +194,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       has_api_key: true,
       provider_attempted: true,
       provider_status: "live",
+      provider_env: provider || "goldapi",
       timestamp: new Date().toISOString(),
       base_usd: currentSpots,
       rates
