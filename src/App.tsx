@@ -27,7 +27,48 @@ import { isLive, supabase, mockDb } from "./lib/supabase";
 export default function App() {
   const [currentLang, setCurrentLang] = useState<"en" | "ar">("ar");
   const [selectedCurrency, setSelectedCurrency] = useState<string>("AED"); // Default to local UAE Dirham
-  const [rates, setRates] = useState<LiveMarketRates | null>(null);
+
+  // Pre-calculated default reference spot rates for flawless client experience
+  const getInitialRates = (): LiveMarketRates => {
+    const defaultSpots = {
+      gold: 2365.40,
+      silver: 29.85,
+      platinum: 965.20,
+      palladium: 1012.10
+    };
+    
+    const exchangeRates = {
+      USD: 1.0,
+      AED: 3.6725,
+      EUR: 0.925,
+      GBP: 0.785,
+      SAR: 3.7505
+    };
+    
+    const OUNCE_TO_GRAM = 31.1034768;
+    const ratesObj: any = {};
+    
+    Object.entries(defaultSpots).forEach(([metal, spotUsd]) => {
+      ratesObj[metal] = {
+        spot_usd_oz: spotUsd,
+        currencies: {}
+      };
+      
+      Object.entries(exchangeRates).forEach(([currency, rate]) => {
+        const ouncePrice = spotUsd * rate;
+        const gramPrice = ouncePrice / OUNCE_TO_GRAM;
+        
+        ratesObj[metal].currencies[currency] = {
+          ounce: parseFloat(ouncePrice.toFixed(2)),
+          gram: parseFloat(gramPrice.toFixed(4))
+        };
+      });
+    });
+    
+    return ratesObj as LiveMarketRates;
+  };
+
+  const [rates, setRates] = useState<LiveMarketRates>(getInitialRates());
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Modal / Drawer / Overlay States
@@ -122,14 +163,18 @@ export default function App() {
     setIsRefreshing(true);
     try {
       const response = await fetch("/api/prices");
-      const data = await response.json();
-      if (response.ok && data.status === "success") {
-        setRates(data.rates);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.status === "success" && data.rates) {
+          setRates(data.rates);
+        } else {
+          console.warn("Backend price compilation failed, keeping local premium reference rates.");
+        }
       } else {
-        console.error("Backend price compilation failed, falling back to static feed.");
+        console.warn("Server returned error status for prices, keeping local premium reference rates.");
       }
     } catch (err) {
-      console.error("Failed to connect with PGR prices endpoint:", err);
+      console.warn("Failed to connect with PGR prices endpoint, keeping local premium reference rates:", err);
     } finally {
       // Small simulated buffer for premium UX feel
       setTimeout(() => setIsRefreshing(false), 800);
