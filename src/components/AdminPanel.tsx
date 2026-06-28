@@ -77,7 +77,12 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
     trade_phone: "+971 4 445 8888",
     office_address_en: "Almas Tower, DMCC Precinct, Dubai Marina, Dubai, United Arab Emirates",
     office_address_ar: "برج الماس، منطقة مركز دبي للسلع المتعددة (DMCC)، دبي مارينا، دبي، الإمارات العربية المتحدة",
-    dmcc_reg_no: "890317"
+    dmcc_reg_no: "890317",
+    manual_gold_usd_oz: 2365.40,
+    manual_silver_usd_oz: 29.85,
+    usd_aed_rate: 3.6725,
+    default_product_premium_pct: 2.0,
+    disable_live_pricing: false
   });
 
   // Product CRUD states
@@ -693,7 +698,12 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
         trade_phone: settings.trade_phone,
         office_address_en: settings.office_address_en,
         office_address_ar: settings.office_address_ar,
-        dmcc_reg_no: settings.dmcc_reg_no
+        dmcc_reg_no: settings.dmcc_reg_no,
+        manual_gold_usd_oz: Number(settings.manual_gold_usd_oz || 2365.40),
+        manual_silver_usd_oz: Number(settings.manual_silver_usd_oz || 29.85),
+        usd_aed_rate: Number(settings.usd_aed_rate || 3.6725),
+        default_product_premium_pct: Number(settings.default_product_premium_pct || 2.0),
+        disable_live_pricing: Boolean(settings.disable_live_pricing)
       });
 
       await dbService.exchangeRates.update(exchangeRates);
@@ -2162,6 +2172,82 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                           className="w-full bg-black border border-white/10 rounded px-3 py-2 text-white outline-none"
                         />
                       </div>
+                    </div>
+
+                    <h5 className="text-sm font-serif text-gold-base pt-4 border-t border-white/[0.03]">Manual Spot Fallbacks & Rates</h5>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Manual Gold Spot (USD/oz)</span>
+                          <span className="text-gold-light font-bold">${settings.manual_gold_usd_oz || 2365.40}</span>
+                        </div>
+                        <input
+                          type="number" step="0.01"
+                          value={settings.manual_gold_usd_oz || 2365.40}
+                          onChange={(e) => setSettings({ ...settings, manual_gold_usd_oz: Number(e.target.value) })}
+                          className="w-full bg-black border border-white/10 rounded px-3 py-2 text-white outline-none"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Manual Silver Spot (USD/oz)</span>
+                          <span className="text-gold-light font-bold">${settings.manual_silver_usd_oz || 29.85}</span>
+                        </div>
+                        <input
+                          type="number" step="0.01"
+                          value={settings.manual_silver_usd_oz || 29.85}
+                          onChange={(e) => setSettings({ ...settings, manual_silver_usd_oz: Number(e.target.value) })}
+                          className="w-full bg-black border border-white/10 rounded px-3 py-2 text-white outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">USD/AED Peg Rate</span>
+                          <span className="text-gold-light font-bold">{settings.usd_aed_rate || 3.6725}</span>
+                        </div>
+                        <input
+                          type="number" step="0.0001"
+                          value={settings.usd_aed_rate || 3.6725}
+                          onChange={(e) => setSettings({ ...settings, usd_aed_rate: Number(e.target.value) })}
+                          className="w-full bg-black border border-white/10 rounded px-3 py-2 text-white outline-none"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Default Product Premium (%)</span>
+                          <span className="text-gold-light font-bold">{settings.default_product_premium_pct || 2.0}%</span>
+                        </div>
+                        <input
+                          type="number" step="0.1"
+                          value={settings.default_product_premium_pct || 2.0}
+                          onChange={(e) => setSettings({ ...settings, default_product_premium_pct: Number(e.target.value) })}
+                          className="w-full bg-black border border-white/10 rounded px-3 py-2 text-white outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-3 pt-2">
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="checkbox"
+                          id="disable_live_pricing"
+                          checked={Boolean(settings.disable_live_pricing)}
+                          onChange={(e) => setSettings({ ...settings, disable_live_pricing: e.target.checked })}
+                          className="h-4 w-4 bg-black border border-white/10 rounded accent-gold-base cursor-pointer"
+                        />
+                        <label htmlFor="disable_live_pricing" className="text-gray-300 font-serif select-none cursor-pointer">
+                          Emergency Disable Live Pricing & Force Manual Spot Fallback
+                        </label>
+                      </div>
+                      <p className="text-[10px] text-gray-500 font-mono">
+                        When enabled, the system bypasses external live pricing APIs completely and locks rates to the manual fallback inputs above.
+                      </p>
                     </div>
 
                     <button

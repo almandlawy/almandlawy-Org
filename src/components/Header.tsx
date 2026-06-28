@@ -66,18 +66,18 @@ export default function Header({
 
   // Get current Gold spot price for the top miniature marquee
   const getGoldMiniPrice = () => {
-    if (!rates) return "...";
+    if (!rates) return currentLang === "ar" ? "طلب عرض سعر" : "Request Quote";
     const cur = selectedCurrency as any;
     const goldRate = rates.gold.currencies[cur];
-    if (!goldRate) return "...";
+    if (!goldRate) return currentLang === "ar" ? "طلب عرض سعر" : "Request Quote";
     return `${goldRate.ounce.toLocaleString()} ${selectedCurrency}`;
   };
 
   const getMiniSilverPrice = () => {
-    if (!rates) return "...";
+    if (!rates) return currentLang === "ar" ? "طلب عرض سعر" : "Request Quote";
     const cur = selectedCurrency as any;
     const silverRate = rates.silver.currencies[cur];
-    if (!silverRate) return "...";
+    if (!silverRate) return currentLang === "ar" ? "طلب عرض سعر" : "Request Quote";
     return `${silverRate.ounce.toLocaleString()} ${selectedCurrency}`;
   };
 

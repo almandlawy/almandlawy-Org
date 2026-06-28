@@ -30,6 +30,19 @@ export default function Catalog({
   const [sortBy, setSortBy] = React.useState<"default" | "price_asc" | "price_desc" | "weight_asc" | "weight_desc" | "name_asc">("default");
   const [isProductsFetchFailed, setIsProductsFetchFailed] = React.useState(false);
   const [isPriceTimeout, setIsPriceTimeout] = React.useState(false);
+  const [settings, setSettings] = React.useState<any>(null);
+
+  React.useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const sObj = await dbService.settings.get();
+        if (sObj) setSettings(sObj);
+      } catch (err) {
+        console.error("Failed to load settings in Catalog:", err);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   React.useEffect(() => {
     const timer = setTimeout(() => {
@@ -107,7 +120,17 @@ export default function Catalog({
       if (totalGrams === 0) return null;
 
       const baseCost = totalGrams * baseSpot.gram;
-      const finalCost = baseCost * (product?.premium_multiplier || 1.0);
+      
+      let premiumFactor = 1.0;
+      if (product?.premium_multiplier) {
+        premiumFactor = product.premium_multiplier;
+      } else if (settings && settings.default_product_premium_pct) {
+        premiumFactor = 1 + (settings.default_product_premium_pct / 100);
+      } else {
+        premiumFactor = 1.02; // default 2%
+      }
+      
+      const finalCost = baseCost * premiumFactor;
 
       return finalCost;
     } catch (e) {

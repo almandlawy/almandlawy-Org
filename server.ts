@@ -80,71 +80,189 @@ const EXCHANGE_RATES = {
   SAR: 3.7505  // Saudi Riyal
 };
 
-// Returns slightly fluctuating real-time premium precious metals rates
+// Global server-side admin settings state with robust manual fallback values
+let serverSettings = {
+  gold_markup_pct: 0.8,
+  silver_markup_pct: 1.5,
+  spread_usd: 12.0,
+  premium_markup_pct: 2.0,
+  whatsapp_hotline: "+971559688837",
+  desk_email: "desk@pgruae.com",
+  trade_phone: "+971 4 445 8888",
+  office_address_en: "Almas Tower, DMCC Precinct, Dubai Marina, Dubai, United Arab Emirates",
+  office_address_ar: "برج الماس، منطقة مركز دبي للسلع المتعددة (DMCC)، دبي مارينا، دبي، الإمارات العربية المتحدة",
+  dmcc_reg_no: "890317",
+  manual_gold_usd_oz: 2365.40,
+  manual_silver_usd_oz: 29.85,
+  usd_aed_rate: 3.6725,
+  default_product_premium_pct: 2.0,
+  disable_live_pricing: false,
+};
+
+// Admin settings endpoints
+app.get("/api/admin/settings", (req, res) => {
+  res.json(serverSettings);
+});
+
+app.post("/api/admin/settings", (req, res) => {
+  serverSettings = { ...serverSettings, ...req.body };
+  res.json({ success: true, settings: serverSettings });
+});
+
+// Secure server-side endpoint: GET /api/metal-prices
+app.get("/api/metal-prices", async (req, res) => {
+  const isLiveEnabled = !serverSettings.disable_live_pricing;
+  
+  // Find key
+  const apiKey = process.env.METALS_API_KEY || process.env.GOLD_API_KEY || process.env.METAL_PRICE_API_KEY;
+  
+  let gold_usd_per_oz: number | null = null;
+  let silver_usd_per_oz: number | null = null;
+  let source_status = "quote";
+  let usd_aed = serverSettings.usd_aed_rate || 3.6725;
+  
+  if (isLiveEnabled && apiKey) {
+    try {
+      // 3-second timeout fetch
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      
+      const url = `https://api.metalpriceapi.com/v1/latest?api_key=${apiKey}&base=USD&currencies=XAU,XAG`;
+      const apiRes = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      
+      const apiData = await apiRes.json();
+      if (apiData && apiData.rates) {
+        if (apiData.rates.XAU) {
+          const val = apiData.rates.XAU;
+          gold_usd_per_oz = val < 1 ? 1 / val : val;
+        }
+        if (apiData.rates.XAG) {
+          const val = apiData.rates.XAG;
+          silver_usd_per_oz = val < 1 ? 1 / val : val;
+        }
+        
+        if (gold_usd_per_oz && silver_usd_per_oz) {
+          source_status = "live";
+        }
+      }
+    } catch (apiErr) {
+      console.warn("Failed to fetch live metal-prices, falling back:", apiErr);
+    }
+  }
+  
+  // Apply fallback order
+  if (!gold_usd_per_oz || !silver_usd_per_oz) {
+    if (serverSettings.manual_gold_usd_oz && serverSettings.manual_silver_usd_oz) {
+      gold_usd_per_oz = serverSettings.manual_gold_usd_oz;
+      silver_usd_per_oz = serverSettings.manual_silver_usd_oz;
+      source_status = "fallback";
+    } else {
+      source_status = "quote";
+    }
+  }
+  
+  res.json({
+    gold_usd_per_oz,
+    silver_usd_per_oz,
+    usd_aed,
+    updated_at: new Date().toISOString(),
+    source_status
+  });
+});
+
+// Returns slightly fluctuating real-time premium precious metals rates with absolute fallback order
 app.get("/api/prices", async (req, res) => {
   try {
-    const isLiveApiConfigured = !!process.env.METAL_PRICE_API_KEY;
-
-    if (!isLiveApiConfigured) {
+    const isLiveEnabled = !serverSettings.disable_live_pricing;
+    const apiKey = process.env.METALS_API_KEY || process.env.GOLD_API_KEY || process.env.METAL_PRICE_API_KEY;
+    
+    let goldSpot: number | null = null;
+    let silverSpot: number | null = null;
+    let platinumSpot: number | null = METAL_SPOTS.platinum;
+    let palladiumSpot: number | null = METAL_SPOTS.palladium;
+    let sourceStatus = "quote";
+    
+    if (isLiveEnabled && apiKey) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
+        
+        const url = `https://api.metalpriceapi.com/v1/latest?api_key=${apiKey}&base=USD&currencies=XAU,XAG,XPT,XPD`;
+        const apiRes = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeoutId);
+        
+        const apiData = await apiRes.json();
+        if (apiData && apiData.rates) {
+          if (apiData.rates.XAU) {
+            const val = apiData.rates.XAU;
+            goldSpot = val < 1 ? 1 / val : val;
+          }
+          if (apiData.rates.XAG) {
+            const val = apiData.rates.XAG;
+            silverSpot = val < 1 ? 1 / val : val;
+          }
+          if (apiData.rates.XPT) {
+            const val = apiData.rates.XPT;
+            platinumSpot = val < 1 ? 1 / val : val;
+          }
+          if (apiData.rates.XPD) {
+            const val = apiData.rates.XPD;
+            palladiumSpot = val < 1 ? 1 / val : val;
+          }
+          if (goldSpot && silverSpot) {
+            sourceStatus = "live";
+          }
+        }
+      } catch (apiErr) {
+        console.warn("Failed to fetch live prices inside /api/prices:", apiErr);
+      }
+    }
+    
+    // Fallback to manual admin price
+    if (!goldSpot || !silverSpot) {
+      if (serverSettings.manual_gold_usd_oz && serverSettings.manual_silver_usd_oz) {
+        goldSpot = serverSettings.manual_gold_usd_oz;
+        silverSpot = serverSettings.manual_silver_usd_oz;
+        sourceStatus = "fallback";
+      } else {
+        sourceStatus = "quote";
+      }
+    }
+    
+    if (sourceStatus === "quote") {
       return res.json({
         status: "success",
         is_live_configured: false,
         rates: null,
-        source_status: "Indicative Reference Only",
+        source_status: "Request Quote Only",
         timestamp: new Date().toISOString()
       });
     }
-
-    let goldSpot = METAL_SPOTS.gold;
-    let silverSpot = METAL_SPOTS.silver;
-    let platinumSpot = METAL_SPOTS.platinum;
-    let palladiumSpot = METAL_SPOTS.palladium;
-
-    try {
-      const url = `https://api.metalpriceapi.com/v1/latest?api_key=${process.env.METAL_PRICE_API_KEY}&base=USD&currencies=XAU,XAG,XPT,XPD`;
-      const apiRes = await fetch(url);
-      const apiData = await apiRes.json();
-      if (apiData && apiData.rates) {
-        if (apiData.rates.XAU) goldSpot = apiData.rates.XAU;
-        if (apiData.rates.XAG) silverSpot = apiData.rates.XAG;
-        if (apiData.rates.XPT) platinumSpot = apiData.rates.XPT;
-        if (apiData.rates.XPD) palladiumSpot = apiData.rates.XPD;
-      }
-    } catch (apiErr) {
-      console.warn("Failed to fetch from real-time metal price API, using cached/simulated spots:", apiErr);
-      
-      // Generate organic market fluctuations (random walk of +/- 0.05%)
-      const seconds = Math.floor(Date.now() / 1000);
-      const goldFluctuation = 1 + Math.sin(seconds / 20) * 0.0004;
-      const silverFluctuation = 1 + Math.cos(seconds / 25) * 0.0008;
-      const platinumFluctuation = 1 + Math.sin(seconds / 30) * 0.0006;
-      const palladiumFluctuation = 1 + Math.cos(seconds / 35) * 0.0007;
-
-      goldSpot = METAL_SPOTS.gold * goldFluctuation;
-      silverSpot = METAL_SPOTS.silver * silverFluctuation;
-      platinumSpot = METAL_SPOTS.platinum * platinumFluctuation;
-      palladiumSpot = METAL_SPOTS.palladium * palladiumFluctuation;
-    }
-
+    
     const currentSpots = {
-      gold: goldSpot,
-      silver: silverSpot,
-      platinum: platinumSpot,
-      palladium: palladiumSpot,
+      gold: goldSpot!,
+      silver: silverSpot!,
+      platinum: platinumSpot || METAL_SPOTS.platinum,
+      palladium: palladiumSpot || METAL_SPOTS.palladium,
     };
-
-    // Prepare response with prices converted to AED, USD, EUR, GBP, SAR
-    // Also supply per gram rate (1 Ounce = 31.1034768 Grams)
+    
     const OUNCE_TO_GRAM = 31.1034768;
     const rates: Record<string, any> = {};
-
+    const usdAed = serverSettings.usd_aed_rate || 3.6725;
+    
+    const exchangeRates = {
+      ...EXCHANGE_RATES,
+      AED: usdAed
+    };
+    
     Object.entries(currentSpots).forEach(([metal, spotUsd]) => {
       rates[metal] = {
         spot_usd_oz: spotUsd,
         currencies: {} as Record<string, { ounce: number; gram: number }>
       };
-
-      Object.entries(EXCHANGE_RATES).forEach(([currency, rate]) => {
+      
+      Object.entries(exchangeRates).forEach(([currency, rate]) => {
         const ouncePrice = spotUsd * rate;
         const gramPrice = ouncePrice / OUNCE_TO_GRAM;
         
@@ -154,13 +272,13 @@ app.get("/api/prices", async (req, res) => {
         };
       });
     });
-
+    
     res.json({
       status: "success",
-      is_live_configured: true,
+      is_live_configured: sourceStatus === "live",
       timestamp: new Date().toISOString(),
       base_usd: currentSpots,
-      source_status: "Verified Exchange Feed",
+      source_status: sourceStatus === "live" ? "Verified Exchange Feed" : "Indicative Reference Only",
       rates
     });
   } catch (err: any) {

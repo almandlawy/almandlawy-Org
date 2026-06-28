@@ -35,6 +35,7 @@ export default function LiveMarket({
   });
 
   const [lastPrices, setLastPrices] = React.useState<Record<string, number>>({});
+  const [lastUpdatedTime, setLastUpdatedTime] = React.useState<string>("");
   const [flashStates, setFlashStates] = React.useState<Record<string, "up" | "down" | null>>({
     gold: null,
     silver: null,
@@ -67,6 +68,16 @@ export default function LiveMarket({
           }
         }
       });
+
+      if (changed || !lastUpdatedTime) {
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString(currentLang === "ar" ? "ar-EG" : "en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit"
+        });
+        setLastUpdatedTime(timeStr);
+      }
 
       if (changed) {
         setHistory(updatedHistory);
@@ -314,7 +325,7 @@ export default function LiveMarket({
           </div>
           <div className="text-gray-500">
             {rates ? (
-              currentLang === "ar" ? "آخر تحديث: قبل ثوانٍ قليلة" : "Last synchronized: Seconds ago"
+              currentLang === "ar" ? `آخر تحديث: ${lastUpdatedTime}` : `Last updated: ${lastUpdatedTime}`
             ) : (
               currentLang === "ar" ? "اطلب عرض سعر للحصول على السعر النهائي" : "Request quote for final price"
             )}

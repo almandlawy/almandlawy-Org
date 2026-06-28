@@ -323,7 +323,12 @@ const seedLocalStorage = () => {
     trade_phone: "+971 4 445 8888",
     office_address_en: "Almas Tower, DMCC Precinct, Dubai Marina, Dubai, United Arab Emirates",
     office_address_ar: "برج الماس، منطقة مركز دبي للسلع المتعددة (DMCC)، دبي مارينا، دبي، الإمارات العربية المتحدة",
-    dmcc_reg_no: "890317"
+    dmcc_reg_no: "890317",
+    manual_gold_usd_oz: 2365.40,
+    manual_silver_usd_oz: 29.85,
+    usd_aed_rate: 3.6725,
+    default_product_premium_pct: 2.0,
+    disable_live_pricing: false
   });
 
   // 12. Exchange Rates (AED / USD / IQD)
@@ -977,12 +982,34 @@ export const dbService = {
 
   settings: {
     get: async () => {
-      return mockDb.get("pgr_settings");
+      try {
+        const res = await fetch("/api/admin/settings");
+        if (res.ok) {
+          const serverData = await res.json();
+          const current = mockDb.get("pgr_settings") || {};
+          const merged = { ...current, ...serverData };
+          mockDb.set("pgr_settings", merged);
+          return merged;
+        }
+      } catch (err) {
+        console.warn("Could not fetch server settings, using local only", err);
+      }
+      return mockDb.get("pgr_settings") || {};
     },
     update: async (newSettings: any) => {
-      const current = mockDb.get("pgr_settings");
+      const current = mockDb.get("pgr_settings") || {};
       const updated = { ...current, ...newSettings };
       mockDb.set("pgr_settings", updated);
+      
+      try {
+        await fetch("/api/admin/settings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updated)
+        });
+      } catch (err) {
+        console.warn("Failed to sync updated settings with server", err);
+      }
       return updated;
     }
   },

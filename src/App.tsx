@@ -136,12 +136,12 @@ export default function App() {
     }
   };
 
-  // Sync market rates on mount and poll every 15 seconds
+  // Sync market rates on mount and poll every 60 seconds
   useEffect(() => {
     fetchRates();
     const interval = setInterval(() => {
       fetchRates();
-    }, 15000);
+    }, 60000);
     return () => clearInterval(interval);
   }, []);
 
