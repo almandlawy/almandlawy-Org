@@ -662,23 +662,19 @@ export const mapFrontendProductToDb = (product: any): any => {
     categoryVal = "gold";
   }
 
-  // Sanitize availability to strictly comply with 'products_availability_check' (e.g. In Stock, Out of Stock, Available on Order)
+  // Sanitize availability to strictly comply with 'products_availability_check' (which only permits 'In Stock' or 'Out of Stock')
   let dbAvailability = "In Stock";
-  const origAvail = String(product.availability || "").trim();
-  if (origAvail === "Available on Order" || origAvail === "متوفر عند الطلب") {
-    dbAvailability = "Available on Order";
-  } else if (origAvail === "Out of Stock" || origAvail === "غير متوفر") {
+  const origAvail = String(product.availability || "").toLowerCase().trim();
+  if (origAvail.includes("out of stock") || origAvail.includes("غير متوفر") || origAvail.includes("out")) {
     dbAvailability = "Out of Stock";
   } else {
-    dbAvailability = "In Stock"; // Handles 'In Stock', 'Limited Stock', 'متوفر', 'كمية محدودة'
+    dbAvailability = "In Stock"; // Map all other options (Limited Stock, Available on Order, etc.) to 'In Stock'
   }
 
-  // Sanitize stock_status as well
+  // Sanitize stock_status as well to strictly comply with database constraints
   let dbStockStatus = "In Stock";
-  const origStatus = String(product.stock_status || "").trim();
-  if (origStatus === "Available on Order" || origStatus === "متوفر عند الطلب") {
-    dbStockStatus = "Available on Order";
-  } else if (origStatus === "Out of Stock" || origStatus === "غير متوفر") {
+  const origStatus = String(product.stock_status || "").toLowerCase().trim();
+  if (origStatus.includes("out of stock") || origStatus.includes("غير متوفر") || origStatus.includes("out")) {
     dbStockStatus = "Out of Stock";
   } else {
     dbStockStatus = "In Stock";
