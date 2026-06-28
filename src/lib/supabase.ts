@@ -590,6 +590,21 @@ export const mapFrontendProductToDb = (product: any): any => {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
 
+  let weight = product.weight || product.weight_label || product.technical_specs?.weight || "";
+  if (!weight) {
+    if (weightGrams === 1000) {
+      weight = "1kg";
+    } else if (weightGrams === 100) {
+      weight = "100g";
+    } else {
+      if (weightGrams % 1000 === 0) {
+        weight = `${weightGrams / 1000}kg`;
+      } else {
+        weight = `${weightGrams}g`;
+      }
+    }
+  }
+
   const payload: any = {
     name: product.name_en || "",
     arabic_name: product.name_ar || product.name_en || "",
@@ -597,6 +612,7 @@ export const mapFrontendProductToDb = (product: any): any => {
     category: product.category || "gold_bars",
     brand: product.brand || product.manufacturer || "PAMP Suisse",
     metal_type: metalType,
+    weight: weight,
     weight_grams: weightGrams,
     purity: product.purity || "999.9",
     price: Number(product.price) || 0,
@@ -627,6 +643,7 @@ export const mapFrontendProductToDb = (product: any): any => {
     "category",
     "brand",
     "metal_type",
+    "weight",
     "weight_grams",
     "purity",
     "price",
