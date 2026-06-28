@@ -200,7 +200,13 @@ Phone: ${phone}
                     }
                     alt={activeProduct.name_en}
                     referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover transition-transform duration-200"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = isGold
+                        ? "/src/assets/images/gold_bar_luxury_1782445126673.jpg"
+                        : "/src/assets/images/silver_bar_luxury_1782445139922.jpg";
+                    }}
+                    className="w-full h-full object-contain transition-transform duration-200"
                     style={{
                       transform: `scale(${zoomScale})`,
                       transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`
@@ -435,7 +441,13 @@ Phone: ${phone}
                                   : "/src/assets/images/silver_bar_luxury_1782445139922.jpg")
                               }
                               alt={rel.name_en}
-                              className="h-full w-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.onerror = null;
+                                e.currentTarget.src = rel.technical_specs.metal === "gold"
+                                  ? "/src/assets/images/gold_bar_luxury_1782445126673.jpg"
+                                  : "/src/assets/images/silver_bar_luxury_1782445139922.jpg";
+                              }}
+                              className="h-full w-full object-contain"
                             />
                           </div>
                           <div>

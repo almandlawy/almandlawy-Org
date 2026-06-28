@@ -28,6 +28,14 @@ export default function Catalog({
   const [searchQuery, setSearchQuery] = React.useState("");
   const [selectedFilter, setSelectedFilter] = React.useState<string>(selectedCategoryFilter || "all");
   const [isProductsFetchFailed, setIsProductsFetchFailed] = React.useState(false);
+  const [isPriceTimeout, setIsPriceTimeout] = React.useState(false);
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsPriceTimeout(true);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
 
   React.useEffect(() => {
     const fetchProducts = async () => {
@@ -234,7 +242,13 @@ export default function Catalog({
                         }
                         alt={product.name_en || "Bullion product"}
                         referrerPolicy="no-referrer"
-                        className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-all duration-1000 scale-100 group-hover:scale-105 z-0"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = isGold
+                            ? "/src/assets/images/gold_bar_luxury_1782445126673.jpg"
+                            : "/src/assets/images/silver_bar_luxury_1782445139922.jpg";
+                        }}
+                        className="w-full h-full object-contain opacity-60 group-hover:opacity-80 transition-all duration-1000 scale-100 group-hover:scale-105 z-0"
                       />
 
                       {/* Shimmer reflection sweep animation */}
@@ -277,14 +291,41 @@ export default function Catalog({
                       <div className="pt-4 border-t border-white/[0.03] flex justify-between items-center">
                         <div>
                           <span className="text-[10px] text-gray-500 font-mono block uppercase">
-                            {currentLang === "ar" ? "سعر استرشادي مباشر" : "Indicative Live Price"}
+                            {product.price_mode === "fixed"
+                              ? (currentLang === "ar" ? "السعر الثابت المعتمد" : "Confirmed Fixed Price")
+                              : (currentLang === "ar" ? "سعر استرشادي مباشر" : "Indicative Live Price")}
                           </span>
-                          {indicativePrice ? (
+                          {product.price_mode === "fixed" ? (
                             <span className="text-sm font-mono font-semibold text-white">
-                              {indicativePrice.toLocaleString(undefined, { maximumFractionDigits: 2 })} <span className="text-[10px] text-gold-base">{selectedCurrency}</span>
+                              {product.price && product.price > 0 ? (
+                                <>
+                                  {product.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}{" "}
+                                  <span className="text-[10px] text-gold-base">{selectedCurrency}</span>
+                                </>
+                              ) : (
+                                <span className="text-xs text-gold-base font-mono font-medium">
+                                  {currentLang === "ar" ? "طلب عرض سعر" : "Request Quote"}
+                                </span>
+                              )}
                             </span>
+                          ) : indicativePrice ? (
+                            <span className="text-sm font-mono font-semibold text-white">
+                              {indicativePrice.toLocaleString(undefined, { maximumFractionDigits: 2 })}{" "}
+                              <span className="text-[10px] text-gold-base">{selectedCurrency}</span>
+                            </span>
+                          ) : isPriceTimeout ? (
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-[11px] text-gold-base font-semibold leading-tight block">
+                                {currentLang === "ar" ? "طلب عرض سعر" : "Request Quote"}
+                              </span>
+                              <span className="text-[9px] text-gray-400 font-medium leading-none block">
+                                {currentLang === "ar" ? "يتم تأكيد السعر قبل الدفع" : "Price confirmed before payment"}
+                              </span>
+                            </div>
                           ) : (
-                            <span className="text-xs text-gold-base font-mono font-medium">Loading live data...</span>
+                            <span className="text-xs text-gold-base font-mono font-medium animate-pulse">
+                              {currentLang === "ar" ? "جاري تحميل البيانات..." : "Loading live data..."}
+                            </span>
                           )}
                         </div>
 
