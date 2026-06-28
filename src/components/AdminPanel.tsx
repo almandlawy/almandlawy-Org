@@ -1608,7 +1608,41 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
 
                   {/* List of current products in database */}
                   <div className="bg-[#0d0d0e] p-5 rounded border border-white/[0.03] space-y-4">
-                    <span className="text-xs font-mono text-gray-400 uppercase tracking-wider block">Live Catalog Products ({products.length})</span>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-white/[0.02]">
+                      <span className="text-xs font-mono text-gray-400 uppercase tracking-wider block">
+                        {currentLang === "ar" ? `منتجات الكتالوج النشطة (${products.length})` : `Live Catalog Products (${products.length})`}
+                      </span>
+                      {isLive && (
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            const confirmMsg = currentLang === "ar" 
+                              ? "هل أنت متأكد من رغبتك في استيراد/مزامنة جميع الـ 50 منتجاً الافتراضياً إلى قاعدة بيانات Supabase الحية الخاصة بك؟ سيعمل هذا على إنشاء أو تحديث جميع المنتجات."
+                              : "Are you sure you want to seed/sync all 50 default products to your live Supabase database? This will create or update all products.";
+                            if (window.confirm(confirmMsg)) {
+                              try {
+                                setLoading(true);
+                                const { PRODUCTS } = await import("../data");
+                                for (const p of PRODUCTS) {
+                                  await dbService.products.save(p);
+                                }
+                                await loadAdminData();
+                                alert(currentLang === "ar" ? "تمت مزامنة جميع المنتجات بنجاح!" : "Successfully seeded all products!");
+                              } catch (e: any) {
+                                console.error(e);
+                                alert((currentLang === "ar" ? "فشلت مزامنة المنتجات: " : "Failed to seed products: ") + (e.message || e));
+                              } finally {
+                                setLoading(false);
+                              }
+                            }
+                          }}
+                          className="px-3 py-1.5 bg-gold-base/10 hover:bg-gold-base/20 border border-gold-base/30 text-gold-base font-semibold rounded text-[11px] tracking-wider uppercase flex items-center gap-1.5 cursor-pointer transition-colors"
+                        >
+                          <RefreshCw size={11} />
+                          {currentLang === "ar" ? "مزامنة المنتجات الافتراضية" : "Sync Default Products"}
+                        </button>
+                      )}
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono">
                       {products.map((p) => (
                         <div key={p.id} className="p-4 rounded border border-white/[0.02] bg-[#070708] flex items-center justify-between gap-4">

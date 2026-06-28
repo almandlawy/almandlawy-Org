@@ -46,12 +46,12 @@ export default function Catalog({
           setProducts(list);
           setIsProductsFetchFailed(false);
         } else {
-          setProducts(isProduction ? [] : PRODUCTS);
+          setProducts(PRODUCTS);
           setIsProductsFetchFailed(true);
         }
       } catch (err) {
         console.error("Failed to load products dynamically:", err);
-        setProducts(isProduction ? [] : PRODUCTS);
+        setProducts(PRODUCTS);
         setIsProductsFetchFailed(true);
       }
     };
@@ -117,7 +117,7 @@ export default function Catalog({
   };
 
   // Filter products based on search query and category pill selection
-  const filteredProducts = (products.length > 0 ? products : (isProduction ? [] : PRODUCTS)).filter((product) => {
+  const filteredProducts = (products.length > 0 ? products : PRODUCTS).filter((product) => {
     try {
       if (!product) return false;
       const matchesCategory = selectedFilter === "all" || product.category === selectedFilter;
@@ -189,7 +189,7 @@ export default function Catalog({
           </div>
         )}
 
-        {isProduction && (isProductsFetchFailed || products.length === 0) ? (
+        {isProduction && products.length === 0 ? (
           <div className="max-w-2xl mx-auto p-12 text-center border border-amber-500/20 bg-amber-500/[0.03] text-amber-500 rounded space-y-4">
             <AlertCircle size={32} className="mx-auto text-amber-500 animate-pulse" />
             <h3 className="text-lg font-serif text-white">
