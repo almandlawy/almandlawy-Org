@@ -29,12 +29,21 @@ const isKeyConfigured = Boolean(
 );
 
 // We will initialize these safely
+const supabaseOptions = {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    flowType: "implicit" as const
+  }
+};
+
 let supabaseClient = null;
 let initializedSuccessfully = false;
 
 if (isUrlConfigured && isKeyConfigured) {
   try {
-    supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+    supabaseClient = createClient(supabaseUrl, supabaseAnonKey, supabaseOptions);
     initializedSuccessfully = true;
   } catch (err) {
     console.error("Supabase createClient failed synchronously:", err);
@@ -47,7 +56,7 @@ export const isProduction = typeof window !== "undefined" && window.location.hos
 export const isLive = isProduction ? true : (isUrlConfigured && isKeyConfigured && initializedSuccessfully);
 
 // 2. Initialize Supabase client
-export const supabase = isLive ? (supabaseClient || (isUrlConfigured && isKeyConfigured ? createClient(supabaseUrl, supabaseAnonKey) : null)) : null;
+export const supabase = isLive ? (supabaseClient || (isUrlConfigured && isKeyConfigured ? createClient(supabaseUrl, supabaseAnonKey, supabaseOptions) : null)) : null;
 
 export const configStatus = {
   urlConfigured: isUrlConfigured ? "YES" : "NO",

@@ -45,6 +45,13 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [authErrorMsg, setAuthErrorMsg] = useState("");
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  // Debug states for admin OAuth/session detection
+  const [debugSessionDetected, setDebugSessionDetected] = useState<"YES" | "NO" | "PENDING">("PENDING");
+  const [debugUserEmail, setDebugUserEmail] = useState<string>("NONE");
+  const [debugAdminCheck, setDebugAdminCheck] = useState<"YES" | "NO" | "PENDING">("PENDING");
+  const [debugReason, setDebugReason] = useState<string>("loading");
 
   // Database mirror states
   const [products, setProducts] = useState<Product[]>([]);
@@ -161,52 +168,192 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
     setTimeout(() => setActionError(null), 7000);
   };
 
+  const checkAdmin = async (email: string): Promise<boolean> => {
+    setLoading(true);
+    try {
+      if (isLive && supabase) {
+        const { data, error } = await supabase
+          .from("admin_users")
+          .select("email, is_active")
+          .eq("email", email.trim().toLowerCase())
+          .maybeSingle();
+
+        if (error) {
+          console.error("Error querying admin_users:", error);
+          setDebugAdminCheck("NO");
+          setDebugReason("Error querying database: " + error.message);
+          setIsAdminLoggedIn(false);
+          setAuthErrorMsg(isAr ? "حدث خطأ أثناء التحقق من الصلاحيات الإدارية." : "Error verifying admin privileges.");
+          return false;
+        }
+
+        if (data) {
+          const isActive = data.is_active === true || data.is_active === null || data.is_active === undefined;
+          if (isActive) {
+            setIsAdminLoggedIn(true);
+            setAuthErrorMsg("");
+            setDebugAdminCheck("YES");
+            setDebugReason("admin verified");
+            // Only after session exists, clean up URL hash
+            window.history.replaceState({}, document.title, "/admin");
+            await loadAdminData();
+            return true;
+          } else {
+            setIsAdminLoggedIn(false);
+            setAuthErrorMsg(isAr ? "تم إيقاف حساب المسؤول هذا." : "This admin account is inactive.");
+            setDebugAdminCheck("NO");
+            setDebugReason("admin inactive");
+            return false;
+          }
+        } else {
+          setIsAdminLoggedIn(false);
+          setAuthErrorMsg(
+            isAr 
+              ? "تم رفض الدخول. حسابك ليس مدرجاً في قائمة المشرفين." 
+              : "Access denied. Your email is not in the admin directory."
+          );
+          setDebugAdminCheck("NO");
+          setDebugReason("not admin");
+          return false;
+        }
+      } else {
+        // Local fallback check
+        const isAuthorized = await dbService.adminUsers.checkEmail(email);
+        if (isAuthorized) {
+          setIsAdminLoggedIn(true);
+          setAuthErrorMsg("");
+          setDebugAdminCheck("YES");
+          setDebugReason("admin verified (simulation)");
+          await loadAdminData();
+          return true;
+        } else {
+          setIsAdminLoggedIn(false);
+          setAuthErrorMsg(
+            isAr 
+              ? "تم رفض الدخول. صلاحية الإدارة مطلوبة." 
+              : "Access denied. Admin permission required."
+          );
+          setDebugAdminCheck("NO");
+          setDebugReason("not admin");
+          return false;
+        }
+      }
+    } catch (err) {
+      console.error("Exception checking admin:", err);
+      setDebugAdminCheck("NO");
+      setDebugReason("Exception: " + (err instanceof Error ? err.message : String(err)));
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     const checkInitialAuth = async () => {
       setCheckingAuth(true);
+      setLoading(true);
+      setDebugReason("loading");
+      setDebugSessionDetected("PENDING");
+      setDebugAdminCheck("PENDING");
+
       try {
+        let activeUser = null;
+
         if (isLive && supabase) {
-          const { data: { session } } = await supabase.auth.getSession();
+          const { data: { session }, error } = await supabase.auth.getSession();
+          if (error) {
+            console.error("Failed to fetch session:", error);
+          }
           if (session && session.user) {
             const email = session.user.email || "";
-            const mappedUser = {
+            activeUser = {
               id: session.user.id,
               email: email,
               name: session.user.user_metadata?.full_name || session.user.email?.split("@")[0] || "Accredited Investor",
               role: email === "almandlawy112@gmail.com" ? "admin" : "customer",
               created_at: session.user.created_at || new Date().toISOString()
             };
-            mockDb.auth.setUser(mappedUser);
-          }
-        }
+            setCurrentUser(activeUser);
+            mockDb.auth.setUser(activeUser);
+            setDebugSessionDetected("YES");
+            setDebugUserEmail(email);
 
-        const currentUser = mockDb.auth.getUser();
-        if (currentUser && currentUser.email) {
-          const isAuthorized = await dbService.adminUsers.checkEmail(currentUser.email);
-          if (isAuthorized) {
-            setIsAdminLoggedIn(true);
-            setAuthErrorMsg("");
+            // Now check if admin
+            await checkAdmin(email);
           } else {
+            // No session detected
+            setDebugSessionDetected("NO");
+            setDebugUserEmail("NONE");
+            setDebugAdminCheck("NO");
+            setDebugReason("no session");
             setIsAdminLoggedIn(false);
-            setAuthErrorMsg(
-              isAr 
-                ? "تم رفض الدخول. صلاحية الإدارة مطلوبة." 
-                : "Access denied. Admin permission required."
-            );
           }
         } else {
-          setIsAdminLoggedIn(false);
-          setAuthErrorMsg(""); // Clear error message when not logged in at all!
+          // Local/Simulated flow
+          const simulatedUser = mockDb.auth.getUser();
+          if (simulatedUser) {
+            activeUser = simulatedUser;
+            setCurrentUser(activeUser);
+            setDebugSessionDetected("YES");
+            setDebugUserEmail(simulatedUser.email);
+            await checkAdmin(simulatedUser.email);
+          } else {
+            setDebugSessionDetected("NO");
+            setDebugUserEmail("NONE");
+            setDebugAdminCheck("NO");
+            setDebugReason("no session");
+            setIsAdminLoggedIn(false);
+          }
         }
       } catch (err) {
-        console.error("Initial admin auth verification failed:", err);
+        console.error("Initial checkInitialAuth failed:", err);
+        setDebugReason("Initialization error: " + (err instanceof Error ? err.message : String(err)));
       } finally {
         setCheckingAuth(false);
+        setLoading(false);
       }
     };
 
     checkInitialAuth();
-    loadAdminData();
+
+    // Listen for auth changes
+    let subscription: any = null;
+    if (isLive && supabase) {
+      const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
+        console.log("Auth state change event inside AdminPanel:", event, session?.user?.email);
+        if (session?.user) {
+          const email = session.user.email || "";
+          const activeUser = {
+            id: session.user.id,
+            email: email,
+            name: session.user.user_metadata?.full_name || session.user.email?.split("@")[0] || "Accredited Investor",
+            role: email === "almandlawy112@gmail.com" ? "admin" : "customer",
+            created_at: session.user.created_at || new Date().toISOString()
+          };
+          setCurrentUser(activeUser);
+          mockDb.auth.setUser(activeUser);
+          setDebugSessionDetected("YES");
+          setDebugUserEmail(email);
+          await checkAdmin(email);
+        } else {
+          // If signed out, clean states
+          setCurrentUser(null);
+          mockDb.auth.setUser(null);
+          setIsAdminLoggedIn(false);
+          setDebugSessionDetected("NO");
+          setDebugUserEmail("NONE");
+          setDebugAdminCheck("NO");
+          setDebugReason("no session");
+        }
+      });
+      subscription = data?.subscription;
+    }
+
+    return () => {
+      if (subscription) {
+        subscription.unsubscribe();
+      }
+    };
   }, [currentLang]);
 
   // Load all dataset values
@@ -621,7 +768,6 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
 
   // SCREEN A: RENDER UNLOGGED AUTH FORM OR ACCESS DENIED
   if (!isAdminLoggedIn) {
-    const currentUser = mockDb.auth.getUser();
     const isLoggedButNotAdmin = currentUser !== null;
 
     return (
@@ -663,6 +809,7 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                 <button
                   onClick={async () => {
                     await dbService.auth.logout();
+                    setCurrentUser(null);
                     setIsAdminLoggedIn(false);
                     setAuthErrorMsg("");
                   }}
@@ -731,6 +878,17 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
               </div>
             </>
           )}
+
+          {/* Temporary System Security Debug Panel */}
+          <div className="p-4 bg-white/[0.02] border border-white/[0.05] rounded text-[11px] font-mono space-y-1.5 text-gray-400">
+            <p className="text-gray-500 uppercase tracking-wider font-bold text-[10px] mb-2 border-b border-white/[0.05] pb-1">
+              SYSTEM SECURITY DEBUG INFO:
+            </p>
+            <p>Session detected: <span className={debugSessionDetected === "YES" ? "text-green-400 font-bold" : debugSessionDetected === "NO" ? "text-red-400" : "text-amber-400"}>{debugSessionDetected}</span></p>
+            <p>User email: <span className="text-white">{debugUserEmail}</span></p>
+            <p>Admin check: <span className={debugAdminCheck === "YES" ? "text-green-400 font-bold" : debugAdminCheck === "NO" ? "text-red-400" : "text-amber-400"}>{debugAdminCheck}</span></p>
+            <p>Reason: <span className="text-amber-400">{debugReason}</span></p>
+          </div>
 
           {/* Home Link */}
           <div className="text-center pt-2">
