@@ -175,47 +175,77 @@ app.get("/api/metal-prices", async (req, res) => {
 app.get("/api/prices", async (req, res) => {
   try {
     const isLiveEnabled = !serverSettings.disable_live_pricing;
-    const apiKey = process.env.METALS_API_KEY || process.env.GOLD_API_KEY || process.env.METAL_PRICE_API_KEY;
+    const GOLD_API_KEY = process.env.GOLD_API_KEY;
+    const METAL_PRICE_API_KEY = process.env.METAL_PRICE_API_KEY;
+    const METALS_API_KEY = process.env.METALS_API_KEY;
+
+    const apiKey = GOLD_API_KEY || METAL_PRICE_API_KEY || METALS_API_KEY;
+    const has_api_key = !!apiKey;
+    const is_live_configured = has_api_key;
     
     let goldSpot: number | null = null;
     let silverSpot: number | null = null;
-    let platinumSpot: number | null = METAL_SPOTS.platinum;
-    let palladiumSpot: number | null = METAL_SPOTS.palladium;
-    let sourceStatus = "quote";
+    let platinumSpot: number | null = null;
+    let palladiumSpot: number | null = null;
+
+    let provider_attempted = false;
+    let provider_status: "live" | "fallback" | "error" = "fallback";
+    let provider_error_type: "api_failed" | undefined = undefined;
+    let sourceStatus = "reference";
     
-    if (isLiveEnabled && apiKey) {
+    if (isLiveEnabled && has_api_key) {
+      provider_attempted = true;
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000);
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
         
         const url = `https://api.metalpriceapi.com/v1/latest?api_key=${apiKey}&base=USD&currencies=XAU,XAG,XPT,XPD`;
         const apiRes = await fetch(url, { signal: controller.signal });
         clearTimeout(timeoutId);
         
-        const apiData = await apiRes.json();
-        if (apiData && apiData.rates) {
-          if (apiData.rates.XAU) {
-            const val = apiData.rates.XAU;
-            goldSpot = val < 1 ? 1 / val : val;
+        if (apiRes.ok) {
+          const apiData = await apiRes.json();
+          if (apiData && apiData.rates) {
+            if (apiData.rates.XAU) {
+              const val = apiData.rates.XAU;
+              goldSpot = val < 1 ? 1 / val : val;
+            }
+            if (apiData.rates.XAG) {
+              const val = apiData.rates.XAG;
+              silverSpot = val < 1 ? 1 / val : val;
+            }
+            if (apiData.rates.XPT) {
+              const val = apiData.rates.XPT;
+              platinumSpot = val < 1 ? 1 / val : val;
+            }
+            if (apiData.rates.XPD) {
+              const val = apiData.rates.XPD;
+              palladiumSpot = val < 1 ? 1 / val : val;
+            }
+
+            if (goldSpot && silverSpot) {
+              sourceStatus = "live";
+              provider_status = "live";
+            } else {
+              sourceStatus = "fallback";
+              provider_status = "error";
+              provider_error_type = "api_failed";
+            }
+          } else {
+            sourceStatus = "fallback";
+            provider_status = "error";
+            provider_error_type = "api_failed";
           }
-          if (apiData.rates.XAG) {
-            const val = apiData.rates.XAG;
-            silverSpot = val < 1 ? 1 / val : val;
-          }
-          if (apiData.rates.XPT) {
-            const val = apiData.rates.XPT;
-            platinumSpot = val < 1 ? 1 / val : val;
-          }
-          if (apiData.rates.XPD) {
-            const val = apiData.rates.XPD;
-            palladiumSpot = val < 1 ? 1 / val : val;
-          }
-          if (goldSpot && silverSpot) {
-            sourceStatus = "live";
-          }
+        } else {
+          sourceStatus = "fallback";
+          provider_status = "error";
+          provider_error_type = "api_failed";
         }
       } catch (apiErr) {
         console.warn("Secure Fetch Warning: Live prices route fell back due to a network or timeout event.");
+        sourceStatus = "fallback";
+        provider_status = "error";
+        provider_error_type = "api_failed";
       }
     }
     
@@ -225,10 +255,16 @@ app.get("/api/prices", async (req, res) => {
         goldSpot = serverSettings.manual_gold_usd_oz;
         silverSpot = serverSettings.manual_silver_usd_oz;
         sourceStatus = "fallback";
+        provider_status = "fallback";
       } else {
         goldSpot = METAL_SPOTS.gold;
         silverSpot = METAL_SPOTS.silver;
-        sourceStatus = "reference";
+        platinumSpot = METAL_SPOTS.platinum;
+        palladiumSpot = METAL_SPOTS.palladium;
+        if (!has_api_key) {
+          sourceStatus = "reference";
+          provider_status = "fallback";
+        }
       }
     }
     
@@ -265,14 +301,34 @@ app.get("/api/prices", async (req, res) => {
       });
     });
     
-    res.json({
+    const responsePayload: any = {
       status: "success",
-      is_live_configured: sourceStatus === "live",
+      is_live_configured,
+      source_status: sourceStatus,
+      provider: "Metal Price API",
+      gold_usd_per_oz: currentSpots.gold,
+      silver_usd_per_oz: currentSpots.silver,
+      platinum_usd_per_oz: currentSpots.platinum,
+      palladium_usd_per_oz: currentSpots.palladium,
+      usd_aed: usdAed,
+      updated_at: new Date().toISOString(),
+      
+      // Safe non-secret debug fields
+      has_api_key,
+      provider_attempted,
+      provider_status,
+      
+      // Preserve standard frontend keys
       timestamp: new Date().toISOString(),
       base_usd: currentSpots,
-      source_status: sourceStatus === "live" ? "Verified Exchange Feed" : "Indicative Reference Only",
       rates
-    });
+    };
+
+    if (provider_error_type) {
+      responsePayload.provider_error_type = provider_error_type;
+    }
+    
+    res.json(responsePayload);
   } catch (err: any) {
     res.status(500).json({ error: "Failed to compile live metal feed data", details: err.message });
   }
