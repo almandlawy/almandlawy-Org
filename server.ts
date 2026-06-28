@@ -421,7 +421,21 @@ app.get("/api/prices", async (req, res) => {
 // Post Custom Inquiry / Quote request
 app.post("/api/quote", async (req, res) => {
   try {
-    const { name, email, phone, company, metalInterest, productCategory, weight, message, sourceLanguage } = req.body;
+    const {
+      name,
+      email,
+      phone,
+      company,
+      metalInterest,
+      productCategory,
+      productName,
+      productId,
+      quantity,
+      weightPreference,
+      message,
+      sourceLanguage,
+      customerId,
+    } = req.body;
     
     if (!name || !email || !phone) {
       return res.status(400).json({ error: "Required fields missing (name, email, phone)" });
@@ -430,15 +444,18 @@ app.post("/api/quote", async (req, res) => {
     const inquiryId = "PGR-" + Math.floor(100000 + Math.random() * 900000);
     const newQuote = {
       id: inquiryId,
+      customer_id: customerId || null,
       name,
       email,
       phone,
       company: company || "",
-      metal_interest: metalInterest || "both",
-      product_category: productCategory || "General Bullion Consultation",
-      weight_preference: weight || "",
+      metal_interest: metalInterest || "gold",
+      product_id: productId || null,
+      product_name: productName || productCategory || "General Bullion Consultation",
+      quantity: quantity || 1,
+      weight_preference: weightPreference || "",
       message: message || "",
-      status: "Pending",
+      status: "awaiting_confirmation",
       created_at: new Date().toISOString()
     };
 
@@ -458,11 +475,11 @@ app.post("/api/quote", async (req, res) => {
       inquiryId,
       message: sourceLanguage === "ar" 
         ? "لقد تم تسجيل طلب عرض السعر بنجاح. سيتواصل معك أحد ممثلي مكتب طلبات التسعير لدينا قريباً."
-        : "Your bespoke quote request has been cataloged successfully. A PGR Product & Quote Desk Representative will contact you shortly.",
+        : "Your quote request has been recorded successfully. A PGR Product & Quote Desk Representative will contact you shortly.",
       timestamp: new Date().toISOString()
     });
   } catch (err: any) {
-    res.status(500).json({ error: "Failed to record bespoke quote inquiry", details: err.message });
+    res.status(500).json({ error: "Failed to record quote inquiry", details: err.message });
   }
 });
 

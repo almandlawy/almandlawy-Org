@@ -22,7 +22,7 @@ import Footer from "./components/Footer";
 import { LiveMarketRates, Product } from "./types";
 import { WHY_US_ITEMS, BRANDS } from "./data";
 import { Shield, Sparkles, Building, Truck, Landmark, Award } from "lucide-react";
-import { isLive, supabase, mockDb } from "./lib/supabase";
+import { isLive, supabase, mockDb, dbService } from "./lib/supabase";
 
 export default function App() {
   const [currentLang, setCurrentLang] = useState<"en" | "ar">("ar");
@@ -69,49 +69,33 @@ export default function App() {
 
   const handleUserLogin = async (supabaseUser: any) => {
     const email = supabaseUser.email;
-    const fullName = supabaseUser.user_metadata?.full_name || supabaseUser.email?.split("@")[0] || "Accredited Investor";
+    const fullName = supabaseUser.user_metadata?.full_name || supabaseUser.email?.split("@")[0] || "Customer";
     const avatarUrl = supabaseUser.user_metadata?.avatar_url || "";
+    const phone = supabaseUser.user_metadata?.phone || "";
     
-    // Store user session in mockDb.auth so standard pages load it instantly
     const mappedUser = {
       id: supabaseUser.id,
       email: email,
       name: fullName,
+      phone,
       role: email === "almandlawy112@gmail.com" ? "admin" : "customer",
       created_at: supabaseUser.created_at || new Date().toISOString()
     };
     mockDb.auth.setUser(mappedUser);
 
-    // Save/update user profile in supabase 'customers' table as requested!
     try {
-      const { data: existingCustomer } = await supabase!
-        .from("customers")
-        .select("*")
-        .eq("email", email)
-        .single();
-
-      const customerProfile = {
+      await dbService.customers.upsert({
         id: supabaseUser.id,
+        auth_user_id: supabaseUser.id,
         full_name: fullName,
         email: email,
+        phone,
+        preferred_language: currentLang,
         avatar_url: avatarUrl,
-        provider: supabaseUser.app_metadata?.provider || "google",
-        last_login: new Date().toISOString()
-      };
-
-      if (existingCustomer) {
-        await supabase!
-          .from("customers")
-          .update(customerProfile)
-          .eq("id", supabaseUser.id);
-      } else {
-        await supabase!
-          .from("customers")
-          .insert({
-            ...customerProfile,
-            created_at: new Date().toISOString()
-          });
-      }
+        provider: supabaseUser.app_metadata?.provider || "email",
+        last_login: new Date().toISOString(),
+        created_at: supabaseUser.created_at || new Date().toISOString(),
+      });
     } catch (err) {
       console.error("Failed to upsert customer profile to Supabase:", err);
     }

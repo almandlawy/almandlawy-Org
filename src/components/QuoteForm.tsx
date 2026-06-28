@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from "react";
 import { X, CheckCircle, Mail, Phone, Users, Landmark, FileText } from "lucide-react";
-import { dbService } from "../lib/supabase";
+import { dbService, mockDb, isLive, supabase } from "../lib/supabase";
 
 interface QuoteFormProps {
   currentLang: "en" | "ar";
@@ -29,7 +29,42 @@ export default function QuoteForm({ currentLang, prefilledProduct, onClose }: Qu
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [settings, setSettings] = React.useState<any>(null);
 
-  // Load settings on mount
+  const [customerId, setCustomerId] = React.useState<string | null>(null);
+
+  useEffect(() => {
+    const prefillFromSession = async () => {
+      try {
+        if (isLive && supabase) {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user) {
+            setCustomerId(session.user.id);
+            const profile = await dbService.customers.getByAuthId(session.user.id);
+            setFormData((prev) => ({
+              ...prev,
+              name: profile?.full_name || session.user.user_metadata?.full_name || prev.name,
+              email: session.user.email || prev.email,
+              phone: profile?.phone || prev.phone,
+              company: profile?.company_name || prev.company,
+            }));
+            return;
+          }
+        }
+        const mockUser = mockDb.auth.getUser();
+        if (mockUser) {
+          setCustomerId(mockUser.id);
+          setFormData((prev) => ({
+            ...prev,
+            name: mockUser.name || prev.name,
+            email: mockUser.email || prev.email,
+            phone: mockUser.phone || prev.phone,
+          }));
+        }
+      } catch (err) {
+        console.error("QuoteForm session prefill failed:", err);
+      }
+    };
+    prefillFromSession();
+  }, []);
   useEffect(() => {
     const fetchSettings = async () => {
       try {
@@ -49,7 +84,7 @@ export default function QuoteForm({ currentLang, prefilledProduct, onClose }: Qu
         ...prev,
         message: currentLang === "ar"
           ? `أود الحصول على تسعير مباشر وجمركي بخصوص: ${prefilledProduct}`
-          : `I would like to request an institutional quote regarding: ${prefilledProduct}`
+          : `I would like to request a quote regarding: ${prefilledProduct}`
       }));
     }
   }, [prefilledProduct, currentLang]);
@@ -70,7 +105,10 @@ export default function QuoteForm({ currentLang, prefilledProduct, onClose }: Qu
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
+          customerId,
+          productName: prefilledProduct || "General Bullion Consultation",
           productCategory: prefilledProduct || "General Bullion Consultation",
+          quantity: 1,
           sourceLanguage: currentLang
         })
       });
@@ -145,7 +183,7 @@ export default function QuoteForm({ currentLang, prefilledProduct, onClose }: Qu
             <div className="space-y-6">
               <div className="space-y-2">
                 <span className="text-xs font-mono text-gold-base uppercase tracking-widest block">
-                  {currentLang === "ar" ? "استفسار الصفقات الكبرى والمحافظ" : "Institutional Portfolio Consultation"}
+                  {currentLang === "ar" ? "طلب تسعير منتج" : "Product Quote Request"}
                 </span>
                 <h2 className="text-2xl font-serif text-white tracking-tight font-medium">
                   {currentLang === "ar" ? "طلب عرض سعر مخصص" : "Request Bespoke Quote"}
