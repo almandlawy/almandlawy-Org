@@ -8,8 +8,6 @@ import { X, ShieldCheck, Phone, CheckCircle, Mail, AlertTriangle, FileText, Zoom
 import { Product, LiveMarketRates } from "../types";
 import { PRODUCTS } from "../data";
 import { dbService, isProduction } from "../lib/supabase";
-import goldBarImg from "../assets/images/gold_bar_luxury_1782445126673.jpg";
-import silverBarImg from "../assets/images/silver_bar_luxury_1782445139922.jpg";
 
 interface ProductDetailModalProps {
   currentLang: "en" | "ar";
@@ -197,16 +195,16 @@ Phone: ${phone}
                   <img
                     src={
                       activeProduct.image_url || (isGold
-                        ? goldBarImg
-                        : silverBarImg)
+                        ? "/gold_bar_luxury_1782445126673.jpg"
+                        : "/silver_bar_luxury_1782445139922.jpg")
                     }
                     alt={activeProduct.name_en}
                     referrerPolicy="no-referrer"
                     onError={(e) => {
                       e.currentTarget.onerror = null;
                       e.currentTarget.src = isGold
-                        ? goldBarImg
-                        : silverBarImg;
+                        ? "/gold_bar_luxury_1782445126673.jpg"
+                        : "/silver_bar_luxury_1782445139922.jpg";
                     }}
                     className="w-full h-full object-contain transition-transform duration-200"
                     style={{
@@ -439,15 +437,15 @@ Phone: ${phone}
                             <img
                               src={
                                 rel.image_url || (rel.technical_specs.metal === "gold"
-                                  ? goldBarImg
-                                  : silverBarImg)
+                                  ? "/gold_bar_luxury_1782445126673.jpg"
+                                  : "/silver_bar_luxury_1782445139922.jpg")
                               }
                               alt={rel.name_en}
                               onError={(e) => {
                                 e.currentTarget.onerror = null;
                                 e.currentTarget.src = rel.technical_specs.metal === "gold"
-                                  ? goldBarImg
-                                  : silverBarImg;
+                                  ? "/gold_bar_luxury_1782445126673.jpg"
+                                  : "/silver_bar_luxury_1782445139922.jpg";
                               }}
                               className="h-full w-full object-contain"
                             />

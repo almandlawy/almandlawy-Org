@@ -8,8 +8,6 @@ import { Search, Filter, ShieldCheck, ChevronRight, Sparkles, AlertCircle } from
 import { Product, MetalCategory, LiveMarketRates } from "../types";
 import { PRODUCTS } from "../data";
 import { dbService, isProduction } from "../lib/supabase";
-import goldBarImg from "../assets/images/gold_bar_luxury_1782445126673.jpg";
-import silverBarImg from "../assets/images/silver_bar_luxury_1782445139922.jpg";
 
 interface CatalogProps {
   currentLang: "en" | "ar";
@@ -295,16 +293,16 @@ export default function Catalog({
                       <img
                         src={
                           product.image_url || (isGold
-                            ? goldBarImg
-                            : silverBarImg)
+                            ? "/gold_bar_luxury_1782445126673.jpg"
+                            : "/silver_bar_luxury_1782445139922.jpg")
                         }
                         alt={product.name_en || "Bullion product"}
                         referrerPolicy="no-referrer"
                         onError={(e) => {
                           e.currentTarget.onerror = null;
                           e.currentTarget.src = isGold
-                            ? goldBarImg
-                            : silverBarImg;
+                            ? "/gold_bar_luxury_1782445126673.jpg"
+                            : "/silver_bar_luxury_1782445139922.jpg";
                         }}
                         className="w-full h-full object-contain opacity-60 group-hover:opacity-80 transition-all duration-1000 scale-100 group-hover:scale-105 z-0"
                       />
