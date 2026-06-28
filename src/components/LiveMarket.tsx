@@ -133,7 +133,7 @@ export default function LiveMarket({
   };
 
   const getPriceData = (metal: "gold" | "silver" | "platinum" | "palladium") => {
-    if (!rates) return { ounce: 0, gram: 0 };
+    if (!rates || !rates[metal]) return { ounce: 0, gram: 0 };
     const cur = selectedCurrency as any;
     return rates[metal].currencies[cur] || { ounce: 0, gram: 0 };
   };
@@ -198,6 +198,7 @@ export default function LiveMarket({
         {/* Live Grid Display */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {(["gold", "silver", "platinum", "palladium"] as const).map((metal) => {
+            if (rates && !rates[metal]) return null;
             const metalPrice = getPriceData(metal);
             const isGold = metal === "gold";
             const isSilver = metal === "silver";

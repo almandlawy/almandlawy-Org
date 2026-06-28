@@ -69,6 +69,7 @@ function buildRequestQuoteResponse(opts: {
   provider_status: "live" | "fallback" | "error";
   provider_error_type?: "api_failed";
   provider_env?: string | null;
+  provider_errors?: Array<{ metal: string; status: number; error: string }>;
 }) {
   return {
     status: "success",
@@ -86,50 +87,88 @@ function buildRequestQuoteResponse(opts: {
     provider_status: opts.provider_status,
     provider_error_type: opts.provider_error_type,
     provider_env: opts.provider_env ?? null,
+    provider_errors: opts.provider_errors ?? undefined,
     timestamp: new Date().toISOString(),
     rates: null
   };
 }
 
+type MetalFetchResult =
+  | { metal: string; ok: true; price: number }
+  | { metal: string; ok: false; status: number; error: string };
+
+async function fetchSingleMetal(
+  apiKey: string,
+  metal: string,
+  signal: AbortSignal
+): Promise<MetalFetchResult> {
+  try {
+    const apiRes = await fetch(`https://www.goldapi.io/api/${metal}/USD`, {
+      headers: {
+        "x-access-token": apiKey,
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      signal
+    });
+
+    if (!apiRes.ok) {
+      const body = await apiRes.text().catch(() => "");
+      return {
+        metal,
+        ok: false,
+        status: apiRes.status,
+        error: body.slice(0, 160) || `HTTP ${apiRes.status}`
+      };
+    }
+
+    const data = await apiRes.json();
+    const price = Number(data.price);
+    if (isNaN(price) || price <= 0) {
+      return { metal, ok: false, status: 200, error: "invalid price in response" };
+    }
+
+    return { metal, ok: true, price };
+  } catch (err: any) {
+    return {
+      metal,
+      ok: false,
+      status: 0,
+      error: err?.name === "AbortError" ? "request timeout" : (err?.message || "fetch failed")
+    };
+  }
+}
+
 async function fetchGoldApiSpots(apiKey: string, signal: AbortSignal) {
-  const results = await Promise.all(
-    GOLDAPI_METALS.map(async (metal) => {
-      const apiRes = await fetch(`https://www.goldapi.io/api/${metal}/USD`, {
-        headers: {
-          "x-access-token": apiKey,
-          "Content-Type": "application/json"
-        },
-        signal
-      });
+  const results: MetalFetchResult[] = [];
 
-      if (!apiRes.ok) {
-        throw new Error(`GoldAPI.io ${metal}/USD returned status ${apiRes.status}`);
-      }
+  // Sequential requests — friendlier for GoldAPI free-tier rate limits
+  for (const metal of GOLDAPI_METALS) {
+    results.push(await fetchSingleMetal(apiKey, metal, signal));
+    await new Promise((resolve) => setTimeout(resolve, 200));
+  }
 
-      const data = await apiRes.json();
-      const price = Number(data.price);
-      if (isNaN(price) || price <= 0) {
-        throw new Error(`GoldAPI.io ${metal}/USD returned invalid price`);
-      }
+  const gold = results.find((r): r is Extract<MetalFetchResult, { ok: true }> => r.metal === "XAU" && r.ok);
+  const silver = results.find((r): r is Extract<MetalFetchResult, { ok: true }> => r.metal === "XAG" && r.ok);
+  const platinum = results.find((r): r is Extract<MetalFetchResult, { ok: true }> => r.metal === "XPT" && r.ok);
+  const palladium = results.find((r): r is Extract<MetalFetchResult, { ok: true }> => r.metal === "XPD" && r.ok);
 
-      return { metal, price };
-    })
-  );
+  const provider_errors = results
+    .filter((r): r is Extract<MetalFetchResult, { ok: false }> => !r.ok)
+    .map((r) => ({ metal: r.metal, status: r.status, error: r.error }));
 
-  const goldObj = results.find((r) => r.metal === "XAU");
-  const silverObj = results.find((r) => r.metal === "XAG");
-  const platinumObj = results.find((r) => r.metal === "XPT");
-  const palladiumObj = results.find((r) => r.metal === "XPD");
-
-  if (!goldObj || !silverObj || !platinumObj || !palladiumObj) {
-    throw new Error("GoldAPI.io missing required metal prices");
+  if (!gold || !silver) {
+    const err: any = new Error("GoldAPI.io gold/silver fetch failed");
+    err.provider_errors = provider_errors;
+    throw err;
   }
 
   return {
-    gold: goldObj.price,
-    silver: silverObj.price,
-    platinum: platinumObj.price,
-    palladium: palladiumObj.price
+    gold: gold.price,
+    silver: silver.price,
+    platinum: platinum?.price ?? null,
+    palladium: palladium?.price ?? null,
+    provider_errors
   };
 }
 
@@ -165,18 +204,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
 
     let spots: {
       gold: number;
       silver: number;
       platinum: number | null;
       palladium: number | null;
+      provider_errors?: Array<{ metal: string; status: number; error: string }>;
     };
 
     try {
       spots = await fetchGoldApiSpots(apiKey, controller.signal);
-    } catch (err) {
+    } catch (err: any) {
       console.error("GoldAPI.io price fetch failed:", err);
       return res.status(200).json(
         buildRequestQuoteResponse({
@@ -186,19 +226,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           provider_attempted: true,
           provider_status: "error",
           provider_error_type: "api_failed",
-          provider_env: providerEnv
+          provider_env: providerEnv,
+          provider_errors: err?.provider_errors
         })
       );
     } finally {
       clearTimeout(timeoutId);
     }
 
-    const currentSpots = {
+    const currentSpots: Record<string, number> = {
       gold: spots.gold,
       silver: spots.silver,
-      platinum: spots.platinum,
-      palladium: spots.palladium
     };
+    if (spots.platinum) currentSpots.platinum = spots.platinum;
+    if (spots.palladium) currentSpots.palladium = spots.palladium;
 
     const rates: Record<string, any> = {};
 
@@ -224,16 +265,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       is_live_configured: true,
       source_status: "live",
       provider: providerName,
-      gold_usd_per_oz: currentSpots.gold,
-      silver_usd_per_oz: currentSpots.silver,
-      platinum_usd_per_oz: currentSpots.platinum,
-      palladium_usd_per_oz: currentSpots.palladium,
+      gold_usd_per_oz: spots.gold,
+      silver_usd_per_oz: spots.silver,
+      platinum_usd_per_oz: spots.platinum,
+      palladium_usd_per_oz: spots.palladium,
       usd_aed: EXCHANGE_RATES.AED,
       updated_at: new Date().toISOString(),
       has_api_key: true,
       provider_attempted: true,
       provider_status: "live",
       provider_env: providerEnv,
+      provider_errors: spots.provider_errors?.length ? spots.provider_errors : undefined,
       timestamp: new Date().toISOString(),
       base_usd: currentSpots,
       rates
