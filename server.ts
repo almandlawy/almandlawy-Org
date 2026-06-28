@@ -147,7 +147,7 @@ app.get("/api/metal-prices", async (req, res) => {
         }
       }
     } catch (apiErr) {
-      console.warn("Failed to fetch live metal-prices, falling back:", apiErr);
+      console.warn("Secure Fetch Warning: Live metal-prices fell back due to a network or timeout event.");
     }
   }
   
@@ -215,7 +215,7 @@ app.get("/api/prices", async (req, res) => {
           }
         }
       } catch (apiErr) {
-        console.warn("Failed to fetch live prices inside /api/prices:", apiErr);
+        console.warn("Secure Fetch Warning: Live prices route fell back due to a network or timeout event.");
       }
     }
     
