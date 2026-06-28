@@ -18,6 +18,49 @@ function normalizeProvider(value: string | undefined): string {
     .toLowerCase();
 }
 
+function isGoldApiKeyFormat(value: string): boolean {
+  return /^goldapi-[a-z0-9]+-io$/i.test(value.trim());
+}
+
+function resolveGoldApiConfig() {
+  const rawProvider = process.env.METAL_PRICE_PROVIDER?.trim() || "";
+  const provider = normalizeProvider(rawProvider);
+  const goldApiKeyFromEnv = process.env.GOLD_API_KEY?.trim() || "";
+
+  // Correct setup: METAL_PRICE_PROVIDER=goldapi + GOLD_API_KEY=goldapi-xxxx-io
+  if (provider === "goldapi") {
+    return {
+      isGoldApi: true,
+      apiKey: goldApiKeyFromEnv || null,
+      providerEnv: "goldapi"
+    };
+  }
+
+  // Common mistake: API key pasted into METAL_PRICE_PROVIDER
+  if (isGoldApiKeyFormat(rawProvider)) {
+    return {
+      isGoldApi: true,
+      apiKey: goldApiKeyFromEnv || rawProvider,
+      providerEnv: "goldapi"
+    };
+  }
+
+  // GOLD_API_KEY only (provider unset)
+  if (!provider && goldApiKeyFromEnv) {
+    return {
+      isGoldApi: true,
+      apiKey: goldApiKeyFromEnv,
+      providerEnv: "goldapi"
+    };
+  }
+
+  return {
+    isGoldApi: false,
+    apiKey: goldApiKeyFromEnv || null,
+    providerEnv: provider || null
+  };
+}
+
 function buildRequestQuoteResponse(opts: {
   provider: string;
   has_api_key: boolean;
@@ -104,23 +147,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const rawProvider = process.env.METAL_PRICE_PROVIDER;
-    const provider = normalizeProvider(rawProvider);
-    const goldApiKey = process.env.GOLD_API_KEY?.trim();
+    const { isGoldApi, apiKey, providerEnv } = resolveGoldApiConfig();
     const providerName = "GoldAPI.io";
-    // Use goldapi when explicitly set, or when GOLD_API_KEY exists and provider is unset
-    const isGoldApiProvider = provider === "goldapi" || (!provider && !!goldApiKey);
-    const isLiveConfigured = isGoldApiProvider && !!goldApiKey;
+    const isLiveConfigured = isGoldApi && !!apiKey;
 
-    if (!isGoldApiProvider || !goldApiKey) {
+    if (!isGoldApi || !apiKey) {
       return res.status(200).json(
         buildRequestQuoteResponse({
           provider: providerName,
-          has_api_key: !!goldApiKey,
+          has_api_key: !!apiKey || !!process.env.GOLD_API_KEY,
           is_live_configured: isLiveConfigured,
           provider_attempted: false,
           provider_status: "fallback",
-          provider_env: provider || null
+          provider_env: providerEnv
         })
       );
     }
@@ -136,7 +175,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     };
 
     try {
-      spots = await fetchGoldApiSpots(goldApiKey, controller.signal);
+      spots = await fetchGoldApiSpots(apiKey, controller.signal);
     } catch (err) {
       console.error("GoldAPI.io price fetch failed:", err);
       return res.status(200).json(
@@ -147,7 +186,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           provider_attempted: true,
           provider_status: "error",
           provider_error_type: "api_failed",
-          provider_env: provider || "goldapi"
+          provider_env: providerEnv
         })
       );
     } finally {
@@ -194,7 +233,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       has_api_key: true,
       provider_attempted: true,
       provider_status: "live",
-      provider_env: provider || "goldapi",
+      provider_env: providerEnv,
       timestamp: new Date().toISOString(),
       base_usd: currentSpots,
       rates
