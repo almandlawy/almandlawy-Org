@@ -1623,8 +1623,14 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                               try {
                                 setLoading(true);
                                 const { PRODUCTS } = await import("../data");
+                                let count = 0;
                                 for (const p of PRODUCTS) {
-                                  await dbService.products.save(p);
+                                  count++;
+                                  try {
+                                    await dbService.products.save(p);
+                                  } catch (err: any) {
+                                    throw new Error(`Product #${count} (${p.id} - "${p.name_en}") failed. Front-end Availability: "${p.availability}". DB payload mapping details: ${JSON.stringify(err.message || err)}`);
+                                  }
                                 }
                                 await loadAdminData();
                                 alert(currentLang === "ar" ? "تمت مزامنة جميع المنتجات بنجاح!" : "Successfully seeded all products!");
