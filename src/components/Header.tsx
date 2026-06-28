@@ -50,8 +50,6 @@ export default function Header({
       }
     };
     checkAdmin();
-    const interval = setInterval(checkAdmin, 2500);
-    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {

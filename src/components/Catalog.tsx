@@ -27,6 +27,7 @@ export default function Catalog({
   const [products, setProducts] = React.useState<Product[]>([]);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [selectedFilter, setSelectedFilter] = React.useState<string>(selectedCategoryFilter || "all");
+  const [isProductsFetchFailed, setIsProductsFetchFailed] = React.useState(false);
 
   React.useEffect(() => {
     const fetchProducts = async () => {
@@ -34,12 +35,15 @@ export default function Catalog({
         const list = await dbService.products.list();
         if (list && list.length > 0) {
           setProducts(list);
+          setIsProductsFetchFailed(false);
         } else {
           setProducts(PRODUCTS);
+          setIsProductsFetchFailed(true);
         }
       } catch (err) {
         console.error("Failed to load products dynamically:", err);
         setProducts(PRODUCTS);
+        setIsProductsFetchFailed(true);
       }
     };
     fetchProducts();
@@ -76,39 +80,50 @@ export default function Catalog({
 
   // Estimate physical product pricing based on current live spot rate
   const calculateIndicativePrice = (product: Product) => {
-    if (!rates) return null;
-    const cur = selectedCurrency as any;
-    const isGold = product.technical_specs.metal === "gold";
-    const baseSpot = isGold ? rates.gold.currencies[cur] : rates.silver.currencies[cur];
+    try {
+      if (!rates || !product) return null;
+      const cur = selectedCurrency as any;
+      const isGold = product?.technical_specs?.metal === "gold" || product?.category?.includes("gold");
+      const baseSpot = isGold ? rates.gold.currencies[cur] : rates.silver.currencies[cur];
 
-    if (!baseSpot) return null;
+      if (!baseSpot) return null;
 
-    let totalGrams = 0;
-    if (product.technical_specs.weight_grams) {
-      totalGrams = product.technical_specs.weight_grams;
-    } else if (product.technical_specs.weight_oz) {
-      totalGrams = product.technical_specs.weight_oz * 31.1034768;
+      let totalGrams = 0;
+      if (product?.technical_specs?.weight_grams) {
+        totalGrams = product.technical_specs.weight_grams;
+      } else if (product?.technical_specs?.weight_oz) {
+        totalGrams = product.technical_specs.weight_oz * 31.1034768;
+      }
+
+      if (totalGrams === 0) return null;
+
+      const baseCost = totalGrams * baseSpot.gram;
+      const finalCost = baseCost * (product?.premium_multiplier || 1.0);
+
+      return finalCost;
+    } catch (e) {
+      console.error("Error calculating indicative price:", e);
+      return null;
     }
-
-    if (totalGrams === 0) return null;
-
-    const baseCost = totalGrams * baseSpot.gram;
-    const finalCost = baseCost * product.premium_multiplier;
-
-    return finalCost;
   };
 
   // Filter products based on search query and category pill selection
   const filteredProducts = (products.length > 0 ? products : PRODUCTS).filter((product) => {
-    const matchesCategory = selectedFilter === "all" || product.category === selectedFilter;
-    
-    const query = searchQuery.toLowerCase();
-    const nameMatch = product.name_en.toLowerCase().includes(query) || product.name_ar.includes(query);
-    const manufacturerMatch = product.manufacturer.toLowerCase().includes(query);
-    const countryMatch = product.country_en.toLowerCase().includes(query);
-    const isPublished = product.published !== false;
+    try {
+      if (!product) return false;
+      const matchesCategory = selectedFilter === "all" || product.category === selectedFilter;
+      
+      const query = searchQuery.toLowerCase();
+      const nameMatch = (product.name_en || "").toLowerCase().includes(query) || (product.name_ar || "").includes(query);
+      const manufacturerMatch = (product.manufacturer || "").toLowerCase().includes(query);
+      const countryMatch = (product.country_en || "").toLowerCase().includes(query);
+      const isPublished = product.published !== false;
 
-    return isPublished && matchesCategory && (nameMatch || manufacturerMatch || countryMatch);
+      return isPublished && matchesCategory && (nameMatch || manufacturerMatch || countryMatch);
+    } catch (e) {
+      console.error("Error filtering product:", e);
+      return false;
+    }
   });
 
   return (
@@ -130,6 +145,18 @@ export default function Catalog({
               : "Explore our collection of high-purity gold and silver bars and investment coins. Sourced exclusively from LBMA-certified international refineries."}
           </p>
         </div>
+
+        {/* Dynamic fetch warning banner */}
+        {isProductsFetchFailed && (
+          <div className="max-w-2xl mx-auto p-4 rounded border border-amber-500/20 bg-amber-500/[0.03] text-amber-500 flex items-center gap-3 text-xs font-sans">
+            <AlertCircle size={16} className="shrink-0" />
+            <span className="font-semibold text-center w-full">
+              {currentLang === "ar"
+                ? "يتم تحديث المنتجات حالياً. يرجى طلب عرض سعر."
+                : "Products are being updated. Please request a quote."}
+            </span>
+          </div>
+        )}
 
         {/* Filters and Search Action Bar */}
         <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-6 pb-6 border-b border-white/[0.04]">
@@ -167,8 +194,8 @@ export default function Catalog({
         {/* Product Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredProducts.map((product) => {
-            const isGold = product.technical_specs.metal === "gold";
-            const isCoin = product.category.includes("coin");
+            const isGold = product?.technical_specs?.metal === "gold" || product?.category?.includes("gold");
+            const isCoin = product?.category?.includes("coin") || false;
             const indicativePrice = calculateIndicativePrice(product);
 
             return (
@@ -191,7 +218,7 @@ export default function Catalog({
                         ? "/src/assets/images/gold_bar_luxury_1782445126673.jpg"
                         : "/src/assets/images/silver_bar_luxury_1782445139922.jpg")
                     }
-                    alt={product.name_en}
+                    alt={product.name_en || "Bullion product"}
                     referrerPolicy="no-referrer"
                     className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-all duration-1000 scale-100 group-hover:scale-105 z-0"
                   />
@@ -202,12 +229,12 @@ export default function Catalog({
                   {/* Brand metadata tag */}
                   <div className="absolute top-4 left-4 z-20 flex items-center gap-1.5 px-2 py-1 rounded bg-[#070707]/80 backdrop-blur-md border border-white/[0.04]">
                     <ShieldCheck size={11} className={isGold ? "text-gold-base" : "text-silver-base"} />
-                    <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider">{product.manufacturer}</span>
+                    <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider">{product.manufacturer || "Certified"}</span>
                   </div>
 
                   {/* Certified Gold/Silver Stamp Overlay */}
                   <div className="absolute bottom-4 right-4 z-20 px-2 py-0.5 rounded bg-gold-dark/10 text-gold-base border border-gold-base/10 text-[9px] font-mono tracking-widest uppercase font-semibold">
-                    {product.purity.split(" ")[0]}
+                    {(product?.purity || "").split(" ")[0] || "999.9"}
                   </div>
                 </div>
 
@@ -216,19 +243,19 @@ export default function Catalog({
                   <div className="space-y-2">
                     {/* Manufacturer Name & Country */}
                     <span className="text-[10px] font-mono text-gray-500 uppercase tracking-[0.2em] block">
-                      {product.manufacturer} • {currentLang === "ar" ? product.country_ar : product.country_en}
+                      {product.manufacturer || "Refined"} • {currentLang === "ar" ? product.country_ar || "دبي" : product.country_en || "Dubai"}
                     </span>
                     
                     {/* Product Name */}
                     <h3 className="text-lg font-serif text-white group-hover:text-gold-light transition-colors line-clamp-1 font-medium">
-                      {currentLang === "ar" ? product.name_ar : product.name_en}
+                      {currentLang === "ar" ? product.name_ar || "" : product.name_en || ""}
                     </h3>
 
                     {/* Technical Weight & Purity specifications details */}
                     <div className="flex items-center gap-4 text-xs font-mono text-gray-400 pt-1">
-                      <span>{currentLang === "ar" ? "الوزن:" : "Weight:"} <strong className="text-white">{product.weight_label}</strong></span>
+                      <span>{currentLang === "ar" ? "الوزن:" : "Weight:"} <strong className="text-white">{product?.weight_label || ""}</strong></span>
                       <span className="text-white/20">|</span>
-                      <span>{currentLang === "ar" ? "النقاوة:" : "Purity:"} <strong className="text-white">{product.purity.split(" ")[0]}</strong></span>
+                      <span>{currentLang === "ar" ? "النقاوة:" : "Purity:"} <strong className="text-white">{(product?.purity || "").split(" ")[0] || "999.9"}</strong></span>
                     </div>
                   </div>
 
