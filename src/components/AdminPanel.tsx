@@ -115,8 +115,8 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
     image_url: "",
     availability: "In Stock" as any,
     stock_status: "In Stock" as any,
-    description_en: "Investment Grade Bullion Bar",
-    description_ar: "سبائك درجة استثمارية عالية الجودة",
+    description_en: "High-Purity Bullion Bar",
+    description_ar: "سبائك عالية النقاء والجودة",
     certificate_url: "",
     published: true,
     premium_pct: 2.5
@@ -269,7 +269,7 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
             activeUser = {
               id: session.user.id,
               email: email,
-              name: session.user.user_metadata?.full_name || session.user.email?.split("@")[0] || "Accredited Investor",
+              name: session.user.user_metadata?.full_name || session.user.email?.split("@")[0] || "Customer Account",
               role: email === "almandlawy112@gmail.com" ? "admin" : "customer",
               created_at: session.user.created_at || new Date().toISOString()
             };
@@ -326,7 +326,7 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
           const activeUser = {
             id: session.user.id,
             email: email,
-            name: session.user.user_metadata?.full_name || session.user.email?.split("@")[0] || "Accredited Investor",
+            name: session.user.user_metadata?.full_name || session.user.email?.split("@")[0] || "Customer Account",
             role: email === "almandlawy112@gmail.com" ? "admin" : "customer",
             created_at: session.user.created_at || new Date().toISOString()
           };
@@ -476,8 +476,8 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
         image_url: "",
         availability: "In Stock",
         stock_status: "In Stock",
-        description_en: "Investment Grade Bullion Bar",
-        description_ar: "سبائك درجة استثمارية عالية الجودة",
+        description_en: "High-Purity Bullion Bar",
+        description_ar: "سبائك عالية النقاء والجودة",
         certificate_url: "",
         published: true,
         premium_pct: 2.5
@@ -717,7 +717,7 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
   // Stats calculators
   const stats = {
     totalVolumeUSD: orders.reduce((sum, o) => sum + (o.total_amount || 0), 0) + holdings.reduce((sum, h) => sum + (h.current_market_value_usd || 0), 0),
-    activeInvestorsCount: kycProfiles.filter(k => k.status === "Verified").length + 5,
+    activeCustomersCount: kycProfiles.filter(k => k.status === "Verified").length + 5,
     pendingQuotesCount: quotes.filter(q => q.status === "Pending").length,
     activeDeliveriesIraq: iraqDeliveries.filter(d => d.status !== "Delivered").length,
     pendingKycCount: kycProfiles.filter(k => k.status === "Pending review" || k.status === "Pending").length,
@@ -910,7 +910,7 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
     { id: "products", label: "Catalog Entries", labelAr: "كتالوج المنتجات" },
     { id: "quotes", label: "Quote Requests", labelAr: "طلبات الأسعار" },
     { id: "orders", label: "Orders Management", labelAr: "الأوامر الصادرة" },
-    { id: "customers", label: "Investors", labelAr: "المستثمرون" },
+    { id: "customers", label: "Customer Accounts", labelAr: "حسابات العملاء" },
     { id: "kyc", label: "KYC Compliance", labelAr: "امتثال KYC" },
     { id: "iraq_delivery", label: "Iraq Logistics", labelAr: "لوجستيات العراق" },
     { id: "pickup_points", label: "Pickup Terminals", labelAr: "مراكز الاستلام" },
@@ -1026,18 +1026,18 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                 <div className="space-y-6 font-mono text-xs">
                   <div>
                     <h4 className="text-lg font-serif text-white">{isAr ? "لوحة الإحصائيات والأداء" : "Precious Metals Control Center"}</h4>
-                    <p className="text-xs text-gray-500 uppercase">Live bullion liquidity, compliance profiles, and logistic pipelines</p>
+                    <p className="text-xs text-gray-500 uppercase">Product and Quote Overview, compliance profiles, and logistic pipelines</p>
                   </div>
 
                   {/* Bento Stats Matrix */}
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="p-4 bg-[#0d0d0e] border border-white/[0.03] rounded">
-                      <span className="text-[10px] text-gray-500 uppercase">Asset Holding Pool</span>
+                      <span className="text-[10px] text-gray-500 uppercase">Listed Product Value</span>
                       <p className="text-xl font-serif text-white font-bold mt-1">${stats.totalVolumeUSD.toLocaleString()}</p>
                     </div>
                     <div className="p-4 bg-[#0d0d0e] border border-white/[0.03] rounded">
-                      <span className="text-[10px] text-gray-500 uppercase">Investors</span>
-                      <p className="text-xl font-serif text-gold-base font-bold mt-1">{stats.activeInvestorsCount} Accounts</p>
+                      <span className="text-[10px] text-gray-500 uppercase">Customer Accounts</span>
+                      <p className="text-xl font-serif text-gold-base font-bold mt-1">{stats.activeCustomersCount} Accounts</p>
                     </div>
                     <div className="p-4 bg-[#0d0d0e] border border-white/[0.03] rounded">
                       <span className="text-[10px] text-gray-500 uppercase">Pending Quotes</span>
@@ -1052,7 +1052,7 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Security Compliance Checklist */}
                     <div className="p-5 bg-[#0d0d0e] border border-white/[0.03] rounded space-y-4">
-                      <h5 className="text-sm font-serif text-gold-base border-b border-white/[0.03] pb-2">Compliance Radar</h5>
+                      <h5 className="text-sm font-serif text-gold-base border-b border-white/[0.03] pb-2">KYC / Customer Review</h5>
                       <div className="space-y-2">
                         <div className="flex justify-between items-center py-1 border-b border-white/[0.01]">
                           <span className="text-gray-400">KYC Profiles Awaiting Review</span>
@@ -1065,8 +1065,8 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                           <span className="text-white font-bold">{stats.buybackInquiries} Inquiries</span>
                         </div>
                         <div className="flex justify-between items-center py-1">
-                          <span className="text-gray-400">Refinery Accreditations</span>
-                          <span className="text-green-400 font-bold">100% LBMA Compliant</span>
+                          <span className="text-gray-400">Product Certificates</span>
+                          <span className="text-green-400 font-bold">Product Documentation Status</span>
                         </div>
                       </div>
                     </div>
@@ -1812,15 +1812,15 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
               {activeSection === "customers" && (
                 <div className="space-y-6">
                   <div>
-                    <h4 className="text-lg font-serif text-white">Investors Account Directories</h4>
-                    <p className="text-xs text-gray-500 font-mono uppercase">Client profiles, registered investment portfolios, and total balances</p>
+                    <h4 className="text-lg font-serif text-white">Customer Account Directories</h4>
+                    <p className="text-xs text-gray-500 font-mono uppercase">Client profiles, registered product allocations, and total balances</p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
                     {holdings.map((h, i) => (
                       <div key={i} className="p-5 bg-[#0d0d0e] border border-white/[0.03] rounded space-y-3">
                         <div className="flex justify-between items-center border-b border-white/[0.02] pb-2">
-                          <span className="text-white font-serif text-sm">Investor Account ID: <span className="text-gold-base">{h.customer_id}</span></span>
+                          <span className="text-white font-serif text-sm">Customer Account ID: <span className="text-gold-base">{h.customer_id}</span></span>
                           <span className="px-2 py-0.5 rounded bg-green-950/30 text-green-400 font-bold">ACTIVE DEPOSITS</span>
                         </div>
                         <div className="grid grid-cols-2 gap-2 text-gray-400">
@@ -1882,7 +1882,7 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                               onClick={() => handleUpdateKycStatus(k.id, "Verified")}
                               className="px-3 py-1.5 bg-green-950/30 text-green-400 border border-green-900/30 rounded hover:bg-green-800 hover:text-white cursor-pointer"
                             >
-                              Approve Investor KYC Profile
+                              Approve Customer KYC Profile
                             </button>
                             <button
                               onClick={() => handleUpdateKycStatus(k.id, "Rejected")}
@@ -2339,7 +2339,7 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                 <div className="space-y-6">
                   <div>
                     <h4 className="text-lg font-serif text-white">Corporate Intelligence & Research Dispatches</h4>
-                    <p className="text-xs text-gray-500 font-mono uppercase">Publish macro gold reports and Iraqi market liquidity updates</p>
+                    <p className="text-xs text-gray-500 font-mono uppercase">Publish macro gold reports and Iraqi market price updates</p>
                   </div>
 
                   {/* Add blog form */}
