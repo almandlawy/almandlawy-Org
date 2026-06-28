@@ -9,7 +9,17 @@ const EXCHANGE_RATES = {
 };
 
 const OUNCE_TO_GRAM = 31.1034768;
-const GOLDAPI_METALS = ["XAU", "XAG", "XPT", "XPD"] as const;
+const METAL_SYMBOLS = ["XAU", "XAG", "XPT", "XPD"] as const;
+
+type ProviderId = "goldapi" | "metalpriceapi";
+
+type SpotPrices = {
+  gold: number;
+  silver: number;
+  platinum: number | null;
+  palladium: number | null;
+  provider_errors?: Array<{ metal: string; status: number; error: string }>;
+};
 
 function normalizeProvider(value: string | undefined): string {
   return (value || "")
@@ -22,41 +32,61 @@ function isGoldApiKeyFormat(value: string): boolean {
   return /^goldapi-[a-z0-9]+-io$/i.test(value.trim());
 }
 
-function resolveGoldApiConfig() {
+function resolveProviderConfig() {
   const rawProvider = process.env.METAL_PRICE_PROVIDER?.trim() || "";
   const provider = normalizeProvider(rawProvider);
-  const goldApiKeyFromEnv = process.env.GOLD_API_KEY?.trim() || "";
+  const goldApiKey = process.env.GOLD_API_KEY?.trim() || "";
+  const metalPriceApiKey = process.env.METAL_PRICE_API_KEY?.trim() || "";
 
-  // Correct setup: METAL_PRICE_PROVIDER=goldapi + GOLD_API_KEY=goldapi-xxxx-io
+  if (provider === "metalpriceapi" || provider === "metalprice") {
+    return {
+      providerId: "metalpriceapi" as ProviderId,
+      providerName: "MetalpriceAPI",
+      apiKey: metalPriceApiKey || goldApiKey || null,
+      providerEnv: "metalpriceapi"
+    };
+  }
+
   if (provider === "goldapi") {
     return {
-      isGoldApi: true,
-      apiKey: goldApiKeyFromEnv || null,
+      providerId: "goldapi" as ProviderId,
+      providerName: "GoldAPI.io",
+      apiKey: goldApiKey || null,
       providerEnv: "goldapi"
     };
   }
 
-  // Common mistake: API key pasted into METAL_PRICE_PROVIDER
   if (isGoldApiKeyFormat(rawProvider)) {
     return {
-      isGoldApi: true,
-      apiKey: goldApiKeyFromEnv || rawProvider,
+      providerId: "goldapi" as ProviderId,
+      providerName: "GoldAPI.io",
+      apiKey: goldApiKey || rawProvider,
       providerEnv: "goldapi"
     };
   }
 
-  // GOLD_API_KEY only (provider unset)
-  if (!provider && goldApiKeyFromEnv) {
+  if (metalPriceApiKey) {
     return {
-      isGoldApi: true,
-      apiKey: goldApiKeyFromEnv,
+      providerId: "metalpriceapi" as ProviderId,
+      providerName: "MetalpriceAPI",
+      apiKey: metalPriceApiKey,
+      providerEnv: "metalpriceapi"
+    };
+  }
+
+  if (goldApiKey) {
+    return {
+      providerId: "goldapi" as ProviderId,
+      providerName: "GoldAPI.io",
+      apiKey: goldApiKey,
       providerEnv: "goldapi"
     };
   }
 
   return {
-    isGoldApi: false,
-    apiKey: goldApiKeyFromEnv || null,
+    providerId: null,
+    providerName: "None",
+    apiKey: null,
     providerEnv: provider || null
   };
 }
@@ -93,11 +123,79 @@ function buildRequestQuoteResponse(opts: {
   };
 }
 
+function parseMetalPriceApiUsdPerOz(
+  rates: Record<string, number>,
+  symbol: string
+): number | null {
+  const direct = rates[`USD${symbol}`];
+  if (typeof direct === "number" && direct > 0) return direct;
+
+  const inverted = rates[symbol];
+  if (typeof inverted === "number" && inverted > 0) {
+    return inverted < 1 ? 1 / inverted : inverted;
+  }
+
+  return null;
+}
+
+async function fetchMetalPriceApiSpots(apiKey: string, signal: AbortSignal): Promise<SpotPrices> {
+  const url = `https://api.metalpriceapi.com/v1/latest?api_key=${encodeURIComponent(apiKey)}&base=USD&currencies=XAU,XAG,XPT,XPD`;
+  const apiRes = await fetch(url, {
+    headers: { Accept: "application/json" },
+    signal
+  });
+
+  if (!apiRes.ok) {
+    const body = await apiRes.text().catch(() => "");
+    const err: any = new Error("MetalpriceAPI request failed");
+    err.provider_errors = [{
+      metal: "ALL",
+      status: apiRes.status,
+      error: body.slice(0, 160) || `HTTP ${apiRes.status}`
+    }];
+    throw err;
+  }
+
+  const data = await apiRes.json();
+  if (!data?.success || !data?.rates) {
+    const err: any = new Error("MetalpriceAPI invalid response");
+    err.provider_errors = [{
+      metal: "ALL",
+      status: 200,
+      error: JSON.stringify(data).slice(0, 160)
+    }];
+    throw err;
+  }
+
+  const gold = parseMetalPriceApiUsdPerOz(data.rates, "XAU");
+  const silver = parseMetalPriceApiUsdPerOz(data.rates, "XAG");
+  const platinum = parseMetalPriceApiUsdPerOz(data.rates, "XPT");
+  const palladium = parseMetalPriceApiUsdPerOz(data.rates, "XPD");
+
+  const provider_errors: Array<{ metal: string; status: number; error: string }> = [];
+  if (!gold) provider_errors.push({ metal: "XAU", status: 200, error: "missing gold price" });
+  if (!silver) provider_errors.push({ metal: "XAG", status: 200, error: "missing silver price" });
+
+  if (!gold || !silver) {
+    const err: any = new Error("MetalpriceAPI gold/silver fetch failed");
+    err.provider_errors = provider_errors;
+    throw err;
+  }
+
+  return {
+    gold,
+    silver,
+    platinum,
+    palladium,
+    provider_errors: provider_errors.length ? provider_errors : undefined
+  };
+}
+
 type MetalFetchResult =
   | { metal: string; ok: true; price: number }
   | { metal: string; ok: false; status: number; error: string };
 
-async function fetchSingleMetal(
+async function fetchSingleGoldApiMetal(
   apiKey: string,
   metal: string,
   signal: AbortSignal
@@ -107,7 +205,7 @@ async function fetchSingleMetal(
       headers: {
         "x-access-token": apiKey,
         "Content-Type": "application/json",
-        "Accept": "application/json"
+        Accept: "application/json"
       },
       signal
     });
@@ -139,12 +237,11 @@ async function fetchSingleMetal(
   }
 }
 
-async function fetchGoldApiSpots(apiKey: string, signal: AbortSignal) {
+async function fetchGoldApiSpots(apiKey: string, signal: AbortSignal): Promise<SpotPrices> {
   const results: MetalFetchResult[] = [];
 
-  // Sequential requests — friendlier for GoldAPI free-tier rate limits
-  for (const metal of GOLDAPI_METALS) {
-    results.push(await fetchSingleMetal(apiKey, metal, signal));
+  for (const metal of METAL_SYMBOLS) {
+    results.push(await fetchSingleGoldApiMetal(apiKey, metal, signal));
     await new Promise((resolve) => setTimeout(resolve, 200));
   }
 
@@ -168,37 +265,66 @@ async function fetchGoldApiSpots(apiKey: string, signal: AbortSignal) {
     silver: silver.price,
     platinum: platinum?.price ?? null,
     palladium: palladium?.price ?? null,
-    provider_errors
+    provider_errors: provider_errors.length ? provider_errors : undefined
   };
 }
 
+function buildRatesFromSpots(spots: SpotPrices) {
+  const currentSpots: Record<string, number> = {
+    gold: spots.gold,
+    silver: spots.silver
+  };
+  if (spots.platinum) currentSpots.platinum = spots.platinum;
+  if (spots.palladium) currentSpots.palladium = spots.palladium;
+
+  const rates: Record<string, any> = {};
+
+  Object.entries(currentSpots).forEach(([metal, spotUsd]) => {
+    rates[metal] = {
+      spot_usd_oz: spotUsd,
+      currencies: {} as Record<string, { ounce: number; gram: number }>
+    };
+
+    Object.entries(EXCHANGE_RATES).forEach(([currency, rate]) => {
+      const ouncePrice = spotUsd * rate;
+      const gramPrice = ouncePrice / OUNCE_TO_GRAM;
+
+      rates[metal].currencies[currency] = {
+        ounce: parseFloat(ouncePrice.toFixed(2)),
+        gram: parseFloat(gramPrice.toFixed(4))
+      };
+    });
+  });
+
+  return { currentSpots, rates };
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS");
   res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+    "Access-Control-Allow-Headers",
+    "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version"
   );
 
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
 
   try {
-    const { isGoldApi, apiKey, providerEnv } = resolveGoldApiConfig();
-    const providerName = "GoldAPI.io";
-    const isLiveConfigured = isGoldApi && !!apiKey;
+    const config = resolveProviderConfig();
+    const isLiveConfigured = !!config.providerId && !!config.apiKey;
 
-    if (!isGoldApi || !apiKey) {
+    if (!config.providerId || !config.apiKey) {
       return res.status(200).json(
         buildRequestQuoteResponse({
-          provider: providerName,
-          has_api_key: !!apiKey || !!process.env.GOLD_API_KEY,
+          provider: config.providerName,
+          has_api_key: !!process.env.GOLD_API_KEY || !!process.env.METAL_PRICE_API_KEY,
           is_live_configured: isLiveConfigured,
           provider_attempted: false,
           provider_status: "fallback",
-          provider_env: providerEnv
+          provider_env: config.providerEnv
         })
       );
     }
@@ -206,27 +332,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000);
 
-    let spots: {
-      gold: number;
-      silver: number;
-      platinum: number | null;
-      palladium: number | null;
-      provider_errors?: Array<{ metal: string; status: number; error: string }>;
-    };
+    let spots: SpotPrices;
 
     try {
-      spots = await fetchGoldApiSpots(apiKey, controller.signal);
+      spots =
+        config.providerId === "metalpriceapi"
+          ? await fetchMetalPriceApiSpots(config.apiKey, controller.signal)
+          : await fetchGoldApiSpots(config.apiKey, controller.signal);
     } catch (err: any) {
-      console.error("GoldAPI.io price fetch failed:", err);
+      console.error(`${config.providerName} price fetch failed:`, err);
       return res.status(200).json(
         buildRequestQuoteResponse({
-          provider: providerName,
+          provider: config.providerName,
           has_api_key: true,
           is_live_configured: true,
           provider_attempted: true,
           provider_status: "error",
           provider_error_type: "api_failed",
-          provider_env: providerEnv,
+          provider_env: config.providerEnv,
           provider_errors: err?.provider_errors
         })
       );
@@ -234,37 +357,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       clearTimeout(timeoutId);
     }
 
-    const currentSpots: Record<string, number> = {
-      gold: spots.gold,
-      silver: spots.silver,
-    };
-    if (spots.platinum) currentSpots.platinum = spots.platinum;
-    if (spots.palladium) currentSpots.palladium = spots.palladium;
-
-    const rates: Record<string, any> = {};
-
-    Object.entries(currentSpots).forEach(([metal, spotUsd]) => {
-      rates[metal] = {
-        spot_usd_oz: spotUsd,
-        currencies: {} as Record<string, { ounce: number; gram: number }>
-      };
-
-      Object.entries(EXCHANGE_RATES).forEach(([currency, rate]) => {
-        const ouncePrice = spotUsd * rate;
-        const gramPrice = ouncePrice / OUNCE_TO_GRAM;
-
-        rates[metal].currencies[currency] = {
-          ounce: parseFloat(ouncePrice.toFixed(2)),
-          gram: parseFloat(gramPrice.toFixed(4))
-        };
-      });
-    });
+    const { currentSpots, rates } = buildRatesFromSpots(spots);
 
     return res.status(200).json({
       status: "success",
       is_live_configured: true,
       source_status: "live",
-      provider: providerName,
+      provider: config.providerName,
       gold_usd_per_oz: spots.gold,
       silver_usd_per_oz: spots.silver,
       platinum_usd_per_oz: spots.platinum,
@@ -274,7 +373,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       has_api_key: true,
       provider_attempted: true,
       provider_status: "live",
-      provider_env: providerEnv,
+      provider_env: config.providerEnv,
       provider_errors: spots.provider_errors?.length ? spots.provider_errors : undefined,
       timestamp: new Date().toISOString(),
       base_usd: currentSpots,
