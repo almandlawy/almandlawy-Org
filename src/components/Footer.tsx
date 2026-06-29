@@ -63,14 +63,14 @@ export default function Footer({
               <span className="text-xl font-serif font-bold tracking-[0.2em] text-white">
                 PGR <span className="text-gold-base">UAE</span>
               </span>
-              <span className="text-[9px] uppercase tracking-[0.4em] text-gray-500 mt-1">
-                Precious Metals Trading
+              <span className="text-[9px] uppercase tracking-[0.4em] text-[#c5a85c] mt-1 font-mono font-bold">
+                Precious Metals & Bullion Quote Desk
               </span>
             </div>
             <p className="text-gray-500 text-[11px] leading-relaxed">
               {currentLang === "ar"
-                ? "مؤسسة بي جي آر لتجارة المعادن الثمينة ومقرها دبي. نوفر حلول تداول وادخار كلاسيكية بالجملة للمؤسسات وصناديق الاستثمار وكبار الشخصيات بأعلى معايير الأمان السويسري."
-                : "PGR UAE is an internationally accredited physical gold and silver wholesale bullion house headquartered in Dubai. Partnering with elite Swiss and global refineries."}
+                ? "مؤسسة بي جي آر لتجارة المعادن الثمينة ومقرها دبي. نوفر عروض أسعار وحلول تخزين مخصصة للسبائك للمؤسسات وصناديق الاستثمار وكبار الشخصيات بأعلى معايير الأمان السويسري."
+                : "PGR UAE is an internationally accredited physical gold and silver wholesale bullion house and purchase inquiry platform headquartered in Dubai, partnering with elite Swiss and global refineries."}
             </p>
             <div className="flex flex-col gap-2 pt-2 text-[11px]">
               <button 
@@ -115,15 +115,21 @@ export default function Footer({
           {/* Secure Logistic Terms Column */}
           <div className="space-y-4">
             <h4 className="text-xs uppercase tracking-widest text-white font-semibold">
-              {currentLang === "ar" ? "اللوائح والسياسات القانونية" : "Compliance & Security"}
+              {currentLang === "ar" ? "اللوائح والسياسات والامتثال" : "Compliance, Policies & Trust"}
             </h4>
-            <ul className="space-y-2.5 text-[11px]">
-              <li><button onClick={() => onOpenLegalDoc("aml")} className="hover:text-gold-base transition-colors cursor-pointer text-left">{currentLang === "ar" ? "سياسة مكافحة غسيل الأموال" : "AML / KYC Compliance Policy"}</button></li>
-              <li><button onClick={() => onOpenLegalDoc("terms")} className="hover:text-gold-base transition-colors cursor-pointer text-left">{currentLang === "ar" ? "شروط وأحكام التداول" : "Trading Terms & Conditions"}</button></li>
-              <li><button onClick={() => onOpenLegalDoc("privacy")} className="hover:text-gold-base transition-colors cursor-pointer text-left">{currentLang === "ar" ? "سياسة خصوصية البيانات" : "Privacy & Data Directive"}</button></li>
-              <li><button onClick={() => onOpenLegalDoc("shipping")} className="hover:text-gold-base transition-colors cursor-pointer text-left">{currentLang === "ar" ? "سياسة الشحن والتأمين" : "Shipping & Transit Insurance"}</button></li>
-              <li><span className="text-gray-500">{currentLang === "ar" ? "الاعتماد الفني:" : "Assay Standard:"} {currentLang === "ar" ? "مصافي معتمدة دولياً" : "Certified International Refiners"}</span></li>
-            </ul>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-x-2 gap-y-1.5 text-[11px]">
+              <button onClick={() => onOpenLegalDoc("terms")} className="hover:text-gold-base transition-colors cursor-pointer text-left">{currentLang === "ar" ? "شروط الخدمة والأحكام" : "Terms of Service"}</button>
+              <button onClick={() => onOpenLegalDoc("privacy")} className="hover:text-gold-base transition-colors cursor-pointer text-left">{currentLang === "ar" ? "سياسة الخصوصية" : "Privacy Policy"}</button>
+              <button onClick={() => onOpenLegalDoc("aml")} className="hover:text-gold-base transition-colors cursor-pointer text-left">{currentLang === "ar" ? "سياسة الامتثال ومكافحة غسيل الأموال" : "KYC & AML Policy"}</button>
+              <button onClick={() => onOpenLegalDoc("pricing")} className="hover:text-gold-base transition-colors cursor-pointer text-left">{currentLang === "ar" ? "إخلاء مسؤولية الأسعار" : "Pricing Disclaimer"}</button>
+              <button onClick={() => onOpenLegalDoc("refund")} className="hover:text-gold-base transition-colors cursor-pointer text-left">{currentLang === "ar" ? "سياسة الإلغاء والاسترداد" : "Refund & Cancellation"}</button>
+              <button onClick={() => onOpenLegalDoc("delivery")} className="hover:text-gold-base transition-colors cursor-pointer text-left">{currentLang === "ar" ? "سياسة التوصيل والاستلام" : "Delivery & Collection"}</button>
+              <button onClick={() => onOpenLegalDoc("storage")} className="hover:text-gold-base transition-colors cursor-pointer text-left">{currentLang === "ar" ? "شروط التخزين المخصص" : "Allocated Storage Terms"}</button>
+              <button onClick={() => onOpenLegalDoc("sellback")} className="hover:text-gold-base transition-colors cursor-pointer text-left">{currentLang === "ar" ? "سياسة إعادة الشراء" : "Sell-Back Quote Policy"}</button>
+              <button onClick={() => onOpenLegalDoc("risk")} className="hover:text-gold-base transition-colors cursor-pointer text-left">{currentLang === "ar" ? "الإفصاح عن المخاطر" : "Risk Disclosure"}</button>
+              <button onClick={() => onOpenLegalDoc("cookie")} className="hover:text-gold-base transition-colors cursor-pointer text-left">{currentLang === "ar" ? "سياسة ملفات الارتباط" : "Cookie Policy"}</button>
+              <button onClick={() => onOpenLegalDoc("compliance")} className="hover:text-gold-base transition-colors cursor-pointer text-left font-semibold text-[#c5a85c]">{currentLang === "ar" ? "الامتثال والشفافية" : "Compliance & Trust"}</button>
+            </div>
           </div>
 
           {/* Newsletter Column */}
@@ -206,17 +212,32 @@ export default function Footer({
           </div>
         </div>
 
-        {/* Lower Section - Trademarks & Disclaimers */}
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-[10px] text-gray-600">
-          <div>
-            © 2026 PGR UAE Precious Metals (pgruae.com). Licensed by Jebel Ali and Dubai Commodities Regulatory Division. All rights reserved.
+        {/* Lower Section - Regulatory Disclaimer & Trademarks */}
+        <div className="space-y-6 pt-6 border-t border-white/[0.04]">
+          <div className="p-4 bg-white/[0.01] border border-white/[0.03] rounded-sm text-[10px] leading-relaxed text-gray-500 space-y-3">
+            <p>
+              <strong className="text-white">English Compliance Wording:</strong><br />
+              PGR UAE provides indicative precious metals pricing and quote request services for physical bullion inquiries. Prices shown are market references only and may change without notice. Final availability, premiums, VAT/tax treatment, payment, delivery, storage, and settlement terms are confirmed by PGR UAE before any transaction. PGR UAE does not provide financial, investment, tax, or legal advice and does not guarantee market performance.
+            </p>
+            <p className="text-right" style={{ direction: "rtl" }}>
+              <strong className="text-white">الامتثال القانوني (العربية):</strong><br />
+              توفر PGR UAE أسعاراً إرشادية وخدمة طلب عروض أسعار للاستفسارات المتعلقة بالسبائك والمعادن الثمينة الفعلية. الأسعار المعروضة مؤشرات سوقية فقط وقد تتغير دون إشعار. يتم تأكيد التوفر، الهامش، المعاملة الضريبية، الدفع، التسليم، التخزين، وشروط التسوية من قبل PGR UAE قبل أي عملية. لا تقدم PGR UAE نصائح مالية أو استثمارية أو ضريبية أو قانونية ولا تضمن أداء السوق.
+            </p>
           </div>
-          <div className="flex gap-4">
-            <button onClick={() => onOpenLegalDoc("terms")} className="hover:text-gold-base transition-colors cursor-pointer">{currentLang === "ar" ? "الشروط والأحكام" : "Terms & Conditions"}</button>
-            <span>•</span>
-            <button onClick={() => onOpenLegalDoc("privacy")} className="hover:text-gold-base transition-colors cursor-pointer">{currentLang === "ar" ? "سياسة الخصوصية" : "Privacy Circular"}</button>
-            <span>•</span>
-            <span>UAE VAT Law No. 8</span>
+
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-[10px] text-gray-600">
+            <div>
+              © 2026 PGR UAE Precious Metals & Bullion Quote Desk (pgruae.com). Licensed by Jebel Ali and Dubai Commodities Regulatory Division. All rights reserved.
+            </div>
+            <div className="flex gap-4">
+              <button onClick={() => onOpenLegalDoc("terms")} className="hover:text-gold-base transition-colors cursor-pointer">{currentLang === "ar" ? "الشروط والأحكام" : "Terms & Conditions"}</button>
+              <span>•</span>
+              <button onClick={() => onOpenLegalDoc("privacy")} className="hover:text-gold-base transition-colors cursor-pointer">{currentLang === "ar" ? "سياسة الخصوصية" : "Privacy Policy"}</button>
+              <span>•</span>
+              <button onClick={() => onOpenLegalDoc("compliance")} className="hover:text-gold-base transition-colors cursor-pointer">{currentLang === "ar" ? "ديوان الامتثال" : "Compliance Desk"}</button>
+              <span>•</span>
+              <span>UAE VAT Law No. 8</span>
+            </div>
           </div>
         </div>
 

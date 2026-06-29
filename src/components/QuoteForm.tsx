@@ -257,11 +257,96 @@ export default function QuoteForm({ currentLang, prefilledProduct, onClose }: Qu
                     {currentLang === "ar" ? "تفاصيل الطلب الإضافية" : "Additional Specifications"}
                   </label>
                   <textarea
-                    rows={3}
+                    rows={2}
                     value={formData.message}
                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                     className="w-full bg-[#161616] border border-white/[0.04] focus:border-gold-base rounded-sm py-2 px-3 text-white outline-none resize-none"
                   />
+                </div>
+
+                {/* Mandated Compliance & Legal Checkboxes */}
+                <div className="space-y-2.5 p-3.5 bg-black/40 border border-white/[0.03] rounded-sm font-sans text-[10.5px] leading-tight text-gray-400">
+                  <span className="text-[10px] font-mono uppercase text-[#c5a85c] tracking-wider block mb-1">
+                    {currentLang === "ar" ? "موافقة وإقرار الامتثال واللوائح" : "Mandatory Compliance Declarations"}
+                  </span>
+                  
+                  <label className="flex items-start gap-2.5 cursor-pointer hover:text-white transition-colors">
+                    <input
+                      type="checkbox"
+                      required
+                      className="mt-0.5 accent-[#c5a85c] h-3.5 w-3.5 rounded-sm bg-black border-white/20 shrink-0"
+                    />
+                    <span>
+                      {currentLang === "ar" 
+                        ? "أقبل بشروط وأحكام الخدمة لـ PGR UAE." 
+                        : "I accept the Terms of Service."}
+                    </span>
+                  </label>
+
+                  <label className="flex items-start gap-2.5 cursor-pointer hover:text-white transition-colors">
+                    <input
+                      type="checkbox"
+                      required
+                      className="mt-0.5 accent-[#c5a85c] h-3.5 w-3.5 rounded-sm bg-black border-white/20 shrink-0"
+                    />
+                    <span>
+                      {currentLang === "ar" 
+                        ? "أقبل بسياسة الخصوصية وسرية البيانات لـ PGR UAE." 
+                        : "I accept the Privacy Policy."}
+                    </span>
+                  </label>
+
+                  <label className="flex items-start gap-2.5 cursor-pointer hover:text-white transition-colors">
+                    <input
+                      type="checkbox"
+                      required
+                      className="mt-0.5 accent-[#c5a85c] h-3.5 w-3.5 rounded-sm bg-black border-white/20 shrink-0"
+                    />
+                    <span>
+                      {currentLang === "ar" 
+                        ? "أوافق على معالجة البيانات وإجراءات التحقق والامتثال (KYC/AML)." 
+                        : "I consent to KYC/AML processing."}
+                    </span>
+                  </label>
+
+                  <label className="flex items-start gap-2.5 cursor-pointer hover:text-white transition-colors">
+                    <input
+                      type="checkbox"
+                      required
+                      className="mt-0.5 accent-[#c5a85c] h-3.5 w-3.5 rounded-sm bg-black border-white/20 shrink-0"
+                    />
+                    <span>
+                      {currentLang === "ar" 
+                        ? "أفهم أن الأسعار المعروضة إرشادية وتأشيرية فقط حتى تصدر PGR UAE عرض سعر مؤكد نهائي." 
+                        : "I understand prices are indicative until PGR UAE issues a firm quote."}
+                    </span>
+                  </label>
+
+                  <label className="flex items-start gap-2.5 cursor-pointer hover:text-white transition-colors">
+                    <input
+                      type="checkbox"
+                      required
+                      className="mt-0.5 accent-[#c5a85c] h-3.5 w-3.5 rounded-sm bg-black border-white/20 shrink-0"
+                    />
+                    <span>
+                      {currentLang === "ar" 
+                        ? "أفهم أن PGR UAE لا تقدم أي استشارات مالية أو استثمارية أو ضريبية أو قانونية." 
+                        : "I understand PGR UAE does not provide financial, investment, tax, or legal advice."}
+                    </span>
+                  </label>
+
+                  <label className="flex items-start gap-2.5 cursor-pointer hover:text-white transition-colors">
+                    <input
+                      type="checkbox"
+                      required
+                      className="mt-0.5 accent-[#c5a85c] h-3.5 w-3.5 rounded-sm bg-black border-white/20 shrink-0"
+                    />
+                    <span>
+                      {currentLang === "ar" 
+                        ? "أفهم أن PGR UAE قد ترفض أو تلغي أو تعلّق أي طلب، أو تطلب مستندات إضافية لأسباب تتعلق بالامتثال والقوانين المرعية." 
+                        : "I understand PGR UAE may reject, cancel, hold, or request more information for compliance reasons."}
+                    </span>
+                  </label>
                 </div>
 
                 {/* Error Banner */}

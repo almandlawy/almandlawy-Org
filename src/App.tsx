@@ -107,6 +107,32 @@ export default function App() {
     }
   }, []);
 
+  // Pathname routing for compliance & legal policies
+  useEffect(() => {
+    const handleLocation = () => {
+      const path = window.location.pathname;
+      const pathMap: Record<string, string> = {
+        "/terms": "terms",
+        "/privacy-policy": "privacy",
+        "/kyc-aml-policy": "aml",
+        "/pricing-disclaimer": "pricing",
+        "/refund-cancellation-policy": "refund",
+        "/delivery-collection-policy": "delivery",
+        "/allocated-storage-terms": "storage",
+        "/sell-back-policy": "sellback",
+        "/risk-disclosure": "risk",
+        "/cookie-policy": "cookie",
+        "/compliance": "compliance"
+      };
+      if (pathMap[path]) {
+        setActiveLegalDoc(pathMap[path]);
+      }
+    };
+    handleLocation();
+    window.addEventListener("popstate", handleLocation);
+    return () => window.removeEventListener("popstate", handleLocation);
+  }, []);
+
   const handleUserLogin = async (supabaseUser: any) => {
     const email = supabaseUser.email;
     const fullName = supabaseUser.user_metadata?.full_name || supabaseUser.email?.split("@")[0] || "Accredited Investor";
@@ -404,7 +430,24 @@ export default function App() {
         onNavigate={handleScrollToSection}
         onOpenAIChat={() => setIsAIChatOpen(true)}
         onOpenQuote={() => handleOpenQuote()}
-        onOpenLegalDoc={(docId) => setActiveLegalDoc(docId)}
+        onOpenLegalDoc={(docId) => {
+          const rMap: Record<string, string> = {
+            "terms": "/terms",
+            "privacy": "/privacy-policy",
+            "aml": "/kyc-aml-policy",
+            "pricing": "/pricing-disclaimer",
+            "refund": "/refund-cancellation-policy",
+            "delivery": "/delivery-collection-policy",
+            "storage": "/allocated-storage-terms",
+            "sellback": "/sell-back-policy",
+            "risk": "/risk-disclosure",
+            "cookie": "/cookie-policy",
+            "compliance": "/compliance"
+          };
+          const p = rMap[docId] || "/";
+          window.history.pushState(null, "", p);
+          setActiveLegalDoc(docId);
+        }}
         onOpenClientDashboard={() => setIsClientDashboardOpen(true)}
         onOpenAdminPortal={() => setIsAdminPortalOpen(true)}
       />
@@ -484,7 +527,10 @@ export default function App() {
         <LegalOverlayModal
           currentLang={currentLang}
           defaultDoc={activeLegalDoc}
-          onClose={() => setActiveLegalDoc(null)}
+          onClose={() => {
+            window.history.pushState(null, "", "/");
+            setActiveLegalDoc(null);
+          }}
         />
       )}
 

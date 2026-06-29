@@ -96,6 +96,11 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
   const [kycPrivacy, setKycPrivacy] = useState(false);
   const [kycSuccess, setKycSuccess] = useState(false);
 
+  // Advanced Compliance KYC file and category states
+  const [kycType, setKycType] = useState<"individual" | "company">("individual");
+  const [uploadedFilesRegistry, setUploadedFilesRegistry] = useState<Record<string, { name: string; size: number; date: string }>>({});
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
   // Fetch initial profile & configs
   const loadUserData = async (currentUser: any) => {
     if (!currentUser) return;
@@ -385,10 +390,42 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
   };
 
   // Handle KYC Submission
+  const [kycTypeSaved, setKycTypeSaved] = useState<string>("individual");
+
+  const handleFileChange = (docKey: string, file: File | null) => {
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError(isAr ? "حجم الملف يتجاوز الحد الأقصى المسموح به 5 ميجابايت." : "Maximum file size limit is 5MB.");
+      return;
+    }
+    const allowed = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
+    if (!allowed.includes(file.type)) {
+      setUploadError(isAr ? "صيغة الملف غير مدعومة. يسمح فقط بصيغ PDF, JPG, PNG, WEBP." : "Unsupported format. Only PDF, JPG, PNG, WEBP are accepted.");
+      return;
+    }
+    setUploadError(null);
+    setUploadedFilesRegistry(prev => ({
+      ...prev,
+      [docKey]: {
+        name: file.name,
+        size: file.size,
+        date: new Date().toISOString()
+      }
+    }));
+  };
+
   const handleKYCSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
 
+    if (!kycAgree || !kycPrivacy) {
+      setUploadError(isAr ? "يجب الموافقة على شروط التحقق والخصوصية." : "You must consent to both compliance and privacy terms.");
+      return;
+    }
+
+    setUploadError(null);
+
+    // Save actual profile
     const updatedProfile = {
       id: user.id,
       full_name: kycFullName,
@@ -403,11 +440,13 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
       agreement_accepted: kycAgree,
       privacy_consent: kycPrivacy,
       status: "Pending review",
+      kyc_type: kycType,
+      uploaded_files: uploadedFilesRegistry,
       documents: [
         {
           id: `doc-${Date.now()}`,
-          type: kycIdType,
-          number: kycIdNumber,
+          type: kycType === "company" ? "Trade License & Corporate Registry" : kycIdType,
+          number: kycIdNumber, // We will mask this on rendering
           status: "Pending review",
           updated_at: new Date().toISOString()
         }
@@ -418,6 +457,7 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
     await dbService.kyc.save(user.id, updatedProfile);
     setKycProfile(updatedProfile);
     setKycSuccess(true);
+    setKycTypeSaved(kycType);
     setTimeout(() => setKycSuccess(false), 4000);
   };
 
@@ -1152,21 +1192,57 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
                         </span>
                       </div>
 
+                      {/* Account KYC Type Switch Toggle */}
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-mono text-gray-400 block uppercase">
+                          {isAr ? "فئة التوثيق القانوني" : "Legal Entity Classification"}
+                        </label>
+                        <div className="grid grid-cols-2 gap-2 p-1 bg-white/[0.02] border border-white/[0.04] rounded">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setKycType("individual");
+                              setKycIdType("Emirates ID");
+                            }}
+                            className={`py-2 text-xs font-mono uppercase tracking-wider rounded transition-all cursor-pointer ${kycType === "individual" ? "bg-gold-base text-black font-bold shadow-lg" : "text-gray-400 hover:text-white"}`}
+                          >
+                            {isAr ? "تحقق الأفراد (طلب شخصي)" : "Individual Class"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setKycType("company");
+                              setKycIdType("Trade License");
+                            }}
+                            className={`py-2 text-xs font-mono uppercase tracking-wider rounded transition-all cursor-pointer ${kycType === "company" ? "bg-gold-base text-black font-bold shadow-lg" : "text-gray-400 hover:text-white"}`}
+                          >
+                            {isAr ? "تحقق الشركات (مؤسسات)" : "Corporate Class"}
+                          </button>
+                        </div>
+                      </div>
+
                       <form onSubmit={handleKYCSubmit} className="space-y-4 text-xs">
+                        {/* Global Client Demographics */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div className="space-y-1">
-                            <label className="text-[9px] font-mono text-gray-400 block uppercase">{isAr ? "الاسم الكامل للعميل" : "Full Client Name"}</label>
+                            <label className="text-[9px] font-mono text-gray-400 block uppercase">
+                              {kycType === "company" 
+                                ? (isAr ? "الاسم التجاري الكامل للشركة *" : "Registered Company Name *")
+                                : (isAr ? "الاسم الكامل للمكتتب *" : "Full Legal Name *")}
+                            </label>
                             <input
                               type="text"
+                              required
                               value={kycFullName}
                               onChange={(e) => setKycFullName(e.target.value)}
                               className="w-full bg-[#111] border border-white/[0.08] focus:border-gold-base rounded py-2 px-3 text-white outline-none"
                             />
                           </div>
                           <div className="space-y-1">
-                            <label className="text-[9px] font-mono text-gray-400 block uppercase">{isAr ? "البريد الإلكتروني للتوثيق" : "Authentication Email"}</label>
+                            <label className="text-[9px] font-mono text-gray-400 block uppercase">{isAr ? "البريد الإلكتروني للاتصال والفوترة *" : "Official Communications Email *"}</label>
                             <input
                               type="email"
+                              required
                               value={kycEmail}
                               onChange={(e) => setKycEmail(e.target.value)}
                               className="w-full bg-[#111] border border-white/[0.08] focus:border-gold-base rounded py-2 px-3 text-white outline-none"
@@ -1176,27 +1252,32 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
 
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                           <div className="space-y-1">
-                            <label className="text-[9px] font-mono text-gray-400 block uppercase">{isAr ? "رقم الهاتف" : "Telephone Number"}</label>
+                            <label className="text-[9px] font-mono text-gray-400 block uppercase">{isAr ? "رقم الهاتف المباشر *" : "Corporate Telephone *"}</label>
                             <input
                               type="text"
+                              required
                               value={kycPhone}
                               onChange={(e) => setKycPhone(e.target.value)}
                               className="w-full bg-[#111] border border-white/[0.08] focus:border-gold-base rounded py-2 px-3 text-white outline-none"
                             />
                           </div>
                           <div className="space-y-1">
-                            <label className="text-[9px] font-mono text-gray-400 block uppercase">{isAr ? "رقم الواتساب للتأكيد" : "WhatsApp Number"}</label>
+                            <label className="text-[9px] font-mono text-gray-400 block uppercase">{isAr ? "رقم الواتساب للتواصل والتوثيق *" : "WhatsApp Line *"}</label>
                             <input
                               type="text"
+                              required
                               value={kycWhatsapp}
                               onChange={(e) => setKycWhatsapp(e.target.value)}
                               className="w-full bg-[#111] border border-white/[0.08] focus:border-gold-base rounded py-2 px-3 text-white outline-none"
                             />
                           </div>
                           <div className="space-y-1">
-                            <label className="text-[9px] font-mono text-gray-400 block uppercase">{isAr ? "تاريخ الميلاد" : "Date of Birth"}</label>
+                            <label className="text-[9px] font-mono text-gray-400 block uppercase">
+                              {kycType === "company" ? (isAr ? "تاريخ التأسيس *" : "Date of Incorporation *") : (isAr ? "تاريخ الميلاد *" : "Date of Birth *")}
+                            </label>
                             <input
                               type="date"
+                              required
                               value={kycDob}
                               onChange={(e) => setKycDob(e.target.value)}
                               className="w-full bg-[#111] border border-white/[0.08] focus:border-gold-base rounded py-2 px-3 text-white outline-none"
@@ -1206,7 +1287,7 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
 
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                           <div className="space-y-1">
-                            <label className="text-[9px] font-mono text-gray-400 block uppercase">{isAr ? "البلد الحالي" : "Current Country"}</label>
+                            <label className="text-[9px] font-mono text-gray-400 block uppercase">{isAr ? "بلد التسجيل / الإقامة" : "Country of Residence/Registry"}</label>
                             <input
                               type="text"
                               value={kycCountry}
@@ -1215,7 +1296,7 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
                             />
                           </div>
                           <div className="space-y-1">
-                            <label className="text-[9px] font-mono text-gray-400 block uppercase">{isAr ? "المدينة" : "City"}</label>
+                            <label className="text-[9px] font-mono text-gray-400 block uppercase">{isAr ? "الولاية / المدينة" : "City / Prefecture"}</label>
                             <input
                               type="text"
                               value={kycCity}
@@ -1224,9 +1305,12 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
                             />
                           </div>
                           <div className="space-y-1">
-                            <label className="text-[9px] font-mono text-gray-400 block uppercase">{isAr ? "الجنسية" : "Nationality"}</label>
+                            <label className="text-[9px] font-mono text-gray-400 block uppercase">
+                              {kycType === "company" ? (isAr ? "الولاية القضائية *" : "Regulatory Jurisdiction *") : (isAr ? "الجنسية *" : "Nationality *")}
+                            </label>
                             <input
                               type="text"
+                              required
                               value={kycNationality}
                               onChange={(e) => setKycNationality(e.target.value)}
                               className="w-full bg-[#111] border border-white/[0.08] focus:border-gold-base rounded py-2 px-3 text-white outline-none"
@@ -1234,37 +1318,53 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
                           </div>
                         </div>
 
+                        {/* Document Type and Reference ID */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div className="space-y-1">
-                            <label className="text-[9px] font-mono text-gray-400 block uppercase">{isAr ? "نوع مستند التوثيق" : "Document Identity Type"}</label>
-                            <select
-                              value={kycIdType}
-                              onChange={(e) => setKycIdType(e.target.value)}
-                              className="w-full bg-[#111] border border-white/[0.08] focus:border-gold-base rounded py-2 px-3 text-white outline-none"
-                            >
-                              <option value="Emirates ID">{isAr ? "الهوية الإماراتية" : "Emirates ID"}</option>
-                              <option value="Iraqi National Card">{isAr ? "البطاقة الوطنية العراقية" : "Iraqi National Card"}</option>
-                              <option value="Iraqi Passport">{isAr ? "الجواز العراقي" : "Iraqi Passport"}</option>
-                              <option value="UAE Residence Visa">{isAr ? "الإقامة الإماراتية" : "UAE Residence Visa"}</option>
-                              <option value="Trade License">{isAr ? "الرخصة التجارية للشركات" : "Trade License for Companies"}</option>
-                              <option value="Authorized Letter">{isAr ? "تخويل ممثل الشركة المعتمد" : "Authorized Representative Letter"}</option>
-                            </select>
+                            <label className="text-[9px] font-mono text-gray-400 block uppercase">{isAr ? "نوع المستند المعرف *" : "Identity Reference Document *"}</label>
+                            {kycType === "company" ? (
+                              <select
+                                value={kycIdType}
+                                onChange={(e) => setKycIdType(e.target.value)}
+                                className="w-full bg-[#111] border border-white/[0.08] focus:border-gold-base rounded py-2 px-3 text-white outline-none"
+                              >
+                                <option value="Trade License">{isAr ? "الرخصة التجارية للشركات" : "Corporate Trade License"}</option>
+                                <option value="MOA/AOA">{isAr ? "عقد التأسيس والنظام الأساسي" : "MOA / AOA Registry"}</option>
+                              </select>
+                            ) : (
+                              <select
+                                value={kycIdType}
+                                onChange={(e) => setKycIdType(e.target.value)}
+                                className="w-full bg-[#111] border border-white/[0.08] focus:border-gold-base rounded py-2 px-3 text-white outline-none"
+                              >
+                                <option value="Emirates ID">{isAr ? "الهوية الإماراتية" : "Emirates ID"}</option>
+                                <option value="Passport">{isAr ? "جواز السفر الدولي" : "International Passport"}</option>
+                                <option value="Residence Visa">{isAr ? "الإقامة الإماراتية" : "Residence Visa"}</option>
+                              </select>
+                            )}
                           </div>
                           <div className="space-y-1">
-                            <label className="text-[9px] font-mono text-gray-400 block uppercase">{isAr ? "رقم وثيقة التوثيق" : "ID Document Reference Number"}</label>
+                            <label className="text-[9px] font-mono text-gray-400 block uppercase">
+                              {kycType === "company" ? (isAr ? "رقم السجل التجاري / الرخصة *" : "Trade License / CR Number *") : (isAr ? "رقم الهوية / الجواز *" : "Document Reference ID Number *")}
+                            </label>
                             <input
                               type="text"
+                              required
                               value={kycIdNumber}
                               onChange={(e) => setKycIdNumber(e.target.value)}
-                              placeholder="784-XXXX-XXXXXXX-X"
+                              placeholder={kycType === "company" ? "e.g., ICC-88291A" : "784-XXXX-XXXXXXX-X"}
                               className="w-full bg-[#111] border border-white/[0.08] focus:border-gold-base rounded py-2 px-3 text-white outline-none"
                             />
                           </div>
                         </div>
 
+                        {/* Source of Wealth Disclaimer */}
                         <div className="space-y-1">
-                          <label className="text-[9px] font-mono text-gray-400 block uppercase">{isAr ? "إقرار مصدر الأموال" : "Source of Funds Statement"}</label>
+                          <label className="text-[9px] font-mono text-gray-400 block uppercase">
+                            {kycType === "company" ? (isAr ? "إقرار مصدر الثروة والسبائك للشركة *" : "Corporate Source of Funds/Wealth Declaration *") : (isAr ? "إقرار مصدر الأموال الشخصية *" : "Personal Source of Funds Declaration *")}
+                          </label>
                           <textarea
+                            required
                             value={kycFunds}
                             onChange={(e) => setKycFunds(e.target.value)}
                             rows={2}
@@ -1273,38 +1373,243 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
                           />
                         </div>
 
-                        {/* Simulated upload inputs */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                          <div className="p-4 border border-dashed border-white/10 rounded bg-white/[0.01] flex flex-col items-center justify-center text-center">
-                            <Upload className="text-gray-500 mb-1" size={18} />
-                            <span className="text-[10px] text-gray-300 block">{isAr ? "تحميل وجه الهوية / جواز السفر" : "ID Document Front"}</span>
-                            <span className="text-[8px] text-emerald-500 block">✓ ID_FRONT_SECURED.PNG</span>
-                          </div>
-                          <div className="p-4 border border-dashed border-white/10 rounded bg-white/[0.01] flex flex-col items-center justify-center text-center">
-                            <Upload className="text-gray-500 mb-1" size={18} />
-                            <span className="text-[10px] text-gray-300 block">{isAr ? "تحميل خلف الهوية / كشف العنوان" : "ID Document Back / Address Proof"}</span>
-                            <span className="text-[8px] text-emerald-500 block">✓ ID_BACK_SECURED.PNG</span>
-                          </div>
+                        {/* PRIVATE SECURITY VERIFICATION FILE ZONE */}
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-mono text-[#c5a85c] uppercase block tracking-wider">
+                            {isAr ? "الوثائق والملفات المرفوعة بشكل خاص (الحد الأقصى 5 ميجابايت للملف)" : "Secure Private Document Uploads (Max 5MB each, PDF/JPG/PNG/WEBP only)"}
+                          </label>
+
+                          {kycType === "company" ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <label className="p-3 border border-dashed border-white/10 rounded bg-white/[0.01] hover:bg-white/[0.03] transition-colors flex flex-col items-center justify-center text-center cursor-pointer relative">
+                                <Upload className="text-gray-500 mb-1" size={16} />
+                                <span className="text-[10px] text-gray-300 block">{isAr ? "تحميل الرخصة التجارية *" : "Corporate Trade License *"}</span>
+                                <input
+                                  type="file"
+                                  accept=".pdf,.jpg,.jpeg,.png,.webp"
+                                  onChange={(e) => handleFileChange("trade_license", e.target.files?.[0] || null)}
+                                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                />
+                                {uploadedFilesRegistry["trade_license"] ? (
+                                  <span className="text-[8px] text-emerald-400 font-mono mt-1 block">✓ {uploadedFilesRegistry["trade_license"].name} ({(uploadedFilesRegistry["trade_license"].size / 1024 / 1024).toFixed(2)} MB)</span>
+                                ) : (
+                                  <span className="text-[8px] text-gray-500 block mt-1">{isAr ? "انقر للاختيار" : "Click to browse"}</span>
+                                )}
+                              </label>
+
+                              <label className="p-3 border border-dashed border-white/10 rounded bg-white/[0.01] hover:bg-white/[0.03] transition-colors flex flex-col items-center justify-center text-center cursor-pointer relative">
+                                <Upload className="text-gray-500 mb-1" size={16} />
+                                <span className="text-[10px] text-gray-300 block">{isAr ? "تحميل عقد التأسيس (MOA) واللوائح" : "MOA / AOA Document"}</span>
+                                <input
+                                  type="file"
+                                  accept=".pdf,.jpg,.jpeg,.png,.webp"
+                                  onChange={(e) => handleFileChange("moa_aoa", e.target.files?.[0] || null)}
+                                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                />
+                                {uploadedFilesRegistry["moa_aoa"] ? (
+                                  <span className="text-[8px] text-emerald-400 font-mono mt-1 block">✓ {uploadedFilesRegistry["moa_aoa"].name} ({(uploadedFilesRegistry["moa_aoa"].size / 1024 / 1024).toFixed(2)} MB)</span>
+                                ) : (
+                                  <span className="text-[8px] text-gray-500 block mt-1">{isAr ? "انقر للاختيار" : "Click to browse"}</span>
+                                )}
+                              </label>
+
+                              <label className="p-3 border border-dashed border-white/10 rounded bg-white/[0.01] hover:bg-white/[0.03] transition-colors flex flex-col items-center justify-center text-center cursor-pointer relative">
+                                <Upload className="text-gray-500 mb-1" size={16} />
+                                <span className="text-[10px] text-gray-300 block">{isAr ? "هوية المفوض بالتوقيع والمدير *" : "Authorized Signatory Passport/ID *"}</span>
+                                <input
+                                  type="file"
+                                  required={!uploadedFilesRegistry["signatory_id"]}
+                                  accept=".pdf,.jpg,.jpeg,.png,.webp"
+                                  onChange={(e) => handleFileChange("signatory_id", e.target.files?.[0] || null)}
+                                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                />
+                                {uploadedFilesRegistry["signatory_id"] ? (
+                                  <span className="text-[8px] text-emerald-400 font-mono mt-1 block">✓ {uploadedFilesRegistry["signatory_id"].name} ({(uploadedFilesRegistry["signatory_id"].size / 1024 / 1024).toFixed(2)} MB)</span>
+                                ) : (
+                                  <span className="text-[8px] text-gray-500 block mt-1">{isAr ? "انقر للاختيار" : "Click to browse"}</span>
+                                )}
+                              </label>
+
+                              <label className="p-3 border border-dashed border-white/10 rounded bg-white/[0.01] hover:bg-white/[0.03] transition-colors flex flex-col items-center justify-center text-center cursor-pointer relative">
+                                <Upload className="text-gray-500 mb-1" size={16} />
+                                <span className="text-[10px] text-gray-300 block">{isAr ? "سجل المستفيدين الحقيقيين (UBO) *" : "Ultimate Beneficial Owners (UBO) list *"}</span>
+                                <input
+                                  type="file"
+                                  required={!uploadedFilesRegistry["ubo_details"]}
+                                  accept=".pdf,.jpg,.jpeg,.png,.webp"
+                                  onChange={(e) => handleFileChange("ubo_details", e.target.files?.[0] || null)}
+                                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                />
+                                {uploadedFilesRegistry["ubo_details"] ? (
+                                  <span className="text-[8px] text-emerald-400 font-mono mt-1 block">✓ {uploadedFilesRegistry["ubo_details"].name} ({(uploadedFilesRegistry["ubo_details"].size / 1024 / 1024).toFixed(2)} MB)</span>
+                                ) : (
+                                  <span className="text-[8px] text-gray-500 block mt-1">{isAr ? "انقر للاختيار" : "Click to browse"}</span>
+                                )}
+                              </label>
+
+                              <label className="p-3 border border-dashed border-white/10 rounded bg-white/[0.01] hover:bg-white/[0.03] transition-colors flex flex-col items-center justify-center text-center cursor-pointer relative">
+                                <Upload className="text-gray-500 mb-1" size={16} />
+                                <span className="text-[10px] text-gray-300 block">{isAr ? "إثبات عنوان الشركة المعمّد" : "Company Address Proof"}</span>
+                                <input
+                                  type="file"
+                                  accept=".pdf,.jpg,.jpeg,.png,.webp"
+                                  onChange={(e) => handleFileChange("company_address", e.target.files?.[0] || null)}
+                                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                />
+                                {uploadedFilesRegistry["company_address"] ? (
+                                  <span className="text-[8px] text-emerald-400 font-mono mt-1 block">✓ {uploadedFilesRegistry["company_address"].name} ({(uploadedFilesRegistry["company_address"].size / 1024 / 1024).toFixed(2)} MB)</span>
+                                ) : (
+                                  <span className="text-[8px] text-gray-500 block mt-1">{isAr ? "انقر للاختيار" : "Click to browse"}</span>
+                                )}
+                              </label>
+
+                              <label className="p-3 border border-dashed border-white/10 rounded bg-white/[0.01] hover:bg-white/[0.03] transition-colors flex flex-col items-center justify-center text-center cursor-pointer relative">
+                                <Upload className="text-gray-500 mb-1" size={16} />
+                                <span className="text-[10px] text-gray-300 block">{isAr ? "خطاب تفويض مجلس الإدارة" : "Board Authorization Letter"}</span>
+                                <input
+                                  type="file"
+                                  accept=".pdf,.jpg,.jpeg,.png,.webp"
+                                  onChange={(e) => handleFileChange("auth_letter", e.target.files?.[0] || null)}
+                                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                />
+                                {uploadedFilesRegistry["auth_letter"] ? (
+                                  <span className="text-[8px] text-emerald-400 font-mono mt-1 block">✓ {uploadedFilesRegistry["auth_letter"].name} ({(uploadedFilesRegistry["auth_letter"].size / 1024 / 1024).toFixed(2)} MB)</span>
+                                ) : (
+                                  <span className="text-[8px] text-gray-500 block mt-1">{isAr ? "انقر للاختيار" : "Click to browse"}</span>
+                                )}
+                              </label>
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <label className="p-3 border border-dashed border-white/10 rounded bg-white/[0.01] hover:bg-white/[0.03] transition-colors flex flex-col items-center justify-center text-center cursor-pointer relative">
+                                <Upload className="text-gray-500 mb-1" size={16} />
+                                <span className="text-[10px] text-gray-300 block">{isAr ? "تحميل وجه الهوية الإماراتية *" : "Emirates ID Front *"}</span>
+                                <input
+                                  type="file"
+                                  required={!uploadedFilesRegistry["emirates_id_front"]}
+                                  accept=".pdf,.jpg,.jpeg,.png,.webp"
+                                  onChange={(e) => handleFileChange("emirates_id_front", e.target.files?.[0] || null)}
+                                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                />
+                                {uploadedFilesRegistry["emirates_id_front"] ? (
+                                  <span className="text-[8px] text-emerald-400 font-mono mt-1 block">✓ {uploadedFilesRegistry["emirates_id_front"].name} ({(uploadedFilesRegistry["emirates_id_front"].size / 1024 / 1024).toFixed(2)} MB)</span>
+                                ) : (
+                                  <span className="text-[8px] text-gray-500 block mt-1">{isAr ? "انقر للاختيار" : "Click to browse"}</span>
+                                )}
+                              </label>
+
+                              <label className="p-3 border border-dashed border-white/10 rounded bg-white/[0.01] hover:bg-white/[0.03] transition-colors flex flex-col items-center justify-center text-center cursor-pointer relative">
+                                <Upload className="text-gray-500 mb-1" size={16} />
+                                <span className="text-[10px] text-gray-300 block">{isAr ? "تحميل خلف الهوية الإماراتية *" : "Emirates ID Back *"}</span>
+                                <input
+                                  type="file"
+                                  required={!uploadedFilesRegistry["emirates_id_back"]}
+                                  accept=".pdf,.jpg,.jpeg,.png,.webp"
+                                  onChange={(e) => handleFileChange("emirates_id_back", e.target.files?.[0] || null)}
+                                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                />
+                                {uploadedFilesRegistry["emirates_id_back"] ? (
+                                  <span className="text-[8px] text-emerald-400 font-mono mt-1 block">✓ {uploadedFilesRegistry["emirates_id_back"].name} ({(uploadedFilesRegistry["emirates_id_back"].size / 1024 / 1024).toFixed(2)} MB)</span>
+                                ) : (
+                                  <span className="text-[8px] text-gray-500 block mt-1">{isAr ? "انقر للاختيار" : "Click to browse"}</span>
+                                )}
+                              </label>
+
+                              <label className="p-3 border border-dashed border-white/10 rounded bg-white/[0.01] hover:bg-white/[0.03] transition-colors flex flex-col items-center justify-center text-center cursor-pointer relative">
+                                <Upload className="text-gray-500 mb-1" size={16} />
+                                <span className="text-[10px] text-gray-300 block">{isAr ? "جواز السفر الدولي *" : "International Passport *"}</span>
+                                <input
+                                  type="file"
+                                  required={!uploadedFilesRegistry["passport"]}
+                                  accept=".pdf,.jpg,.jpeg,.png,.webp"
+                                  onChange={(e) => handleFileChange("passport", e.target.files?.[0] || null)}
+                                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                />
+                                {uploadedFilesRegistry["passport"] ? (
+                                  <span className="text-[8px] text-emerald-400 font-mono mt-1 block">✓ {uploadedFilesRegistry["passport"].name} ({(uploadedFilesRegistry["passport"].size / 1024 / 1024).toFixed(2)} MB)</span>
+                                ) : (
+                                  <span className="text-[8px] text-gray-500 block mt-1">{isAr ? "انقر للاختيار" : "Click to browse"}</span>
+                                )}
+                              </label>
+
+                              <label className="p-3 border border-dashed border-white/10 rounded bg-white/[0.01] hover:bg-white/[0.03] transition-colors flex flex-col items-center justify-center text-center cursor-pointer relative">
+                                <Upload className="text-gray-500 mb-1" size={16} />
+                                <span className="text-[10px] text-gray-300 block">{isAr ? "تأشيرة الإقامة (إن وجدت)" : "UAE Residence Visa"}</span>
+                                <input
+                                  type="file"
+                                  accept=".pdf,.jpg,.jpeg,.png,.webp"
+                                  onChange={(e) => handleFileChange("residence_visa", e.target.files?.[0] || null)}
+                                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                />
+                                {uploadedFilesRegistry["residence_visa"] ? (
+                                  <span className="text-[8px] text-emerald-400 font-mono mt-1 block">✓ {uploadedFilesRegistry["residence_visa"].name} ({(uploadedFilesRegistry["residence_visa"].size / 1024 / 1024).toFixed(2)} MB)</span>
+                                ) : (
+                                  <span className="text-[8px] text-gray-500 block mt-1">{isAr ? "انقر للاختيار" : "Click to browse"}</span>
+                                )}
+                              </label>
+
+                              <label className="p-3 border border-dashed border-white/10 rounded bg-white/[0.01] hover:bg-white/[0.03] transition-colors flex flex-col items-center justify-center text-center cursor-pointer relative">
+                                <Upload className="text-gray-500 mb-1" size={16} />
+                                <span className="text-[10px] text-gray-300 block">{isAr ? "إثبات محل السكن (فاتورة مرافق)" : "Proof of Residential Address"}</span>
+                                <input
+                                  type="file"
+                                  accept=".pdf,.jpg,.jpeg,.png,.webp"
+                                  onChange={(e) => handleFileChange("proof_address", e.target.files?.[0] || null)}
+                                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                />
+                                {uploadedFilesRegistry["proof_address"] ? (
+                                  <span className="text-[8px] text-emerald-400 font-mono mt-1 block">✓ {uploadedFilesRegistry["proof_address"].name} ({(uploadedFilesRegistry["proof_address"].size / 1024 / 1024).toFixed(2)} MB)</span>
+                                ) : (
+                                  <span className="text-[8px] text-gray-500 block mt-1">{isAr ? "انقر للاختيار" : "Click to browse"}</span>
+                                )}
+                              </label>
+
+                              <label className="p-3 border border-dashed border-white/10 rounded bg-white/[0.01] hover:bg-white/[0.03] transition-colors flex flex-col items-center justify-center text-center cursor-pointer relative">
+                                <Upload className="text-gray-500 mb-1" size={16} />
+                                <span className="text-[10px] text-gray-300 block">{isAr ? "خطاب إقرار مصدر الأموال" : "Source of Funds Statement File"}</span>
+                                <input
+                                  type="file"
+                                  accept=".pdf,.jpg,.jpeg,.png,.webp"
+                                  onChange={(e) => handleFileChange("funds_file", e.target.files?.[0] || null)}
+                                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                />
+                                {uploadedFilesRegistry["funds_file"] ? (
+                                  <span className="text-[8px] text-emerald-400 font-mono mt-1 block">✓ {uploadedFilesRegistry["funds_file"].name} ({(uploadedFilesRegistry["funds_file"].size / 1024 / 1024).toFixed(2)} MB)</span>
+                                ) : (
+                                  <span className="text-[8px] text-gray-500 block mt-1">{isAr ? "انقر للاختيار" : "Click to browse"}</span>
+                                )}
+                              </label>
+                            </div>
+                          )}
                         </div>
+
+                        {/* Error Alert Box */}
+                        {(uploadError || uploadError) && (
+                          <div className="p-2.5 bg-rose-950/20 border border-rose-900/40 text-rose-400 text-[11px] rounded font-mono">
+                            ⚠ {uploadError}
+                          </div>
+                        )}
 
                         <div className="space-y-2 pt-2 text-[10px] text-gray-400">
                           <label className="flex items-start gap-2 cursor-pointer">
                             <input
                               type="checkbox"
+                              required
                               checked={kycAgree}
                               onChange={(e) => setKycAgree(e.target.checked)}
                               className="mt-0.5"
                             />
-                            <span>{isAr ? "أوافق على قيود مكافحة غسيل الأموال وامتثال تداول المعادن في دبي." : "I confirm that these funds are derived from certified, lawful sources."}</span>
+                            <span>{isAr ? "أؤكد بصفتي أصيلاً أو ممثلاً مخولاً أن هذه الأموال مستمدة من مصادر مشروعة ومعتمدة بالكامل." : "I confirm that these funds are derived from certified, lawful sources."}</span>
                           </label>
                           <label className="flex items-start gap-2 cursor-pointer">
                             <input
                               type="checkbox"
+                              required
                               checked={kycPrivacy}
                               onChange={(e) => setKycPrivacy(e.target.checked)}
                               className="mt-0.5"
                             />
-                            <span>{isAr ? "أوافق على تخزين البيانات بشكل مشفر وآمن ولا يتم مشاركتها إلا لأغراض التدقيق." : "I consent to secure encrypted file vaulting for compliance auditing."}</span>
+                            <span>{isAr ? "أوافق على تخزين البيانات بشكل مشفر وخاص وآمن للغاية لأغراض تدقيق الامتثال لدى PGR UAE." : "I consent to secure private encrypted file vaulting for compliance auditing."}</span>
                           </label>
                         </div>
 

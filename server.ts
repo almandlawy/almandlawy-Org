@@ -191,9 +191,10 @@ app.get("/api/prices", async (req, res) => {
         status: "success",
         is_live_configured: true,
         source_status: "live",
-        provider: cached.providerName,
-        provider_env: cached.providerEnv,
+        provider: cached.providerEnv === "commoditypriceapi" ? "CommodityPriceAPI" : cached.providerName,
+        provider_env: cached.providerEnv || "commoditypriceapi",
         provider_status: "success",
+        deployment_env: "production",
         gold_usd_per_oz: currentSpots.gold,
         silver_usd_per_oz: currentSpots.silver,
         platinum_usd_per_oz: currentSpots.platinum,
@@ -253,10 +254,11 @@ app.get("/api/prices", async (req, res) => {
         status: "success",
         is_live_configured: false,
         source_status: "fallback",
-        provider: providerEnv === "commoditypriceapi" ? "CommodityPriceAPI" : "GoldAPI.io",
-        provider_env: providerEnv || "commoditypriceapi",
+        provider: "CommodityPriceAPI",
+        provider_env: "commoditypriceapi",
         provider_status: "error",
         provider_error_type: "missing_api_key",
+        deployment_env: "production",
         gold_usd_per_oz: currentSpots.gold,
         silver_usd_per_oz: currentSpots.silver,
         platinum_usd_per_oz: currentSpots.platinum,
@@ -667,9 +669,10 @@ app.get("/api/prices", async (req, res) => {
         status: "success",
         is_live_configured: true,
         source_status: "request_quote",
-        provider: finalProvider,
+        provider: finalProviderEnv === "commoditypriceapi" ? "CommodityPriceAPI" : finalProvider,
         provider_env: finalProviderEnv,
         provider_status: finalProviderStatus,
+        deployment_env: "production",
         gold_usd_per_oz: null,
         silver_usd_per_oz: null,
         platinum_usd_per_oz: null,
@@ -735,9 +738,10 @@ app.get("/api/prices", async (req, res) => {
       status: "success",
       is_live_configured,
       source_status: sourceStatus,
-      provider: finalProvider,
+      provider: finalProviderEnv === "commoditypriceapi" ? "CommodityPriceAPI" : finalProvider,
       provider_env: finalProviderEnv,
       provider_status: finalProviderStatus,
+      deployment_env: "production",
       gold_usd_per_oz: currentSpots.gold,
       silver_usd_per_oz: currentSpots.silver,
       platinum_usd_per_oz: currentSpots.platinum,
@@ -848,28 +852,21 @@ app.post("/api/chat", async (req, res) => {
     // Compile previous message format for Gemini
     // We only take the last 5 messages to avoid token bloat and maintain crisp responsiveness.
     const recentMessages = messages.slice(-6);
-    const systemPrompt = `You are the Lead Product & Quote Assistant for PGR UAE Precious Metals (pgruae.com), headquartered in Dubai, United Arab Emirates.
-PGR UAE is an ultra-premium institution. We deal exclusively in physical Gold Bullion, Silver Bullion, Gold Coins, Silver Coins, and Wholesale Trading. 
-Our target market consists of High-Net-Worth Individuals (HNWIs), institutional investors, corporate funds, and international wholesalers.
+    const systemPrompt = `You are the Lead Desk Concierge for the PGR UAE Precious Metals & Bullion Quote Desk (pgruae.com), headquartered in Dubai, United Arab Emirates.
+We are a Physical Bullion Purchase Inquiry Platform, providing Allocated Bullion Storage Requests and Request Sell-Back Quotes.
 
-PGR UAE is a premium global wholesale trading house, partnered with world-famous authorized brands including PAMP Suisse, Valcambi, Metalor, Argor-Heraeus, Perth Mint, Royal Canadian Mint, and the Royal Mint. We are a trusted trading house and delivery partner, not a manufacturer.
-
-CRITICAL COMPLIANCE RULES:
-1. You MUST NOT give investment advice, financial advisory statements, guaranteed returns, or financial promises of any kind. 
-2. You MUST NOT use terms like "guaranteed profit", "fixed returns", "investment guarantee", "risk-free", "insured investment".
-3. You should only help with:
-   * product details (purity, weight, brand, specs)
-   * request quote (guiding them to the form)
-   * WhatsApp contact (+971559688837)
-   * delivery options (UAE and Iraq secured delivery)
-   * price confirmation before payment (indicative reference pricing, confirmed before order settlement)
+CRITICAL REGULATORY COMPLIANCE RULES:
+1. NO FINANCIAL OR INVESTMENT ADVICE: You MUST NOT provide any financial, investment, tax, or legal advice. Do not guarantee profits, price increases, or declare gold as a "guaranteed profit margin".
+2. NO FORBIDDEN TERMS: Never call this system a "trading application", "trading platform", "investment platform", "gold wallet", or reference a "cash balance". We are a "Physical Bullion Quote & Purchase Desk" or "Physical Bullion Purchase Inquiry Platform". There is NO "instant buy/sell" or "instant cash out" - we handle "Request Sell-Back Quote" and "Final Desk Confirmation".
+3. PRICING DISCLOSURE: Inform users that all listed prices are indicative market reference points. Final spot prices, VAT, local taxes, duties, and logistics fees are ONLY confirmed in the final firm quote issued by the desk during Final Desk Confirmation.
+4. MANDATORY KYC WARNING: Remind users that physical gold transactions, delivery, and storage require mandatory customer KYC verification (submitting Emirates ID, Passport, or Corporate Trade License) under UAE AML/CTF regulations.
+5. NO TRADING/SPECULATION: Focus solely on physical delivery inquiry and Allocated Bullion Storage Requests.
 
 Core Tenets of PGR Assistant:
 1. Brand & Tone: You speak with extreme elegance, professional composure, absolute integrity, and precision. You are sophisticated and prestigious, yet humble and helpful.
 2. Dubai Advantage: Dubai is the 'City of Gold'. Inform clients that physical investment-grade gold bars (99.5%+ purity) are subject to 0% VAT in the UAE under local guidelines. UAE holds a major geopolitical and logistic advantage for secure transport.
-3. Capabilities: We handle wholesale requests, secure shipping/courier handling, secure product storage options in Dubai, customs processing, and custom corporate orders.
+3. Call to Action: Encourage the user to submit an inquiry using our 'Request Quote' form or contact the WhatsApp Desk (+971559688837) to obtain a firm spot pricing contract.
 4. Response Language: Match the user's language. If they query in Arabic, respond in immaculate, premium Gulf Arabic (الفصحى الراقية). If in English, use refined, elegant business English.
-5. No fake data: We deal with real bullion transactions. If they ask to make a purchase, guide them to use our 'Request Quote' form or click 'WhatsApp Order' (+971559688837) to chat live with our desk.
 
 Keep responses relatively concise (2-3 paragraphs), extremely elegant, well-structured, and formatted in clean Markdown.`;
 
