@@ -13,9 +13,11 @@ const ERROR_MSG = {
   ar: `تعذر إرسال طلبك حالياً. يرجى التواصل مع PGR UAE عبر واتساب: ${WHATSAPP}`,
 };
 
-function getSupabase() {
+function getSupabase(): ReturnType<typeof createClient> | null {
   const url = process.env.VITE_SUPABASE_URL || "";
-  const key = process.env.VITE_SUPABASE_ANON_KEY || "";
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+  const anonKey = process.env.VITE_SUPABASE_ANON_KEY || "";
+  const key = serviceKey || anonKey;
   if (!url || !key || url.includes("placeholder") || key.length < 10) return null;
   if (!url.startsWith("http://") && !url.startsWith("https://")) return null;
   return createClient(url, key);
@@ -23,6 +25,15 @@ function getSupabase() {
 
 function langOf(sourceLanguage?: string): "en" | "ar" {
   return sourceLanguage === "ar" ? "ar" : "en";
+}
+
+async function insertQuoteRow(supabase: ReturnType<typeof createClient>, rows: Record<string, unknown>[]) {
+  for (const row of rows) {
+    const { error } = await supabase.from("quote_requests").insert(row as never);
+    if (!error) return { ok: true as const };
+    console.error("Quote insert attempt failed:", error.message, Object.keys(row));
+  }
+  return { ok: false as const };
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -96,7 +107,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const inquiryId = "PGR-" + Math.floor(100000 + Math.random() * 900000);
-
+  const createdAt = new Date().toISOString();
   const enrichedMessage = [
     message,
     `Client type: ${clientType}`,
@@ -104,22 +115,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     `Delivery/collection/storage: ${deliveryInterest}`,
   ].join("\n");
 
-  // Insert only columns that exist on quote_requests (snake_case schema)
-  const dbRow = {
+  const baseRow = {
     id: inquiryId,
-    customer_id: body.customerId || null,
     name,
     email,
     phone,
     company: clientType === "company" ? company : "",
     metal_interest: metalInterest,
-    product_name: productInterest,
-    quantity: 1,
     weight_preference: weightPreference,
-    currency: preferredCurrency,
     message: enrichedMessage,
     status: "Pending",
-    created_at: new Date().toISOString(),
+    created_at: createdAt,
   };
 
   try {
@@ -134,9 +140,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    const { error } = await supabase.from("quote_requests").insert(dbRow);
-    if (error) {
-      console.error("Failed to save quote request to Supabase:", error.message);
+    const insertResult = await insertQuoteRow(supabase, [
+      { ...baseRow, product_name: productInterest, currency: preferredCurrency, quantity: 1 },
+      { ...baseRow, product_name: productInterest },
+      { ...baseRow, product_category: productInterest },
+      { ...baseRow, product_name: productInterest, status: "awaiting_confirmation" },
+    ]);
+
+    if (!insertResult.ok) {
       return res.status(500).json({
         success: false,
         error: ERROR_MSG[lang],
@@ -148,7 +159,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       success: true,
       inquiryId,
       message: SUCCESS_MSG[lang],
-      timestamp: new Date().toISOString(),
+      timestamp: createdAt,
     });
   } catch (err: unknown) {
     console.error("Quote submission error:", err);
