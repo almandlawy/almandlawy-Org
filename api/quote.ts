@@ -97,28 +97,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const inquiryId = "PGR-" + Math.floor(100000 + Math.random() * 900000);
 
-  // Align field names with AdminPanel (camelCase) and Supabase (snake_case) expectations
-  const newQuote = {
+  const enrichedMessage = [
+    message,
+    `Client type: ${clientType}`,
+    `Preferred currency: ${preferredCurrency}`,
+    `Delivery/collection/storage: ${deliveryInterest}`,
+  ].join("\n");
+
+  // Insert only columns that exist on quote_requests (snake_case schema)
+  const dbRow = {
     id: inquiryId,
     customer_id: body.customerId || null,
     name,
     email,
     phone,
     company: clientType === "company" ? company : "",
-    clientType,
-    client_type: clientType,
-    metalInterest,
     metal_interest: metalInterest,
-    productCategory: productInterest,
-    product_category: productInterest,
     product_name: productInterest,
-    weight: weightPreference,
+    quantity: 1,
     weight_preference: weightPreference,
-    preferredCurrency,
-    preferred_currency: preferredCurrency,
-    deliveryInterest,
-    delivery_interest: deliveryInterest,
-    message,
+    currency: preferredCurrency,
+    message: enrichedMessage,
     status: "Pending",
     created_at: new Date().toISOString(),
   };
@@ -135,7 +134,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    const { error } = await supabase.from("quote_requests").insert(newQuote);
+    const { error } = await supabase.from("quote_requests").insert(dbRow);
     if (error) {
       console.error("Failed to save quote request to Supabase:", error.message);
       return res.status(500).json({

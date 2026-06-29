@@ -894,7 +894,7 @@ export const dbService = {
         productCategory: q.productCategory || q.product_category || q.product_name || "General Bullion Inquiry",
         weight: q.weight || q.weight_preference || "",
         clientType: q.clientType || q.client_type || "",
-        preferredCurrency: q.preferredCurrency || q.preferred_currency || "",
+        preferredCurrency: q.preferredCurrency || q.preferred_currency || q.currency || "",
         deliveryInterest: q.deliveryInterest || q.delivery_interest || "",
         status: q.status === "awaiting_confirmation" ? "Pending" : q.status,
       });
