@@ -1,6 +1,6 @@
 {
   "name": "PGR UAE Precious Metals",
-  "description": "The official digital presence of PGR UAE Precious Metals, Dubai's premier physical gold and silver bullion trading institution, specializing in wholesale bullion, custom investment coins, and secure global delivery.",
+  "description": "The official digital presence of PGR UAE Precious Metals, Dubai's premier physical gold and silver bullion trading institution, specializing in wholesale bullion, custom gold and silver coins, and secure global delivery.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

@@ -43,8 +43,8 @@ export default function OfficeSection({ currentLang }: OfficeSectionProps) {
   const phone = settings?.trade_phone || "+971 4 445 8888";
   const email = settings?.desk_email || "desk@pgruae.com";
   const whatsapp = settings?.whatsapp_hotline || "+971559688837";
-  const whatsappCleaned = "971559688837";
-  const tradeLicense = settings?.trade_license_no || "890317";
+  const whatsappCleaned = whatsapp.replace(/[^0-9]/g, "");
+  const regNo = settings?.dmcc_reg_no || "890317";
 
   const officeDetails = {
     title: isAr ? "المقر الرئيسي للمؤسسة" : "Corporate Headquarters",
@@ -61,8 +61,8 @@ export default function OfficeSection({ currentLang }: OfficeSectionProps) {
     emailValue: email,
     complianceTitle: isAr ? "الامتثال والتصاريح الأمنية" : "Compliance Status",
     complianceText: isAr 
-      ? `ممتثل للضوابط والتدقيق القانوني بالكامل بموجب ترخيص تجاري رقم ${tradeLicense}. جميع المعاملات تخضع لقوانين مكافحة غسيل الأموال (AML) ومطابقة معايير البنك المركزي للإمارات.` 
-      : `Fully compliant under commercial license no. ${tradeLicense}. All bullion procurement is cleared via stringent AML / KYC frameworks matching UAE Central Bank guidelines.`
+      ? `ممتثل للضوابط والتدقيق القانوني بالكامل بموجب ترخيص رقم ${regNo}. جميع المعاملات تخضع لقوانين مكافحة غسيل الأموال (AML) ومطابقة معايير البنك المركزي للإمارات.` 
+      : `Fully compliant under commercial license no. ${regNo}. All bullion procurement is cleared via stringent AML / KYC frameworks matching UAE Central Bank guidelines.`
   };
 
   return (
@@ -309,7 +309,7 @@ export default function OfficeSection({ currentLang }: OfficeSectionProps) {
                   {point.whatsapp && (
                     <div className="pt-2">
                       <a
-                        href="https://wa.me/971559688837"
+                        href={`https://wa.me/${point.whatsapp.replace(/[^0-9]/g, "")}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1.5 text-xs text-emerald-400 font-mono hover:underline"

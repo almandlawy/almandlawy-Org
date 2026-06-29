@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import { dbService, mockDb, isLive, supabase, getRedirectUrl } from "../lib/supabase";
 import { Product } from "../types";
-import { normalizeOrder, normalizeQuote, ORDER_STATUSES } from "../lib/accountHelpers";
 
 interface AdminPanelProps {
   currentLang?: "en" | "ar";
@@ -78,7 +77,7 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
     trade_phone: "+971 4 445 8888",
     office_address_en: "Almas Tower, West Trade Zone, Dubai Marina, Dubai, United Arab Emirates",
     office_address_ar: "برج الماس، منطقة التداول الحرة، دبي مارينا، دبي، الإمارات العربية المتحدة",
-    trade_license_no: "890317",
+    dmcc_reg_no: "890317",
     manual_gold_usd_oz: 2365.40,
     manual_silver_usd_oz: 29.85,
     usd_aed_rate: 3.6725,
@@ -168,8 +167,6 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
 
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [editingQuote, setEditingQuote] = useState<any | null>(null);
-  const [editingOrder, setEditingOrder] = useState<any | null>(null);
 
   const triggerErrorMessage = (msg: string) => {
     setActionError(msg);
@@ -369,31 +366,31 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
     setLoading(true);
     try {
       const [
-        pList, qList, oList, cList, kList, dList, ptList, exRates, bbList, sObj, certs, blogList
+        pList, qList, oList, kList, dList, ptList, exRates, bbList, hList, sObj, certs, blogList
       ] = await Promise.all([
         dbService.products.list(),
         dbService.quoteRequests.list(),
         dbService.orders.list(),
-        dbService.customers.list(),
         dbService.kyc.listAll(),
         dbService.iraqDelivery.list(),
         dbService.pickupPoints.list(),
         dbService.exchangeRates.get(),
         dbService.buyback.list(),
+        dbService.investment.listAll(),
         dbService.settings.get(),
         dbService.certificates.listAll(),
         dbService.blog.list()
       ]);
 
       if (pList) setProducts(pList);
-      if (qList) setQuotes(qList.map(normalizeQuote));
-      if (oList) setOrders(oList.map(normalizeOrder));
-      if (cList) setCustomers(cList);
+      if (qList) setQuotes(qList);
+      if (oList) setOrders(oList);
       if (kList) setKycProfiles(kList);
       if (dList) setIraqDeliveries(dList);
       if (ptList) setPickupPoints(ptList);
       if (exRates) setExchangeRates(exRates);
       if (bbList) setBuybacks(bbList);
+      if (hList) setHoldings(hList);
       if (sObj) setSettings(sObj);
       if (certs) setCertificates(certs);
       if (blogList) setBlogPosts(blogList);
@@ -536,91 +533,38 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
   };
 
   // 3. OTHER CRUD SUBMISSIONS
-  const handleUpdateQuoteStatus = async (quoteId: string, status: "rejected" | "cancelled") => {
+  const handleUpdateQuoteStatus = async (quoteId: string, status: "Approved" | "Rejected") => {
     try {
-      await dbService.quoteRequests.update(quoteId, { status });
-      triggerSuccessMessage(`Quote ${quoteId} set to: ${status}`);
-      await loadAdminData();
-    } catch (err) {
-      console.error(err);
-      triggerErrorMessage(err instanceof Error ? err.message : "Failed to update quote");
-    }
-  };
-
-  const handleConfirmQuoteAndCreateOrder = async () => {
-    if (!editingQuote?.id) return;
-    try {
-      const confirmedPrice = Number(editingQuote.confirmed_price);
-      if (!confirmedPrice || confirmedPrice <= 0) {
-        triggerErrorMessage("Please set a confirmed price before creating the order.");
-        return;
+      await dbService.quoteRequests.updateStatus(quoteId, status);
+      
+      if (status === "Approved") {
+        const match = quotes.find(q => q.id === quoteId);
+        if (match) {
+          await dbService.orders.create({
+            customer_id: match.customer_id || "cust-verified-1",
+            total_amount: parseFloat(match.weight || "100") * (match.metalInterest === "silver" ? 1.1 : 78.5),
+            currency: "USD",
+            shipping_method: "Office Pickup",
+            payment_method: "Bank Transfer",
+            shipping_address: "Dubai Vault Gate",
+            status: "Quoted",
+            items: [
+              { 
+                product_id: match.productCategory || "gb-100g", 
+                quantity: 1, 
+                unit_price: parseFloat(match.weight || "100") * (match.metalInterest === "silver" ? 1.1 : 78.5), 
+                product_name: `${match.metalInterest?.toUpperCase()} Bullion: ${match.weight || "Custom Lot"}` 
+              }
+            ]
+          });
+          triggerSuccessMessage("Quote APPROVED and Live Order Ticket created!");
+        }
+      } else {
+        triggerSuccessMessage("Quote set to: Rejected");
       }
-
-      await dbService.quoteRequests.update(editingQuote.id, {
-        status: "price_confirmed",
-        confirmed_price: confirmedPrice,
-        currency: editingQuote.currency || "USD",
-        product_name: editingQuote.product_name,
-        quantity: editingQuote.quantity || 1,
-        admin_notes: editingQuote.admin_notes || "",
-        quote_expiry: editingQuote.quote_expiry || null,
-      });
-
-      const orderId = `PGR-ORD-${Math.floor(10000 + Math.random() * 90000)}`;
-      await dbService.orders.create({
-        id: orderId,
-        customer_id: editingQuote.customer_id || editingQuote.email,
-        quote_id: editingQuote.id,
-        product_id: editingQuote.product_id,
-        product_name: editingQuote.product_name,
-        quantity: editingQuote.quantity || 1,
-        status: "awaiting_payment",
-        confirmed_price: confirmedPrice,
-        currency: editingQuote.currency || "USD",
-        payment_status: "unpaid",
-        payment_link: editingQuote.payment_link || "",
-        bank_transfer_details: editingQuote.bank_transfer_details || "",
-        delivery_status: "awaiting_payment",
-        admin_notes: editingQuote.admin_notes || "",
-        quote_expiry: editingQuote.quote_expiry || null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      });
-
-      await dbService.quoteRequests.update(editingQuote.id, { status: "order_created" });
-      setEditingQuote(null);
-      triggerSuccessMessage("Quote confirmed and order created for customer payment.");
       await loadAdminData();
     } catch (err) {
       console.error(err);
-      triggerErrorMessage(err instanceof Error ? err.message : "Failed to confirm quote");
-    }
-  };
-
-  const handleSaveOrderAdmin = async () => {
-    if (!editingOrder?.id) return;
-    try {
-      await dbService.orders.update(editingOrder.id, {
-        status: editingOrder.status,
-        confirmed_price: Number(editingOrder.confirmed_price),
-        currency: editingOrder.currency,
-        payment_status: editingOrder.payment_status,
-        payment_link: editingOrder.payment_link,
-        bank_transfer_details: editingOrder.bank_transfer_details,
-        payment_receipt_url: editingOrder.payment_receipt_url,
-        delivery_status: editingOrder.delivery_status,
-        invoice_url: editingOrder.invoice_url,
-        certificate_url: editingOrder.certificate_url,
-        admin_notes: editingOrder.admin_notes,
-        quote_expiry: editingOrder.quote_expiry,
-        updated_at: new Date().toISOString(),
-      });
-      setEditingOrder(null);
-      triggerSuccessMessage(`Order ${editingOrder.id} updated.`);
-      await loadAdminData();
-    } catch (err) {
-      console.error(err);
-      triggerErrorMessage(err instanceof Error ? err.message : "Failed to update order");
     }
   };
 
@@ -754,7 +698,7 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
         trade_phone: settings.trade_phone,
         office_address_en: settings.office_address_en,
         office_address_ar: settings.office_address_ar,
-        trade_license_no: settings.trade_license_no,
+        dmcc_reg_no: settings.dmcc_reg_no,
         manual_gold_usd_oz: Number(settings.manual_gold_usd_oz || 2365.40),
         manual_silver_usd_oz: Number(settings.manual_silver_usd_oz || 29.85),
         usd_aed_rate: Number(settings.usd_aed_rate || 3.6725),
@@ -782,9 +726,9 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
 
   // Stats calculators
   const stats = {
-    totalVolumeUSD: orders.reduce((sum, o) => sum + (o.confirmed_price || o.total_amount || 0), 0),
-    activeCustomersCount: customers.length,
-    pendingQuotesCount: quotes.filter(q => ["awaiting_confirmation", "Pending", "price_confirmed"].includes(q.status)).length,
+    totalVolumeUSD: orders.reduce((sum, o) => sum + (o.total_amount || 0), 0) + holdings.reduce((sum, h) => sum + (h.current_market_value_usd || 0), 0),
+    activeCustomersCount: kycProfiles.filter(k => k.status === "Verified").length + 5,
+    pendingQuotesCount: quotes.filter(q => q.status === "Pending").length,
     activeDeliveriesIraq: iraqDeliveries.filter(d => d.status !== "Delivered").length,
     pendingKycCount: kycProfiles.filter(k => k.status === "Pending review" || k.status === "Pending").length,
     buybackInquiries: buybacks.filter(b => b.status === "Pending").length
@@ -1753,45 +1697,28 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
               {activeSection === "quotes" && (
                 <div className="space-y-6">
                   <div>
-                    <h4 className="text-lg font-serif text-white">Quote Requests</h4>
-                    <p className="text-xs text-gray-500 font-mono uppercase">Review requests, confirm price, then create confirmed order for payment</p>
+                    <h4 className="text-lg font-serif text-white">Live Institutional & Custom Inquiries</h4>
+                    <p className="text-xs text-gray-500 font-mono uppercase">Confirm physical precious metal availability, pricing agreements and mint tickets</p>
                   </div>
-
-                  {editingQuote && (
-                    <div className="p-4 bg-[#111] border border-gold-base/20 rounded space-y-3">
-                      <h5 className="text-white text-sm font-semibold">Confirm quote: {editingQuote.id}</h5>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                        <input className="bg-black border border-white/10 rounded px-2 py-1 text-white" placeholder="Product name" value={editingQuote.product_name || ""} onChange={(e) => setEditingQuote({ ...editingQuote, product_name: e.target.value })} />
-                        <input type="number" className="bg-black border border-white/10 rounded px-2 py-1 text-white" placeholder="Confirmed price" value={editingQuote.confirmed_price || ""} onChange={(e) => setEditingQuote({ ...editingQuote, confirmed_price: e.target.value })} />
-                        <input className="bg-black border border-white/10 rounded px-2 py-1 text-white" placeholder="Currency" value={editingQuote.currency || "USD"} onChange={(e) => setEditingQuote({ ...editingQuote, currency: e.target.value })} />
-                        <input type="number" className="bg-black border border-white/10 rounded px-2 py-1 text-white" placeholder="Quantity" value={editingQuote.quantity || 1} onChange={(e) => setEditingQuote({ ...editingQuote, quantity: e.target.value })} />
-                        <input className="bg-black border border-white/10 rounded px-2 py-1 text-white md:col-span-2" placeholder="Payment link (optional)" value={editingQuote.payment_link || ""} onChange={(e) => setEditingQuote({ ...editingQuote, payment_link: e.target.value })} />
-                        <textarea className="bg-black border border-white/10 rounded px-2 py-1 text-white md:col-span-2" placeholder="Bank transfer instructions" value={editingQuote.bank_transfer_details || ""} onChange={(e) => setEditingQuote({ ...editingQuote, bank_transfer_details: e.target.value })} />
-                        <textarea className="bg-black border border-white/10 rounded px-2 py-1 text-white md:col-span-2" placeholder="Admin notes" value={editingQuote.admin_notes || ""} onChange={(e) => setEditingQuote({ ...editingQuote, admin_notes: e.target.value })} />
-                        <input type="datetime-local" className="bg-black border border-white/10 rounded px-2 py-1 text-white" value={editingQuote.quote_expiry ? editingQuote.quote_expiry.slice(0, 16) : ""} onChange={(e) => setEditingQuote({ ...editingQuote, quote_expiry: e.target.value })} />
-                      </div>
-                      <div className="flex gap-2">
-                        <button onClick={handleConfirmQuoteAndCreateOrder} className="px-3 py-1.5 bg-gold-base text-black text-xs rounded cursor-pointer">Confirm price & create order</button>
-                        <button onClick={() => setEditingQuote(null)} className="px-3 py-1.5 border border-white/10 text-gray-400 text-xs rounded cursor-pointer">Cancel</button>
-                      </div>
-                    </div>
-                  )}
 
                   <div className="bg-[#0d0d0e] border border-white/[0.03] rounded-sm overflow-hidden font-mono text-xs">
                     <div className="overflow-x-auto">
                       <table className="w-full text-left">
                         <thead className="bg-[#111112] text-gray-400 border-b border-white/[0.03]">
                           <tr>
-                            <th className="p-4">Client</th>
-                            <th className="p-4">Product</th>
-                            <th className="p-4">Qty</th>
+                            <th className="p-4">Client Detail</th>
+                            <th className="p-4">Interest</th>
+                            <th className="p-4">Category / Weight</th>
+                            <th className="p-4">Date Submitted</th>
                             <th className="p-4">Status</th>
-                            <th className="p-4 text-center">Actions</th>
+                            <th className="p-4 text-center">Control</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-white/[0.02]">
                           {quotes.length === 0 ? (
-                            <tr><td colSpan={5} className="p-4 text-center text-gray-500">No quote requests.</td></tr>
+                            <tr>
+                              <td colSpan={6} className="p-4 text-center text-gray-500">No pending quote requests.</td>
+                            </tr>
                           ) : (
                             quotes.map((q) => (
                               <tr key={q.id}>
@@ -1800,16 +1727,37 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                                   <p className="text-gray-500 text-[10px]">{q.email} | {q.phone}</p>
                                 </td>
                                 <td className="p-4">
-                                  <p className="text-white">{q.product_name || q.productCategory || "General"}</p>
-                                  <p className="text-gray-500 text-[10px]">{q.weight_preference || q.weightPreference || ""}</p>
+                                  <span className="px-2 py-0.5 rounded bg-amber-950/20 text-gold-base font-bold uppercase">{q.metalInterest}</span>
                                 </td>
-                                <td className="p-4">{q.quantity || 1}</td>
-                                <td className="p-4"><span className="px-2 py-0.5 rounded bg-amber-950/50 text-amber-400">{q.status}</span></td>
+                                <td className="p-4 space-y-0.5">
+                                  <p className="text-white">{q.productCategory || "Custom Lot"}</p>
+                                  <p className="text-gray-500 text-[10px]">{q.weight || "N/A"}</p>
+                                </td>
+                                <td className="p-4 text-gray-400">{new Date(q.created_at || "").toLocaleDateString()}</td>
+                                <td className="p-4">
+                                  <span className={`px-2 py-0.5 rounded text-[10px] ${
+                                    q.status === "Approved" ? "bg-green-950/50 text-green-400" :
+                                    q.status === "Rejected" ? "bg-red-950/50 text-red-400" :
+                                    "bg-amber-950/50 text-amber-400 animate-pulse"
+                                  }`}>
+                                    {q.status}
+                                  </span>
+                                </td>
                                 <td className="p-4 flex gap-2 justify-center">
-                                  {!["order_created", "rejected", "cancelled", "Rejected"].includes(q.status) && (
+                                  {q.status === "Pending" && (
                                     <>
-                                      <button onClick={() => setEditingQuote({ ...q, payment_link: "", bank_transfer_details: "" })} className="px-2.5 py-1 bg-green-900/40 text-green-300 border border-green-800/30 rounded cursor-pointer">Review</button>
-                                      <button onClick={() => handleUpdateQuoteStatus(q.id, "rejected")} className="px-2.5 py-1 bg-red-900/40 text-red-300 border border-red-800/30 rounded cursor-pointer">Reject</button>
+                                      <button
+                                        onClick={() => handleUpdateQuoteStatus(q.id, "Approved")}
+                                        className="px-2.5 py-1 bg-green-900/40 text-green-300 border border-green-800/30 rounded hover:bg-green-700 hover:text-white cursor-pointer"
+                                      >
+                                        Approve
+                                      </button>
+                                      <button
+                                        onClick={() => handleUpdateQuoteStatus(q.id, "Rejected")}
+                                        className="px-2.5 py-1 bg-red-900/40 text-red-300 border border-red-800/30 rounded hover:bg-red-700 hover:text-white cursor-pointer"
+                                      >
+                                        Reject
+                                      </button>
                                     </>
                                   )}
                                 </td>
@@ -1827,65 +1775,79 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
               {activeSection === "orders" && (
                 <div className="space-y-6">
                   <div>
-                    <h4 className="text-lg font-serif text-white">Confirmed Orders & Payments</h4>
-                    <p className="text-xs text-gray-500 font-mono uppercase">Manage payment links, bank instructions, receipts, delivery, and documents</p>
+                    <h4 className="text-lg font-serif text-white">Order Registry</h4>
+                    <p className="text-xs text-gray-500 font-mono uppercase">Control active client purchase invoices and holding contracts</p>
                   </div>
-
-                  {editingOrder && (
-                    <div className="p-4 bg-[#111] border border-gold-base/20 rounded space-y-3">
-                      <h5 className="text-white text-sm font-semibold">Edit order: {editingOrder.id}</h5>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                        <select className="bg-black border border-white/10 rounded px-2 py-1 text-white" value={editingOrder.status} onChange={(e) => setEditingOrder({ ...editingOrder, status: e.target.value })}>
-                          {ORDER_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
-                        </select>
-                        <select className="bg-black border border-white/10 rounded px-2 py-1 text-white" value={editingOrder.payment_status || "unpaid"} onChange={(e) => setEditingOrder({ ...editingOrder, payment_status: e.target.value })}>
-                          <option value="unpaid">unpaid</option>
-                          <option value="pending_review">pending_review</option>
-                          <option value="paid">paid</option>
-                        </select>
-                        <input type="number" className="bg-black border border-white/10 rounded px-2 py-1 text-white" placeholder="Confirmed price" value={editingOrder.confirmed_price || ""} onChange={(e) => setEditingOrder({ ...editingOrder, confirmed_price: e.target.value })} />
-                        <input className="bg-black border border-white/10 rounded px-2 py-1 text-white" placeholder="Currency" value={editingOrder.currency || "USD"} onChange={(e) => setEditingOrder({ ...editingOrder, currency: e.target.value })} />
-                        <input className="bg-black border border-white/10 rounded px-2 py-1 text-white md:col-span-2" placeholder="Payment link" value={editingOrder.payment_link || ""} onChange={(e) => setEditingOrder({ ...editingOrder, payment_link: e.target.value })} />
-                        <textarea className="bg-black border border-white/10 rounded px-2 py-1 text-white md:col-span-2" placeholder="Bank transfer details" value={editingOrder.bank_transfer_details || ""} onChange={(e) => setEditingOrder({ ...editingOrder, bank_transfer_details: e.target.value })} />
-                        <input className="bg-black border border-white/10 rounded px-2 py-1 text-white md:col-span-2" placeholder="Payment receipt URL" value={editingOrder.payment_receipt_url || ""} onChange={(e) => setEditingOrder({ ...editingOrder, payment_receipt_url: e.target.value })} />
-                        <select className="bg-black border border-white/10 rounded px-2 py-1 text-white" value={editingOrder.delivery_status || editingOrder.status} onChange={(e) => setEditingOrder({ ...editingOrder, delivery_status: e.target.value })}>
-                          {ORDER_STATUSES.map((s) => <option key={`d-${s}`} value={s}>{s}</option>)}
-                        </select>
-                        <input className="bg-black border border-white/10 rounded px-2 py-1 text-white" placeholder="Invoice URL" value={editingOrder.invoice_url || ""} onChange={(e) => setEditingOrder({ ...editingOrder, invoice_url: e.target.value })} />
-                        <input className="bg-black border border-white/10 rounded px-2 py-1 text-white md:col-span-2" placeholder="Certificate URL" value={editingOrder.certificate_url || ""} onChange={(e) => setEditingOrder({ ...editingOrder, certificate_url: e.target.value })} />
-                        <textarea className="bg-black border border-white/10 rounded px-2 py-1 text-white md:col-span-2" placeholder="Admin notes" value={editingOrder.admin_notes || ""} onChange={(e) => setEditingOrder({ ...editingOrder, admin_notes: e.target.value })} />
-                      </div>
-                      <div className="flex gap-2">
-                        <button onClick={handleSaveOrderAdmin} className="px-3 py-1.5 bg-gold-base text-black text-xs rounded cursor-pointer">Save order</button>
-                        <button onClick={() => setEditingOrder(null)} className="px-3 py-1.5 border border-white/10 text-gray-400 text-xs rounded cursor-pointer">Cancel</button>
-                      </div>
-                    </div>
-                  )}
 
                   <div className="bg-[#0d0d0e] border border-white/[0.03] rounded-sm overflow-hidden font-mono text-xs">
                     <div className="overflow-x-auto">
                       <table className="w-full text-left">
                         <thead className="bg-[#111112] text-gray-400 border-b border-white/[0.03]">
                           <tr>
-                            <th className="p-4">Order</th>
-                            <th className="p-4">Customer</th>
-                            <th className="p-4">Price</th>
-                            <th className="p-4">Status / Payment</th>
-                            <th className="p-4">Actions</th>
+                            <th className="p-4">Order ID</th>
+                            <th className="p-4">Client</th>
+                            <th className="p-4">Total Value</th>
+                            <th className="p-4">Method / Destination</th>
+                            <th className="p-4">Status & Payment</th>
+                            <th className="p-4">Manual Payment Link</th>
+                            <th className="p-4">Logistics State Controls</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-white/[0.02]">
                           {orders.map((o) => (
                             <tr key={o.id}>
-                              <td className="p-4 font-bold text-white">{o.id}<div className="text-gray-500 font-normal">{o.product_name}</div></td>
+                              <td className="p-4 font-bold text-white uppercase">{o.id}</td>
                               <td className="p-4 text-gray-300">{o.customer_id}</td>
-                              <td className="p-4 text-gold-base font-bold">{(o.confirmed_price || o.total_amount || 0).toLocaleString()} {o.currency}</td>
-                              <td className="p-4 space-y-1">
-                                <span className="px-2 py-0.5 rounded bg-amber-950/20 text-gold-light uppercase text-[10px]">{o.status}</span>
-                                <div><span className="text-[10px] text-gray-400">{o.payment_status || "unpaid"}</span></div>
+                              <td className="p-4 text-gold-base font-bold">${o.total_amount?.toLocaleString()} {o.currency}</td>
+                              <td className="p-4 space-y-0.5">
+                                <p className="text-white">{o.shipping_method}</p>
+                                <p className="text-gray-500 text-[10px]">{o.shipping_address}</p>
+                              </td>
+                              <td className="p-4 space-y-2">
+                                <div>
+                                  <span className="px-2 py-0.5 rounded bg-amber-950/20 text-gold-light uppercase text-[10px]">{o.status}</span>
+                                </div>
+                                <div>
+                                  <button
+                                    onClick={() => handleToggleOrderPaymentStatus(o.id, o.payment_status)}
+                                    className={`px-2 py-0.5 rounded text-[9px] font-semibold border transition-all cursor-pointer ${
+                                      o.payment_status === "Paid"
+                                        ? "bg-green-950/30 text-green-400 border-green-500/25"
+                                        : "bg-red-950/30 text-red-400 border-red-500/25 animate-pulse"
+                                    }`}
+                                  >
+                                    {o.payment_status === "Paid" ? "● PAID" : "● UNPAID (PENDING)"}
+                                  </button>
+                                </div>
                               </td>
                               <td className="p-4">
-                                <button onClick={() => setEditingOrder({ ...o })} className="px-2 py-1 border border-white/10 rounded text-gray-300 hover:text-white cursor-pointer">Edit</button>
+                                <div className="flex gap-1.5 items-center max-w-[240px]">
+                                  <input
+                                    type="text"
+                                    placeholder="Paste manual checkout/payment link..."
+                                    defaultValue={o.payment_link || ""}
+                                    onBlur={(e) => handleUpdateOrderPaymentLink(o.id, e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter") {
+                                        handleUpdateOrderPaymentLink(o.id, (e.target as HTMLInputElement).value);
+                                      }
+                                    }}
+                                    className="bg-black border border-white/10 rounded px-2 py-1 text-[11px] text-white outline-none flex-1 font-mono"
+                                  />
+                                </div>
+                              </td>
+                              <td className="p-4">
+                                <select
+                                  value={o.status}
+                                  onChange={(e) => handleUpdateOrderStatus(o.id, e.target.value)}
+                                  className="bg-black border border-white/10 rounded p-1 text-[11px] text-white outline-none cursor-pointer"
+                                >
+                                  <option value="Quoted">Quoted (طلب سعر معتمد)</option>
+                                  <option value="Awaiting Payment">Awaiting Payment (بانتظار التحويل)</option>
+                                  <option value="Paid / In Vault">Paid / In Vault (تم الدفع وبخزنة الحفظ)</option>
+                                  <option value="Shipped">Shipped (شُحنت)</option>
+                                  <option value="Delivered">Delivered (سلّمت للعميل)</option>
+                                </select>
                               </td>
                             </tr>
                           ))}
@@ -1900,24 +1862,23 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
               {activeSection === "customers" && (
                 <div className="space-y-6">
                   <div>
-                    <h4 className="text-lg font-serif text-white">Registered Customer Accounts</h4>
-                    <p className="text-xs text-gray-500 font-mono uppercase">Customer profiles for quote and order tracking — no wallet balances</p>
+                    <h4 className="text-lg font-serif text-white">Customer Account Directories</h4>
+                    <p className="text-xs text-gray-500 font-mono uppercase">Client profiles, registered product allocations, and total balances</p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
-                    {customers.length === 0 ? (
-                      <p className="text-gray-500">No registered customers yet.</p>
-                    ) : (
-                      customers.map((c: any) => (
-                        <div key={c.id || c.email} className="p-5 bg-[#0d0d0e] border border-white/[0.03] rounded space-y-2">
-                          <p className="text-white font-serif text-sm">{c.full_name}</p>
-                          <p className="text-gray-400">{c.email}</p>
-                          <p className="text-gray-500">{c.phone} • {c.country} / {c.city}</p>
-                          {c.company_name && <p className="text-gray-500">Company: {c.company_name}</p>}
-                          {c.delivery_destination && <p className="text-gray-500">Delivery: {c.delivery_destination}</p>}
+                    {holdings.map((h, i) => (
+                      <div key={i} className="p-5 bg-[#0d0d0e] border border-white/[0.03] rounded space-y-3">
+                        <div className="flex justify-between items-center border-b border-white/[0.02] pb-2">
+                          <span className="text-white font-serif text-sm">Customer Account ID: <span className="text-gold-base">{h.customer_id}</span></span>
+                          <span className="px-2 py-0.5 rounded bg-green-950/30 text-green-400 font-bold">ACTIVE DEPOSITS</span>
                         </div>
-                      ))
-                    )}
+                        <div className="grid grid-cols-2 gap-2 text-gray-400">
+                          <div>Metal Allocation: <span className="text-white font-bold">{h.weight_grams}g of {h.metal?.toUpperCase()}</span></div>
+                          <div>Value: <span className="text-gold-light font-bold">${h.current_market_value_usd?.toLocaleString()}</span></div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
@@ -2635,8 +2596,8 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                         <label className="text-gray-500 block uppercase text-[9px]">Official Trade Registration Number</label>
                         <input
                           type="text"
-                          value={settings.trade_license_no}
-                          onChange={(e) => setSettings({ ...settings, trade_license_no: e.target.value })}
+                          value={settings.dmcc_reg_no}
+                          onChange={(e) => setSettings({ ...settings, dmcc_reg_no: e.target.value })}
                           className="w-full bg-black border border-white/10 rounded px-3 py-2 text-white outline-none"
                         />
                       </div>

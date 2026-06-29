@@ -93,16 +93,16 @@ export default function AIConcierge({ currentLang, onClose }: AIConciergeProps) 
   // Suggestion chips designed to educate clients on UAE gold advantage
   const suggestions = currentLang === "ar"
     ? [
-        "ما هي تفاصيل سبائك الذهب المتوفرة؟",
-        "كيف أطلب عرض سعر لمنتج معين؟",
-        "ما خيارات التوصيل للإمارات والعراق؟",
-        "هل يتم تأكيد السعر قبل الدفع؟"
+        "هل يوجد ضريبة قيمة مضافة على سبائك الذهب بدبي؟",
+        "ما هي الماصفي المعتمدة من PGR لتسليم الذهب؟",
+        "هل يمكن شحن سبائك ذهب بوزن ١٠ كغ إلى أوروبا آمنياً؟",
+        "كيف يتم تسعير سبائك الذهب بالجملة للمؤسسات؟"
       ]
     : [
-        "What gold bar products are available?",
-        "How do I request a quote for a product?",
-        "What are the delivery options to UAE and Iraq?",
-        "Is the price confirmed before payment?"
+        "Is there VAT on Gold investment bars in Dubai?",
+        "What bullion brands are available through PGR UAE?",
+        "Can PGR handle secure shipping of 5kg gold to London?",
+        "How is institutional wholesale gold pricing calculated?"
       ];
 
   return (
@@ -183,7 +183,7 @@ export default function AIConcierge({ currentLang, onClose }: AIConciergeProps) 
                 <span className="h-1.5 w-1.5 rounded-full bg-gold-base animate-bounce" style={{ animationDelay: "100ms" }} />
                 <span className="h-1.5 w-1.5 rounded-full bg-gold-base animate-bounce" style={{ animationDelay: "200ms" }} />
                 <span className="h-1.5 w-1.5 rounded-full bg-gold-base animate-bounce" style={{ animationDelay: "300ms" }} />
-                <span>{currentLang === "ar" ? "جاري المعالجة..." : "Processing..."}</span>
+                <span>Syncing PGR desk...</span>
               </div>
             </div>
           )}
@@ -238,7 +238,7 @@ export default function AIConcierge({ currentLang, onClose }: AIConciergeProps) 
           </form>
           
           <div className="text-[9px] text-gray-600 font-mono text-center">
-            Product specifications provided by PGR Product & Quote Assistant. Price confirmed before payment.
+            Product specifications provided by PGR artificial intelligence. Standard terms and conditions apply.
           </div>
         </div>
 

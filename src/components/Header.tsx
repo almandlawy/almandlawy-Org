@@ -86,7 +86,7 @@ export default function Header({
   const navLinks = [
     { id: "market", label_en: "Live Rates", label_ar: "الأسعار المباشرة" },
     { id: "catalog", label_en: "Bullion Catalog", label_ar: "كتالوج السبائك" },
-    { id: "dashboard", label_en: "Customer Dashboard", label_ar: "لوحة العميل" },
+    { id: "investment", label_en: "Buy & Track", label_ar: "شراء وتتبع" },
     { id: "why-us", label_en: "Institutional Edge", label_ar: "المعايير المؤسسية" },
     { id: "office", label_en: "Dubai Office", label_ar: "مكتب دبي" },
     { id: "blog", label_en: "Intelligence", label_ar: "تقارير الأبحاث" }
@@ -99,7 +99,7 @@ export default function Header({
         <div className="flex items-center gap-4 overflow-hidden">
           <span className="flex items-center gap-1.5 text-gold-base text-[10px] uppercase tracking-widest font-semibold">
             <span className="h-1.5 w-1.5 rounded-full bg-gold-base animate-pulse"></span>
-            {currentLang === "ar" ? "مباشر دبي" : "Dubai Spot"}
+            {currentLang === "ar" ? "مباشر دبي" : "Dubai Spot Live"}
           </span>
           <div className="flex items-center gap-6 text-[11px]">
             <span className="hover:text-white transition-colors cursor-pointer">
@@ -141,7 +141,7 @@ export default function Header({
               <button
                 key={link.id}
                 onClick={() => {
-                  if (link.id === "dashboard") {
+                  if (link.id === "investment") {
                     onOpenClientDashboard();
                   } else {
                     onNavigate(link.id);
@@ -231,7 +231,7 @@ export default function Header({
               <button
                 key={link.id}
                 onClick={() => {
-                  if (link.id === "dashboard") {
+                  if (link.id === "investment") {
                     onOpenClientDashboard();
                   } else {
                     onNavigate(link.id);

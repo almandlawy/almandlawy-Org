@@ -205,28 +205,23 @@ const seedLocalStorage = () => {
     }
   ]);
 
+  // 5. Quote Requests
+  getOrSet("pgr_quote_requests", []);
+
   // 6. Orders
   if (!isProduction) {
     const initialOrders = [
       {
         id: "PGR-ORD-10924",
         customer_id: "cust-verified-1",
-        quote_id: "PGR-QT-100001",
-        product_name: "PAMP Suisse 100g Cast Gold Bar",
-        quantity: 4,
         created_at: "2026-06-15T14:32:00Z",
-        status: "delivered",
-        confirmed_price: 118400.0,
+        status: "Delivered",
+        total_amount: 118400.0,
         currency: "AED",
-        payment_status: "paid",
-        payment_link: "",
-        bank_transfer_details: "Emirates NBD — PGR UAE Trading — IBAN AE00XXXX",
-        delivery_status: "delivered",
         shipping_method: "Dubai Delivery",
+        payment_method: "Bank Transfer",
         shipping_address: "Penthouse 45, Marina Heights, Dubai Marina",
-        invoice_url: "",
-        certificate_url: "",
-        admin_notes: "Delivered and documented.",
+        billing_address: "Penthouse 45, Marina Heights, Dubai Marina",
         items: [
           { product_id: "gb-100g", quantity: 4, unit_price: 29600.0, product_name: "PAMP Suisse 100g Cast Gold Bar" }
         ]
@@ -234,61 +229,22 @@ const seedLocalStorage = () => {
       {
         id: "PGR-ORD-11530",
         customer_id: "cust-verified-1",
-        quote_id: "PGR-QT-100002",
-        product_name: "PAMP Suisse 1kg Certified Gold Bar",
-        quantity: 1,
         created_at: "2026-06-25T11:05:00Z",
-        status: "awaiting_payment",
-        confirmed_price: 326500.0,
+        status: "Quoted",
+        total_amount: 326500.0,
         currency: "AED",
-        payment_status: "unpaid",
-        payment_link: "https://pay.example.com/pgr-order-11530",
-        bank_transfer_details: "Emirates NBD — PGR UAE Trading — IBAN AE00XXXX — Reference PGR-ORD-11530",
-        delivery_status: "awaiting_payment",
         shipping_method: "Office Pickup",
-        shipping_address: "PGR Office, Dubai Marina",
-        quote_expiry: "2026-07-02T18:00:00Z",
-        admin_notes: "Final price confirmed. Awaiting customer payment.",
+        payment_method: "Cash Office",
+        shipping_address: "PGR Vault Gateway Office, Dubai Marina",
+        billing_address: "PGR Vault Gateway Office, Dubai Marina",
         items: [
           { product_id: "gb-1kg", quantity: 1, unit_price: 326500.0, product_name: "PAMP Suisse 1kg Certified Gold Bar" }
         ]
       }
     ];
     getOrSet("pgr_orders", initialOrders);
-
-    getOrSet("pgr_quote_requests", [
-      {
-        id: "PGR-QT-100001",
-        customer_id: "cust-verified-1",
-        name: "Sheikh Mansoor Al-Maktoum",
-        email: "verified.investor@dubaimarina.ae",
-        phone: "+971559688837",
-        product_name: "PAMP Suisse 100g Cast Gold Bar",
-        quantity: 4,
-        metal_interest: "gold",
-        status: "order_created",
-        confirmed_price: 118400,
-        currency: "AED",
-        created_at: "2026-06-10T09:00:00Z"
-      },
-      {
-        id: "PGR-QT-100002",
-        customer_id: "cust-verified-1",
-        name: "Sheikh Mansoor Al-Maktoum",
-        email: "verified.investor@dubaimarina.ae",
-        phone: "+971559688837",
-        product_name: "PAMP Suisse 1kg Certified Gold Bar",
-        quantity: 1,
-        metal_interest: "gold",
-        status: "price_confirmed",
-        confirmed_price: 326500,
-        currency: "AED",
-        created_at: "2026-06-24T14:00:00Z"
-      }
-    ]);
   } else {
     safeStorage.removeItem("pgr_orders");
-    safeStorage.removeItem("pgr_quote_requests");
   }
 
   // 7. Blog Posts (CMS)
@@ -367,7 +323,7 @@ const seedLocalStorage = () => {
     trade_phone: "+971 4 445 8888",
     office_address_en: "Almas Tower, West Trade Zone, Dubai Marina, Dubai, United Arab Emirates",
     office_address_ar: "برج الماس، منطقة التداول الحرة، دبي مارينا، دبي، الإمارات العربية المتحدة",
-    trade_license_no: "890317",
+    dmcc_reg_no: "890317",
     manual_gold_usd_oz: 2365.40,
     manual_silver_usd_oz: 29.85,
     usd_aed_rate: 3.6725,
@@ -392,8 +348,8 @@ const seedLocalStorage = () => {
       city_ar: "بغداد",
       address_en: "Al-Mansour District, Near Baghdad Mall",
       address_ar: "حي المنصور، بالقرب من بغداد مول",
-      phone: "+971559688837",
-      whatsapp: "+971559688837",
+      phone: "+964 770 123 4567",
+      whatsapp: "+964 770 123 4567",
       working_hours_en: "Sun - Thu: 10:00 AM - 4:00 PM AST",
       working_hours_ar: "الأحد - الخميس: ١٠:٠٠ صباحاً - ٤:٠٠ مساءً",
       maps_link: "https://maps.google.com",
@@ -453,9 +409,32 @@ const seedLocalStorage = () => {
     safeStorage.removeItem("pgr_iraq_delivery_requests");
   }
 
-  // 16. Bullion Ownership records (admin-managed only, no demo seeds)
+  // 16. Bullion Ownership / Investment Accounts
   if (!isProduction) {
-    getOrSet("pgr_investment_accounts", []);
+    getOrSet("pgr_investment_accounts", [
+      {
+        id: "inv-gold",
+        customer_id: "cust-verified-1",
+        metal: "gold",
+        weight_grams: 250,
+        average_purchase_price_usd: 75.40,
+        total_purchase_amount_usd: 18850.00,
+        current_market_value_usd: 19125.00,
+        daily_change_percent: 0.28,
+        monthly_change_percent: 1.45
+      },
+      {
+        id: "inv-silver",
+        customer_id: "cust-verified-1",
+        metal: "silver",
+        weight_grams: 2000,
+        average_purchase_price_usd: 0.92,
+        total_purchase_amount_usd: 1840.00,
+        current_market_value_usd: 1880.00,
+        daily_change_percent: -0.15,
+        monthly_change_percent: 2.10
+      }
+    ]);
   } else {
     safeStorage.removeItem("pgr_investment_accounts");
   }
@@ -481,27 +460,6 @@ const seedLocalStorage = () => {
 
   // 18. Admin Users emails
   getOrSet("pgr_admin_users", ["almandlawy112@gmail.com", "admin@pgruae.com"]);
-
-  // 19. Registered customers (profile registry)
-  if (!isProduction) {
-    getOrSet("pgr_customers", [
-      {
-        id: "cust-verified-1",
-        auth_user_id: "cust-verified-1",
-        full_name: "Sheikh Mansoor Al-Maktoum",
-        email: "verified.investor@dubaimarina.ae",
-        phone: "+971559688837",
-        country: "UAE",
-        city: "Dubai",
-        preferred_language: "en",
-        company_name: "Elite Asset Holdings Ltd",
-        delivery_destination: "Dubai Marina",
-        created_at: "2026-01-01T00:00:00Z"
-      }
-    ]);
-  } else {
-    safeStorage.removeItem("pgr_customers");
-  }
 };
 
 // Seed initial localStorage items on import
@@ -877,13 +835,6 @@ export const dbService = {
       }
       return mockDb.get("pgr_orders");
     },
-    listByCustomer: async (customerId: string, email?: string) => {
-      const all = await dbService.orders.list();
-      return (all || []).filter((o: any) =>
-        o.customer_id === customerId ||
-        (email && o.customer_email?.toLowerCase() === email.toLowerCase())
-      );
-    },
     create: async (order: any) => {
       if (isLive && supabase) {
         const { data, error } = await supabase.from("orders").insert(order).select();
@@ -943,13 +894,6 @@ export const dbService = {
       }
       return mockDb.get("pgr_quote_requests");
     },
-    listByCustomer: async (customerId: string, email?: string) => {
-      const all = await dbService.quoteRequests.list();
-      return (all || []).filter((q: any) =>
-        q.customer_id === customerId ||
-        (email && q.email?.toLowerCase() === email.toLowerCase())
-      );
-    },
     create: async (request: any) => {
       if (isLive && supabase) {
         const { data, error } = await supabase.from("quote_requests").insert(request).select();
@@ -968,77 +912,14 @@ export const dbService = {
       return newRequest;
     },
     updateStatus: async (id: string, status: string) => {
-      return dbService.quoteRequests.update(id, { status });
-    },
-    update: async (id: string, updates: any) => {
-      if (isLive && supabase) {
-        const { data, error } = await supabase.from("quote_requests").update(updates).eq("id", id).select();
-        if (error) throw new Error(error.message);
-        if (data) return data[0];
-      }
       const quotes = mockDb.get("pgr_quote_requests");
       const index = quotes.findIndex((q: any) => q.id === id);
       if (index > -1) {
-        quotes[index] = { ...quotes[index], ...updates };
+        quotes[index].status = status;
         mockDb.set("pgr_quote_requests", quotes);
         return quotes[index];
       }
       return null;
-    }
-  },
-
-  customers: {
-    getByAuthId: async (authUserId: string) => {
-      if (isLive && supabase) {
-        const { data } = await supabase.from("customers").select("*").eq("auth_user_id", authUserId).maybeSingle();
-        if (data) return data;
-        const { data: byId } = await supabase.from("customers").select("*").eq("id", authUserId).maybeSingle();
-        if (byId) return byId;
-      }
-      const list = mockDb.get("pgr_customers") || [];
-      return list.find((c: any) => c.auth_user_id === authUserId || c.id === authUserId) || null;
-    },
-    getByEmail: async (email: string) => {
-      if (isLive && supabase) {
-        const { data } = await supabase.from("customers").select("*").eq("email", email).maybeSingle();
-        if (data) return data;
-      }
-      const list = mockDb.get("pgr_customers") || [];
-      return list.find((c: any) => c.email?.toLowerCase() === email.toLowerCase()) || null;
-    },
-    list: async () => {
-      if (isLive && supabase) {
-        const { data } = await supabase.from("customers").select("*");
-        if (data) return data;
-      }
-      return mockDb.get("pgr_customers") || [];
-    },
-    upsert: async (customer: any) => {
-      if (isLive && supabase) {
-        const payload = {
-          ...customer,
-          auth_user_id: customer.auth_user_id || customer.id,
-          updated_at: new Date().toISOString(),
-        };
-        const { data, error } = await supabase.from("customers").upsert(payload).select();
-        if (error) throw new Error(error.message);
-        if (data) return data[0];
-      }
-      const list = mockDb.get("pgr_customers") || [];
-      const index = list.findIndex((c: any) => c.id === customer.id || c.email === customer.email);
-      const record = {
-        ...customer,
-        auth_user_id: customer.auth_user_id || customer.id,
-        updated_at: new Date().toISOString(),
-        created_at: customer.created_at || new Date().toISOString(),
-      };
-      if (index > -1) {
-        list[index] = { ...list[index], ...record };
-      } else {
-        list.unshift(record);
-      }
-      mockDb.set("pgr_customers", list);
-      return record;
     }
   },
 

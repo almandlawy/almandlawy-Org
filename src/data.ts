@@ -35,7 +35,7 @@ export const PRODUCTS: Product[] = [
     availability: "In Stock",
     certificate_en: "Assay Certificate Included",
     certificate_ar: "مرفق بشهادة فحص معتمدة",
-    description_en: "A perfect entry point for physical gold investors. This 1g bar features the iconic Lady Fortuna design and comes sealed in a high-security assay card.",
+    description_en: "A perfect entry point for physical gold collections. This 1g bar features the iconic Lady Fortuna design and comes sealed in a high-security assay card.",
     description_ar: "سبيكة ذهب نقي فئة ١ جرام من مصفاة بامب سويس الشهيرة. تحمل تصميم سيدة الحظ العريق، وتأتي مغلفة ببطاقة أمان وفحص معتمدة لضمان الجودة.",
     technical_specs: { weight_grams: 1, purity: "Au 99.99%", metal: "gold", dimensions: "8.4 mm x 14.7 mm", thickness: "0.5 mm", packaging: "Sealed tamper-proof assay card", serial_number: true },
     image_placeholder: "gold_bar",
@@ -93,7 +93,7 @@ export const PRODUCTS: Product[] = [
     certificate_en: "Certified Swiss Assay Certificate",
     certificate_ar: "شهادة أصالة سويسرية معتمدة",
     description_en: "This Swiss-made 10g gold bar is recognized globally for liquidity and represents a highly liquid wealth preservation asset.",
-    description_ar: "سبيكة ذهب سويسرية وزن ١٠ جرام ممتازة للاستثمار المتوسط. تحظى بقبول عالمي فوري وسيولة تامة بفضل اعتمادها الدولي.",
+    description_ar: "سبيكة ذهب سويسرية وزن ١٠ جرام ممتازة للادخار وحفظ القيمة. تحظى بقبول عالمي فوري وسيولة تامة بفضل اعتمادها الدولي.",
     technical_specs: { weight_grams: 10, purity: "Au 99.99%", metal: "gold", dimensions: "15.0 mm x 25.4 mm", thickness: "1.6 mm", packaging: "Official Assay blister card", serial_number: true },
     image_placeholder: "gold_bar",
     premium_multiplier: 1.06
@@ -131,7 +131,7 @@ export const PRODUCTS: Product[] = [
     certificate_en: "Assay Certificate & Unique Serial Number",
     certificate_ar: "مرفق بشهادة فحص مع رقم تسلسلي فريد",
     description_en: "One of the most globally traded bar sizes, containing exactly 31.1 grams of pure Swiss gold. Perfect balance of cost efficiency and liquidity.",
-    description_ar: "أكثر السبائك تداولاً عالمياً بوزن أونصة واحدة كاملة (٣١.١ جرام). تمثل التوازن الأمثل للمحافظ الاستثمارية للتحوط وسهولة البيع والتبادل.",
+    description_ar: "أكثر السبائك تداولاً عالمياً بوزن أونصة واحدة كاملة (٣١.١ جرام). تمثل التوازن الأمثل لخطط الادخار والتحوط وسهولة البيع والتبادل.",
     technical_specs: { weight_grams: 31.1035, purity: "Au 99.99%", metal: "gold", dimensions: "24.0 mm x 41.0 mm", thickness: "1.7 mm", packaging: "CertiPAMP secure blister pack", serial_number: true },
     image_placeholder: "gold_bar",
     premium_multiplier: 1.045
@@ -169,7 +169,7 @@ export const PRODUCTS: Product[] = [
     certificate_en: "Official PAMP CertiPAMP Packaging & Assayer Stamp",
     certificate_ar: "مغلفة ببطاقة سيرتيبامب الرسمية والختم المعتمد",
     description_en: "A cornerstone for serious physical portfolios. Combining high metal volume with Swiss prestige refining, this 100g cast bar is highly liquid.",
-    description_ar: "حجر الأساس للمحافظ الاستثمارية القيمة. تجمع السبيكة بين الوزن المثالي والبريق السويسري الأخاذ لتجعلها السبيكة الأكثر طلباً لسهولة الادخار والنمو.",
+    description_ar: "حجر الأساس للادخار واقتناء المعادن الثمينة. تجمع السبيكة بين الوزن المثالي والبريق السويسري الأخاذ لتجعلها السبيكة الأكثر طلباً لسهولة الادخار وحفظ القيمة.",
     technical_specs: { weight_grams: 100, purity: "Au 99.99%", metal: "gold", dimensions: "24.0 mm x 41.0 mm", thickness: "5.5 mm", packaging: "High-security CertiPAMP hard pack", serial_number: true },
     image_placeholder: "gold_bar",
     premium_multiplier: 1.03
@@ -226,7 +226,7 @@ export const PRODUCTS: Product[] = [
     certificate_en: "Certified standard refiner",
     certificate_ar: "شهادة معتمدة ومطابقة للمواصفات الدولية",
     description_en: "A half-kilogram bar of pure UAE-refined gold. Ideal for high-net-worth vaults looking for tightly-spread gold volume.",
-    description_ar: "سبيكة تزن نصف كيلو جرام من الذهب الصافي من مصفاة إس إيه إم بدبي. ممتازة للمستثمرين الباحثين عن اقتناء الذهب بفروقات سعرية ضئيلة.",
+    description_ar: "سبيكة تزن نصف كيلو جرام من الذهب الصافي من مصفاة إس إيه إم بدبي. ممتازة للمدخرين والمقتنين الباحثين عن اقتناء الذهب بفروقات سعرية ضئيلة.",
     technical_specs: { weight_grams: 500, purity: "Au 99.99%", metal: "gold", dimensions: "40.0 mm x 85.0 mm", thickness: "7.8 mm", packaging: "Padded box with official paper certificates", serial_number: true },
     image_placeholder: "gold_bar",
     premium_multiplier: 1.02
@@ -301,8 +301,8 @@ export const PRODUCTS: Product[] = [
     availability: "Available on Order",
     certificate_en: "Official Refinery Assay Certificate",
     certificate_ar: "شهادة معتمدة ومطابقة للمواصفات الرسمية",
-    description_en: "The heavyweight choice of local investors. Offers outstanding direct metal premium pricing without complex packaging overhead.",
-    description_ar: "الخيار الأقوى للمستثمرين وكبار المدخرين في السوق المحلية. تمنحك قيمة حقيقية للذهب الصافي عيار ٢٤ مع أقل تكلفة تصنيع.",
+    description_en: "The heavyweight choice of local buyers. Offers outstanding direct metal premium pricing without complex packaging overhead.",
+    description_ar: "الخيار الأقوى للمشترين وكبار المدخرين في السوق المحلية. تمنحك قيمة حقيقية للذهب الصافي عيار ٢٤ مع أقل تكلفة تصنيع.",
     technical_specs: { weight_grams: 500, purity: "Au 99.99%", metal: "gold", dimensions: "41.0 mm x 84.0 mm", thickness: "8.0 mm", packaging: "Padded protective case and security sheet", serial_number: true },
     image_placeholder: "gold_bar",
     premium_multiplier: 1.02
@@ -401,7 +401,7 @@ export const PRODUCTS: Product[] = [
     certificate_en: "Official Assay certified",
     certificate_ar: "مصحوبة بشهادة نقاوة وفحص معتمدة",
     description_en: "A gorgeous minted silver bar manufactured in Dubai, carrying the Rose of Dubai emblem. A perfect local bullion asset.",
-    description_ar: "سبيكة فضة إماراتية رائعة من مصفاة إمارات جولد، تزدان برمز وردة دبي الوطنية لتقديم خيار استثماري إقليمي جذاب.",
+    description_ar: "سبيكة فضة إماراتية رائعة من مصفاة إمارات جولد، تزدان برمز وردة دبي الوطنية لتقديم خيار ادخاري واقتنائي إقليمي جذاب.",
     technical_specs: { weight_grams: 100, purity: "Ag 99.9%", metal: "silver", dimensions: "27.0 mm x 47.0 mm", thickness: "8.0 mm", packaging: "Emirates Gold custom blister pack", serial_number: true },
     image_placeholder: "silver_bar",
     premium_multiplier: 1.10
@@ -458,7 +458,7 @@ export const PRODUCTS: Product[] = [
     certificate_en: "Serialized Swiss Assayer Stamp & Paper Certificate",
     certificate_ar: "مختومة بختم الفاحص السويسري مع شهادة ورقية رسمية",
     description_en: "High bulk silver storage refined with absolute Swiss purity. Stamped with the iconic Valcambi square logo, this bar is perfect for hedging and robust physical holdings.",
-    description_ar: "سبيكة فضة نقية بوزن ١ كيلو جرام لتأمين السيولة في المحفظة. توفر حجماً استثمارياً ممتازاً بهامش سعري ضئيل ومصنعة باعتماد دولي عريق.",
+    description_ar: "سبيكة فضة نقية بوزن ١ كيلو جرام لتأمين السيولة وحفظ القيمة. توفر حجماً ادخارياً ممتازاً بهامش سعري ضئيل ومصنعة باعتماد دولي عريق.",
     technical_specs: { weight_grams: 1000, purity: "Ag 99.9%", metal: "silver", dimensions: "52.0 mm x 117.0 mm", thickness: "15.0 mm", packaging: "Vacuum sealed wrap with certificate", serial_number: true },
     image_placeholder: "silver_bar",
     premium_multiplier: 1.05
@@ -477,7 +477,7 @@ export const PRODUCTS: Product[] = [
     certificate_en: "Official Canadian Mint backing",
     certificate_ar: "موثقة ومعتمدة من دار السك الملكية الكندية",
     description_en: "Highly coveted heavyweight bar containing 100oz of pure 99.99% silver. Perfect for standard vaults and hedge allocations.",
-    description_ar: "سبيكة فضة عملاقة تزن ٣.١١ كيلو جرام (١٠٠ أونصة تروي) ونقاوة كندية فائقة ٩٩.٩٩٪ من أثمن الأصول الاستثمارية للفضة.",
+    description_ar: "سبيكة فضة عملاقة تزن ٣.١١ كيلو جرام (١٠٠ أونصة تروي) ونقاوة كندية فائقة ٩٩.٩٩٪ من أثمن خيارات اقتناء الفضة والادخار.",
     technical_specs: { weight_grams: 3110.35, purity: "Ag 99.99%", metal: "silver", dimensions: "72.0 mm x 152.0 mm", thickness: "33.0 mm", packaging: "Hard casing with official stamp and serial", serial_number: true },
     image_placeholder: "silver_bar",
     premium_multiplier: 1.04
@@ -506,9 +506,9 @@ export const PRODUCTS: Product[] = [
   // --- GOLD COINS (12 Products) ---
   // ==========================================
   {
-    id: "gc-royal-mint-7g",
-    name_en: "Royal Mint Gold Coin 7.98g",
-    name_ar: "مسكوكة ذهب رويال مينت ٧.٩٨ جرام",
+    id: "gc-sovereign",
+    name_en: "Royal Mint Gold Sovereign Coin 7.98g",
+    name_ar: "عملة السوفرين الذهبية الملكية ٧.٩٨ جرام",
     category: "gold_coins",
     weight_label: "7.98 Grams (22 Karat)",
     purity: "22 Karat (91.67% Gold, Crown Alloy)",
@@ -518,7 +518,7 @@ export const PRODUCTS: Product[] = [
     availability: "In Stock",
     certificate_en: "Official UK Legal Tender Backed by HM Treasury",
     certificate_ar: "عملة قانونية معتمدة ومدعومة من الخزانة البريطانية",
-    description_en: "The historic Royal Mint gold coin, depicting Saint George slaying the dragon. Exceptionally liquid and highly historical.",
+    description_en: "The historic Sovereign coin, depicting Saint George slaying the dragon. Exceptionally liquid and highly historical.",
     description_ar: "العملة الملكية التاريخية الأشهر في العالم بنقش القديس جورج والتنين. تزن ٧.٩٨ جرام (محتواها الذهبي الصافي هو ٧.٣٢ جرام).",
     technical_specs: { weight_grams: 7.988, purity: "91.67% Au (22k)", metal: "gold", dimensions: "Diameter 22.05 mm", thickness: "1.52 mm", packaging: "Protective acrylic capsule", serial_number: false },
     image_placeholder: "gold_coin",
@@ -707,7 +707,7 @@ export const PRODUCTS: Product[] = [
     country_ar: "جنوب أفريقيا",
     availability: "Limited Stock",
     certificate_en: "The world's first and most widely traded bullion gold coin",
-    certificate_ar: "العملة الاستثمارية الأولى تاريخياً والأوسع تداولاً في العالم",
+    certificate_ar: "العملة الذهبية التاريخية الأولى تاريخياً والأوسع تداولاً في العالم",
     description_en: "Introduced in 1967. The Krugerrand carries a rich coppery-gold warmth and is recognized instantly by precious metals desks globally.",
     description_ar: "تم إطلاقها لأول مرة عام ١٩٦٧ لتكون الرمز التاريخي لادخار الذهب الخاص. تتميز بلونها الدافئ الجذاب بسبب سبيكة النحاس المتينة.",
     technical_specs: { weight_oz: 1, purity: "91.67% Au (31.1g pure content)", metal: "gold", dimensions: "Diameter 32.77 mm", thickness: "2.83 mm", packaging: "Protective dynamic capsule", serial_number: false },
@@ -827,7 +827,7 @@ export const PRODUCTS: Product[] = [
     certificate_en: "Rand Refinery Official Bullion Coin",
     certificate_ar: "العملة الفضية الرسمية المعتمدة من دار راند بجنوب أفريقيا",
     description_en: "Bringing the prestige of the legendary Krugerrand series to fine silver. Struck in South Africa.",
-    description_ar: "النسخة الفضية من عملة كروغران الأسطورية، لتمنح المستثمرين السيولة والتحوط عيار ٢٤ فضة ناعمة.",
+    description_ar: "النسخة الفضية من عملة كروغران الأسطورية، لتمنح المدخرين السيولة والتحوط عيار ٢٤ فضة ناعمة.",
     technical_specs: { weight_oz: 1, purity: "Ag 99.9%", metal: "silver", dimensions: "Diameter 38.7 mm", thickness: "3.0 mm", packaging: "Protective optical capsule", serial_number: false },
     image_placeholder: "silver_coin",
     premium_multiplier: 1.18
@@ -846,7 +846,7 @@ export const PRODUCTS: Product[] = [
     certificate_en: "Perth Mint Australian Government Backing",
     certificate_ar: "مضمونة السك من مصفاة بيرث الأسترالية الحكومية Official",
     description_en: "Highly collectible, featuring a annually updated design of the native Australian Kookaburra bird.",
-    description_ar: "عملة استثمارية وجامعة للأصول، تتميز بتصميم سنوي متجدد لطائر الكوكابورا الأسترالي بفضة نقاوة أربعة تسعات.",
+    description_ar: "عملة تذكارية وجامعة للأصول، تتميز بتصميم سنوي متجدد لطائر الكوكابورا الأسترالي بفضة نقاوة أربعة تسعات.",
     technical_specs: { weight_oz: 1, purity: "Ag 99.99%", metal: "silver", dimensions: "Diameter 40.6 mm", thickness: "3.21 mm", packaging: "Official Perth Mint acrylic capsule", serial_number: false },
     image_placeholder: "silver_coin",
     premium_multiplier: 1.22
@@ -922,7 +922,7 @@ export const PRODUCTS: Product[] = [
     certificate_en: "Australian Mint Legal Tender Backed",
     certificate_ar: "عملة الكنغر الأسترالية الفضية مضمونة وموثقة النقاوة",
     description_en: "The standard workhorse bullion coin of Australia. Brilliant micro-radial security lines to deter replication.",
-    description_ar: "العملة الاستثمارية الفضية الأساسية في أستراليا. تتميز بخطوط أمان مشتتة للضوء ونقش الكنغر الأسترالي الشهير.",
+    description_ar: "العملة الفضية التذكارية الأساسية في أستراليا. تتميز بخطوط أمان مشتتة للضوء ونقش الكنغر الأسترالي الشهير.",
     technical_specs: { weight_oz: 1, purity: "Ag 99.99%", metal: "silver", dimensions: "Diameter 40.6 mm", thickness: "3.21 mm", packaging: "Airtight hard shell capsule", serial_number: false },
     image_placeholder: "silver_coin",
     premium_multiplier: 1.18
@@ -950,27 +950,27 @@ export const PRODUCTS: Product[] = [
 
 export const WHY_US_ITEMS = [
   {
-    title_en: "Request Quote",
-    title_ar: "طلب عرض سعر",
-    desc_en: "Every product inquiry starts with a formal quote. Final pricing is confirmed before payment based on availability and market conditions.",
-    desc_ar: "كل استفسار عن منتج يبدأ بطلب تسعير رسمي. يتم تأكيد السعر النهائي قبل الدفع وفق التوفر وظروف السوق."
+    title_en: "International Institutional Compliance",
+    title_ar: "امتثال مؤسسي بمعايير دولية",
+    desc_en: "Operating in the heart of Dubai, the absolute global epicentre of precious metals trading, with strict international standards of compliance.",
+    desc_ar: "نعمل من قلب دبي، العاصمة العالمية لتداول الذهب والمعادن الثمينة، بامتثال تام للأنظمة المرعية والاعتمادات الدولية."
   },
   {
-    title_en: "Product Details Verified",
-    title_ar: "تفاصيل المنتج موثقة",
-    desc_en: "Product specifications, weight, purity, and brand are verified before order confirmation.",
-    desc_ar: "يتم التحقق من مواصفات المنتج والوزن والنقاوة والعلامة التجارية قبل تأكيد الطلب."
+    title_en: "Wholesale Global Solutions",
+    title_ar: "حلول تداول بالجملة وعالمية",
+    desc_en: "We offer tailored, highly competitive direct pricing for institutional bullion procurement, private funds, high-volume trading, and institutional reserves.",
+    desc_ar: "نقدم تسعيراً مباشراً وتنافسياً مخصصاً لعمليات شراء السبائك الكبرى للمؤسسات، الصناديق الخاصة، تداول الكميات الضخمة، والاحتياطيات المؤسسية."
   },
   {
-    title_en: "Delivery Options to UAE and Iraq",
-    title_ar: "خيارات التوصيل للإمارات والعراق",
-    desc_en: "Secure product handling with delivery and pickup options to UAE and Iraq, subject to verification and customs requirements.",
-    desc_ar: "معالجة آمنة للمنتجات مع خيارات التوصيل والاستلام للإمارات والعراق، وفق التحقق والمتطلبات الجمركية."
+    title_en: "Secure Global Vaulting",
+    title_ar: "تخزين وشحن عالمي آمن",
+    desc_en: "Fully covered door-to-door transit via high-security logistics (Brink's / Transguard) with direct storage options in UAE premium, certified vaults.",
+    desc_ar: "شحن مغطى بالكامل من الباب إلى الباب عبر كبرى شركات الأمن (برينكس / ترانسجارد) مع خيارات تخزين مباشر في أرقى الخزائن المؤمنة والمعتمدة في دبي."
   },
   {
-    title_en: "Customer Dashboard",
-    title_ar: "لوحة العميل",
-    desc_en: "Track quote requests, confirmed orders, delivery status, payment links, and product certificates when available.",
-    desc_ar: "تتبع طلبات التسعير والطلبات المؤكدة وحالة التوصيل وروابط الدفع وشهادات المنتج عند توفرها."
+    title_en: "Absolute Pricing Transparency",
+    title_ar: "شفافية مطلقة في التسعير",
+    desc_en: "PGR UAE is founded on absolute transparency. Our digital rates align directly with global gold/silver spot tickers with zero hidden broker premiums.",
+    desc_ar: "تأسست بي جي آر على مبدأ الشفافية الكاملة. أسعارنا الرقمية تتبع شاشات التداول العالمية مباشرة بدون أي رسوم وساطة خفية."
   }
 ];
