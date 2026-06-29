@@ -70,6 +70,9 @@ export default function ProductDetailModal({
   // Calculate live price estimation on demand
   const getLivePrice = () => {
     if (!rates) return null;
+    if (rates.source_status !== "live" && rates.source_status !== "cached") {
+      return null;
+    }
     const cur = selectedCurrency as any;
     const isGoldMetal = activeProduct.technical_specs.metal === "gold";
     const baseSpot = isGoldMetal ? rates.gold.currencies[cur] : rates.silver.currencies[cur];
@@ -293,15 +296,31 @@ Phone: ${phone}
                 </div>
 
                 <div className="flex items-baseline justify-between">
-                  <div className="flex items-baseline gap-1">
-                    <span className={`text-2xl md:text-3xl font-serif font-medium ${isGold ? "text-gold-gradient" : "text-silver-gradient"}`}>
-                      {getLivePrice() || "..."}
-                    </span>
-                    <span className="text-xs text-gray-400 font-mono font-medium">{selectedCurrency}</span>
-                  </div>
-                  <span className="text-[10px] text-emerald-400 font-mono font-semibold">
-                    {currentLang === "ar" ? "محدث تلقائياً" : "Live synchronized"}
-                  </span>
+                  {getLivePrice() ? (
+                    <>
+                      <div className="flex items-baseline gap-1">
+                        <span className={`text-2xl md:text-3xl font-serif font-medium ${isGold ? "text-gold-gradient" : "text-silver-gradient"}`}>
+                          {getLivePrice()}
+                        </span>
+                        <span className="text-xs text-gray-400 font-mono font-medium">{selectedCurrency}</span>
+                      </div>
+                      <span className="text-[10px] text-emerald-400 font-mono font-semibold">
+                        {currentLang === "ar" ? "محدث تلقائياً" : "Live synchronized"}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-xl md:text-2xl font-serif font-medium text-gold-base">
+                          {currentLang === "ar" ? "طلب عرض سعر" : "Request Quote"}
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-amber-500 font-mono font-semibold flex items-center gap-1">
+                        <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                        {currentLang === "ar" ? "سعر المباشر غير متوفر" : "Live price unavailable"}
+                      </span>
+                    </>
+                  )}
                 </div>
 
                 <div className="text-[10px] font-mono text-gray-600 leading-relaxed pt-2 border-t border-white/[0.03]">

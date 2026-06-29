@@ -46,7 +46,9 @@ export default function App() {
     };
     
     const OUNCE_TO_GRAM = 31.1034768;
-    const ratesObj: any = {};
+    const ratesObj: any = {
+      source_status: "reference"
+    };
     
     Object.entries(defaultSpots).forEach(([metal, spotUsd]) => {
       ratesObj[metal] = {
@@ -68,7 +70,7 @@ export default function App() {
     return ratesObj as LiveMarketRates;
   };
 
-  const [rates, setRates] = useState<LiveMarketRates>(getInitialRates());
+  const [rates, setRates] = useState<LiveMarketRates | null>(getInitialRates());
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Modal / Drawer / Overlay States
@@ -169,7 +171,12 @@ export default function App() {
           if (data.source_status === "request_quote") {
             setRates(null);
           } else if (data.rates) {
-            setRates(data.rates);
+            setRates({
+              ...data.rates,
+              source_status: data.source_status,
+              updated_at: data.updated_at,
+              cache_timestamp: data.cache_timestamp
+            });
           }
         } else {
           console.warn("Backend price compilation failed, keeping local premium reference rates.");

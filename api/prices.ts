@@ -187,21 +187,34 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           }
         } else {
           // Attempt 1: GoldAPI.io
+          if (!GOLD_API_KEY) {
+            throw new Error("Skipped: GOLD_API_KEY is not defined");
+          }
           const metals = ["XAU", "XAG", "XPT", "XPD"];
           const results = await Promise.all(
             metals.map(async (metal) => {
-              const apiRes = await fetch(`https://www.goldapi.io/api/${metal}/USD`, {
-                headers: {
-                  "x-access-token": apiKey!,
-                  "Content-Type": "application/json"
-                },
-                signal: controller.signal
-              });
-              if (!apiRes.ok) throw new Error(`GoldAPI.io returned status ${apiRes.status}`);
-              const data = await apiRes.json();
-              const p = Number(data.price);
-              if (isNaN(p) || p <= 0) throw new Error("Invalid goldapi.io price response");
-              return { metal, price: p };
+              try {
+                const apiRes = await fetch(`https://www.goldapi.io/api/${metal}/USD`, {
+                  headers: {
+                    "x-access-token": GOLD_API_KEY,
+                    "Content-Type": "application/json"
+                  },
+                  signal: controller.signal
+                });
+                if (!apiRes.ok) {
+                  console.warn(`GoldAPI.io for ${metal} returned status ${apiRes.status}`);
+                  return { metal, price: null };
+                }
+                const data = await apiRes.json();
+                const p = Number(data.price);
+                if (isNaN(p) || p <= 0) {
+                  return { metal, price: null };
+                }
+                return { metal, price: p };
+              } catch (err: any) {
+                console.warn(`GoldAPI.io fetch failed for ${metal}:`, err.message || err);
+                return { metal, price: null };
+              }
             })
           );
 
@@ -210,32 +223,59 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           const platinumObj = results.find(r => r.metal === "XPT");
           const palladiumObj = results.find(r => r.metal === "XPD");
 
-          if (goldObj && silverObj) {
-            goldSpot = goldObj.price;
-            silverSpot = silverObj.price;
-            platinumSpot = platinumObj ? platinumObj.price : null;
-            palladiumSpot = palladiumObj ? palladiumObj.price : null;
+          const gPrice = goldObj?.price ?? null;
+          const sPrice = silverObj?.price ?? null;
+          const pPrice = platinumObj?.price ?? null;
+          const pdPrice = palladiumObj?.price ?? null;
+
+          const goldSpotValid = gPrice !== null && gPrice >= 500 && gPrice <= 10000;
+          const silverSpotValid = sPrice !== null && sPrice >= 5 && sPrice <= 200;
+          const platinumSpotValid = pPrice !== null && pPrice >= 300 && pPrice <= 5000;
+          const palladiumSpotValid = pdPrice !== null && pdPrice >= 300 && pdPrice <= 5000;
+
+          if (goldSpotValid) {
+            goldSpot = gPrice;
+            silverSpot = silverSpotValid ? sPrice : null;
+            platinumSpot = platinumSpotValid ? pPrice : null;
+            palladiumSpot = palladiumSpotValid ? pdPrice : null;
             providerName = "GoldAPI.io";
             provider_status = "live";
             sourceStatus = "live";
+          } else {
+            throw new Error("GoldAPI.io failed validation");
           }
         }
-      } catch (errIo) {
+      } catch (errIo: any) {
         if (providerEnv !== "commoditypriceapi") {
-          console.warn("GoldAPI.io failed, attempting goldapi.net as secondary fallback...", errIo);
+          if (GOLD_API_KEY) {
+            console.warn("GoldAPI.io failed, attempting goldapi.net as secondary fallback...", errIo.message || errIo);
+          }
           try {
             // Attempt 2: goldapi.net
+            if (!GOLD_API_KEY) {
+              throw new Error("Skipped: GOLD_API_KEY is not defined");
+            }
             const metals = ["XAU", "XAG", "XPT", "XPD"];
             const results = await Promise.all(
               metals.map(async (metal) => {
-                const apiRes = await fetch(`https://app.goldapi.net/price/${metal}/USD?x-api-key=${apiKey}`, {
-                  signal: controller.signal
-                });
-                if (!apiRes.ok) throw new Error(`goldapi.net returned status ${apiRes.status}`);
-                const data = await apiRes.json();
-                const p = Number(data.price || data.price_oz || data.value || data.spot || data.rate);
-                if (isNaN(p) || p <= 0) throw new Error("Invalid goldapi.net price response");
-                return { metal, price: p };
+                try {
+                  const apiRes = await fetch(`https://app.goldapi.net/price/${metal}/USD?x-api-key=${GOLD_API_KEY}`, {
+                    signal: controller.signal
+                  });
+                  if (!apiRes.ok) {
+                    console.warn(`goldapi.net for ${metal} returned status ${apiRes.status}`);
+                    return { metal, price: null };
+                  }
+                  const data = await apiRes.json();
+                  const p = Number(data.price || data.price_oz || data.value || data.spot || data.rate);
+                  if (isNaN(p) || p <= 0) {
+                    return { metal, price: null };
+                  }
+                  return { metal, price: p };
+                } catch (err: any) {
+                  console.warn(`goldapi.net fetch failed for ${metal}:`, err.message || err);
+                  return { metal, price: null };
+                }
               })
             );
 
@@ -244,20 +284,38 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             const platinumObj = results.find(r => r.metal === "XPT");
             const palladiumObj = results.find(r => r.metal === "XPD");
 
-            if (goldObj && silverObj) {
-              goldSpot = goldObj.price;
-              silverSpot = silverObj.price;
-              platinumSpot = platinumObj ? platinumObj.price : null;
-              palladiumSpot = palladiumObj ? palladiumObj.price : null;
+            const gPrice = goldObj?.price ?? null;
+            const sPrice = silverObj?.price ?? null;
+            const pPrice = platinumObj?.price ?? null;
+            const pdPrice = palladiumObj?.price ?? null;
+
+            const goldSpotValid = gPrice !== null && gPrice >= 500 && gPrice <= 10000;
+            const silverSpotValid = sPrice !== null && sPrice >= 5 && sPrice <= 200;
+            const platinumSpotValid = pPrice !== null && pPrice >= 300 && pPrice <= 5000;
+            const palladiumSpotValid = pdPrice !== null && pdPrice >= 300 && pdPrice <= 5000;
+
+            if (goldSpotValid) {
+              goldSpot = gPrice;
+              silverSpot = silverSpotValid ? sPrice : null;
+              platinumSpot = platinumSpotValid ? pPrice : null;
+              palladiumSpot = palladiumSpotValid ? pdPrice : null;
               providerName = "goldapi.net";
               provider_status = "live";
               sourceStatus = "live";
+            } else {
+              throw new Error("goldapi.net failed validation");
             }
-          } catch (errNet) {
-            console.warn("goldapi.net failed, attempting metalpriceapi.com as tertiary fallback...", errNet);
+          } catch (errNet: any) {
+            if (GOLD_API_KEY) {
+              console.warn("goldapi.net failed, attempting metalpriceapi.com as tertiary fallback...", errNet.message || errNet);
+            }
             try {
               // Attempt 3: metalpriceapi.com
-              const apiRes = await fetch(`https://api.metalpriceapi.com/v1/latest?api_key=${apiKey}&base=USD&currencies=XAU,XAG,XPT,XPD`, {
+              const mApiKey = METAL_PRICE_API_KEY || METALS_API_KEY;
+              if (!mApiKey) {
+                throw new Error("Skipped: METAL_PRICE_API_KEY and METALS_API_KEY are not defined");
+              }
+              const apiRes = await fetch(`https://api.metalpriceapi.com/v1/latest?api_key=${mApiKey}&base=USD&currencies=XAU,XAG,XPT,XPD`, {
                 signal: controller.signal
               });
               if (apiRes.ok) {
@@ -273,31 +331,37 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                   const pPrice = xpt ? (xpt < 1 ? 1 / xpt : xpt) : null;
                   const pdPrice = xpd ? (xpd < 1 ? 1 / xpd : xpd) : null;
 
-                  if (gPrice && sPrice) {
+                  const goldSpotValid = gPrice >= 500 && gPrice <= 10000;
+                  const silverSpotValid = sPrice >= 5 && sPrice <= 200;
+                  const platinumSpotValid = pPrice !== null && pPrice >= 300 && pPrice <= 5000;
+                  const palladiumSpotValid = pdPrice !== null && pdPrice >= 300 && pdPrice <= 5000;
+
+                  if (goldSpotValid) {
                     goldSpot = gPrice;
-                    silverSpot = sPrice;
-                    platinumSpot = pPrice;
-                    palladiumSpot = pdPrice;
+                    silverSpot = silverSpotValid ? sPrice : null;
+                    platinumSpot = platinumSpotValid ? pPrice : null;
+                    palladiumSpot = palladiumSpotValid ? pdPrice : null;
                     providerName = "Metal Price API";
                     provider_status = "live";
                     sourceStatus = "live";
                   }
                 }
               }
-            } catch (errMetal) {
-              console.error("All live market price providers failed.", errMetal);
+            } catch (errMetal: any) {
+              if (METAL_PRICE_API_KEY || METALS_API_KEY) {
+                console.error("All live market price providers failed.", errMetal.message || errMetal);
+              }
             }
           }
         } else {
-          console.error("CommodityPriceAPI live fetch failed.", errIo);
+          console.error("CommodityPriceAPI live fetch failed.", errIo.message || errIo);
         }
       } finally {
         clearTimeout(timeoutId);
       }
 
-      // If key was present but all attempts failed, set correct error and request_quote status
+      // If key was present but all attempts failed, set correct error and fallback status rather than request_quote so we never serve null rates to UI
       if (!goldSpot || !silverSpot) {
-        sourceStatus = "request_quote";
         if (providerEnv === "commoditypriceapi") {
           provider_status = "error";
           provider_error_type = "parse_failed";
@@ -305,6 +369,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           provider_status = "error";
           provider_error_type = "api_failed";
         }
+        goldSpot = METAL_SPOTS.gold;
+        silverSpot = METAL_SPOTS.silver;
+        platinumSpot = METAL_SPOTS.platinum;
+        palladiumSpot = METAL_SPOTS.palladium;
+        sourceStatus = "reference";
       }
     }
 

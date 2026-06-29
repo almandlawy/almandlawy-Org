@@ -24,6 +24,9 @@ export interface LiveMarketRates {
   silver: MetalPriceData;
   platinum: MetalPriceData;
   palladium: MetalPriceData;
+  source_status?: "live" | "cached" | "fallback" | "reference";
+  updated_at?: string;
+  cache_timestamp?: string;
 }
 
 export type MetalCategory = "gold_bars" | "silver_bars" | "gold_coins" | "silver_coins";

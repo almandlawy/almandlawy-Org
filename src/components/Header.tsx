@@ -67,6 +67,9 @@ export default function Header({
   // Get current Gold spot price for the top miniature marquee
   const getGoldMiniPrice = () => {
     if (!rates) return currentLang === "ar" ? "طلب عرض سعر" : "Request Quote";
+    if (rates.source_status !== "live" && rates.source_status !== "cached") {
+      return currentLang === "ar" ? "طلب عرض سعر" : "Request Quote";
+    }
     const cur = selectedCurrency as any;
     const goldRate = rates.gold.currencies[cur];
     if (!goldRate) return currentLang === "ar" ? "طلب عرض سعر" : "Request Quote";
@@ -75,6 +78,9 @@ export default function Header({
 
   const getMiniSilverPrice = () => {
     if (!rates) return currentLang === "ar" ? "طلب عرض سعر" : "Request Quote";
+    if (rates.source_status !== "live" && rates.source_status !== "cached") {
+      return currentLang === "ar" ? "طلب عرض سعر" : "Request Quote";
+    }
     const cur = selectedCurrency as any;
     const silverRate = rates.silver.currencies[cur];
     if (!silverRate) return currentLang === "ar" ? "طلب عرض سعر" : "Request Quote";
@@ -98,8 +104,14 @@ export default function Header({
       <div className="w-full bg-[#0a0a0a] border-b border-white/[0.03] text-[11px] font-mono py-1.5 px-4 flex justify-between items-center text-gray-400">
         <div className="flex items-center gap-4 overflow-hidden">
           <span className="flex items-center gap-1.5 text-gold-base text-[10px] uppercase tracking-widest font-semibold">
-            <span className="h-1.5 w-1.5 rounded-full bg-gold-base animate-pulse"></span>
-            {currentLang === "ar" ? "مباشر دبي" : "Dubai Spot Live"}
+            <span className={`h-1.5 w-1.5 rounded-full animate-pulse ${
+              (rates && (rates.source_status === "live" || rates.source_status === "cached")) ? "bg-emerald-500" : "bg-amber-500"
+            }`}></span>
+            {(rates && (rates.source_status === "live" || rates.source_status === "cached")) ? (
+              currentLang === "ar" ? "مباشر دبي" : "Dubai Spot Live"
+            ) : (
+              currentLang === "ar" ? "أسعار إرشادية دبي" : "Dubai Indicative"
+            )}
           </span>
           <div className="flex items-center gap-6 text-[11px]">
             <span className="hover:text-white transition-colors cursor-pointer">

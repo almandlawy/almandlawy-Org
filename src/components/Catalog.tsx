@@ -372,7 +372,7 @@ export default function Catalog({
                           <span className="text-[10px] text-gray-500 font-mono block uppercase">
                             {product.price_mode === "fixed"
                               ? (currentLang === "ar" ? "السعر الثابت المعتمد" : "Confirmed Fixed Price")
-                              : rates
+                              : (rates && (rates.source_status === "live" || rates.source_status === "cached"))
                                 ? (currentLang === "ar" ? "سعر استرشادي" : "Indicative Price")
                                 : (currentLang === "ar" ? "السعر عند الطلب" : "Price on Request")}
                           </span>
@@ -394,7 +394,7 @@ export default function Catalog({
                                 </div>
                               )}
                             </span>
-                          ) : rates && indicativePrice ? (
+                          ) : (rates && (rates.source_status === "live" || rates.source_status === "cached")) && indicativePrice ? (
                             <span className="text-sm font-mono font-semibold text-white">
                               {indicativePrice.toLocaleString(undefined, { maximumFractionDigits: 2 })}{" "}
                               <span className="text-[10px] text-gold-base">{selectedCurrency}</span>
@@ -405,7 +405,9 @@ export default function Catalog({
                                 {currentLang === "ar" ? "طلب عرض سعر" : "Request Quote"}
                               </span>
                               <span className="text-[9px] text-gray-400 font-medium leading-none block">
-                                {currentLang === "ar" ? "يتم تأكيد السعر قبل الدفع" : "Price confirmed before payment"}
+                                {rates && (rates.source_status === "fallback" || rates.source_status === "reference")
+                                  ? (currentLang === "ar" ? "سعر المباشر غير متوفر" : "Live price unavailable")
+                                  : (currentLang === "ar" ? "يتم تأكيد السعر قبل الدفع" : "Price confirmed before payment")}
                               </span>
                             </div>
                           )}
