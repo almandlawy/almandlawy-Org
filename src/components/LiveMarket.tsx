@@ -66,10 +66,10 @@ export default function LiveMarket({
 
       (["gold", "silver", "platinum", "palladium"] as const).forEach((metal) => {
         const metalData = rates[metal];
-        const currentPrice = metalData ? metalData.spot_usd_oz : undefined;
+        const currentPrice = metalData?.spot_usd_oz ?? undefined;
         const previousPrice = lastPrices[metal];
 
-        if (currentPrice && currentPrice !== previousPrice) {
+        if (currentPrice != null && currentPrice > 0 && currentPrice !== previousPrice) {
           changed = true;
           // Append new price
           const list = [...(updatedHistory[metal] || [])];
@@ -143,8 +143,17 @@ export default function LiveMarket({
 
   const getPriceData = (metal: "gold" | "silver" | "platinum" | "palladium") => {
     if (!rates) return { ounce: 0, gram: 0 };
+    const metalData = rates[metal];
+    if (
+      !metalData ||
+      metalData.spot_usd_oz === null ||
+      metalData.spot_usd_oz === undefined ||
+      !metalData.currencies
+    ) {
+      return { ounce: 0, gram: 0 };
+    }
     const cur = selectedCurrency as any;
-    return rates[metal].currencies[cur] || { ounce: 0, gram: 0 };
+    return metalData.currencies[cur] || { ounce: 0, gram: 0 };
   };
 
   const currencies = ["AED", "USD", "EUR", "GBP", "SAR"];
@@ -217,12 +226,13 @@ export default function LiveMarket({
             // Verify if this specific metal has a live spot price available
             const isMetalLive = !!(rates && 
               rates[metal] && 
-              rates[metal].spot_usd_oz !== null && 
+              rates[metal].spot_usd_oz !== null &&
+              rates[metal].spot_usd_oz !== undefined &&
               rates[metal].spot_usd_oz > 0 && 
               (
                 (isGold || isSilver) 
                   ? (rates.source_status === "live" || rates.source_status === "cached")
-                  : (rates.source_status === "live")
+                  : (rates.source_status === "live" || rates.source_status === "cached")
               )
             );
 

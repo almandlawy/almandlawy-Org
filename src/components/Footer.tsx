@@ -105,10 +105,10 @@ export default function Footer({
             </h4>
             <ul className="space-y-2.5 text-[11px]">
               <li><button onClick={() => onNavigate("catalog")} className="hover:text-gold-base transition-colors cursor-pointer text-left">{currentLang === "ar" ? "سبائك الذهب المصكوكة" : "Minted Gold Bars (1g - 1kg)"}</button></li>
-              <li><button onClick={() => onNavigate("catalog")} className="hover:text-gold-base transition-colors cursor-pointer text-left">{currentLang === "ar" ? "مسكوكات الذهب والفضة الاستثمارية" : "Investment Gold Coins"}</button></li>
+              <li><button onClick={() => onNavigate("catalog")} className="hover:text-gold-base transition-colors cursor-pointer text-left">{currentLang === "ar" ? "مسكوكات ذهب وفضة" : "Bullion Coins"}</button></li>
               <li><button onClick={() => onNavigate("catalog")} className="hover:text-gold-base transition-colors cursor-pointer text-left">{currentLang === "ar" ? "سبائك الفضة الصب والصبابة" : "Cast Silver Bullion (1kg)"}</button></li>
               <li><button onClick={onOpenQuote} className="hover:text-gold-base transition-colors cursor-pointer text-left">{currentLang === "ar" ? "تصدير وتجارة الجملة الدولية" : "Wholesale Institutional Contracts"}</button></li>
-              <li><button onClick={onOpenAIChat} className="hover:text-gold-base transition-colors cursor-pointer text-left">{currentLang === "ar" ? "ديوان المستشار المالي الرقمي" : "Bespoke Portfolio Hedging"}</button></li>
+              <li><button onClick={onOpenAIChat} className="hover:text-gold-base transition-colors cursor-pointer text-left">{currentLang === "ar" ? "مساعد المنتجات وطلبات التسعير" : "Product & Quote Assistant"}</button></li>
             </ul>
           </div>
 
@@ -191,7 +191,7 @@ export default function Footer({
               <Phone size={12} />
             </div>
             <div>
-              <span className="text-white block font-medium">{currentLang === "ar" ? "مكتب التداول الهاتفي" : "Desk Direct Hotline"}</span>
+              <span className="text-white block font-medium">{currentLang === "ar" ? "خط تواصل PGR UAE" : "PGR UAE Desk Hotline"}</span>
               <span className="text-gray-500">
                 {settings?.trade_phone || "+971 4 445 8888"} • {settings?.whatsapp_hotline || "+971 55 968 8837"}
               </span>

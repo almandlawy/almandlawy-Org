@@ -888,11 +888,22 @@ export const dbService = {
 
   quoteRequests: {
     list: async () => {
+      const normalize = (q: any) => ({
+        ...q,
+        metalInterest: q.metalInterest || q.metal_interest || "gold",
+        productCategory: q.productCategory || q.product_category || q.product_name || "General Bullion Inquiry",
+        weight: q.weight || q.weight_preference || "",
+        clientType: q.clientType || q.client_type || "",
+        preferredCurrency: q.preferredCurrency || q.preferred_currency || "",
+        deliveryInterest: q.deliveryInterest || q.delivery_interest || "",
+        status: q.status === "awaiting_confirmation" ? "Pending" : q.status,
+      });
+
       if (isLive && supabase) {
         const { data } = await supabase.from("quote_requests").select("*");
-        if (data) return data;
+        if (data) return data.map(normalize);
       }
-      return mockDb.get("pgr_quote_requests");
+      return (mockDb.get("pgr_quote_requests") || []).map(normalize);
     },
     create: async (request: any) => {
       if (isLive && supabase) {
@@ -912,6 +923,14 @@ export const dbService = {
       return newRequest;
     },
     updateStatus: async (id: string, status: string) => {
+      if (isLive && supabase) {
+        const { data, error } = await supabase
+          .from("quote_requests")
+          .update({ status })
+          .eq("id", id)
+          .select();
+        if (!error && data?.[0]) return data[0];
+      }
       const quotes = mockDb.get("pgr_quote_requests");
       const index = quotes.findIndex((q: any) => q.id === id);
       if (index > -1) {

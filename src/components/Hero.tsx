@@ -114,7 +114,7 @@ export default function Hero({ currentLang, onScrollToCatalog, onScrollToMarket,
             onClick={onOpenQuote}
             className="w-full sm:w-auto px-8 py-3.5 text-[12px] uppercase tracking-[0.2em] font-semibold text-gold-light bg-gold-dark/10 border border-gold-base/30 hover:border-gold-base rounded-sm transition-all duration-300 cursor-pointer"
           >
-            {currentLang === "ar" ? "طلب استشارة ومقايسة" : "Bespoke Portfolio Quote"}
+            {currentLang === "ar" ? "طلب عرض سعر مؤكد" : "Request Firm Quote"}
           </button>
         </div>
 

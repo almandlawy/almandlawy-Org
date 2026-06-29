@@ -107,7 +107,7 @@ export default function App() {
     }
   }, []);
 
-  // Pathname routing for compliance & legal policies
+  // Pathname routing for compliance & legal policies, quote form, and FAQ
   useEffect(() => {
     const handleLocation = () => {
       const path = window.location.pathname;
@@ -126,6 +126,17 @@ export default function App() {
       };
       if (pathMap[path]) {
         setActiveLegalDoc(pathMap[path]);
+        return;
+      }
+      if (path === "/request-quote") {
+        setIsQuoteOpen(true);
+        return;
+      }
+      if (path === "/faq") {
+        setTimeout(() => {
+          const el = document.getElementById("faq");
+          if (el) el.scrollIntoView({ behavior: "smooth" });
+        }, 150);
       }
     };
     handleLocation();
@@ -399,7 +410,7 @@ export default function App() {
             <p className="text-xs text-gray-500 max-w-xl mx-auto leading-relaxed">
               {currentLang === "ar"
                 ? "نحن وكيل وموزع معتمد لكبرى مصافي الذهب العالمية المعتمدة."
-                : "Authorized logistics and trading conduit for world-renowned certified gold refineries."}
+                : "Authorized logistics and bullion desk partner for world-renowned certified gold refineries."}
             </p>
           </div>
 
@@ -421,6 +432,60 @@ export default function App() {
             ))}
           </div>
 
+        </div>
+      </section>
+
+      {/* FAQ section — linked from /faq sitemap route */}
+      <section className="py-20 px-4 md:px-8 bg-[#0a0a0b] border-t border-white/[0.03]" id="faq">
+        <div className="max-w-3xl mx-auto space-y-8">
+          <div className="text-center space-y-3">
+            <span className="text-gold-base font-mono uppercase text-xs tracking-[0.3em] font-semibold block">
+              {currentLang === "ar" ? "الأسئلة الشائعة" : "Frequently Asked Questions"}
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-serif text-white font-medium">
+              {currentLang === "ar" ? "أسئلة شائعة حول سبائك الذهب والفضة" : "Bullion Quote Desk FAQ"}
+            </h2>
+          </div>
+          <div className="space-y-4 text-sm text-gray-400">
+            <div className="p-4 rounded border border-white/[0.04] bg-[#111]">
+              <h3 className="text-white font-medium mb-2">
+                {currentLang === "ar" ? "هل يوجد ضريبة قيمة مضافة على سبائك الذهب في دبي؟" : "Is there VAT on gold bullion in Dubai, UAE?"}
+              </h3>
+              <p>
+                {currentLang === "ar"
+                  ? "قد تختلف المعاملة الضريبية حسب نوع المنتج، حالة العميل، طريقة التسليم، والأنظمة المطبقة في دولة الإمارات. سيتم توضيح أي ضريبة أو رسوم ضمن عرض السعر النهائي قبل المتابعة."
+                  : "VAT/tax treatment may vary depending on product type, customer status, delivery method, and applicable UAE rules. Any VAT, tax, or fee will be confirmed in the final quote before proceeding."}
+              </p>
+            </div>
+            <div className="p-4 rounded border border-white/[0.04] bg-[#111]">
+              <h3 className="text-white font-medium mb-2">
+                {currentLang === "ar" ? "هل تضمنون إعادة الشراء؟" : "Do you guarantee buyback?"}
+              </h3>
+              <p>
+                {currentLang === "ar"
+                  ? "لا تقدم PGR UAE ضماناً لإعادة الشراء. يمكنك تقديم طلب عرض سعر لإعادة البيع، وتخضع أي عملية لتحقق المنتج، فحوصات الامتثال، ظروف السوق، الرسوم، وتأكيد المكتب النهائي."
+                  : "PGR UAE does not guarantee buyback. You may request a sell-back quote, subject to product verification, compliance checks, market conditions, fees, and final desk confirmation."}
+              </p>
+            </div>
+            <div className="p-4 rounded border border-white/[0.04] bg-[#111]">
+              <h3 className="text-white font-medium mb-2">
+                {currentLang === "ar" ? "هل المنتجات معتمدة؟" : "Are bullion products certified?"}
+              </h3>
+              <p>
+                {currentLang === "ar"
+                  ? "يتم توفير سبائك الذهب والفضة من مصافي عالمية معتمدة مع شهادات فحص ومواصفات المنتج حسب التوفر والتحقق من المكتب."
+                  : "Gold and silver bullion is sourced from accredited global refineries with assay certificates and product specifications, subject to availability and desk verification."}
+              </p>
+            </div>
+          </div>
+          <div className="text-center">
+            <button
+              onClick={() => handleOpenQuote()}
+              className="px-6 py-2.5 bg-gold-base hover:bg-amber-600 text-black text-xs font-semibold uppercase tracking-widest rounded transition-colors cursor-pointer"
+            >
+              {currentLang === "ar" ? "طلب عرض سعر مؤكد" : "Request Firm Quote"}
+            </button>
+          </div>
         </div>
       </section>
 

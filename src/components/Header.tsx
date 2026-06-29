@@ -71,8 +71,8 @@ export default function Header({
       return currentLang === "ar" ? "طلب عرض سعر" : "Request Quote";
     }
     const cur = selectedCurrency as any;
-    const goldRate = rates.gold.currencies[cur];
-    if (!goldRate) return currentLang === "ar" ? "طلب عرض سعر" : "Request Quote";
+    const goldRate = rates.gold?.currencies?.[cur];
+    if (!goldRate || rates.gold?.spot_usd_oz == null) return currentLang === "ar" ? "طلب عرض سعر" : "Request Quote";
     return `${goldRate.ounce.toLocaleString()} ${selectedCurrency}`;
   };
 
@@ -82,8 +82,8 @@ export default function Header({
       return currentLang === "ar" ? "طلب عرض سعر" : "Request Quote";
     }
     const cur = selectedCurrency as any;
-    const silverRate = rates.silver.currencies[cur];
-    if (!silverRate) return currentLang === "ar" ? "طلب عرض سعر" : "Request Quote";
+    const silverRate = rates.silver?.currencies?.[cur];
+    if (!silverRate || rates.silver?.spot_usd_oz == null) return currentLang === "ar" ? "طلب عرض سعر" : "Request Quote";
     return `${silverRate.ounce.toLocaleString()} ${selectedCurrency}`;
   };
 
@@ -92,7 +92,7 @@ export default function Header({
   const navLinks = [
     { id: "market", label_en: "Live Rates", label_ar: "الأسعار المباشرة" },
     { id: "catalog", label_en: "Bullion Catalog", label_ar: "كتالوج السبائك" },
-    { id: "investment", label_en: "Buy & Track", label_ar: "شراء وتتبع" },
+    { id: "investment", label_en: "Quotes & Orders", label_ar: "العروض والطلبات" },
     { id: "why-us", label_en: "Institutional Edge", label_ar: "المعايير المؤسسية" },
     { id: "office", label_en: "Dubai Office", label_ar: "مكتب دبي" },
     { id: "blog", label_en: "Intelligence", label_ar: "تقارير الأبحاث" }
