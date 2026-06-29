@@ -190,6 +190,15 @@ app.get("/api/prices", async (req, res) => {
     const has_api_key = !!apiKey;
     const is_live_configured = has_api_key;
     
+    const isDebug = req.query && (req.query.debug === "1" || req.query.debug === "true");
+
+    let raw_success: boolean | null = null;
+    let raw_rates_keys: string[] | null = null;
+    let raw_meta_keys: string[] | null = null;
+    let raw_error_code: any = null;
+    let raw_error_message: any = null;
+    let rawRatesObj: any = null;
+
     let goldSpot: number | null = null;
     let silverSpot: number | null = null;
     let platinumSpot: number | null = null;
@@ -197,7 +206,7 @@ app.get("/api/prices", async (req, res) => {
 
     let provider_attempted = false;
     let provider_status: "live" | "fallback" | "error" = "fallback";
-    let provider_error_type: "api_failed" | undefined = undefined;
+    let provider_error_type: "api_failed" | "parse_failed" | undefined = undefined;
     let sourceStatus = "reference";
     let providerName = providerEnv === "commoditypriceapi" ? "CommodityPriceAPI" : "GoldAPI.io";
     
@@ -208,31 +217,113 @@ app.get("/api/prices", async (req, res) => {
 
       try {
         if (providerEnv === "commoditypriceapi") {
-          const url = `https://commoditypriceapi.com/api/v1/latest?api_key=${apiKey}&base=USD&symbols=XAU,XAG,XPT,XPD`;
-          const apiRes = await fetch(url, { signal: controller.signal });
-          if (apiRes.ok) {
-            const apiData = await apiRes.json();
-            if (apiData && apiData.rates) {
-              const xau = apiData.rates.XAU;
-              const xag = apiData.rates.XAG;
-              const xpt = apiData.rates.XPT;
-              const xpd = apiData.rates.XPD;
+          const url = `https://api.commoditypriceapi.com/v2/rates/latest?symbols=xau,xag,xpt,xpd&apiKey=${apiKey}`;
+          let fetchError: any = null;
+          let apiData: any = null;
 
-              const gPrice = xau ? (xau < 1 ? 1 / xau : xau) : null;
-              const sPrice = xag ? (xag < 1 ? 1 / xag : xag) : null;
-              const pPrice = xpt ? (xpt < 1 ? 1 / xpt : xpt) : null;
-              const pdPrice = xpd ? (xpd < 1 ? 1 / xpd : xpd) : null;
+          try {
+            const apiRes = await fetch(url, {
+              headers: {
+                "x-api-key": apiKey
+              },
+              signal: controller.signal
+            });
+            if (apiRes.ok) {
+              apiData = await apiRes.json();
+            } else {
+              fetchError = new Error(`HTTP Status ${apiRes.status}`);
+              try {
+                apiData = await apiRes.json();
+              } catch (e) {}
+            }
+          } catch (err: any) {
+            fetchError = err;
+            console.error("CommodityPriceAPI fetch error on server:", err);
+          }
 
-              if (gPrice && sPrice) {
-                goldSpot = gPrice;
-                silverSpot = sPrice;
-                platinumSpot = pPrice;
-                palladiumSpot = pdPrice;
-                providerName = "CommodityPriceAPI";
-                provider_status = "live";
-                sourceStatus = "live";
+          if (apiData) {
+            raw_success = apiData.success !== undefined ? !!apiData.success : null;
+            raw_rates_keys = apiData.rates ? Object.keys(apiData.rates) : null;
+            raw_meta_keys = Object.keys(apiData).filter(k => k !== "rates");
+            if (apiData.error) {
+              raw_error_code = apiData.error.code || null;
+              raw_error_message = apiData.error.message || null;
+            }
+            if (apiData.rates) {
+              rawRatesObj = apiData.rates;
+            }
+          } else if (fetchError) {
+            raw_success = false;
+            raw_error_message = fetchError.message || String(fetchError);
+          }
+
+          let gPrice: number | null = null;
+          let sPrice: number | null = null;
+          let pPrice: number | null = null;
+          let pdPrice: number | null = null;
+
+          if (apiData && apiData.rates) {
+            const getRateValue = (ratesObj: any, key: string): number | null => {
+              const val = ratesObj[key.toLowerCase()] !== undefined ? ratesObj[key.toLowerCase()] : ratesObj[key.toUpperCase()];
+              if (typeof val === "number" && !isNaN(val) && val > 0) return val;
+              if (typeof val === "string") {
+                const parsed = parseFloat(val);
+                if (!isNaN(parsed) && parsed > 0) return parsed;
+              }
+              return null;
+            };
+
+            const rawXau = getRateValue(apiData.rates, "XAU");
+            const rawXag = getRateValue(apiData.rates, "XAG");
+            const rawXpt = getRateValue(apiData.rates, "XPT");
+            const rawXpd = getRateValue(apiData.rates, "XPD");
+
+            if (rawXau !== null) {
+              gPrice = rawXau;
+              if (gPrice < 500 && (1 / gPrice) >= 500 && (1 / gPrice) <= 10000) {
+                gPrice = 1 / gPrice;
               }
             }
+            if (rawXag !== null) {
+              sPrice = rawXag;
+              if (sPrice < 5 && (1 / sPrice) >= 5 && (1 / sPrice) <= 200) {
+                sPrice = 1 / sPrice;
+              }
+            }
+            if (rawXpt !== null) {
+              pPrice = rawXpt;
+              if (pPrice < 300 && (1 / pPrice) >= 300 && (1 / pPrice) <= 5000) {
+                pPrice = 1 / pPrice;
+              }
+            }
+            if (rawXpd !== null) {
+              pdPrice = rawXpd;
+              if (pdPrice < 300 && (1 / pdPrice) >= 300 && (1 / pdPrice) <= 5000) {
+                pdPrice = 1 / pdPrice;
+              }
+            }
+          }
+
+          const goldSpotValid = gPrice !== null && gPrice >= 500 && gPrice <= 10000;
+          const silverSpotValid = sPrice !== null && sPrice >= 5 && sPrice <= 200;
+          const platinumSpotValid = pPrice !== null && pPrice >= 300 && pPrice <= 5000;
+          const palladiumSpotValid = pdPrice !== null && pdPrice >= 300 && pdPrice <= 5000;
+
+          if (goldSpotValid) {
+            goldSpot = gPrice;
+            silverSpot = silverSpotValid ? sPrice : null;
+            platinumSpot = platinumSpotValid ? pPrice : null;
+            palladiumSpot = palladiumSpotValid ? pdPrice : null;
+            provider_status = "live";
+            sourceStatus = "live";
+          } else {
+            goldSpot = null;
+            silverSpot = null;
+            platinumSpot = null;
+            palladiumSpot = null;
+            provider_status = "error";
+            provider_error_type = "parse_failed";
+            sourceStatus = "request_quote";
           }
         } else {
           // Attempt 1: GoldAPI.io
@@ -347,8 +438,13 @@ app.get("/api/prices", async (req, res) => {
       // If key was present but all attempts failed, set correct error and request_quote status
       if (!goldSpot || !silverSpot) {
         sourceStatus = "request_quote";
-        provider_status = "error";
-        provider_error_type = "api_failed";
+        if (providerEnv === "commoditypriceapi") {
+          provider_status = "error";
+          provider_error_type = "parse_failed";
+        } else {
+          provider_status = "error";
+          provider_error_type = "api_failed";
+        }
       }
     }
     
@@ -361,12 +457,16 @@ app.get("/api/prices", async (req, res) => {
     if (providerEnv === "commoditypriceapi") {
       finalProvider = "CommodityPriceAPI";
       finalProviderEnv = "commoditypriceapi";
-      finalProviderStatus = "success";
+      if (provider_status === "live") {
+        finalProviderStatus = "success";
+      } else {
+        finalProviderStatus = "error";
+      }
     }
 
     // Build the final response payload for server
     if (sourceStatus === "request_quote") {
-      return res.json({
+      const errorPayload: any = {
         status: "success",
         is_live_configured: true,
         source_status: "request_quote",
@@ -383,7 +483,19 @@ app.get("/api/prices", async (req, res) => {
         provider_attempted,
         timestamp: new Date().toISOString(),
         rates: null
-      });
+      };
+      if (provider_error_type) {
+        errorPayload.provider_error_type = provider_error_type;
+      }
+      if (isDebug) {
+        errorPayload.raw_success = raw_success;
+        errorPayload.raw_rates_keys = raw_rates_keys;
+        errorPayload.raw_meta_keys = raw_meta_keys;
+        errorPayload.raw_error_code = raw_error_code;
+        errorPayload.raw_error_message = raw_error_message;
+        errorPayload.raw_rates = rawRatesObj;
+      }
+      return res.json(errorPayload);
     }
 
     // Fallback to manual admin price or default reference points if completely unconfigured (no API key)
@@ -459,6 +571,15 @@ app.get("/api/prices", async (req, res) => {
 
     if (provider_error_type) {
       responsePayload.provider_error_type = provider_error_type;
+    }
+
+    if (isDebug) {
+      responsePayload.raw_success = raw_success;
+      responsePayload.raw_rates_keys = raw_rates_keys;
+      responsePayload.raw_meta_keys = raw_meta_keys;
+      responsePayload.raw_error_code = raw_error_code;
+      responsePayload.raw_error_message = raw_error_message;
+      responsePayload.raw_rates = rawRatesObj;
     }
     
     res.json(responsePayload);
