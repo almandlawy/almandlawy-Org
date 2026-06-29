@@ -765,7 +765,7 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
   const stats = {
     totalVolumeUSD: orders.reduce((sum, o) => sum + (o.total_amount || 0), 0) + holdings.reduce((sum, h) => sum + (h.current_market_value_usd || 0), 0),
     activeCustomersCount: kycProfiles.filter(k => k.status === "Verified").length + 5,
-    pendingQuotesCount: quotes.filter(q => q.status === "Pending").length,
+    pendingQuotesCount: quotes.filter(q => q.status === "Pending" || q.status === "awaiting_confirmation").length,
     activeDeliveriesIraq: iraqDeliveries.filter(d => d.status !== "Delivered").length,
     pendingKycCount: kycProfiles.filter(k => k.status === "Pending review" || k.status === "Pending").length,
     buybackInquiries: buybacks.filter(b => b.status === "Pending").length
@@ -1781,7 +1781,7 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                                   </span>
                                 </td>
                                 <td className="p-4 flex gap-2 justify-center">
-                                  {q.status === "Pending" && (
+                                  {(q.status === "Pending" || q.status === "awaiting_confirmation") && (
                                     <>
                                       <button
                                         onClick={() => handleUpdateQuoteStatus(q.id, "Approved")}

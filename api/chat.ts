@@ -70,6 +70,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
+    if (
+      lastUserMsg.includes("vat") ||
+      lastUserMsg.includes("tax") ||
+      (lastUserMsg.includes("gold") && lastUserMsg.includes("dubai"))
+    ) {
+      return res.status(200).json({
+        text: "VAT/tax treatment may vary depending on product type, customer status, delivery method, and applicable UAE rules. Any VAT, tax, or fee will be confirmed in the final quote before proceeding.",
+        isFallback: true,
+      });
+    }
+
     if (lastUserMsg.includes("buyback") || lastUserMsg.includes("guarantee")) {
       return res.status(200).json({
         text: "PGR UAE does not guarantee buyback. You may request a sell-back quote, subject to product verification, compliance checks, market conditions, fees, and final desk confirmation.",

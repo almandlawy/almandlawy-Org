@@ -1218,7 +1218,6 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
                                 <span className="text-[10px] text-gray-300 block">{isAr ? "هوية المفوض بالتوقيع والمدير *" : "Authorized Signatory Passport/ID *"}</span>
                                 <input
                                   type="file"
-                                  required={!uploadedFilesRegistry["signatory_id"]}
                                   accept=".pdf,.jpg,.jpeg,.png,.webp"
                                   onChange={(e) => handleFileChange("signatory_id", e.target.files?.[0] || null)}
                                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
@@ -1235,7 +1234,6 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
                                 <span className="text-[10px] text-gray-300 block">{isAr ? "سجل المستفيدين الحقيقيين (UBO) *" : "Ultimate Beneficial Owners (UBO) list *"}</span>
                                 <input
                                   type="file"
-                                  required={!uploadedFilesRegistry["ubo_details"]}
                                   accept=".pdf,.jpg,.jpeg,.png,.webp"
                                   onChange={(e) => handleFileChange("ubo_details", e.target.files?.[0] || null)}
                                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
@@ -1286,7 +1284,6 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
                                 <span className="text-[10px] text-gray-300 block">{isAr ? "تحميل وجه الهوية الإماراتية *" : "Emirates ID Front *"}</span>
                                 <input
                                   type="file"
-                                  required={!uploadedFilesRegistry["emirates_id_front"]}
                                   accept=".pdf,.jpg,.jpeg,.png,.webp"
                                   onChange={(e) => handleFileChange("emirates_id_front", e.target.files?.[0] || null)}
                                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
@@ -1303,7 +1300,6 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
                                 <span className="text-[10px] text-gray-300 block">{isAr ? "تحميل خلف الهوية الإماراتية *" : "Emirates ID Back *"}</span>
                                 <input
                                   type="file"
-                                  required={!uploadedFilesRegistry["emirates_id_back"]}
                                   accept=".pdf,.jpg,.jpeg,.png,.webp"
                                   onChange={(e) => handleFileChange("emirates_id_back", e.target.files?.[0] || null)}
                                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
@@ -1320,7 +1316,6 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
                                 <span className="text-[10px] text-gray-300 block">{isAr ? "جواز السفر الدولي *" : "International Passport *"}</span>
                                 <input
                                   type="file"
-                                  required={!uploadedFilesRegistry["passport"]}
                                   accept=".pdf,.jpg,.jpeg,.png,.webp"
                                   onChange={(e) => handleFileChange("passport", e.target.files?.[0] || null)}
                                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"

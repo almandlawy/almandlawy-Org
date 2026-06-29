@@ -82,6 +82,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 
+  if (clientType === "company" && !company) {
+    return res.status(400).json({
+      error: lang === "ar" ? "يرجى إدخال اسم الشركة." : "Company name is required for company inquiries.",
+    });
+  }
+
   const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   if (!emailOk) {
     return res.status(400).json({
@@ -91,6 +97,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const inquiryId = "PGR-" + Math.floor(100000 + Math.random() * 900000);
 
+  // Align field names with AdminPanel (camelCase) and Supabase (snake_case) expectations
   const newQuote = {
     id: inquiryId,
     customer_id: body.customerId || null,
@@ -98,39 +105,49 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     email,
     phone,
     company: clientType === "company" ? company : "",
+    clientType,
     client_type: clientType,
+    metalInterest,
     metal_interest: metalInterest,
-    product_id: body.productId || null,
+    productCategory: productInterest,
+    product_category: productInterest,
     product_name: productInterest,
-    quantity: body.quantity || 1,
+    weight: weightPreference,
     weight_preference: weightPreference,
+    preferredCurrency,
     preferred_currency: preferredCurrency,
+    deliveryInterest,
     delivery_interest: deliveryInterest,
     message,
-    status: "awaiting_confirmation",
+    status: "Pending",
     created_at: new Date().toISOString(),
   };
 
   try {
     const supabase = getSupabase();
-    let stored = false;
 
-    if (supabase) {
-      const { error } = await supabase.from("quote_requests").insert(newQuote);
-      if (error) {
-        console.error("Failed to save quote request to Supabase:", error.message);
-      } else {
-        stored = true;
-      }
-    } else {
-      console.warn("Supabase not configured — quote logged server-side only:", inquiryId);
+    if (!supabase) {
+      console.error("Supabase not configured — cannot persist quote:", inquiryId);
+      return res.status(503).json({
+        success: false,
+        error: ERROR_MSG[lang],
+        whatsapp: WHATSAPP,
+      });
+    }
+
+    const { error } = await supabase.from("quote_requests").insert(newQuote);
+    if (error) {
+      console.error("Failed to save quote request to Supabase:", error.message);
+      return res.status(500).json({
+        success: false,
+        error: ERROR_MSG[lang],
+        whatsapp: WHATSAPP,
+      });
     }
 
     return res.status(200).json({
       success: true,
       inquiryId,
-      stored,
-      whatsapp: WHATSAPP,
       message: SUCCESS_MSG[lang],
       timestamp: new Date().toISOString(),
     });
