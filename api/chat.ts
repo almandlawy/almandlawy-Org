@@ -48,42 +48,63 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // Fallback handler if Gemini SDK is not configured
   if (!ai) {
-    console.warn("Serverless: Gemini Client is not initialized due to missing API key.");
-    const lastUserMsg = messages[messages.length - 1]?.content || "";
-    const responseText = userLanguage === "ar"
-      ? `شكراً لتواصلك مع PGR ومقرنا في دبي. في الوقت الحالي، مساعد المنتجات وطلبات التسعير غير متصل مؤقتاً بالإنترنت. يرجى التواصل معنا مباشرة عبر الواتساب على 971559688837+ لتأكيد الأسعار وتفاصيل المنتجات.`
-      : `Thank you for contacting PGR Precious Metals, Dubai. Our Product & Quote Assistant is currently offline. Please contact our support desk directly via WhatsApp at +971559688837 for instant product pricing and quote confirmations.`;
-    
-    return res.status(200).json({ text: responseText, isFallback: true });
+    console.warn("Serverless: Gemini Client is not initialized — GEMINI_API_KEY missing.");
+    const lastUserMsg = (messages[messages.length - 1]?.content || "").toLowerCase();
+
+    if (userLanguage === "ar") {
+      if (lastUserMsg.includes("ضريبة") && (lastUserMsg.includes("ذهب") || lastUserMsg.includes("سبائك"))) {
+        return res.status(200).json({
+          text: "قد تختلف المعاملة الضريبية حسب نوع المنتج، حالة العميل، طريقة التسليم، والأنظمة المطبقة في دولة الإمارات. سيتم توضيح أي ضريبة أو رسوم ضمن عرض السعر النهائي قبل المتابعة.",
+          isFallback: true,
+        });
+      }
+      if (lastUserMsg.includes("إعادة الشراء") || lastUserMsg.includes("تضمنون")) {
+        return res.status(200).json({
+          text: "لا تقدم PGR UAE ضماناً لإعادة الشراء. يمكنك تقديم طلب عرض سعر لإعادة البيع (Request Sell-Back Quote)، وتخضع أي عملية لتحقق المنتج، فحوصات الامتثال، ظروف السوق، الرسوم، وتأكيد المكتب النهائي.",
+          isFallback: true,
+        });
+      }
+      return res.status(200).json({
+        text: `شكراً لتواصلك مع PGR UAE. مساعد المنتجات وطلبات التسعير غير متصل حالياً. يرجى التواصل معنا عبر واتساب: +971559688837 لطلب عرض سعر مؤكد.`,
+        isFallback: true,
+      });
+    }
+
+    if (lastUserMsg.includes("buyback") || lastUserMsg.includes("guarantee")) {
+      return res.status(200).json({
+        text: "PGR UAE does not guarantee buyback. You may request a sell-back quote, subject to product verification, compliance checks, market conditions, fees, and final desk confirmation.",
+        isFallback: true,
+      });
+    }
+
+    return res.status(200).json({
+      text: `Thank you for contacting PGR UAE. Our Product & Quote Assistant is currently offline. Please contact us on WhatsApp at +971559688837 to request a firm quote.`,
+      isFallback: true,
+    });
   }
 
   try {
     // Compile previous message format for Gemini
     const recentMessages = messages.slice(-6);
-    const systemPrompt = `You are the Lead Product & Quote Assistant for PGR UAE Precious Metals (pgruae.com), headquartered in Dubai, United Arab Emirates.
-PGR UAE is an ultra-premium institution. We deal exclusively in physical Gold Bullion, Silver Bullion, Gold Coins, Silver Coins, and Wholesale Trading. 
-Our target market consists of High-Net-Worth Individuals (HNWIs), institutional investors, corporate funds, and international wholesalers.
+    const systemPrompt = `You are the Lead Product & Quote Assistant for PGR UAE Precious Metals & Bullion Quote Desk (pgruae.com), headquartered in Dubai, United Arab Emirates.
+PGR UAE is a Physical Bullion Quote & Purchase Desk. We deal exclusively in physical Gold Bullion, Silver Bullion, Gold Coins, and Silver Coins.
 
-PGR UAE is a premium global wholesale trading house, partnered with world-famous authorized brands including PAMP Suisse, Valcambi, Metalor, Argor-Heraeus, Perth Mint, Royal Canadian Mint, and the Royal Mint. We are a trusted trading house and delivery partner, not a manufacturer.
+PGR UAE is partnered with world-famous authorized brands including PAMP Suisse, Valcambi, Metalor, Argor-Heraeus, Perth Mint, Royal Canadian Mint, and the Royal Mint. We are a trusted bullion desk and delivery partner, not a manufacturer.
 
 CRITICAL COMPLIANCE RULES:
-1. You MUST NOT give investment advice, financial advisory statements, guaranteed returns, or financial promises of any kind. 
-2. You MUST NOT use terms like "guaranteed profit", "fixed returns", "investment guarantee", "risk-free", "insured investment".
-3. You should only help with:
-   * product details (purity, weight, brand, specs)
-   * request quote (guiding them to the form)
-   * WhatsApp contact (+971559688837)
-   * delivery options (UAE and Iraq secured delivery)
-   * price confirmation before payment (indicative reference pricing, confirmed before order settlement)
+1. You MUST NOT give investment advice, financial advisory statements, guaranteed returns, or financial promises of any kind.
+2. You MUST NOT use terms like "trading platform", "trading application", "trading desk", "wallet", "cash balance", "investment account", "portfolio", "guaranteed profit", "fixed returns", "instant buy/sell", or "instant cash out".
+3. Use only: Physical Bullion Quote & Purchase Desk, Request Firm Quote, Indicative Market Price, Final Desk Confirmation, Request Sell-Back Quote.
+4. For VAT questions in Arabic: explain that tax treatment varies by product type, client status, delivery method, and UAE regulations. Final taxes/fees are confirmed in the firm quote before proceeding.
+5. For buyback questions: PGR UAE does NOT guarantee buyback. Customers may request a sell-back quote subject to verification, compliance, market conditions, fees, and final desk confirmation.
+6. Guide users to the Request Firm Quote form or WhatsApp (+971559688837).
 
-Core Tenets of PGR Assistant:
-1. Brand & Tone: You speak with extreme elegance, professional composure, absolute integrity, and precision. You are sophisticated and prestigious, yet humble and helpful.
-2. Dubai Advantage: Dubai is the 'City of Gold'. Inform clients that physical investment-grade gold bars (99.5%+ purity) are subject to 0% VAT in the UAE under local guidelines. UAE holds a major geopolitical and logistic advantage for secure transport.
-3. Capabilities: We handle wholesale requests, secure shipping/courier handling, secure product storage options in Dubai, customs processing, and custom corporate orders.
-4. Response Language: Match the user's language. If they query in Arabic, respond in immaculate, premium Gulf Arabic (الفصحى الراقية). If in English, use refined, elegant business English.
-5. No fake data: We deal with real bullion transactions. If they ask to make a purchase, guide them to use our 'Request Quote' form or click 'WhatsApp Order' (+971559688837) to chat live with our desk.
-
-Keep responses relatively concise (2-3 paragraphs), extremely elegant, well-structured, and formatted in clean Markdown.`;
+Core Tenets:
+1. Brand & Tone: Professional, elegant, precise, and helpful.
+2. Dubai Advantage: Physical investment-grade gold bars (99.5%+ purity) may be subject to 0% VAT in the UAE under applicable guidelines — always note final terms are confirmed in the firm quote.
+3. Capabilities: Quote requests, delivery, office collection, allocated storage requests, sell-back quote requests.
+4. Response Language: Match the user's language with premium Gulf Arabic or refined business English.
+5. Keep responses concise (2-3 paragraphs), well-structured Markdown.`;
 
     // Map conversation array to content parts
     const contents = recentMessages.map((msg: any) => ({

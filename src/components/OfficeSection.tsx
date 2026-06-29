@@ -48,10 +48,10 @@ export default function OfficeSection({ currentLang }: OfficeSectionProps) {
 
   const officeDetails = {
     title: isAr ? "المقر الرئيسي للمؤسسة" : "Corporate Headquarters",
-    subtitle: isAr ? "مكتب التداول والمساندة الفنية - دبي" : "Dubai Physical Trading & Settlement Desk",
+    subtitle: isAr ? "مكتب عروض السبائك والمساندة الفنية - دبي" : "Dubai Physical Bullion Quote & Settlement Desk",
     addressLabel: isAr ? "العنوان" : "Vault Address",
     addressValue: address,
-    hoursLabel: isAr ? "ساعات العمل الرسمية" : "Desk Trading Hours",
+    hoursLabel: isAr ? "ساعات عمل المكتب" : "Desk Operating Hours",
     hoursValue: isAr 
       ? "الإثنين - الجمعة: ٩:٠٠ صباحاً - ٦:٠٠ مساءً (توقيت الخليج)" 
       : "Monday - Friday: 09:00 AM - 06:00 PM (GST)",

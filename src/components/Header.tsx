@@ -92,7 +92,7 @@ export default function Header({
   const navLinks = [
     { id: "market", label_en: "Live Rates", label_ar: "الأسعار المباشرة" },
     { id: "catalog", label_en: "Bullion Catalog", label_ar: "كتالوج السبائك" },
-    { id: "investment", label_en: "Buy & Track", label_ar: "شراء وتتبع" },
+    { id: "investment", label_en: "Quotes & Orders", label_ar: "العروض والطلبات" },
     { id: "why-us", label_en: "Institutional Edge", label_ar: "المعايير المؤسسية" },
     { id: "office", label_en: "Dubai Office", label_ar: "مكتب دبي" },
     { id: "blog", label_en: "Intelligence", label_ar: "تقارير الأبحاث" }

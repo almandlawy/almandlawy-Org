@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from "react";
 import { 
   X, ShieldCheck, Truck, Clipboard, Search, Check, AlertCircle, 
-  Sparkles, QrCode, LogOut, DollarSign, Calculator, FileText, 
+  Sparkles, QrCode, LogOut, DollarSign, FileText, 
   Upload, UserCheck, MapPin, Lock, PlusCircle, ArrowRight, TrendingUp 
 } from "lucide-react";
 import { dbService, mockDb, isProduction, isLive, supabase } from "../lib/supabase";
@@ -52,8 +52,7 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
   const [exchangeRates, setExchangeRates] = useState<any>({ USD: 1.0, AED: 3.6725, IQD: 1310.0 });
   const [settings, setSettings] = useState<any>(null);
 
-  // Portfolio states
-  const [portfolio, setPortfolio] = useState<any[]>([]);
+  // Portfolio states (quote/order focused — no investment accounts)
   const [buybackList, setBuybackList] = useState<any[]>([]);
   const [orderList, setOrderList] = useState<any[]>([]);
   const [pickupPoints, setPickupPoints] = useState<any[]>([]);
@@ -70,10 +69,7 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
   const [deliveryPhone, setDeliveryPhone] = useState("");
   const [deliverySuccess, setDeliverySuccess] = useState(false);
 
-  // Scenario Calculator states
-  const [calcAmount, setCalcAmount] = useState("1000");
-  const [calcMetal, setCalcMetal] = useState<"gold" | "silver">("gold");
-  const [calcCurrency, setCalcCurrency] = useState<"USD" | "AED" | "IQD">("USD");
+  // Scenario Calculator states — removed (quote desk only)
 
   // Certificate search state
   const [certQuery, setCertQuery] = useState("PAMP-882941");
@@ -140,10 +136,6 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
       // Filter orders related to this user
       const userOrders = oList.filter((o: any) => o.customer_id === currentUser.id);
       setOrderList(userOrders);
-
-      // Load investment accounts
-      const pInv = await dbService.investment.getAccounts(currentUser.id);
-      setPortfolio(pInv);
 
     } catch (err) {
       console.error("Error loading user data:", err);
@@ -336,36 +328,6 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
       created_at: new Date().toISOString()
     };
 
-    // Auto seed an investment account for new users so the portfolio isn't blank
-    const seedAccGold = {
-      id: `inv-g-${dummyUser.id}`,
-      customer_id: dummyUser.id,
-      metal: "gold" as const,
-      weight_grams: onboardType === "wholesale" ? 1000 : 50,
-      average_purchase_price_usd: 75.50,
-      total_purchase_amount_usd: onboardType === "wholesale" ? 75500.0 : 3775.0,
-      current_market_value_usd: onboardType === "wholesale" ? 75900.0 : 3800.0,
-      daily_change_percent: 0.15,
-      monthly_change_percent: 1.25
-    };
-
-    const seedAccSilver = {
-      id: `inv-s-${dummyUser.id}`,
-      customer_id: dummyUser.id,
-      metal: "silver" as const,
-      weight_grams: onboardType === "wholesale" ? 5000 : 500,
-      average_purchase_price_usd: 0.95,
-      total_purchase_amount_usd: onboardType === "wholesale" ? 4750.0 : 475.0,
-      current_market_value_usd: onboardType === "wholesale" ? 4800.0 : 485.0,
-      daily_change_percent: 0.32,
-      monthly_change_percent: 2.10
-    };
-
-    // Write seeds
-    const existingAccounts = mockDb.get("pgr_investment_accounts") || [];
-    existingAccounts.push(seedAccGold, seedAccSilver);
-    mockDb.set("pgr_investment_accounts", existingAccounts);
-
     mockDb.auth.setUser(dummyUser);
     setUser(dummyUser);
     loadUserData(dummyUser);
@@ -384,7 +346,6 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
     mockDb.auth.logout();
     setUser(null);
     setKycProfile(null);
-    setPortfolio([]);
     setOrderList([]);
     setBuybackList([]);
   };
@@ -392,26 +353,10 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
   // Handle KYC Submission
   const [kycTypeSaved, setKycTypeSaved] = useState<string>("individual");
 
-  const handleFileChange = (docKey: string, file: File | null) => {
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      setUploadError(isAr ? "حجم الملف يتجاوز الحد الأقصى المسموح به 5 ميجابايت." : "Maximum file size limit is 5MB.");
-      return;
-    }
-    const allowed = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
-    if (!allowed.includes(file.type)) {
-      setUploadError(isAr ? "صيغة الملف غير مدعومة. يسمح فقط بصيغ PDF, JPG, PNG, WEBP." : "Unsupported format. Only PDF, JPG, PNG, WEBP are accepted.");
-      return;
-    }
-    setUploadError(null);
-    setUploadedFilesRegistry(prev => ({
-      ...prev,
-      [docKey]: {
-        name: file.name,
-        size: file.size,
-        date: new Date().toISOString()
-      }
-    }));
+  const handleFileChange = (_docKey: string, _file: File | null) => {
+    setUploadError(isAr
+      ? "رفع المستندات غير متاح حالياً عبر الموقع. قد يطلب فريق PGR UAE مستندات KYC عبر قناة رسمية آمنة."
+      : "Document upload is coming soon. PGR UAE may request KYC documents through an official secure channel.");
   };
 
   const handleKYCSubmit = async (e: React.FormEvent) => {
@@ -552,38 +497,6 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
     return "$" + amountUsd.toLocaleString(undefined, { maximumFractionDigits: 2 }) + " USD";
   };
 
-  // Spot calculation for Scenario Planner
-  const calculateScenario = () => {
-    const inputAmount = Number(calcAmount) || 1000;
-    let usd = inputAmount;
-    if (calcCurrency === "AED") {
-      usd = inputAmount / exchangeRates.AED;
-    } else if (calcCurrency === "IQD") {
-      usd = inputAmount / exchangeRates.IQD;
-    }
-
-    const spotGoldUsdOz = rates?.gold?.spot_usd_oz || 2350;
-    const spotSilverUsdOz = rates?.silver?.spot_usd_oz || 28.5;
-    
-    const spotGramUsd = calcMetal === "gold" ? (spotGoldUsdOz / 31.1035) : (spotSilverUsdOz / 31.1035);
-    const premiumPercent = calcMetal === "gold" ? 1.04 : 1.12; // 4% gold premium, 12% silver premium
-    const totalCostPerGram = spotGramUsd * premiumPercent;
-    
-    const estimatedGrams = usd / totalCostPerGram;
-
-    const baseVal = usd;
-    
-    return {
-      grams: estimatedGrams.toFixed(2),
-      spotGramUsd: spotGramUsd.toFixed(2),
-      p1: convertAmount(baseVal * 1.01),
-      p3: convertAmount(baseVal * 1.03),
-      m1: convertAmount(baseVal * 0.99),
-      m3: convertAmount(baseVal * 0.97)
-    };
-  };
-
-  const scenarios = calculateScenario();
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto" style={{ direction: isAr ? "rtl" : "ltr" }}>
@@ -614,14 +527,14 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
                     {isAr ? "لوحة تحكم العميل" : "CUSTOMER DASHBOARD"}
                   </span>
                   <h2 className="text-2xl font-serif text-white tracking-wide">
-                    {isAr ? "الهوية الرقمية وبوابة التداول" : "Digital ID & Sourcing Portal"}
+                    {isAr ? "الهوية الرقمية وبوابة العروض" : "Digital ID & Quote Portal"}
                   </h2>
                 </div>
 
                 <p className="text-xs text-gray-400 leading-relaxed">
                   {isAr 
-                    ? "بوابة آمنة ومبسطة للمواطنين العراقيين والمقيمين في دولة الإمارات والشركات لتسجيل بياناتهم وتتبع طلبات تسليم سبائك الذهب والفضة مع التحقق الكامل والمطابقة الأمنية."
-                    : "A secure framework for Iraqi citizens, UAE residents, and institutional traders to verify credentials, check real-time indicative bullion prices, and track Dubai-to-Iraq shipments."}
+                    ? "بوابة لتسجيل بياناتك وتتبع طلبات عروض الأسعار وحالة KYC والطلبات والتسليم."
+                    : "Register your details and track quote requests, KYC status, orders, delivery, and storage requests."}
                 </p>
 
                 <div className="space-y-3 pt-2">
@@ -631,7 +544,7 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
                   </div>
                   <div className="flex items-center gap-2 text-xs text-gray-300">
                     <Truck size={16} className="text-gold-base" />
-                    <span>{isAr ? "خطوط تداول آمنة لبغداد والبصرة وأربيل" : "Secure channels to Baghdad, Basra & Erbil"}</span>
+                    <span>{isAr ? "خطوط توصيل آمنة لبغداد والبصرة وأربيل" : "Secure delivery channels to Baghdad, Basra & Erbil"}</span>
                   </div>
                 </div>
 
@@ -933,7 +846,7 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
                 {/* Side Navigation Menu */}
                 <div className="md:col-span-3 bg-[#080809] border-r border-white/[0.04] p-4 space-y-1">
                   {[
-                    { id: "performance", icon: <TrendingUp size={14} />, label_en: "My Products & Allocations", label_ar: "منتجاتي والمنتجات المخصصة" },
+                    { id: "performance", icon: <TrendingUp size={14} />, label_en: "My Quotes & Status", label_ar: "عروض الأسعار والحالة" },
                     { id: "verification", icon: <ShieldCheck size={14} />, label_en: "Customer Verification (KYC)", label_ar: "التحقق من الهوية" },
                     { id: "orders", icon: <Truck size={14} />, label_en: "My Orders & My Quotes", label_ar: "طلباتي وعروض الأسعار" },
                     { id: "buyback", icon: <DollarSign size={14} />, label_en: "Request Buyback", label_ar: "طلب إعادة الشراء" },
@@ -961,59 +874,47 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
                 {/* TAB CONTENT GRID */}
                 <div className="md:col-span-9 p-6 overflow-y-auto max-h-[550px] space-y-6">
                   
-                  {/* TAB 1: PORTFOLIO & CALCULATOR */}
+                  {/* TAB 1: QUOTES & STATUS OVERVIEW */}
                   {activeTab === "performance" && (
                     <div className="space-y-6">
                       <div className="flex justify-between items-center border-b border-white/[0.04] pb-2">
                         <div>
                           <h4 className="text-sm font-serif font-semibold text-white uppercase tracking-wider">
-                            {isAr ? "المنتجات المخصصة بعد الشراء" : "Product Allocations After Purchase"}
+                            {isAr ? "عروض الأسعار وحالة الطلبات" : "Quote Requests & Order Status"}
                           </h4>
                           <p className="text-[10px] text-gray-500 font-mono">
-                            {isAr ? "قائمة المنتجات المخصصة لك بعد التحقق وتأكيد السداد" : "Allocated gold and silver products verified under your account"}
+                            {isAr ? "تتبع طلبات عروض الأسعار وحالة KYC والطلبات والتسليم" : "Track quote requests, KYC status, firm quotes, orders, and delivery"}
                           </p>
                         </div>
                       </div>
 
-                      {/* PLATFORM ACTIVITY STATS */}
-                      <div className="space-y-2">
-                        <span className="text-[10px] font-mono text-gold-base uppercase tracking-widest block">
-                          {isAr ? "نشاط المنصة / Platform Activity" : "Platform Activity"}
-                        </span>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                          <div className="bg-[#111] border border-white/[0.03] p-4 rounded space-y-1">
-                            <span className="text-[9px] font-mono text-gray-500 uppercase block">{isAr ? "المنتجات المدرجة" : "Listed Products"}</span>
-                            <span className="text-lg font-sans font-bold text-white block">15</span>
-                          </div>
-                          <div className="bg-[#111] border border-white/[0.03] p-4 rounded space-y-1">
-                            <span className="text-[9px] font-mono text-gray-500 uppercase block">{isAr ? "طلبات التسعير" : "Quote Requests"}</span>
-                            <span className="text-lg font-sans font-bold text-white block">{orderList.filter(o => o.status === 'Quoted').length + 2}</span>
-                          </div>
-                          <div className="bg-[#111] border border-white/[0.03] p-4 rounded space-y-1">
-                            <span className="text-[9px] font-mono text-gray-500 uppercase block">{isAr ? "الطلبات المؤكدة" : "Confirmed Orders"}</span>
-                            <span className="text-lg font-sans font-bold text-white block">{orderList.filter(o => o.status !== 'Quoted').length + 3}</span>
-                          </div>
-                          <div className="bg-[#111] border border-white/[0.03] p-4 rounded space-y-1">
-                            <span className="text-[9px] font-mono text-gray-500 uppercase block">{isAr ? "طلبات التوصيل" : "Delivery Requests"}</span>
-                            <span className="text-lg font-sans font-bold text-white block">{orderList.length + 1}</span>
-                          </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="bg-[#111] border border-white/[0.03] p-4 rounded space-y-1">
+                          <span className="text-[9px] font-mono text-gray-500 uppercase block">{isAr ? "حالة KYC" : "KYC Status"}</span>
+                          <span className="text-sm font-sans font-bold text-white block">{kycProfile?.status || (isAr ? "لم يُقدَّم" : "Not submitted")}</span>
                         </div>
-                        <div className="text-[10px] text-gray-500 italic mt-1">
-                          {isAr 
-                            ? "الأرقام مؤشرات تشغيلية ولا تمثل عوائد استثمارية مضمونة." 
-                            : "Figures are operational indicators and do not represent guaranteed investment returns."}
+                        <div className="bg-[#111] border border-white/[0.03] p-4 rounded space-y-1">
+                          <span className="text-[9px] font-mono text-gray-500 uppercase block">{isAr ? "طلبات التسعير" : "Quote Requests"}</span>
+                          <span className="text-lg font-sans font-bold text-white block">{orderList.filter(o => o.status === "Quoted" || o.status === "awaiting_confirmation").length}</span>
+                        </div>
+                        <div className="bg-[#111] border border-white/[0.03] p-4 rounded space-y-1">
+                          <span className="text-[9px] font-mono text-gray-500 uppercase block">{isAr ? "الطلبات المؤكدة" : "Confirmed Orders"}</span>
+                          <span className="text-lg font-sans font-bold text-white block">{orderList.filter(o => o.status !== "Quoted" && o.status !== "awaiting_confirmation").length}</span>
+                        </div>
+                        <div className="bg-[#111] border border-white/[0.03] p-4 rounded space-y-1">
+                          <span className="text-[9px] font-mono text-gray-500 uppercase block">{isAr ? "طلبات إعادة البيع" : "Sell-Back Requests"}</span>
+                          <span className="text-lg font-sans font-bold text-white block">{buybackList.length}</span>
                         </div>
                       </div>
 
-                      {/* Empty State Banner */}
-                      {portfolio.length === 0 && orderList.length === 0 && (
+                      {orderList.length === 0 && (
                         <div className="p-6 bg-amber-500/5 border border-gold-base/10 rounded flex flex-col md:flex-row items-center justify-between gap-4">
                           <div className="space-y-1 text-center md:text-left">
                             <h5 className="text-sm font-sans font-semibold text-gold-base">
-                              {isAr ? "لا توجد لديك منتجات مخصصة حالياً." : "You do not have any allocated products yet."}
+                              {isAr ? "لا توجد طلبات عروض أسعار حالياً." : "No quote requests yet."}
                             </h5>
                             <p className="text-xs text-gray-400 font-sans">
-                              {isAr ? "اطلب عرض سعر للبدء في تملك سبائك الذهب والفضة وترتيب الاستلام أو التوصيل الآمن." : "Request a quote to start acquiring gold & silver products and arranging secure dispatch."}
+                              {isAr ? "اطلب عرض سعر مؤكد للبدء في عملية الشراء أو التخزين أو التسليم." : "Request a firm quote to begin a physical bullion purchase, storage, or delivery inquiry."}
                             </p>
                           </div>
                           <button
@@ -1025,137 +926,31 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
                             }}
                             className="px-4 py-2 bg-gold-base hover:bg-amber-600 text-black rounded font-sans font-semibold text-xs tracking-wider uppercase transition-colors shrink-0 cursor-pointer"
                           >
-                            {isAr ? "اطلب عرض سعر للبدء" : "Request a quote to start"}
+                            {isAr ? "طلب عرض سعر" : "Request Firm Quote"}
                           </button>
                         </div>
                       )}
 
-                      {/* PHYSICAL BULLION TABLE */}
-                      <div className="bg-[#111] border border-white/[0.03] rounded overflow-hidden">
-                        <div className="p-3 bg-[#161618] border-b border-white/[0.03] text-[10px] font-mono text-gray-400 uppercase tracking-wider">
-                          {isAr ? "المنتجات المخصصة بعد الشراء" : "Product allocations after purchase"}
-                        </div>
-                        <div className="divide-y divide-white/[0.02] text-xs font-mono">
-                          {portfolio.length > 0 ? (
-                            portfolio.map((item, idx) => (
-                              <div key={idx} className="p-3 flex justify-between items-center">
-                                <div>
-                                  <span className="text-white font-bold block">{item.metal === "gold" ? (isAr ? "سبيكة ذهب مخصصة" : "Allocated Gold Bullion") : (isAr ? "سبيكة فضة مخصصة" : "Allocated Silver Bullion")}</span>
-                                  <span className="text-gray-500 text-[10px]">{item.weight_grams} {isAr ? "جرام" : "Grams"} • {isAr ? "شهادة المنتج متوفرة عند الطلب" : "Product certificate available on request"}</span>
-                                </div>
-                                <div className="text-right">
-                                  <span className="text-emerald-400 text-[11px] block">{isAr ? "مخصصة ومؤكدة" : "Allocated & Verified"}</span>
-                                  <span className="text-[10px] text-gray-500 block">{isAr ? "تم تأكيد السعر قبل الدفع" : "Price confirmed before payment"}</span>
-                                </div>
-                              </div>
-                            ))
-                          ) : (
-                            <div className="p-4 text-center text-gray-500 text-xs">
-                              {isAr ? "لا توجد منتجات مخصصة حالياً." : "No current gold or silver allocations."}
+                      {rates && rates.gold?.spot_usd_oz > 0 && (
+                        <div className="p-4 bg-[#111] border border-white/[0.03] rounded text-xs font-mono space-y-2">
+                          <span className="text-[10px] text-gold-base uppercase tracking-widest block">{isAr ? "قيمة إرشادية فقط" : "Indicative Reference Value Only"}</span>
+                          <p className="text-gray-400">
+                            {isAr
+                              ? "الأسعار المعروضة إرشادية فقط. يتم تأكيد السعر النهائي من المكتب قبل أي عملية."
+                              : "Displayed prices are indicative only. Final pricing is confirmed by the desk before any transaction."}
+                          </p>
+                          <div className="flex justify-between text-gray-300">
+                            <span>{isAr ? "الذهب (أونصة)" : "Gold (oz)"}</span>
+                            <span>{convertAmount(rates.gold.spot_usd_oz)}</span>
+                          </div>
+                          {rates.silver?.spot_usd_oz > 0 && (
+                            <div className="flex justify-between text-gray-300">
+                              <span>{isAr ? "الفضة (أونصة)" : "Silver (oz)"}</span>
+                              <span>{convertAmount(rates.silver.spot_usd_oz)}</span>
                             </div>
                           )}
                         </div>
-                      </div>
-
-                      {/* DYNAMIC SCENARIO CALCULATOR */}
-                      <div className="p-5 rounded border border-white/[0.05] bg-white/[0.01] space-y-4">
-                        <div className="flex items-center gap-1.5">
-                          <Calculator size={16} className="text-gold-base" />
-                          <h5 className="text-xs font-mono text-white uppercase tracking-widest">{isAr ? "حاسبة التقديرات والتوقع السعري" : "Estimated Value Scenario Calculator"}</h5>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                          <div className="space-y-1">
-                            <label className="text-[9px] font-mono text-gray-400 uppercase">{isAr ? "المبلغ المرصود" : "Allocation Amount"}</label>
-                            <input
-                              type="number"
-                              value={calcAmount}
-                              onChange={(e) => setCalcAmount(e.target.value)}
-                              className="w-full bg-[#111] border border-white/[0.08] focus:border-gold-base rounded py-1.5 px-3 text-xs text-white outline-none"
-                            />
-                          </div>
-
-                          <div className="space-y-1">
-                            <label className="text-[9px] font-mono text-gray-400 uppercase">{isAr ? "نوع المعدن" : "Precious Metal"}</label>
-                            <select
-                              value={calcMetal}
-                              onChange={(e) => setCalcMetal(e.target.value as any)}
-                              className="w-full bg-[#111] border border-white/[0.08] focus:border-gold-base rounded py-1.5 px-3 text-xs text-white outline-none"
-                            >
-                              <option value="gold">{isAr ? "ذهب" : "Gold"}</option>
-                              <option value="silver">{isAr ? "فضة" : "Silver"}</option>
-                            </select>
-                          </div>
-
-                          <div className="space-y-1">
-                            <label className="text-[9px] font-mono text-gray-400 uppercase">{isAr ? "العملة المحلية" : "Currency"}</label>
-                            <select
-                              value={calcCurrency}
-                              onChange={(e) => setCalcCurrency(e.target.value as any)}
-                              className="w-full bg-[#111] border border-white/[0.08] focus:border-gold-base rounded py-1.5 px-3 text-xs text-white outline-none"
-                            >
-                              <option value="USD">USD</option>
-                              <option value="AED">AED</option>
-                              <option value="IQD">IQD</option>
-                            </select>
-                          </div>
-                        </div>
-
-                        <div className="p-3 bg-black/40 rounded border border-white/[0.02] text-xs font-mono space-y-2">
-                          <div className="flex justify-between">
-                            <span className="text-gray-400">{isAr ? "الوزن التقديري المستملك:" : "Estimated Grams Acquired:"}</span>
-                            <span className="text-white font-bold">{scenarios.grams} g</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-400">{isAr ? "سعر غرام الذهب الفوري للتقريب:" : "Spot Price per Gram:"}</span>
-                            <span className="text-[#c5a85c] font-bold">${scenarios.spotGramUsd} /g</span>
-                          </div>
-
-                          <div className="border-t border-white/[0.04] pt-2">
-                            <span className="text-[9px] text-gray-500 uppercase tracking-wider block mb-1">{isAr ? "سيناريوهات الأداء السوقي الممكنة (ليست أرباحاً مضمونة):" : "Hypothetical Spot Movement Scenarios (Estimated P/L):"}</span>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-[11px]">
-                              <div className="p-1.5 bg-emerald-950/10 border border-emerald-900/30 rounded text-center">
-                                <span className="text-gray-500 block text-[9px]">+1% {isAr ? "صعود" : "Rise"}</span>
-                                <span className="text-emerald-400 font-bold">{scenarios.p1}</span>
-                              </div>
-                              <div className="p-1.5 bg-emerald-950/20 border border-emerald-900/40 rounded text-center">
-                                <span className="text-gray-500 block text-[9px]">+3% {isAr ? "أداء مرتفع" : "Strong Performance"}</span>
-                                <span className="text-emerald-400 font-bold">{scenarios.p3}</span>
-                              </div>
-                              <div className="p-1.5 bg-red-950/10 border border-red-900/30 rounded text-center">
-                                <span className="text-gray-500 block text-[9px]">-1% {isAr ? "تراجع" : "Dip"}</span>
-                                <span className="text-red-400 font-bold">{scenarios.m1}</span>
-                              </div>
-                              <div className="p-1.5 bg-red-950/20 border border-red-900/40 rounded text-center">
-                                <span className="text-gray-500 block text-[9px]">-3% {isAr ? "تصحيح سوقي" : "Market Drop"}</span>
-                                <span className="text-red-400 font-bold">{scenarios.m3}</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="text-[10px] text-gray-500 leading-normal">
-                          <strong>{isAr ? "إخلاء مسؤولية:" : "Important Market Notice:"}</strong>{" "}
-                          {isAr 
-                            ? "هذا تقدير للأداء السوقي المقترح بناء على حركة المعادن وليس عائداً مضموناً. أسعار الذهب والفضة متقلبة وتخضع لقوانين العرض والطلب العالمية."
-                            : "This is a model of possible market scenarios. Precious metals carry market price risks and can fluctuate. Past performance is never a guarantee of future outcomes."}
-                        </div>
-                      </div>
-
-                      {/* PGR BULLION GROWTH PROGRAM COMING SOON */}
-                      <div className="p-5 border border-dashed border-white/10 rounded bg-[#111112]/40 opacity-70">
-                        <span className="text-[9px] font-mono text-amber-500 uppercase tracking-widest block mb-1">
-                          {isAr ? "ميزات معلقة مستقبلاً" : "REGULATORY HOLD - COMING SOON"}
-                        </span>
-                        <h5 className="text-xs font-serif font-semibold text-white uppercase">
-                          {isAr ? "برنامج نمو السبائك من PGR" : "PGR Bullion Growth Program"}
-                        </h5>
-                        <p className="text-[11px] text-gray-400 leading-normal mt-1">
-                          {isAr 
-                            ? "خاضع للتراخيص والموافقات التنظيمية. قريباً فقط. لا يتم قبول أي تبرعات أو أموال نقدية أو ادخارات خارجية تحت هذا المسمى حالياً."
-                            : "Subject to complete licensing and regulatory approvals. Not currently active or accepting deposits. Designed to offer compliant storage solutions."}
-                        </p>
-                      </div>
+                      )}
 
                     </div>
                   )}
@@ -1368,19 +1163,24 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
                             value={kycFunds}
                             onChange={(e) => setKycFunds(e.target.value)}
                             rows={2}
-                            placeholder={isAr ? "مثال: أرباح أعمال تجارية مرخصة وعوائد المحافظ الخاصة." : "e.g., Licensed corporate profits, family legacy allocation, physical business cashflow"}
+                            placeholder={isAr ? "مثال: أرباح أعمال تجارية مرخصة ومصادر أموال مشروعة." : "e.g., Licensed corporate profits, lawful business income, physical business cashflow"}
                             className="w-full bg-[#111] border border-white/[0.08] focus:border-gold-base rounded py-2 px-3 text-white outline-none"
                           />
                         </div>
 
-                        {/* PRIVATE SECURITY VERIFICATION FILE ZONE */}
+                        {/* Document upload — coming soon (Option B) */}
                         <div className="space-y-2">
-                          <label className="text-[10px] font-mono text-[#c5a85c] uppercase block tracking-wider">
-                            {isAr ? "الوثائق والملفات المرفوعة بشكل خاص (الحد الأقصى 5 ميجابايت للملف)" : "Secure Private Document Uploads (Max 5MB each, PDF/JPG/PNG/WEBP only)"}
+                          <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded text-[11px] text-amber-200">
+                            {isAr
+                              ? "رفع المستندات قريباً. يمكنك تقديم بيانات الاستفسار الآن، وقد يطلب فريق PGR UAE مستندات KYC عبر قناة رسمية آمنة."
+                              : "Document upload coming soon. You may submit your inquiry details now. PGR UAE may request KYC documents through an official secure channel."}
+                          </div>
+                          <label className="text-[10px] font-mono text-gray-500 uppercase block tracking-wider">
+                            {isAr ? "الوثائق (غير متاحة حالياً)" : "Documents (not available yet)"}
                           </label>
 
                           {kycType === "company" ? (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 opacity-50 pointer-events-none">
                               <label className="p-3 border border-dashed border-white/10 rounded bg-white/[0.01] hover:bg-white/[0.03] transition-colors flex flex-col items-center justify-center text-center cursor-pointer relative">
                                 <Upload className="text-gray-500 mb-1" size={16} />
                                 <span className="text-[10px] text-gray-300 block">{isAr ? "تحميل الرخصة التجارية *" : "Corporate Trade License *"}</span>
@@ -1480,7 +1280,7 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
                               </label>
                             </div>
                           ) : (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 opacity-50 pointer-events-none">
                               <label className="p-3 border border-dashed border-white/10 rounded bg-white/[0.01] hover:bg-white/[0.03] transition-colors flex flex-col items-center justify-center text-center cursor-pointer relative">
                                 <Upload className="text-gray-500 mb-1" size={16} />
                                 <span className="text-[10px] text-gray-300 block">{isAr ? "تحميل وجه الهوية الإماراتية *" : "Emirates ID Front *"}</span>
@@ -1609,7 +1409,7 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
                               onChange={(e) => setKycPrivacy(e.target.checked)}
                               className="mt-0.5"
                             />
-                            <span>{isAr ? "أوافق على تخزين البيانات بشكل مشفر وخاص وآمن للغاية لأغراض تدقيق الامتثال لدى PGR UAE." : "I consent to secure private encrypted file vaulting for compliance auditing."}</span>
+                            <span>{isAr ? "أوافق على معالجة بياناتي لأغراض الامتثال KYC/AML. قد يطلب فريق PGR UAE مستندات عبر قناة رسمية آمنة." : "I consent to KYC/AML data processing. PGR UAE may request documents through an official secure channel."}</span>
                           </label>
                         </div>
 
@@ -1638,7 +1438,7 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
                             {isAr ? "الطلبات الحالية وتتبع الشحن الآمن للعراق" : "Secure Orders & Iraqi Logistics Panel"}
                           </h4>
                           <p className="text-[10px] text-gray-500 font-mono">
-                            {isAr ? "متابعة تداول سبائك الذهب من دبي إلى بغداد والبصرة والمحافظات العراقية" : "Track logistics, custom clearances & secure handovers for Iraq consignments"}
+                            {isAr ? "متابعة توصيل سبائك الذهب من دبي إلى بغداد والبصرة والمحافظات العراقية" : "Track delivery, customs clearance & handovers for Iraq consignments"}
                           </p>
                         </div>
                       </div>
@@ -1745,7 +1545,7 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
                           ))
                         ) : (
                           <div className="p-6 text-center border border-dashed border-white/5 rounded text-gray-500 text-xs">
-                            {isAr ? "لا توجد طلبات جارية لهذا العميل." : "No orders initiated under your account portfolio yet."}
+                            {isAr ? "لا توجد طلبات جارية لهذا العميل." : "No active orders for this account yet."}
                           </div>
                         )}
                       </div>
@@ -1923,7 +1723,7 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
 
                         {buybackSuccess && (
                           <div className="p-2.5 bg-emerald-950/20 border border-emerald-900/40 text-emerald-400 text-xs rounded">
-                            {isAr ? "تم إرسال طلب تسعير إعادة الشراء الفوري بنجاح! سيتم التواصل للتأكيد." : "Buyback quote dispatched to secure desk!"}
+                            {isAr ? "تم إرسال طلب عرض سعر إعادة البيع بنجاح! سيتم التواصل للتأكيد." : "Sell-back quote request submitted! We will contact you for desk confirmation."}
                           </div>
                         )}
 

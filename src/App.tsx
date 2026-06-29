@@ -399,7 +399,7 @@ export default function App() {
             <p className="text-xs text-gray-500 max-w-xl mx-auto leading-relaxed">
               {currentLang === "ar"
                 ? "نحن وكيل وموزع معتمد لكبرى مصافي الذهب العالمية المعتمدة."
-                : "Authorized logistics and trading conduit for world-renowned certified gold refineries."}
+                : "Authorized logistics and bullion desk partner for world-renowned certified gold refineries."}
             </p>
           </div>
 

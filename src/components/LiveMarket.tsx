@@ -217,12 +217,13 @@ export default function LiveMarket({
             // Verify if this specific metal has a live spot price available
             const isMetalLive = !!(rates && 
               rates[metal] && 
-              rates[metal].spot_usd_oz !== null && 
+              rates[metal].spot_usd_oz !== null &&
+              rates[metal].spot_usd_oz !== undefined &&
               rates[metal].spot_usd_oz > 0 && 
               (
                 (isGold || isSilver) 
                   ? (rates.source_status === "live" || rates.source_status === "cached")
-                  : (rates.source_status === "live")
+                  : (rates.source_status === "live" || rates.source_status === "cached")
               )
             );
 

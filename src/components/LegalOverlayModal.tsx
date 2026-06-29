@@ -127,14 +127,14 @@ Any historical metal chart patterns or references on this platform are for gener
 Due to high volatility and real-time spot price fluctuations in international bullion markets, once a firm quote is accepted by the customer and a Final Desk Confirmation invoice is generated, the transaction cannot be cancelled, reversed, or refunded.
 
 2. Price Risk Indemnification
-Any cancellation requested by a customer prior to complete settlement, if approved by the trading desk, will make the customer liable for the market loss spread (the difference between the locked purchase price and current market spot rates), plus an administrative desk fee.`,
+Any cancellation requested by a customer prior to complete settlement, if approved by the quote desk, will make the customer liable for the market loss spread (the difference between the locked purchase price and current market spot rates), plus an administrative desk fee.`,
       content_ar: `سياسة إلغاء طلبات التسعير واسترداد الأموال - PGR UAE
 
 ١. نهائية الأسعار والطلبات المعتمدة
-نظراً للحساسية العالية والتقلب السريع لأسعار الذهب والفضة الفورية عالمياً، فبمجرد قبول العميل لعرض التسعير وصدور الفاتورة النهائية المعتمدة من مكتب التداول، تكون المعاملة نهائية وغير قابلة للإلغاء أو التراجع أو استرداد الأموال.
+نظراً للحساسية العالية والتقلب السريع لأسعار الذهب والفضة الفورية عالمياً، فبمجرد قبول العميل لعرض التسعير وصدور الفاتورة النهائية المعتمدة من مكتب عروض السبائك، تكون المعاملة نهائية وغير قابلة للإلغاء أو التراجع أو استرداد الأموال.
 
 ٢. تعويض مخاطر تغير السوق
-في حالات الإلغاء المستثناة والخاصة التي يوافق عليها مكتب التداول قبل إتمام الدفع، يتحمل العميل فارق خسارة هبوط أسعار السوق (الفرق بين السعر المثبت وقت الطلب وسعر السوق الحالي)، بالإضافة إلى رسوم إدارية إضافية.`
+في حالات الإلغاء المستثناة والخاصة التي يوافق عليها مكتب عروض السبائك قبل إتمام الدفع، يتحمل العميل فارق خسارة هبوط أسعار السوق (الفرق بين السعر المثبت وقت الطلب وسعر السوق الحالي)، بالإضافة إلى رسوم إدارية إضافية.`
     },
     {
       id: "delivery",
@@ -191,7 +191,7 @@ Any precious metal bars submitted for a sell-back quote must undergo physical te
       content_ar: `سياسة طلب عروض أسعار إعادة بيع السبائك - PGR UAE
 
 ١. طلب عرض أسعار فقط
-يمكن للعملاء تقديم طلب للحصول على تسعير لإعادة بيع سبائكهم. لا تعتبر PGR UAE ملزمة بإعادة الشراء إلا بعد صدور عرض سعر نهائي ومؤكد من مكتب التداول لدينا وقبول العميل له. تطبق شروط فحص المنتجات، اختبارات النقاء، الفحص الأمني والرقابي، الرسوم الإدارية، وتأكيد المكتب النهائي.
+يمكن للعملاء تقديم طلب للحصول على تسعير لإعادة بيع سبائكهم. لا تعتبر PGR UAE ملزمة بإعادة الشراء إلا بعد صدور عرض سعر نهائي ومؤكد من مكتب عروض السبائك لدينا وقبول العميل له. تطبق شروط فحص المنتجات، اختبارات النقاء، الفحص الأمني والرقابي، الرسوم الإدارية، وتأكيد المكتب النهائي.
 
 ٢. الفحص المعملي والاختبار الكيميائي للسبائك
 تخضع كافة السبائك المقدمة للفحص والاختبار الكيميائي الفعلي ومطابقة الأرقام التسلسلية قبل صدور السعر النهائي. تحتفظ PGR UAE بحق رفض أي سبيكة لا تطابق المعايير الصارمة لدرجة النقاء المعتمدة.`

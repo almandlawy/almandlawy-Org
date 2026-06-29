@@ -188,7 +188,7 @@ export default function Catalog({
         <div className="text-center space-y-4 max-w-2xl mx-auto">
           <span className="text-gold-base font-mono uppercase text-xs tracking-[0.3em] font-semibold flex items-center justify-center gap-2">
             <Sparkles size={11} />
-            {currentLang === "ar" ? "المجموعة المعتمدة دولياً" : "Accredited Investment Portfolio"}
+            {currentLang === "ar" ? "المجموعة المعتمدة دولياً" : "Accredited Bullion Collection"}
           </span>
           <h2 className="text-3xl sm:text-4xl font-serif tracking-tight text-white font-medium">
             {currentLang === "ar" ? "كتالوج السبائك والمعادن الثمينة" : "Precious Metals Catalog"}
@@ -196,7 +196,7 @@ export default function Catalog({
           <p className="text-sm text-gray-400">
             {currentLang === "ar" 
               ? "استعرض مجموعتنا الشاملة من سبائك ومسكوكات الذهب والفضة عالية النقاوة. جميع المنتجات تأتي من مصافٍ معتمدة عالمياً."
-              : "Explore our collection of high-purity gold and silver bars and investment coins. Sourced exclusively from certified international refineries."}
+              : "Explore our collection of high-purity gold and silver bars and bullion coins. Sourced exclusively from certified international refineries."}
           </p>
         </div>
 
@@ -446,7 +446,7 @@ export default function Catalog({
               <span>
                 {currentLang === "ar"
                   ? "بيان توضيحي: جميع منتجات العلامات التجارية (PAMP, Valcambi, Metalor, Royal Mint) متاحة من خلال PGR بصفتنا بيت تداول معتمد وتخضع للفحص. لا تدعي بي جي آر تفرّدها بتصنيع هذه السبائك الحرة."
-                  : "Institutional notice: These globally respected bullion brands are officially sourced and authenticated through PGR UAE's licensed trading conduits. PGR UAE acts as an authorized bullion house and logistics partner, and does not claim manufacturing rights."}
+                  : "Institutional notice: These globally respected bullion brands are officially sourced and authenticated through PGR UAE's licensed bullion desk channels. PGR UAE acts as an authorized bullion house and logistics partner, and does not claim manufacturing rights."}
               </span>
             </div>
           </>
