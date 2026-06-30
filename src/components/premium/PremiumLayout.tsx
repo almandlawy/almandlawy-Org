@@ -12,7 +12,7 @@ export default function PremiumLayout({ children, hideFooter }: PremiumLayoutPro
   const { currentLang } = useApp();
   return (
     <div
-      className={`min-h-screen bg-[#070707] text-white selection:bg-gold-base selection:text-black ${currentLang === "ar" ? "font-arabic" : "font-sans"}`}
+      className={`min-h-screen bg-black text-[#F5F0E8] selection:bg-gold-base selection:text-black ${currentLang === "ar" ? "font-arabic" : "font-sans"}`}
     >
       <div className="pointer-events-none fixed inset-0 overflow-hidden z-0">
         <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-gold-dark/5 blur-[150px] rounded-full" />

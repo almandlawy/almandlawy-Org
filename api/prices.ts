@@ -430,10 +430,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Fallback to reference points only when API is completely unconfigured
     if (!goldSpot || !silverSpot) {
-      goldSpot = METAL_SPOTS.gold;
-      silverSpot = METAL_SPOTS.silver;
-      platinumSpot = METAL_SPOTS.platinum;
-      palladiumSpot = METAL_SPOTS.palladium;
+      goldSpot = goldSpot || METAL_SPOTS.gold;
+      silverSpot = silverSpot || METAL_SPOTS.silver;
+      platinumSpot = null;
+      palladiumSpot = null;
       sourceStatus = "reference";
     } else if (sourceStatus === "live" || sourceStatus === "cached") {
       // Never fabricate Pt/Pd under live/cached status — only use provider values

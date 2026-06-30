@@ -16,13 +16,13 @@ export default function RequestQuotePage() {
           <span className="text-[10px] font-mono uppercase tracking-[0.35em] text-gold-base">
             {isAr ? "طلب عرض سعر" : "Request Firm Quote"}
           </span>
-          <h1 className="text-3xl md:text-4xl font-serif text-white">
-            {isAr ? "مكتب عروض السبائك والمعادن الثمينة" : "Physical Bullion Quote & Purchase Desk"}
+          <h1 className="text-3xl md:text-4xl font-serif text-[#F5F0E8]">
+            {isAr ? "اطلب عرض سعر مؤكد للسبائك والمعادن الثمينة" : "Request a Firm Bullion Quote"}
           </h1>
           <p className="text-sm text-gray-400 max-w-xl mx-auto">
             {isAr
-              ? "أكمل النموذج أدناه. سيراجع فريق PGR UAE استفسارك وقد يتواصل معك لطلب معلومات KYC/AML قبل إصدار عرض سعر مؤكد."
-              : "Complete the form below. PGR UAE will review your inquiry and may contact you for KYC/AML information before issuing a firm quote."}
+              ? "قدّم استفسارك. سيراجع PGR UAE التوفر والمرجع السوقي والهوامش ومعاملة الضريبة والتسليم ومتطلبات KYC/AML قبل إصدار عرض سعر مؤكد."
+              : "Submit your inquiry. PGR UAE will review availability, market reference, premiums, VAT/tax treatment, delivery/collection, KYC/AML requirements, and confirm a firm quote."}
           </p>
         </div>
       </section>

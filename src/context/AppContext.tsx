@@ -22,11 +22,12 @@ const AppContext = createContext<AppContextValue | null>(null);
 const OUNCE_TO_GRAM = 31.1034768;
 
 function getInitialRates(): LiveMarketRates {
-  const defaultSpots = { gold: 2365.4, silver: 29.85, platinum: 965.2, palladium: 1012.1 };
+  const defaultSpots = { gold: 2365.4, silver: 29.85, platinum: null as number | null, palladium: null as number | null };
   const exchangeRates = { USD: 1.0, AED: 3.6725, EUR: 0.925, GBP: 0.785, SAR: 3.7505 };
   const ratesObj: any = { source_status: "reference" };
   Object.entries(defaultSpots).forEach(([metal, spotUsd]) => {
     ratesObj[metal] = { spot_usd_oz: spotUsd, currencies: {} as Record<string, { ounce: number; gram: number }> };
+    if (spotUsd == null) return;
     Object.entries(exchangeRates).forEach(([currency, rate]) => {
       const ouncePrice = spotUsd * rate;
       ratesObj[metal].currencies[currency] = {

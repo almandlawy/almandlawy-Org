@@ -20,8 +20,8 @@ const CONFIGS: Record<string, ProductLandingConfig> = {
   "gold-bars": {
     slug: "gold-bars",
     heroImage: "/gold_bar_luxury_1782445126673.jpg",
-    titleEn: "Gold Bars",
-    titleAr: "سبائك الذهب",
+    titleEn: "Gold Bars Quote in Dubai",
+    titleAr: "طلب عرض سعر سبائك الذهب في دبي",
     subtitleEn: "Request firm quotes for LBMA-accredited gold bars from 1g to 1kg. Indicative market prices — final desk confirmation required.",
     subtitleAr: "اطلب عروض أسعار مؤكدة لسبائك الذهب المعتمدة من ١ غرام إلى ١ كيلو. أسعار إرشادية — تأكيد نهائي من المكتب.",
     sizesEn: ["1g", "2.5g", "5g", "10g", "20g", "50g", "100g", "250g", "500g", "1kg"],
@@ -31,8 +31,8 @@ const CONFIGS: Record<string, ProductLandingConfig> = {
   "silver-bars": {
     slug: "silver-bars",
     heroImage: "/silver_bar_luxury_1782445139922.jpg",
-    titleEn: "Silver Bars",
-    titleAr: "سبائك الفضة",
+    titleEn: "Silver Bars Quote in Dubai",
+    titleAr: "طلب عرض سعر سبائك الفضة في دبي",
     subtitleEn: "Physical silver bullion bars for collection, storage, and delivery. Request a firm quote for availability and premiums.",
     subtitleAr: "سبائك فضة فعلية للتخزين والتسليم. اطلب عرض سعر مؤكد للتوفر والهامش.",
     sizesEn: ["100g", "250g", "500g", "1kg", "5kg", "15kg", "30kg", "100oz"],
@@ -42,8 +42,8 @@ const CONFIGS: Record<string, ProductLandingConfig> = {
   "bullion-coins": {
     slug: "bullion-coins",
     heroImage: "/gold_bar_luxury_1782445126673.jpg",
-    titleEn: "Bullion Coins",
-    titleAr: "مسكوكات ذهب وفضة",
+    titleEn: "Bullion Coins Inquiry",
+    titleAr: "استفسار مسكوكات الذهب والفضة",
     subtitleEn: "Sovereign mint bullion coins including Maple Leaf, Britannia, and Krugerrand. Firm quotes on request.",
     subtitleAr: "مسكوكات ذهب وفضة من دور السك السيادية. عروض أسعار مؤكدة عند الطلب.",
     sizesEn: ["1/10 oz", "1/4 oz", "1/2 oz", "1 oz"],

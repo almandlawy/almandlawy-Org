@@ -10,9 +10,10 @@ interface SectionHeadingProps {
 
 export default function SectionHeading({ eyebrow, title, subtitle, align = "center", icon }: SectionHeadingProps) {
   const alignClass = align === "center" ? "text-center mx-auto" : "text-left";
+  const flexAlign = align === "center" ? "justify-center" : "justify-start";
   return (
-    <div className={`max-w-3xl space-y-3 mb-12 ${alignClass}`}>
-      <span className="text-gold-base font-mono uppercase text-[10px] tracking-[0.35em] font-semibold flex items-center gap-2 justify-center">
+    <div className={`max-w-3xl space-y-3 mb-10 md:mb-12 ${alignClass}`}>
+      <span className={`text-gold-base font-mono uppercase text-[10px] tracking-[0.35em] font-semibold flex items-center gap-2 ${flexAlign}`}>
         {icon}
         {eyebrow}
       </span>

@@ -1,28 +1,32 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
+  LayoutDashboard,
   FileText,
   Package,
-  ShieldCheck,
+  FolderOpen,
   Warehouse,
-  MessageCircle,
+  RefreshCw,
+  User,
+  Headphones,
+  Search,
+  Bell,
+  Shield,
   LogOut,
-  Clock,
-  ArrowRight,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import PremiumLayout from "../components/premium/PremiumLayout";
 import PremiumButton from "../components/premium/PremiumButton";
-import SectionHeading from "../components/premium/SectionHeading";
+import Logo from "../components/premium/Logo";
 import { dbService, mockDb } from "../lib/supabase";
 
-type Tab = "overview" | "quotes" | "orders" | "kyc" | "storage" | "support";
+type Tab = "dashboard" | "quotes" | "orders" | "documents" | "storage" | "sellback" | "profile" | "support";
 
 export default function DashboardPage() {
   const { currentLang, user, setUser, rates } = useApp();
   const isAr = currentLang === "ar";
   const navigate = useNavigate();
-  const [tab, setTab] = useState<Tab>("overview");
+  const [tab, setTab] = useState<Tab>("dashboard");
   const [quotes, setQuotes] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [buybacks, setBuybacks] = useState<any[]>([]);
@@ -47,9 +51,7 @@ export default function DashboardPage() {
         setQuotes(
           allQuotes.filter(
             (q: any) =>
-              q.email?.toLowerCase() === email ||
-              q.customer_id === user.id ||
-              q.user_id === user.id
+              q.email?.toLowerCase() === email || q.customer_id === user.id || q.user_id === user.id
           )
         );
         setOrders(allOrders.filter((o: any) => o.customer_id === user.id));
@@ -64,296 +66,270 @@ export default function DashboardPage() {
     load();
   }, [user, navigate]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await dbService.auth.logout();
     mockDb.auth.logout();
     setUser(null);
     navigate("/login");
   };
 
   const kycStatus = kyc?.status || (isAr ? "لم يُقدَّم" : "Not submitted");
-  const indicativeGold =
-    rates?.gold?.currencies?.AED?.gram != null
-      ? `AED ${rates.gold.currencies.AED.gram.toFixed(2)}/g`
-      : isAr
-        ? "اطلب عرض سعر"
-        : "Request quote";
+  const goldSpot = rates?.gold?.spot_usd_oz;
 
-  const tabs: { id: Tab; en: string; ar: string; icon: typeof FileText }[] = [
-    { id: "overview", en: "Overview", ar: "نظرة عامة", icon: FileText },
-    { id: "quotes", en: "Quote Requests", ar: "عروض الأسعار", icon: Clock },
-    { id: "orders", en: "Purchase Records", ar: "سجلات الشراء", icon: Package },
-    { id: "kyc", en: "KYC & Documents", ar: "KYC والمستندات", icon: ShieldCheck },
-    { id: "storage", en: "Storage Requests", ar: "طلبات التخزين", icon: Warehouse },
-    { id: "support", en: "Support", ar: "الدعم", icon: MessageCircle },
+  const sidebar: { id: Tab; en: string; ar: string; icon: typeof LayoutDashboard }[] = [
+    { id: "dashboard", en: "Dashboard", ar: "لوحة التحكم", icon: LayoutDashboard },
+    { id: "quotes", en: "Quotes", ar: "عروض الأسعار", icon: FileText },
+    { id: "orders", en: "Orders", ar: "الطلبات", icon: Package },
+    { id: "documents", en: "Documents", ar: "المستندات", icon: FolderOpen },
+    { id: "storage", en: "Storage", ar: "التخزين", icon: Warehouse },
+    { id: "sellback", en: "Sell-Back Requests", ar: "طلبات إعادة البيع", icon: RefreshCw },
+    { id: "profile", en: "Profile", ar: "الملف الشخصي", icon: User },
+    { id: "support", en: "Support", ar: "الدعم", icon: Headphones },
   ];
+
+  const purchaseRecords = orders.map((o: any) => ({
+    id: o.id,
+    metal: o.metal || o.product_name?.includes("Silver") ? "Silver" : "Gold",
+    weight: o.weight || "—",
+    purity: o.purity || "999.9",
+    date: o.created_at ? new Date(o.created_at).toLocaleDateString() : "—",
+    price: o.total_amount ? `$${Number(o.total_amount).toLocaleString()}` : "—",
+    indicative: goldSpot && o.metal !== "silver" ? `$${(goldSpot * (o.weight_oz || 1)).toFixed(0)}` : "—",
+    status: o.status,
+  }));
 
   if (!user) return null;
 
   return (
     <PremiumLayout>
-      <section className="py-10 px-4 md:px-8 max-w-7xl mx-auto" style={{ direction: isAr ? "rtl" : "ltr" }}>
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-          <div>
-            <span className="text-[10px] font-mono uppercase tracking-[0.35em] text-gold-base">
-              {isAr ? "لوحة العميل" : "Client Dashboard"}
+      <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-6 md:py-8" style={{ direction: isAr ? "rtl" : "ltr" }}>
+        {/* Top bar */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 border-b border-gold-base/10">
+          <Logo compact showDescriptor={false} />
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="hidden sm:flex items-center gap-2 px-3 py-2 glass-gold text-xs text-gray-500">
+              <Search size={14} />
+              <span>{isAr ? "بحث..." : "Search..."}</span>
+            </div>
+            <button className="p-2 glass-gold text-gray-400 hover:text-gold-base cursor-pointer" aria-label="Notifications">
+              <Bell size={16} />
+            </button>
+            <div className="flex items-center gap-2 px-3 py-2 glass-gold">
+              <div className="h-7 w-7 rounded-full bg-gold-base/20 border border-gold-base/30 flex items-center justify-center text-[10px] text-gold-base font-semibold">
+                {user.name?.[0]?.toUpperCase() || "C"}
+              </div>
+              <span className="text-xs text-gray-300 hidden sm:block">{user.name}</span>
+            </div>
+            <span className="hidden md:flex items-center gap-1 text-[10px] text-emerald-400 font-mono">
+              <Shield size={12} />
+              {isAr ? "جلسة آمنة" : "Secure session"}
             </span>
-            <h1 className="text-2xl md:text-3xl font-serif text-white mt-1">
-              {isAr ? `مرحباً، ${user.name}` : `Welcome, ${user.name}`}
-            </h1>
-            <p className="text-xs text-gray-500 mt-1">{user.email}</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <PremiumButton to="/request-quote">{isAr ? "طلب عرض سعر" : "Request Quote"}</PremiumButton>
-            <PremiumButton to="/sell-back" variant="outline">
-              {isAr ? "عرض إعادة بيع" : "Sell-Back Quote"}
-            </PremiumButton>
-            <button
-              onClick={handleLogout}
-              className="inline-flex items-center gap-2 px-4 py-2 text-[10px] uppercase tracking-widest text-gray-400 border border-white/10 rounded-sm hover:text-white cursor-pointer"
-            >
-              <LogOut size={14} />
-              {isAr ? "خروج" : "Sign Out"}
+            <button onClick={handleLogout} className="p-2 text-gray-500 hover:text-white cursor-pointer" aria-label="Sign out">
+              <LogOut size={16} />
             </button>
           </div>
         </div>
 
         <div className="grid lg:grid-cols-12 gap-6">
-          <aside className="lg:col-span-3 space-y-1">
-            {tabs.map((t) => (
-              <button
-                key={t.id}
-                onClick={() => setTab(t.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 text-xs rounded-sm transition-colors cursor-pointer ${
-                  tab === t.id
-                    ? "bg-gold-dark/15 border border-gold-base/30 text-gold-base"
-                    : "text-gray-400 hover:bg-white/[0.03] border border-transparent"
-                }`}
-              >
-                <t.icon size={16} />
-                {isAr ? t.ar : t.en}
-              </button>
-            ))}
+          {/* Sidebar */}
+          <aside className="lg:col-span-3 xl:col-span-2">
+            <nav className="glass-gold p-2 space-y-0.5">
+              {sidebar.map((s) => (
+                <button
+                  key={s.id}
+                  onClick={() => setTab(s.id)}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 text-xs rounded-lg transition-colors cursor-pointer ${
+                    tab === s.id
+                      ? "bg-gold-base/15 text-gold-base border border-gold-base/25"
+                      : "text-gray-400 hover:bg-white/[0.03] border border-transparent"
+                  }`}
+                >
+                  <s.icon size={15} />
+                  {isAr ? s.ar : s.en}
+                </button>
+              ))}
+            </nav>
           </aside>
 
-          <div className="lg:col-span-9 space-y-6">
+          {/* Main */}
+          <div className="lg:col-span-9 xl:col-span-10 space-y-6">
             {loading ? (
-              <div className="premium-card p-8 text-center text-gray-500 text-sm">
-                {isAr ? "جاري التحميل..." : "Loading..."}
-              </div>
+              <div className="glass-gold p-12 text-center text-gray-500 text-sm">{isAr ? "جاري التحميل..." : "Loading..."}</div>
             ) : (
               <>
-                {tab === "overview" && (
-                  <div className="space-y-6">
-                    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {(tab === "dashboard" || tab === "orders") && (
+                  <>
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
                       {[
+                        { label: isAr ? "عروض نشطة" : "Active Quotes", value: quotes.length },
+                        { label: isAr ? "الطلبات" : "Orders", value: orders.length },
                         { label: isAr ? "حالة KYC" : "KYC Status", value: kycStatus },
-                        { label: isAr ? "عروض الأسعار" : "Active Quotes", value: quotes.length },
-                        { label: isAr ? "سجلات الشراء" : "Purchase Records", value: orders.length },
-                        { label: isAr ? "طلبات إعادة البيع" : "Sell-Back Requests", value: buybacks.length },
-                      ].map((s) => (
-                        <div key={s.label} className="premium-card p-5">
-                          <span className="text-[9px] font-mono text-gray-500 uppercase block mb-1">{s.label}</span>
-                          <span className="text-lg font-semibold text-white">{s.value}</span>
+                        { label: isAr ? "طلبات التخزين" : "Storage Requests", value: 0 },
+                      ].map((c) => (
+                        <div key={c.label} className="glass-gold p-4 md:p-5">
+                          <span className="text-[9px] font-mono text-gray-500 uppercase block mb-1">{c.label}</span>
+                          <span className="text-xl md:text-2xl font-serif text-[#F5F0E8]">{c.value}</span>
                         </div>
                       ))}
                     </div>
 
-                    <div className="premium-card p-6 flex flex-col md:flex-row justify-between gap-4">
+                    <div className="glass-gold p-5 md:p-6 space-y-4">
                       <div>
-                        <span className="text-[10px] text-gold-base uppercase tracking-widest font-mono">
-                          {isAr ? "قيمة إرشادية فقط" : "Indicative Market Price"}
-                        </span>
-                        <p className="text-2xl font-serif text-white mt-1">{indicativeGold}</p>
-                        <p className="text-[10px] text-gray-600 mt-2 max-w-md">
-                          {isAr
-                            ? "الأسعار إرشادية فقط. عرض السعر المؤكد يصدر من المكتب بعد مراجعة KYC/AML."
-                            : "Prices are indicative only. Firm quotes are issued by desk after KYC/AML review."}
+                        <h2 className="text-lg font-serif text-[#F5F0E8]">
+                          {isAr ? "سجلات شراء السبائك الفعلية" : "Your Physical Bullion Purchase Records"}
+                        </h2>
+                        <p className="text-[10px] text-gray-500 mt-1">
+                          {isAr ? "قيم إرشادية فقط. ليست محفظة تداول." : "Indicative values only. Not a trading wallet."}
                         </p>
                       </div>
-                      <PremiumButton to="/request-quote" className="self-start">
-                        {isAr ? "طلب عرض سعر مؤكد" : "Request Firm Quote"}
-                      </PremiumButton>
-                    </div>
 
-                    <div className="premium-card p-6">
-                      <h3 className="text-sm font-serif text-white mb-4">
-                        {isAr ? "آخر طلبات عروض الأسعار" : "Recent Quote Requests"}
-                      </h3>
-                      {quotes.length === 0 ? (
-                        <p className="text-xs text-gray-500">
-                          {isAr ? "لا توجد طلبات بعد." : "No quote requests yet."}{" "}
-                          <Link to="/request-quote" className="text-gold-base hover:underline">
-                            {isAr ? "اطلب عرض سعر" : "Request a quote"}
-                          </Link>
-                        </p>
+                      {purchaseRecords.length === 0 ? (
+                        <div className="text-center py-10 space-y-3">
+                          <p className="text-sm text-gray-500">{isAr ? "لا توجد سجلات شراء بعد." : "No purchase records yet."}</p>
+                          <PremiumButton to="/request-quote" className="!rounded-lg">
+                            {isAr ? "طلب عرض سعر" : "Request Quote"}
+                          </PremiumButton>
+                        </div>
                       ) : (
-                        <ul className="space-y-3">
-                          {quotes.slice(0, 5).map((q: any) => (
-                            <li
-                              key={q.id}
-                              className="flex justify-between items-center text-xs border-b border-white/[0.04] pb-2"
-                            >
-                              <span className="text-gray-300">
-                                {q.productCategory || q.product_name || q.productInterest || "Bullion"}
-                              </span>
-                              <span className="text-gold-base font-mono">{q.status || "Pending"}</span>
-                            </li>
-                          ))}
-                        </ul>
+                        <div className="overflow-x-auto -mx-2">
+                          <table className="w-full text-xs min-w-[640px]">
+                            <thead>
+                              <tr className="text-gray-500 font-mono uppercase text-[9px] border-b border-gold-base/10">
+                                <th className="text-left py-2 px-2">{isAr ? "المعدن" : "Metal"}</th>
+                                <th className="text-left py-2 px-2">{isAr ? "الوزن" : "Weight"}</th>
+                                <th className="text-left py-2 px-2">{isAr ? "النقاء" : "Purity"}</th>
+                                <th className="text-left py-2 px-2">{isAr ? "تاريخ الشراء" : "Purchase Date"}</th>
+                                <th className="text-left py-2 px-2">{isAr ? "سعر الشراء" : "Purchase Price"}</th>
+                                <th className="text-left py-2 px-2">{isAr ? "قيمة إرشادية" : "Indicative Value"}</th>
+                                <th className="text-left py-2 px-2">{isAr ? "إجراء" : "Action"}</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {purchaseRecords.map((r) => (
+                                <tr key={r.id} className="border-b border-white/[0.04] text-gray-300">
+                                  <td className="py-3 px-2">{r.metal}</td>
+                                  <td className="py-3 px-2">{r.weight}</td>
+                                  <td className="py-3 px-2">{r.purity}</td>
+                                  <td className="py-3 px-2 text-gray-500">{r.date}</td>
+                                  <td className="py-3 px-2">{r.price}</td>
+                                  <td className="py-3 px-2 text-gold-base/80">{r.indicative}</td>
+                                  <td className="py-3 px-2">
+                                    <Link to="/sell-back" className="text-gold-base hover:underline text-[10px] uppercase tracking-wider">
+                                      {isAr ? "عرض إعادة بيع" : "Sell-Back Quote"}
+                                    </Link>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
                       )}
                     </div>
-                  </div>
+
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="glass-gold p-5 space-y-3">
+                        <h3 className="text-sm font-serif text-[#F5F0E8]">{isAr ? "آخر طلبات عروض الأسعار" : "Recent Quote Requests"}</h3>
+                        {quotes.length === 0 ? (
+                          <p className="text-xs text-gray-500">{isAr ? "لا توجد طلبات." : "No requests."}</p>
+                        ) : (
+                          quotes.slice(0, 4).map((q: any) => (
+                            <div key={q.id} className="flex justify-between text-xs border-b border-white/[0.04] pb-2">
+                              <span className="text-gray-400">{q.productCategory || q.productInterest || "Bullion"}</span>
+                              <span className="text-gold-base font-mono">{q.status || "Pending"}</span>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                      <div className="glass-gold p-5 space-y-3">
+                        <h3 className="text-sm font-serif text-[#F5F0E8]">{isAr ? "حالة الطلبات" : "Order Status"}</h3>
+                        {orders.length === 0 ? (
+                          <p className="text-xs text-gray-500">{isAr ? "لا توجد طلبات." : "No orders."}</p>
+                        ) : (
+                          orders.slice(0, 4).map((o: any) => (
+                            <div key={o.id} className="flex justify-between text-xs border-b border-white/[0.04] pb-2">
+                              <span className="text-gray-400 font-mono">{o.id}</span>
+                              <span className="text-gray-300">{o.status}</span>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                      <div className="glass-gold p-5 space-y-3">
+                        <h3 className="text-sm font-serif text-[#F5F0E8]">KYC & {isAr ? "المستندات" : "Documents"}</h3>
+                        <p className="text-xs text-gray-400">{kycStatus}</p>
+                        <p className="text-[10px] text-gray-600">
+                          {isAr ? "رفع المستندات قريباً. قد يطلب المكتب مستندات عبر قناة رسمية آمنة." : "Document upload coming soon. Desk may request documents via official secure channel."}
+                        </p>
+                      </div>
+                      <div className="glass-gold p-5 space-y-3">
+                        <h3 className="text-sm font-serif text-[#F5F0E8]">{isAr ? "الدعم / واتساب" : "Support / WhatsApp"}</h3>
+                        <PremiumButton href="https://wa.me/971559688837" variant="whatsapp" fullWidth className="!rounded-lg">
+                          WhatsApp Desk
+                        </PremiumButton>
+                      </div>
+                    </div>
+                  </>
                 )}
 
                 {tab === "quotes" && (
-                  <div className="premium-card p-6 space-y-4">
-                    <SectionHeading
-                      align="left"
-                      eyebrow={isAr ? "عروض الأسعار" : "Quote Requests"}
-                      title={isAr ? "طلبات عروض الأسعار النشطة" : "Active Quote Requests"}
-                    />
+                  <div className="glass-gold p-6">
+                    <h2 className="text-lg font-serif text-[#F5F0E8] mb-4">{isAr ? "عروض الأسعار" : "Quote Requests"}</h2>
                     {quotes.length === 0 ? (
-                      <div className="text-center py-8 space-y-3">
-                        <p className="text-sm text-gray-400">
-                          {isAr ? "لا توجد عروض أسعار حالياً." : "No quote requests on file."}
-                        </p>
-                        <PremiumButton to="/request-quote">{isAr ? "طلب عرض سعر" : "Request Quote"}</PremiumButton>
-                      </div>
+                      <PremiumButton to="/request-quote" className="!rounded-lg">{isAr ? "طلب عرض سعر" : "Request Quote"}</PremiumButton>
                     ) : (
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-xs">
-                          <thead>
-                            <tr className="text-gray-500 font-mono uppercase text-[10px] border-b border-white/10">
-                              <th className="text-left py-2">{isAr ? "المنتج" : "Product"}</th>
-                              <th className="text-left py-2">{isAr ? "المعدن" : "Metal"}</th>
-                              <th className="text-left py-2">{isAr ? "الحالة" : "Status"}</th>
-                              <th className="text-left py-2">{isAr ? "التاريخ" : "Date"}</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {quotes.map((q: any) => (
-                              <tr key={q.id} className="border-b border-white/[0.03] text-gray-300">
-                                <td className="py-3">{q.productCategory || q.productInterest || "—"}</td>
-                                <td className="py-3">{q.metalInterest || q.metal_interest || "—"}</td>
-                                <td className="py-3 text-gold-base">{q.status || "Pending"}</td>
-                                <td className="py-3 text-gray-500">
-                                  {q.created_at ? new Date(q.created_at).toLocaleDateString() : "—"}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
+                      quotes.map((q: any) => (
+                        <div key={q.id} className="flex justify-between py-3 border-b border-white/[0.04] text-xs">
+                          <span>{q.productInterest || "Bullion"}</span>
+                          <span className="text-gold-base">{q.status}</span>
+                        </div>
+                      ))
                     )}
                   </div>
                 )}
 
-                {tab === "orders" && (
-                  <div className="premium-card p-6 space-y-4">
-                    <SectionHeading
-                      align="left"
-                      eyebrow={isAr ? "الطلبات" : "Orders"}
-                      title={isAr ? "سجلات شراء السبائك" : "Physical Bullion Purchase Records"}
-                    />
-                    {orders.length === 0 ? (
-                      <p className="text-xs text-gray-500 py-6 text-center">
-                        {isAr ? "لا توجد سجلات شراء بعد." : "No purchase records yet."}
-                      </p>
-                    ) : (
-                      <div className="space-y-3">
-                        {orders.map((o: any) => (
-                          <div
-                            key={o.id}
-                            className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-4 border border-white/[0.04] rounded-sm bg-black/20"
-                          >
-                            <div>
-                              <p className="text-sm text-white">{o.product_name || o.description || o.id}</p>
-                              <p className="text-[10px] text-gray-500 font-mono">{o.id}</p>
-                            </div>
-                            <span className="text-xs text-gold-base uppercase tracking-wider">{o.status}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {tab === "kyc" && (
-                  <div className="premium-card p-6 space-y-4">
-                    <SectionHeading
-                      align="left"
-                      eyebrow="KYC / AML"
-                      title={isAr ? "مراجعة KYC والمستندات" : "KYC & AML Review"}
-                      subtitle={
-                        isAr
-                          ? "رفع المستندات قريباً. تواصل مع المكتب لإكمال التحقق."
-                          : "Document upload coming soon. Contact desk to complete verification."
-                      }
-                    />
-                    <div className="grid sm:grid-cols-2 gap-4 text-xs">
-                      <div className="p-4 border border-white/[0.04] rounded-sm">
-                        <span className="text-gray-500 block mb-1">{isAr ? "الحالة" : "Status"}</span>
-                        <span className="text-white font-medium">{kycStatus}</span>
-                      </div>
-                      <div className="p-4 border border-white/[0.04] rounded-sm">
-                        <span className="text-gray-500 block mb-1">{isAr ? "الاسم" : "Full Name"}</span>
-                        <span className="text-white">{kyc?.full_name || user.name}</span>
-                      </div>
-                    </div>
-                    <p className="text-[10px] text-gray-600 font-mono">
-                      {isAr
-                        ? "مستندات KYC تُراجع يدوياً من فريق الامتثال. لا يتم تخزين المستندات في محفظة رقمية."
-                        : "KYC documents are reviewed manually by compliance. This is not a digital wallet."}
-                    </p>
+                {tab === "documents" && (
+                  <div className="glass-gold p-6 space-y-3">
+                    <h2 className="text-lg font-serif text-[#F5F0E8]">KYC / AML</h2>
+                    <p className="text-xs text-gray-400">{kycStatus}</p>
+                    <p className="text-[10px] text-gray-600">{isAr ? "ليس محفظة رقمية." : "This is not a digital wallet."}</p>
                   </div>
                 )}
 
                 {tab === "storage" && (
-                  <div className="premium-card p-6 space-y-4">
-                    <SectionHeading
-                      align="left"
-                      eyebrow={isAr ? "التخزين" : "Storage"}
-                      title={isAr ? "طلبات التخزين المخصص" : "Allocated Bullion Storage Requests"}
-                    />
-                    <p className="text-xs text-gray-400">
-                      {isAr
-                        ? "التخزين المخصص للسبائك الفعلية — ليس رصيداً نقدياً أو محفظة."
-                        : "Allocated storage for physical bullion — not a cash balance or wallet."}
-                    </p>
-                    <PremiumButton to="/allocated-storage">
-                      {isAr ? "طلب تخزين مخصص" : "Request Allocated Storage"}
-                      <ArrowRight size={14} />
-                    </PremiumButton>
+                  <div className="glass-gold p-6 space-y-4">
+                    <h2 className="text-lg font-serif text-[#F5F0E8]">{isAr ? "طلبات التخزين المخصص" : "Allocated Storage Requests"}</h2>
+                    <p className="text-xs text-gray-500">{isAr ? "ليس رصيداً نقدياً أو محفظة." : "Not a cash balance or wallet."}</p>
+                    <PremiumButton to="/allocated-storage" className="!rounded-lg">{isAr ? "طلب تخزين" : "Request Storage"}</PremiumButton>
+                  </div>
+                )}
+
+                {tab === "sellback" && (
+                  <div className="glass-gold p-6 space-y-4">
+                    <h2 className="text-lg font-serif text-[#F5F0E8]">{isAr ? "طلبات إعادة البيع" : "Sell-Back Requests"}</h2>
+                    <p className="text-xs text-gray-500">{buybacks.length} {isAr ? "طلبات" : "requests"}</p>
+                    <PremiumButton to="/sell-back" className="!rounded-lg">{isAr ? "طلب عرض إعادة بيع" : "Request Sell-Back Quote"}</PremiumButton>
+                  </div>
+                )}
+
+                {tab === "profile" && (
+                  <div className="glass-gold p-6 space-y-2 text-sm">
+                    <h2 className="text-lg font-serif text-[#F5F0E8] mb-3">{isAr ? "الملف الشخصي" : "Profile"}</h2>
+                    <p className="text-gray-400">{user.name}</p>
+                    <p className="text-gray-500 text-xs">{user.email}</p>
                   </div>
                 )}
 
                 {tab === "support" && (
-                  <div className="premium-card p-6 space-y-4">
-                    <SectionHeading
-                      align="left"
-                      eyebrow={isAr ? "الدعم" : "Support"}
-                      title={isAr ? "مكتب الدعم" : "Desk Support Panel"}
-                    />
-                    <p className="text-xs text-gray-400">
-                      {isAr
-                        ? "تواصل مع مكتب PGR UAE عبر واتساب أو البريد الإلكتروني."
-                        : "Contact PGR UAE desk via WhatsApp or email."}
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      <PremiumButton href="https://wa.me/971559688837" variant="whatsapp">
-                        WhatsApp Desk
-                      </PremiumButton>
-                      <PremiumButton href="mailto:desk@pgruae.com" variant="outline">
-                        desk@pgruae.com
-                      </PremiumButton>
-                    </div>
+                  <div className="glass-gold p-6 space-y-4">
+                    <h2 className="text-lg font-serif text-[#F5F0E8]">{isAr ? "الدعم" : "Support"}</h2>
+                    <PremiumButton href="mailto:desk@pgruae.com" variant="outline" fullWidth className="!rounded-lg">desk@pgruae.com</PremiumButton>
+                    <PremiumButton href="https://wa.me/971559688837" variant="whatsapp" fullWidth className="!rounded-lg">WhatsApp Desk</PremiumButton>
                   </div>
                 )}
               </>
             )}
           </div>
         </div>
-      </section>
+      </div>
     </PremiumLayout>
   );
 }

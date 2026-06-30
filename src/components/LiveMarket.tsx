@@ -4,7 +4,7 @@
  */
 
 import React from "react";
-import { TrendingUp, Sparkles, RefreshCw, Layers, DollarSign } from "lucide-react";
+import { TrendingUp, RefreshCw } from "lucide-react";
 import { LiveMarketRates } from "../types";
 
 interface LiveMarketProps {
@@ -130,15 +130,32 @@ export default function LiveMarket({
     return `M ${points.join(" L ")}`;
   };
 
-  const getDayChangePct = (metal: string) => {
+  const METAL_SYMBOLS: Record<string, string> = {
+    gold: "XAU / USD",
+    silver: "XAG / USD",
+    platinum: "XPT / USD",
+    palladium: "XPD / USD",
+  };
+
+  const isMetalLive = (metal: "gold" | "silver" | "platinum" | "palladium") => {
+    if (!rates || !rates[metal]) return false;
+    const spot = rates[metal].spot_usd_oz;
+    if (spot == null || spot <= 0) return false;
+    if (metal === "platinum" || metal === "palladium") {
+      return rates.source_status === "live" || rates.source_status === "cached";
+    }
+    return true;
+  };
+
+  const getDayChange = (metal: string) => {
     const prices = history[metal] || [];
-    if (prices.length < 2) return "+0.12%";
+    if (prices.length < 2) return { pct: "+0.00%", abs: "+0.00", positive: true };
     const first = prices[0];
     const last = prices[prices.length - 1];
     const diff = last - first;
     const pct = (diff / first) * 100;
     const sign = pct >= 0 ? "+" : "";
-    return `${sign}${pct.toFixed(2)}%`;
+    return { pct: `${sign}${pct.toFixed(2)}%`, abs: `${sign}${diff.toFixed(2)}`, positive: pct >= 0 };
   };
 
   const getPriceData = (metal: "gold" | "silver" | "platinum" | "palladium") => {
@@ -159,23 +176,18 @@ export default function LiveMarket({
   const currencies = ["AED", "USD", "EUR", "GBP", "SAR"];
 
   return (
-    <section className="py-24 px-4 md:px-8 border-t border-white/[0.03] bg-[#070707] relative" id="market" style={{ direction: currentLang === "ar" ? "rtl" : "ltr" }}>
-      <div className="max-w-7xl mx-auto space-y-16">
+    <section className="py-16 md:py-24 px-4 md:px-8 border-t border-white/[0.04] bg-black relative" id="market" style={{ direction: currentLang === "ar" ? "rtl" : "ltr" }}>
+      <div className="max-w-[1400px] mx-auto space-y-10">
         
-        {/* Title Container */}
-        <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-6 border-b border-white/[0.04] pb-8">
-          <div className="space-y-3">
-            <span className="text-gold-base font-mono uppercase text-xs tracking-[0.25em] font-semibold flex items-center gap-2">
-              <Sparkles size={12} />
-              {currentLang === "ar" ? "لوحة الأسعار الاسترشادية للمعادن الثمينة" : "Indicative Precious Metals Price Board"}
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-serif tracking-tight text-white font-medium">
-              {currentLang === "ar" ? "لوحة الأسعار الاسترشادية للمعادن الثمينة" : "Indicative Precious Metals Price Board"}
+        <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-6">
+          <div className="space-y-2">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif text-[#F5F0E8] font-medium">
+              {currentLang === "ar" ? "أسعار السوق المباشرة" : "Live Market Prices"}
             </h2>
-            <p className="text-sm text-gray-400 max-w-xl">
-              {currentLang === "ar" 
-                ? "أسعار استرشادية للذهب والفضة. يتم تأكيد السعر النهائي قبل الدفع حسب توفر المنتج وحركة السوق." 
-                : "Indicative gold and silver reference prices. Final price is confirmed before payment based on product availability and market movement."}
+            <p className="text-xs text-gray-500 max-w-xl">
+              {currentLang === "ar"
+                ? "أسعار إرشادية للذهب والفضة. البلاتين والبلاديوم — اطلب عرض سعر من المكتب."
+                : "Indicative gold and silver references. Platinum & palladium — request desk quote if not live."}
             </p>
           </div>
 
@@ -213,111 +225,76 @@ export default function LiveMarket({
           </div>
         </div>
 
-        {/* Live Grid Display */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-5">
           {(["gold", "silver", "platinum", "palladium"] as const).map((metal) => {
             const metalPrice = getPriceData(metal);
             const isGold = metal === "gold";
             const isSilver = metal === "silver";
-            const changePct = getDayChangePct(metal);
-            const isPositive = !changePct.startsWith("-");
+            const change = getDayChange(metal);
             const flash = flashStates[metal];
+            const live = isMetalLive(metal);
+            const usdOz = rates?.[metal]?.spot_usd_oz;
 
-            // Verify if this specific metal has a live spot price available
-            const isMetalLive = !!(rates && 
-              rates[metal] && 
-              rates[metal].spot_usd_oz !== null &&
-              rates[metal].spot_usd_oz !== undefined &&
-              rates[metal].spot_usd_oz > 0 && 
-              (
-                (isGold || isSilver) 
-                  ? (rates.source_status === "live" || rates.source_status === "cached")
-                  : (rates.source_status === "live" || rates.source_status === "cached")
-              )
-            );
-
-            // Setup border flash effect
-            let flashClass = "border-white/[0.04]";
-            if (rates && isMetalLive && flash === "up") flashClass = "border-emerald-500/50 shadow-[0_0_20px_rgba(16,185,129,0.1)]";
-            if (rates && isMetalLive && flash === "down") flashClass = "border-rose-500/50 shadow-[0_0_20px_rgba(244,63,94,0.1)]";
+            let flashClass = "border-gold-base/10";
+            if (live && flash === "up") flashClass = "border-emerald-500/40";
+            if (live && flash === "down") flashClass = "border-rose-500/40";
 
             return (
               <div
                 key={metal}
-                className={`glass-premium rounded p-6 space-y-6 transition-all duration-500 relative overflow-hidden group border ${flashClass}`}
+                className={`glass-gold p-5 md:p-6 space-y-4 transition-all duration-500 relative overflow-hidden group border ${flashClass}`}
               >
-                {/* Visual Glow Layer for Metals */}
-                <div className={`absolute top-0 right-0 w-24 h-24 rounded-full blur-[60px] opacity-10 pointer-events-none transition-opacity group-hover:opacity-20 ${
+                <div className={`absolute top-0 right-0 w-20 h-20 rounded-full blur-[50px] opacity-15 pointer-events-none ${
                   isGold ? "bg-gold-base" : isSilver ? "bg-silver-base" : "bg-white"
                 }`} />
 
-                {/* Card Header (Metal Name & Tag) */}
-                <div className="flex justify-between items-start">
+                <div className="flex justify-between items-start gap-2">
                   <div>
-                    <h3 className="text-xl font-serif text-white tracking-wide capitalize font-medium">
+                    <span className="text-[10px] font-mono text-gold-base/80 uppercase tracking-widest block mb-1">
+                      {METAL_SYMBOLS[metal]}
+                    </span>
+                    <h3 className="text-base font-serif text-[#F5F0E8] capitalize font-medium">
                       {currentLang === "ar" ? (
-                        metal === "gold" ? "الذهب النقي" :
-                        metal === "silver" ? "الفضة النقية" :
-                        metal === "platinum" ? "البلاتين" : "البلاديوم"
+                        metal === "gold" ? "الذهب" : metal === "silver" ? "الفضة" : metal === "platinum" ? "البلاتين" : "البلاديوم"
                       ) : metal}
                     </h3>
-                    <span className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">
-                      {isGold ? "999.9 Purity" : isSilver ? "999.0 Purity" : "999.5 Purity"}
-                    </span>
                   </div>
-                  {isMetalLive && (
-                    <span className={`text-xs font-mono font-semibold px-2 py-0.5 rounded-sm ${
-                      isPositive ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"
+                  {live && (
+                    <span className={`text-[10px] font-mono font-semibold px-2 py-1 rounded-md ${
+                      change.positive ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"
                     }`}>
-                      {changePct}
+                      {change.abs} {change.pct}
                     </span>
                   )}
                 </div>
 
-                {/* Spot Prices Details */}
-                <div className="space-y-2">
-                  <div className="text-xs text-gray-500 font-mono uppercase tracking-widest">
-                    {currentLang === "ar" ? "سعر الأونصة الاسترشادي" : "Indicative Price per Ounce"}
-                  </div>
-                  {isMetalLive ? (
+                <div className="space-y-1">
+                  {live && usdOz ? (
                     <>
-                      <div className="flex items-baseline gap-1.5">
-                        <span className={`text-3xl font-serif tracking-tight font-medium transition-colors ${
-                          isGold ? "text-gold-gradient" : isSilver ? "text-silver-gradient" : "text-white"
-                        }`}>
-                          {metalPrice.ounce ? metalPrice.ounce.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "..."}
-                        </span>
-                        <span className="text-xs text-gray-400 font-mono font-medium">{selectedCurrency}</span>
-                      </div>
-
-                      <div className="flex justify-between items-center pt-3 border-t border-white/[0.03] text-xs font-mono">
-                        <span className="text-gray-500">
-                          {currentLang === "ar" ? "سعر الجرام" : "Rate per Gram (g)"}
-                        </span>
-                        <span className="text-gray-300 font-medium">
-                          {metalPrice.gram ? metalPrice.gram.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 }) : "..."} {selectedCurrency}
+                      <div className="text-[10px] text-gray-500 font-mono uppercase tracking-widest">USD / oz</div>
+                      <div className="flex items-baseline gap-2">
+                        <span className={`text-2xl md:text-3xl font-serif font-medium ${isGold ? "text-gold-gradient" : isSilver ? "text-silver-gradient" : "text-[#F5F0E8]"}`}>
+                          ${usdOz.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
                       </div>
+                      {selectedCurrency !== "USD" && metalPrice.ounce > 0 && (
+                        <div className="text-xs text-gray-500 font-mono pt-1">
+                          {metalPrice.ounce.toLocaleString(undefined, { minimumFractionDigits: 2 })} {selectedCurrency} / oz
+                        </div>
+                      )}
                     </>
                   ) : (
                     <div className="space-y-3 pt-1">
-                      {(isGold || isSilver) && (
-                        <div className="text-xs text-rose-400 font-mono flex items-center gap-1.5 bg-rose-500/5 border border-rose-500/10 p-2 rounded">
-                          <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse"></span>
-                          <span>
-                            {currentLang === "ar" ? "سعر المباشر غير متوفر مؤقتاً" : "Live price temporarily unavailable"}
-                          </span>
-                        </div>
-                      )}
-                      <div className="text-sm font-medium text-amber-500 font-mono min-h-[36px] flex items-center gap-1.5 bg-amber-500/5 border border-amber-500/10 p-2 rounded">
-                        <span className="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
-                        <span>
-                          {currentLang === "ar" ? "إرشادي — تأكيد من المكتب" : "Indicative — confirm with desk"}
-                        </span>
+                      <div className="text-sm font-medium text-amber-500/90 font-mono flex items-center gap-2">
+                        <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                        {currentLang === "ar" ? "إرشادي" : "Indicative"}
                       </div>
+                      <p className="text-xs text-gray-500">
+                        {currentLang === "ar" ? "تأكيد من المكتب" : "Confirm with desk"}
+                      </p>
                       <button
                         onClick={onOpenQuote}
-                        className="w-full text-center py-2.5 bg-gold-base/10 hover:bg-gold-base/20 border border-gold-base/20 hover:border-gold-base/40 text-gold-base text-xs font-mono font-semibold uppercase rounded transition-all cursor-pointer shadow-[0_2px_8px_rgba(212,175,55,0.05)]"
+                        className="w-full text-center py-2.5 bg-gold-base/10 hover:bg-gold-base/20 border border-gold-base/25 text-gold-base text-[10px] font-mono font-semibold uppercase rounded-lg transition-all cursor-pointer"
                       >
                         {currentLang === "ar" ? "طلب عرض سعر" : "Request Quote"}
                       </button>
@@ -325,37 +302,19 @@ export default function LiveMarket({
                   )}
                 </div>
 
-                {/* High-End Sparkling Vector Graph */}
-                {isMetalLive && (
-                  <div className="pt-2 h-[75px] w-full flex items-end">
-                    <svg className="overflow-visible w-full h-[70px] pointer-events-none">
-                      {/* Glowing drop-shadow filters */}
-                      <defs>
-                        <linearGradient id={`grad-${metal}`} x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor={isGold ? "#D4AF37" : isSilver ? "#C0C0C0" : "#FFFFFF"} stopOpacity="0.15" />
-                          <stop offset="100%" stopColor={isGold ? "#D4AF37" : isSilver ? "#C0C0C0" : "#FFFFFF"} stopOpacity="0.0" />
-                        </linearGradient>
-                      </defs>
-                      
-                      {/* Glowing sparkline line */}
+                {live && (
+                  <div className="pt-1 h-[60px] w-full flex items-end">
+                    <svg className="overflow-visible w-full h-[55px] pointer-events-none">
                       <path
-                        d={generateSparklineSvgPath(history[metal] || [], 280, 70)}
+                        d={generateSparklineSvgPath(history[metal] || [], 260, 55)}
                         fill="none"
-                        stroke={isGold ? "#D4AF37" : isSilver ? "#C0C0C0" : "#E2E2E2"}
-                        strokeWidth="1.8"
+                        stroke={isGold ? "#C9A84C" : isSilver ? "#C0C0C0" : "#E2E2E2"}
+                        strokeWidth="1.5"
                         strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="transition-all duration-300"
                       />
                     </svg>
                   </div>
                 )}
-
-                {/* Technical Footnote */}
-                <div className="flex justify-between text-[10px] font-mono text-gray-600 pt-2 border-t border-white/[0.03]">
-                  <span>{currentLang === "ar" ? "مرجع السوق الاسترشادي" : "Indicative market reference"}</span>
-                  <span>{currentLang === "ar" ? "يتم تأكيد السعر قبل الدفع" : "Price confirmed before payment"}</span>
-                </div>
               </div>
             );
           })}
