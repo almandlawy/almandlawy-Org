@@ -6,8 +6,7 @@
 import React, { useState, useEffect } from "react";
 import { X, ShieldCheck, Phone, CheckCircle, Mail, AlertTriangle, FileText, ZoomIn, Download, Check, ExternalLink, Award } from "lucide-react";
 import { Product, LiveMarketRates } from "../types";
-import { PRODUCTS } from "../data";
-import { dbService, isProduction } from "../lib/supabase";
+import { dbService } from "../lib/supabase";
 import { getProductImage } from "../lib/productImages";
 
 interface ProductDetailModalProps {
@@ -44,10 +43,10 @@ export default function ProductDetailModal({
     const fetchDynamicData = async () => {
       try {
         const [pList, sObj] = await Promise.all([
-          dbService.products.list(),
+          dbService.products.list("public"),
           dbService.settings.get()
         ]);
-        if (pList && pList.length > 0) setProducts(pList);
+        if (pList.length > 0) setProducts(pList);
         if (sObj) setSettings(sObj);
       } catch (err) {
         console.error("Error loading dynamic data in ProductDetailModal:", err);
@@ -159,9 +158,9 @@ Phone: ${phone}
   };
 
   // Find up to 3 related products of the same metal type
-  const relatedProducts = (products.length > 0 ? products : (isProduction ? [] : PRODUCTS)).filter(
-    (p) => p.technical_specs.metal === activeProduct.technical_specs.metal && p.id !== activeProduct.id
-  ).slice(0, 3);
+  const relatedProducts = products
+    .filter((p) => p.id !== activeProduct.id)
+    .slice(0, 3);
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto" id="product-detail-portal" style={{ direction: currentLang === "ar" ? "rtl" : "ltr" }}>
@@ -201,9 +200,7 @@ Phone: ${phone}
                     referrerPolicy="no-referrer"
                     onError={(e) => {
                       e.currentTarget.onerror = null;
-                      e.currentTarget.src = isGold
-                        ? "/images/products/02-gold-bars-1g-5g-10g.webp"
-                        : "/images/products/06-silver-bars-1oz-100g.webp";
+                      e.currentTarget.src = getProductImage(activeProduct);
                     }}
                     className="w-full h-full object-contain transition-transform duration-200"
                     style={{
@@ -454,9 +451,7 @@ Phone: ${phone}
                               alt={rel.name_en}
                               onError={(e) => {
                                 e.currentTarget.onerror = null;
-                                e.currentTarget.src = rel.technical_specs.metal === "gold"
-                                  ? "/images/products/02-gold-bars-1g-5g-10g.webp"
-                                  : "/images/products/06-silver-bars-1oz-100g.webp";
+                                e.currentTarget.src = getProductImage(rel);
                               }}
                               className="h-full w-full object-contain"
                             />

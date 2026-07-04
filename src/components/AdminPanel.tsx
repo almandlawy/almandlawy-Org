@@ -14,6 +14,7 @@ import {
 import { dbService, mockDb, isLive, supabase, getRedirectUrl, generateQuoteSignature } from "../lib/supabase";
 import { Product, DailyPricingSettings, ShippingSettings } from "../types";
 import { DEFAULT_DAILY_PRICING, DEFAULT_SHIPPING_SETTINGS } from "../data";
+import { resolveProductIdFromLabel } from "../lib/productCatalog";
 import { DebugPanel } from "./DebugPanel";
 
 interface AdminPanelProps {
@@ -406,7 +407,7 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
       const [
         pList, qList, oList, kList, dList, ptList, exRates, bbList, hList, sObj, certs, blogList, auditList
       ] = await Promise.all([
-        dbService.products.list(),
+        dbService.products.list("admin"),
         dbService.quoteRequests.list(),
         dbService.orders.list(),
         dbService.kyc.listAll(),
@@ -607,7 +608,7 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
               status: status === "Completed" ? "Completed" : "Quoted",
               items: [
                 { 
-                  product_id: match.productCategory || match.product_category || "gb-100g", 
+                  product_id: resolveProductIdFromLabel(match.productCategory || match.product_category),
                   quantity: 1, 
                   unit_price: price, 
                   product_name: `${metal.toUpperCase()} Bullion: ${match.weight || match.weight_preference || "Custom Lot"}` 
@@ -746,7 +747,9 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
           status: "Quoted",
           items: [
             {
-              product_id: preparingQuote.productCategory || preparingQuote.product_category || "gb-100g",
+              product_id: resolveProductIdFromLabel(
+                preparingQuote.productCategory || preparingQuote.product_category
+              ),
               quantity: 1,
               unit_price: productPriceNum,
               product_name: `${metal.toUpperCase()} Bullion: ${preparingQuote.weight || preparingQuote.weight_preference || "Custom Lot"}`
@@ -1490,8 +1493,8 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                           >
                             <option value="gold_bars">Gold Bars (سبائك الذهب)</option>
                             <option value="silver_bars">Silver Bars (سبائك الفضة)</option>
-                            <option value="gold_coins">Gold Coins (مسكوكات ذهبية)</option>
-                            <option value="silver_coins">Silver Coins (مسكوكات فضية)</option>
+                            <option value="mint_bars_coins">Mint Bars & Coins</option>
+                            <option value="custom_inquiry">Custom Inquiry</option>
                           </select>
                         </div>
                         <div className="space-y-1">
@@ -1739,8 +1742,8 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                           >
                             <option value="gold_bars">Gold Bars (سبائك الذهب)</option>
                             <option value="silver_bars">Silver Bars (سبائك الفضة)</option>
-                            <option value="gold_coins">Gold Coins (مسكوكات ذهبية)</option>
-                            <option value="silver_coins">Silver Coins (مسكوكات فضية)</option>
+                            <option value="mint_bars_coins">Mint Bars & Coins</option>
+                            <option value="custom_inquiry">Custom Inquiry</option>
                           </select>
                         </div>
                         <div className="space-y-1">
@@ -1955,23 +1958,14 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                           type="button"
                           onClick={async () => {
                             const confirmMsg = currentLang === "ar" 
-                              ? "هل أنت متأكد من رغبتك في استيراد/مزامنة جميع الـ 50 منتجاً الافتراضياً إلى قاعدة بيانات Supabase الحية الخاصة بك؟ سيعمل هذا على إنشاء أو تحديث جميع المنتجات."
-                              : "Are you sure you want to seed/sync all 50 default products to your live Supabase database? This will create or update all products.";
+                              ? "هل أنت متأكد من رغبتك في إعادة ضبط كتالوج PGR إلى ١٠ منتجات رسمية وحذف المنتجات القديمة من قاعدة البيانات؟"
+                              : "Are you sure you want to reset the PGR catalog to the official 10 products and remove legacy products from the database?";
                             if (window.confirm(confirmMsg)) {
                               try {
                                 setLoading(true);
-                                const { PRODUCTS } = await import("../data");
-                                let count = 0;
-                                for (const p of PRODUCTS) {
-                                  count++;
-                                  try {
-                                    await dbService.products.save(p);
-                                  } catch (err: any) {
-                                    throw new Error(`Product #${count} (${p.id} - "${p.name_en}") failed. Front-end Availability: "${p.availability}". DB payload mapping details: ${JSON.stringify(err.message || err)}`);
-                                  }
-                                }
+                                await dbService.products.resetToCatalogDefaults();
                                 await loadAdminData();
-                                alert(currentLang === "ar" ? "تمت مزامنة جميع المنتجات بنجاح!" : "Successfully seeded all products!");
+                                alert(currentLang === "ar" ? "تمت مزامنة كتالوج المنتجات العشرة بنجاح!" : "Successfully reset the 10-product catalog!");
                               } catch (e: any) {
                                 console.error(e);
                                 alert((currentLang === "ar" ? "فشلت مزامنة المنتجات: " : "Failed to seed products: ") + (e.message || e));

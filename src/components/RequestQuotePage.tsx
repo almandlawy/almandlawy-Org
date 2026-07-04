@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import Logo from "./Logo";
 import { Coins, Phone, Mail, CheckCircle, ShieldAlert, FileText, ArrowLeft, ArrowRight } from "lucide-react";
 import { dbService } from "../lib/supabase";
+import { PRODUCTS } from "../data";
+import { resolvePublicCatalog } from "../lib/productCatalog";
 
 interface RequestQuotePageProps {
   currentLang: "en" | "ar";
@@ -15,7 +17,8 @@ export default function RequestQuotePage({ currentLang, onNavigate }: RequestQuo
   const [clientType, setClientType] = useState<"individual" | "corporate">("individual");
   const [companyName, setCompanyName] = useState("");
   const [metal, setMetal] = useState("Gold");
-  const [productInterest, setProductInterest] = useState("Gold Bars");
+  const [productInterest, setProductInterest] = useState(PRODUCTS[0]?.id || "pgr-bullion-collection");
+  const catalogProducts = React.useMemo(() => resolvePublicCatalog(PRODUCTS), []);
   const [weight, setWeight] = useState("");
   const [currency, setCurrency] = useState("AED");
   const [interestType, setInterestType] = useState("Collection");
@@ -48,6 +51,10 @@ export default function RequestQuotePage({ currentLang, onNavigate }: RequestQuo
     setError("");
 
     try {
+      const selectedProduct =
+        catalogProducts.find((product) => product.id === productInterest) || catalogProducts[0];
+      const productLabel = currentLang === "ar" ? selectedProduct.name_ar : selectedProduct.name_en;
+
       const payload = {
         fullName,
         phone,
@@ -55,7 +62,8 @@ export default function RequestQuotePage({ currentLang, onNavigate }: RequestQuo
         clientType,
         companyName,
         metal,
-        productInterest,
+        productInterest: productLabel,
+        productId: selectedProduct.id,
         weight,
         currency,
         interestType,
@@ -78,8 +86,9 @@ export default function RequestQuotePage({ currentLang, onNavigate }: RequestQuo
           company: companyName,
           metalInterest: metal.toLowerCase(),
           metal_interest: metal.toLowerCase(),
-          productCategory: productInterest,
-          product_category: productInterest,
+          productCategory: productLabel,
+          product_category: productLabel,
+          productId: selectedProduct.id,
           weight,
           weight_preference: weight,
           message,
@@ -283,16 +292,17 @@ export default function RequestQuotePage({ currentLang, onNavigate }: RequestQuo
                 </div>
 
                 <div>
-                  <span className="text-gray-500 text-[9px] uppercase tracking-wider block mb-1">Product Format</span>
+                  <span className="text-gray-500 text-[9px] uppercase tracking-wider block mb-1">PGR Product</span>
                   <select
                     value={productInterest}
                     onChange={(e) => setProductInterest(e.target.value)}
                     className="w-full bg-[#070707] border border-white/5 focus:border-[#c5a85c]/60 rounded px-3 py-2 text-white focus:outline-none transition-colors"
                   >
-                    <option value="Gold Bars">Gold Bars (Cast/Minted)</option>
-                    <option value="Silver Bars">Silver Bars (Cast/Minted)</option>
-                    <option value="Bullion Coins">Official Bullion Coins</option>
-                    <option value="Custom Jewelry/Industrial">Custom Grain/Industrial</option>
+                    {catalogProducts.map((product) => (
+                      <option key={product.id} value={product.id}>
+                        {currentLang === "ar" ? product.name_ar : product.name_en}
+                      </option>
+                    ))}
                   </select>
                 </div>
 

@@ -1023,7 +1023,7 @@ app.post("/api/quote", async (req, res) => {
     const phone = req.body.phone;
     const company = req.body.company || req.body.companyName;
     const metalInterest = req.body.metalInterest || req.body.metal || "both";
-    const productCategory = req.body.productCategory || req.body.productInterest || "General Bullion Consultation";
+    const productCategory = req.body.productCategory || req.body.productInterest || "PGR UAE Bullion Collection";
     const weight = req.body.weight || req.body.weightPreference || "";
     const message = req.body.message || "";
     const sourceLanguage = req.body.sourceLanguage || (req.body.source === "website_request_quote_page" ? "en" : "en");

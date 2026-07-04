@@ -118,7 +118,7 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({ currentLang = "en", inli
         email: "expiry.sec@pgruae.com",
         phone: "+971 50 777 8888",
         metalInterest: "gold",
-        productCategory: "Gold Kilo Bar (999.9)",
+        productCategory: "Gold Bar 1kg",
         weight: "100g",
         status: "Pending"
       });

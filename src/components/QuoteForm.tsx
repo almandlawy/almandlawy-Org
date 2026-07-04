@@ -6,6 +6,8 @@
 import React, { useState, useEffect } from "react";
 import { X, CheckCircle, Mail, Phone, Users, Landmark, FileText } from "lucide-react";
 import { dbService } from "../lib/supabase";
+import { PRODUCTS } from "../data";
+import { resolvePublicCatalog } from "../lib/productCatalog";
 
 interface QuoteFormProps {
   currentLang: "en" | "ar";
@@ -24,6 +26,8 @@ export default function QuoteForm({ currentLang, prefilledProduct, onClose }: Qu
     message: ""
   });
 
+  const [selectedProductId, setSelectedProductId] = React.useState(PRODUCTS[0]?.id || "pgr-bullion-collection");
+  const catalogProducts = React.useMemo(() => resolvePublicCatalog(PRODUCTS), []);
   const [isLoading, setIsLoading] = React.useState(false);
   const [successResponse, setSuccessResponse] = React.useState<{ inquiryId: string; message: string } | null>(null);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
@@ -42,9 +46,17 @@ export default function QuoteForm({ currentLang, prefilledProduct, onClose }: Qu
     fetchSettings();
   }, []);
 
-  // Initialize pre-filled product if passed
   React.useEffect(() => {
     if (prefilledProduct) {
+      const match = catalogProducts.find(
+        (product) =>
+          product.name_en === prefilledProduct ||
+          product.name_ar === prefilledProduct ||
+          product.id === prefilledProduct
+      );
+      if (match) {
+        setSelectedProductId(match.id);
+      }
       setFormData((prev) => ({
         ...prev,
         message: currentLang === "ar"
@@ -52,7 +64,7 @@ export default function QuoteForm({ currentLang, prefilledProduct, onClose }: Qu
           : `I would like to request an institutional quote regarding: ${prefilledProduct}`
       }));
     }
-  }, [prefilledProduct, currentLang]);
+  }, [prefilledProduct, currentLang, catalogProducts]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,13 +76,18 @@ export default function QuoteForm({ currentLang, prefilledProduct, onClose }: Qu
     setIsLoading(true);
     setErrorMessage(null);
 
+    const selectedProduct =
+      catalogProducts.find((product) => product.id === selectedProductId) || catalogProducts[0];
+    const productLabel = currentLang === "ar" ? selectedProduct.name_ar : selectedProduct.name_en;
+
     try {
       const response = await fetch("/api/quote", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
-          productCategory: prefilledProduct || "General Bullion Consultation",
+          productId: selectedProduct.id,
+          productCategory: productLabel,
           sourceLanguage: currentLang
         })
       });
@@ -85,8 +102,9 @@ export default function QuoteForm({ currentLang, prefilledProduct, onClose }: Qu
           company: formData.company,
           metalInterest: formData.metalInterest,
           metal_interest: formData.metalInterest,
-          productCategory: prefilledProduct || "General Bullion Consultation",
-          product_category: prefilledProduct || "General Bullion Consultation",
+          productCategory: productLabel,
+          product_category: productLabel,
+          productId: selectedProduct.id,
           weight: formData.weightPreference,
           weight_preference: formData.weightPreference,
           message: formData.message,
@@ -234,8 +252,25 @@ export default function QuoteForm({ currentLang, prefilledProduct, onClose }: Qu
                   </div>
                 </div>
 
+                <div className="space-y-1">
+                  <label className="text-text-secondary font-mono uppercase tracking-wider block font-bold text-[10px]">
+                    {currentLang === "ar" ? "المنتج المطلوب *" : "Product *"}
+                  </label>
+                  <select
+                    required
+                    value={selectedProductId}
+                    onChange={(e) => setSelectedProductId(e.target.value)}
+                    className="w-full bg-brand-bg border border-soft-border focus:border-gold-base rounded py-2 px-3 text-text-charcoal outline-none cursor-pointer font-sans"
+                  >
+                    {catalogProducts.map((product) => (
+                      <option key={product.id} value={product.id}>
+                        {currentLang === "ar" ? product.name_ar : product.name_en}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Metal Interest */}
                   <div className="space-y-1">
                     <label className="text-text-secondary font-mono uppercase tracking-wider block font-bold text-[10px]">
                       {currentLang === "ar" ? "المعدن المطلوب" : "Metal Interest"}

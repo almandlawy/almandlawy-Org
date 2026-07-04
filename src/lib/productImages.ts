@@ -4,6 +4,7 @@
  */
 
 import { Product } from "../types";
+import { ALLOWED_PRODUCT_IDS } from "./productCatalog";
 
 const PRODUCT_IMAGE_MAP: Record<string, string> = {
   "pgr-bullion-collection": "/images/products/01-bullion-collection.webp",
@@ -15,7 +16,7 @@ const PRODUCT_IMAGE_MAP: Record<string, string> = {
   "pgr-silver-500g": "/images/products/07-silver-bar-500g.webp",
   "pgr-silver-1kg": "/images/products/08-silver-bar-1kg.webp",
   "pgr-mint-bars-coins": "/images/products/09-mint-bars-coins.webp",
-  "custom-bullion-inquiry": "/images/products/10-custom-bullion-inquiry.webp"
+  "custom-bullion-inquiry": "/images/products/10-custom-bullion-inquiry.webp",
 };
 
 export function getProductImage(product: Product): string {
@@ -28,14 +29,13 @@ export function getProductImage(product: Product): string {
     return mapped;
   }
 
-  const category = product.category || "";
-  const isGold = category.includes("gold");
-  const isSilver = category.includes("silver");
-  const isCoin = category.includes("coin");
+  if (!import.meta.env.PROD) {
+    console.warn(`[PGR Catalog] No image mapping for product ID "${product.id}"`);
+  }
 
-  if (isCoin) return "/images/products/09-mint-bars-coins.webp";
-  if (isGold) return "/images/products/02-gold-bars-1g-5g-10g.webp";
-  if (isSilver) return "/images/products/06-silver-bars-1oz-100g.webp";
+  return PRODUCT_IMAGE_MAP["pgr-bullion-collection"];
+}
 
-  return "/images/products/01-bullion-collection.webp";
+export function getAllowedProductImageIds(): readonly string[] {
+  return ALLOWED_PRODUCT_IDS;
 }

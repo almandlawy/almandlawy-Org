@@ -7,6 +7,7 @@ import React, { useEffect, useState } from "react";
 import { Shield, Phone, MessageSquare, ArrowRight, ChevronDown, Award, Landmark, CheckCircle, FileText } from "lucide-react";
 import { LiveMarketRates } from "../types";
 import { PRODUCTS } from "../data";
+import { resolvePublicCatalog } from "../lib/productCatalog";
 import MetalCalculator from "./MetalCalculator";
 
 interface SEOLandingPagesProps {
@@ -150,13 +151,14 @@ export default function SEOLandingPages({
 
   // Extract relevant products based on path
   const getPageProducts = () => {
+    const catalog = resolvePublicCatalog(PRODUCTS);
     if (currentPath === "/buy-gold-bars-dubai" || currentPath === "/24k-gold-bars-uae") {
-      return PRODUCTS.filter(p => p.category === "gold_bars").slice(0, 4);
+      return catalog.filter((p) => p.category === "gold_bars");
     }
     if (currentPath === "/buy-silver-bars-dubai") {
-      return PRODUCTS.filter(p => p.category === "silver_bars").slice(0, 4);
+      return catalog.filter((p) => p.category === "silver_bars");
     }
-    return PRODUCTS.slice(0, 4);
+    return catalog;
   };
 
   const getSpotRateValue = (metal: "gold" | "silver") => {

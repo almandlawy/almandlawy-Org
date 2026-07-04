@@ -6,6 +6,13 @@
 import { createClient } from "@supabase/supabase-js";
 import { Product, QuoteSignaturePayload } from "../types";
 import { PRODUCTS, BRANDS, DEFAULT_DAILY_PRICING, DEFAULT_SHIPPING_SETTINGS } from "../data";
+import {
+  CATALOG_SEED_VERSION,
+  catalogNeedsMigration,
+  isLegacyProductId,
+  resolveAdminCatalog,
+  resolvePublicCatalog,
+} from "./productCatalog";
 
 // 1. Fetch environment variables safely (client-side only using import.meta.env)
 const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL || "";
@@ -121,51 +128,46 @@ const seedLocalStorage = () => {
     }
   };
 
-  // Check if we already have products and if it's the old/limited list (e.g., < 15 items)
+  // Reset catalog when seed version changes or legacy/demo products are present
   let existingProductsRaw = safeStorage.getItem("pgr_products");
-  let shouldSeedProducts = !existingProductsRaw;
-  if (existingProductsRaw) {
+  const storedSeedVersion = safeStorage.getItem("pgr_catalog_seed_version");
+  let shouldSeedProducts = !existingProductsRaw || storedSeedVersion !== CATALOG_SEED_VERSION;
+
+  if (existingProductsRaw && storedSeedVersion === CATALOG_SEED_VERSION) {
     try {
       const parsed = JSON.parse(existingProductsRaw);
-      if (Array.isArray(parsed) && parsed.length < 15) {
+      if (catalogNeedsMigration(parsed)) {
         shouldSeedProducts = true;
       }
-    } catch (e) {
+    } catch {
       shouldSeedProducts = true;
     }
   }
 
+  const buildInventory = () =>
+    PRODUCTS.map((p) => ({
+      product_id: p.id,
+      sku: p.id.toUpperCase() + "-MINT",
+      barcode: "729000" + Math.floor(100000 + Math.random() * 900000),
+      stock: p.id.includes("1kg") ? 4 : Math.floor(10 + Math.random() * 40),
+      reserved: 0,
+    }));
+
   if (shouldSeedProducts) {
     safeStorage.setItem("pgr_products", JSON.stringify(PRODUCTS));
-    
-    const initialInventory = PRODUCTS.map(p => ({
-      product_id: p.id,
-      sku: p.id.toUpperCase() + "-MINT",
-      barcode: "729000" + Math.floor(100000 + Math.random() * 900000),
-      stock: p.id.includes("1kg") ? 4 : Math.floor(10 + Math.random() * 40),
-      reserved: 0
-    }));
-    safeStorage.setItem("pgr_inventory", JSON.stringify(initialInventory));
+    safeStorage.setItem("pgr_catalog_seed_version", CATALOG_SEED_VERSION);
+    safeStorage.setItem("pgr_inventory", JSON.stringify(buildInventory()));
   } else {
-    // 1. Products & Inventory
     getOrSet("pgr_products", PRODUCTS);
-    
-    const initialInventory = PRODUCTS.map(p => ({
-      product_id: p.id,
-      sku: p.id.toUpperCase() + "-MINT",
-      barcode: "729000" + Math.floor(100000 + Math.random() * 900000),
-      stock: p.id.includes("1kg") ? 4 : Math.floor(10 + Math.random() * 40),
-      reserved: 0
-    }));
-    getOrSet("pgr_inventory", initialInventory);
+    getOrSet("pgr_inventory", buildInventory());
   }
 
   // 2. Categories
   getOrSet("pgr_categories", [
     { id: "gold_bars", name_en: "Gold Bars", name_ar: "سبائك الذهب" },
     { id: "silver_bars", name_en: "Silver Bars", name_ar: "سبائك الفضة" },
-    { id: "gold_coins", name_en: "Gold Coins", name_ar: "مسكوكات الذهب" },
-    { id: "silver_coins", name_en: "Silver Coins", name_ar: "مسكوكات الفضة" }
+    { id: "mint_bars_coins", name_en: "Mint Bars & Coins", name_ar: "السبائك المصكوكة وعملات السبائك" },
+    { id: "custom_inquiry", name_en: "Custom Inquiry", name_ar: "طلبات مخصصة" },
   ]);
 
   // 3. Brands
@@ -176,7 +178,7 @@ const seedLocalStorage = () => {
     {
       serial_number: "PAMP-882941",
       qr_code: "https://pgruae.com/verify/PAMP-882941",
-      product_name: "PAMP Suisse 100g Cast Gold Bar",
+      product_name: "Gold Bar 100g",
       weight: "100 Grams",
       purity: "999.9 Fine Gold",
       manufacturer: "PAMP Suisse",
@@ -186,7 +188,7 @@ const seedLocalStorage = () => {
     {
       serial_number: "VALC-119302",
       qr_code: "https://pgruae.com/verify/VALC-119302",
-      product_name: "Valcambi 1kg Pure Silver Cast Bar",
+      product_name: "Silver Bar 1kg",
       weight: "1 Kilogram (1000g)",
       purity: "999.0 Fine Silver",
       manufacturer: "Valcambi",
@@ -196,7 +198,7 @@ const seedLocalStorage = () => {
     {
       serial_number: "RM-BR-55421",
       qr_code: "https://pgruae.com/verify/RM-BR-55421",
-      product_name: "Royal Mint Britannia Gold Coin",
+      product_name: "Mint Bars & Bullion Coins",
       weight: "1 Troy Ounce",
       purity: "999.9 Fine Gold",
       manufacturer: "Royal Mint",
@@ -216,8 +218,8 @@ const seedLocalStorage = () => {
       company: "Elite Asset Holdings Ltd",
       metalInterest: "gold",
       metal_interest: "gold",
-      productCategory: "Gold 1 KILO (999.9 Fine)",
-      product_category: "Gold 1 KILO (999.9 Fine)",
+      productCategory: "Gold Bar 1kg",
+      product_category: "Gold Bar 1kg",
       weight: "1000g",
       weight_preference: "1000g",
       status: "KYC Required",
@@ -232,8 +234,8 @@ const seedLocalStorage = () => {
       company: "Elite Asset Holdings Ltd",
       metalInterest: "silver",
       metal_interest: "silver",
-      productCategory: "Silver 5 KILO (999 Fine)",
-      product_category: "Silver 5 KILO (999 Fine)",
+      productCategory: "Silver Bar 1kg",
+      product_category: "Silver Bar 1kg",
       weight: "5000g",
       weight_preference: "5000g",
       status: "Quote Sent",
@@ -248,8 +250,8 @@ const seedLocalStorage = () => {
       company: "Elite Asset Holdings Ltd",
       metalInterest: "gold",
       metal_interest: "gold",
-      productCategory: "Gold 100g Bar",
-      product_category: "Gold 100g Bar",
+      productCategory: "Gold Bar 100g",
+      product_category: "Gold Bar 100g",
       weight: "100g",
       weight_preference: "100g",
       status: "New Request",
@@ -272,7 +274,7 @@ const seedLocalStorage = () => {
         shipping_address: "Penthouse 45, Marina Heights, Dubai Marina",
         billing_address: "Penthouse 45, Marina Heights, Dubai Marina",
         items: [
-          { product_id: "gb-100g", quantity: 4, unit_price: 29600.0, product_name: "PAMP Suisse 100g Cast Gold Bar" }
+          { product_id: "pgr-gold-100g", quantity: 4, unit_price: 29600.0, product_name: "Gold Bar 100g" }
         ]
       },
       {
@@ -287,7 +289,7 @@ const seedLocalStorage = () => {
         shipping_address: "PGR Vault Gateway Office, Dubai Marina",
         billing_address: "PGR Vault Gateway Office, Dubai Marina",
         items: [
-          { product_id: "gb-1kg", quantity: 1, unit_price: 326500.0, product_name: "PAMP Suisse 1kg Certified Gold Bar" }
+          { product_id: "pgr-gold-1kg", quantity: 1, unit_price: 326500.0, product_name: "Gold Bar 1kg" }
         ]
       }
     ];
@@ -334,7 +336,7 @@ const seedLocalStorage = () => {
   // 9. Notifications
   if (!isProduction) {
     getOrSet("pgr_notifications", [
-      { id: "notif-1", title_en: "Bespoke Quote Update", title_ar: "تحديث على مقايسة السعر", content_en: "Your quote request for 1kg PAMP Gold Bar has been approved by the Trader Desk.", content_ar: "تمت الموافقة على طلب التسعير الخاص بك لسبيكة ١ كيلو ذهب من مكتب التداول.", created_at: "2026-06-25T11:10:00Z", unread: true },
+      { id: "notif-1", title_en: "Bespoke Quote Update", title_ar: "تحديث على مقايسة السعر", content_en: "Your quote request for Gold Bar 1kg has been approved by the Trader Desk.", content_ar: "تمت الموافقة على طلب التسعير الخاص بك لسبيكة الذهب ١ كيلو من مكتب التداول.", created_at: "2026-06-25T11:10:00Z", unread: true },
       { id: "notif-2", title_en: "Secure Logins Active", title_ar: "نظام تسجيل الدخول الآمن", content_en: "FaceID / Authenticator connection is active for your premium account.", content_ar: "تم تنشيط ميزة الحماية لربط الحساب الآمن.", created_at: "2026-06-20T08:00:00Z", unread: false }
     ]);
   } else {
@@ -353,7 +355,7 @@ const seedLocalStorage = () => {
         { id: "add-1", label: "Primary Vault Marina", address: "Penthouse 45, Marina Heights, Dubai Marina, UAE" },
         { id: "add-2", label: "Premium Storage Center", address: "Vault Block B, Almas Tower, West Trade Zone, Dubai" }
       ],
-      wishlist: ["gb-1kg", "gc-britannia"],
+      wishlist: ["pgr-gold-1kg", "pgr-mint-bars-coins"],
       role: "verified_customer", // or "admin"
       created_at: "2026-01-01T00:00:00Z"
     });
@@ -635,24 +637,43 @@ export const getRedirectUrl = () => {
 // Bidirectional mappers for product to resolve table field mismatches in Supabase
 export const mapDbProductToFrontend = (dbProd: any): any => {
   if (!dbProd) return null;
+
+  if (isLegacyProductId(String(dbProd.id || ""))) {
+    return null;
+  }
+
+  const canonical = PRODUCTS.find((product) => product.id === dbProd.id);
+  if (canonical) {
+    return {
+      ...canonical,
+      name_en: dbProd.name || canonical.name_en,
+      name_ar: dbProd.arabic_name || canonical.name_ar,
+      description_en: dbProd.description || canonical.description_en,
+      description_ar: dbProd.arabic_description || canonical.description_ar,
+      image_url: dbProd.image_url || canonical.image_url,
+      price: Number(dbProd.price) || canonical.price || 0,
+      price_mode: (dbProd.price_mode || canonical.price_mode || "spot") as "spot" | "fixed",
+      stock_status: dbProd.stock_status || canonical.stock_status || "In Stock",
+      certificate_url: dbProd.certificate_url || canonical.certificate_url,
+      published: dbProd.published !== undefined ? dbProd.published : canonical.published !== false,
+      availability: dbProd.availability || canonical.availability,
+      manufacturer: dbProd.brand || canonical.manufacturer,
+      brand: dbProd.brand || canonical.brand || canonical.manufacturer,
+    };
+  }
+
   const isGold = dbProd.metal_type === "gold" || dbProd.category?.includes("gold") || false;
-  
+
   let frontendCategory = "gold_bars";
   const dbCat = String(dbProd.category || "").toLowerCase();
-  if (dbCat === "coin") {
-    frontendCategory = isGold ? "gold_coins" : "silver_coins";
-  } else if (dbCat === "silver") {
+  if (dbCat.includes("mint") || dbCat === "coin") {
+    frontendCategory = "mint_bars_coins";
+  } else if (dbCat.includes("custom")) {
+    frontendCategory = "custom_inquiry";
+  } else if (dbCat.includes("silver")) {
     frontendCategory = "silver_bars";
-  } else if (dbCat === "gold") {
+  } else if (dbCat.includes("gold")) {
     frontendCategory = "gold_bars";
-  } else {
-    if (dbCat.includes("coin")) {
-      frontendCategory = isGold ? "gold_coins" : "silver_coins";
-    } else if (dbCat.includes("silver")) {
-      frontendCategory = "silver_bars";
-    } else {
-      frontendCategory = "gold_bars";
-    }
   }
 
   return {
@@ -662,9 +683,9 @@ export const mapDbProductToFrontend = (dbProd: any): any => {
     category: frontendCategory,
     weight_label: `${dbProd.weight_grams || 100} Grams`,
     purity: dbProd.purity || "999.9",
-    manufacturer: dbProd.brand || "PAMP Suisse",
-    country_en: isGold ? "Switzerland" : "Switzerland",
-    country_ar: isGold ? "سويسرا" : "سويسرا",
+    manufacturer: dbProd.brand || "PGR UAE",
+    country_en: "United Arab Emirates",
+    country_ar: "الإمارات العربية المتحدة",
     availability: dbProd.availability || "In Stock",
     certificate_en: "Assay Certificate Certified",
     certificate_ar: "شهادة معتمدة",
@@ -673,17 +694,17 @@ export const mapDbProductToFrontend = (dbProd: any): any => {
     technical_specs: {
       weight_grams: Number(dbProd.weight_grams) || 100,
       purity: dbProd.purity || "999.9",
-      metal: (dbProd.metal_type || (isGold ? "gold" : "silver")) as "gold" | "silver"
+      metal: (dbProd.metal_type || (isGold ? "gold" : "silver")) as "gold" | "silver",
     },
     image_placeholder: (isGold ? "gold_bar" : "silver_bar") as any,
     premium_multiplier: 1.025,
-    brand: dbProd.brand || "PAMP Suisse",
+    brand: dbProd.brand || "PGR UAE",
     price: Number(dbProd.price) || 0,
     price_mode: (dbProd.price_mode || "spot") as "spot" | "fixed",
     image_url: dbProd.image_url || undefined,
     stock_status: dbProd.stock_status || "In Stock",
     certificate_url: dbProd.certificate_url || undefined,
-    published: dbProd.published !== undefined ? dbProd.published : true
+    published: dbProd.published !== undefined ? dbProd.published : true,
   };
 };
 
@@ -721,8 +742,10 @@ export const mapFrontendProductToDb = (product: any): any => {
 
   let categoryVal = "gold";
   const catLower = String(product.category || "").toLowerCase();
-  if (catLower.includes("coin") || catLower.includes("عملات")) {
+  if (catLower.includes("mint") || catLower.includes("coin")) {
     categoryVal = "coin";
+  } else if (catLower.includes("custom")) {
+    categoryVal = "custom";
   } else if (catLower.includes("silver") || catLower.includes("فضة")) {
     categoryVal = "silver";
   } else if (catLower.includes("gold") || catLower.includes("ذهب")) {
@@ -890,14 +913,67 @@ function getAdminRequestHeaders(): Record<string, string> {
 // =========================================================================
 export const dbService = {
   products: {
-    list: async (): Promise<Product[]> => {
+    list: async (scope: "public" | "admin" = "public"): Promise<Product[]> => {
+      let rawProducts: Product[] = [];
+
       if (isLive && supabase) {
         const { data, error } = await supabase.from("products").select("*");
         if (!error && data) {
-          return data.map(row => mapDbProductToFrontend(row));
+          rawProducts = data
+            .map((row) => mapDbProductToFrontend(row))
+            .filter(Boolean) as Product[];
+        }
+      } else {
+        rawProducts = mockDb.get("pgr_products") || [];
+      }
+
+      if (catalogNeedsMigration(rawProducts)) {
+        rawProducts = await dbService.products.resetToCatalogDefaults();
+      }
+
+      return scope === "admin"
+        ? resolveAdminCatalog(rawProducts)
+        : resolvePublicCatalog(rawProducts);
+    },
+    resetToCatalogDefaults: async (): Promise<Product[]> => {
+      if (isLive && supabase) {
+        const { data: existing } = await supabase.from("products").select("id");
+        if (existing) {
+          for (const row of existing) {
+            if (isLegacyProductId(row.id)) {
+              await supabase.from("products").delete().eq("id", row.id);
+            }
+          }
+        }
+
+        for (const product of PRODUCTS) {
+          const dbPayload = mapFrontendProductToDb(product);
+          const { error } = await supabase.from("products").upsert(dbPayload);
+          if (error) {
+            console.error(`Failed to upsert catalog product ${product.id}:`, error);
+          }
         }
       }
-      return mockDb.get("pgr_products");
+
+      mockDb.set("pgr_products", PRODUCTS);
+      if (typeof window !== "undefined") {
+        safeStorage.setItem("pgr_products", JSON.stringify(PRODUCTS));
+        safeStorage.setItem("pgr_catalog_seed_version", CATALOG_SEED_VERSION);
+        safeStorage.setItem(
+          "pgr_inventory",
+          JSON.stringify(
+            PRODUCTS.map((p) => ({
+              product_id: p.id,
+              sku: p.id.toUpperCase() + "-MINT",
+              barcode: "729000" + Math.floor(100000 + Math.random() * 900000),
+              stock: p.id.includes("1kg") ? 4 : Math.floor(10 + Math.random() * 40),
+              reserved: 0,
+            }))
+          )
+        );
+      }
+
+      return PRODUCTS;
     },
     save: async (product: any) => {
       if (isLive && supabase) {

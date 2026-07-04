@@ -29,7 +29,11 @@ export interface LiveMarketRates {
   cache_timestamp?: string;
 }
 
-export type MetalCategory = "gold_bars" | "silver_bars" | "gold_coins" | "silver_coins";
+export type MetalCategory =
+  | "gold_bars"
+  | "silver_bars"
+  | "mint_bars_coins"
+  | "custom_inquiry";
 
 export interface TechnicalSpecifications {
   weight_grams?: number;
