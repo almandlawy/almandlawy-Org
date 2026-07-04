@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from "react";
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import Header from "./components/Header";
 import Hero from "./components/Hero";
 import MarketReferenceStrip from "./components/MarketReferenceStrip";
@@ -861,6 +862,9 @@ export default function App() {
 
       {/* Database Telemetry & Security Panel */}
       <DebugPanel currentLang={currentLang} />
+
+      {/* Vercel Speed Insights */}
+      <SpeedInsights />
 
     </div>
   );
