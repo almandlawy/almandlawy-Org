@@ -70,7 +70,7 @@ export default function Footer({
             <p className="text-[#5E564D] text-[11px] leading-relaxed font-bold">
               {currentLang === "ar"
                 ? "مؤسسة بي جي آر لتجارة المعادن الثمينة ومقرها دبي. نوفر عروض أسعار وحلول تخزين مخصصة للسبائك للمؤسسات وصناديق الاستثمار وكبار الشخصيات بأعلى معايير الأمان السويسري."
-                : "PGR UAE is an internationally accredited physical gold and silver wholesale bullion house and purchase inquiry platform headquartered in Dubai, partnering with elite Swiss and global refineries."}
+                : "PGR UAE is an internationally accredited physical gold and silver bullion desk headquartered in Dubai, sourcing through accredited international refineries."}
             </p>
             <div className="flex flex-col gap-2 pt-2 text-[11px]">
               <button 

@@ -821,8 +821,8 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
       // Audit payment update
       await dbService.auditLogs.append(
         "order_payment_update",
-        "compliance.officer@pgruae.com",
-        `Admin updated Order ${orderId} payment status to: "${newStatus}".`
+        currentUser?.email || "admin@pgruae.com",
+        `Admin updated Order ${orderId} payment status: "${currentStatus}" → "${newStatus}".`
       );
 
       await loadAdminData();
@@ -836,8 +836,8 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
     try {
       await dbService.auditLogs.append(
         "admin_payment_proof_view",
-        "compliance.officer@pgruae.com",
-        `Compliance review: Admin viewed payment proof receipt file "${proofName}" for Order ${orderId}.`
+        currentUser?.email || "admin@pgruae.com",
+        `Admin viewed payment proof "${proofName}" for Order ${orderId}.`
       );
       alert(`[AUDITED ACCESS] Opened encrypted receipt proof file: "${proofName}" for Order ${orderId}. This action has been securely logged for central compliance auditing.`);
     } catch (err) {

@@ -28,8 +28,8 @@ export default function TrustedPartnersSection({ currentLang }: TrustedPartnersS
           </h2>
           <p className="text-sm text-text-secondary font-sans leading-relaxed">
             {isAr
-              ? "يتم تأكيد خيارات الدفع واللوجستيات والتسوية من قبل ديوان PGR UAE وفق متطلبات المعاملة. قنوات الخدمة المتاحة/المعتمدة حيث ينطبق ذلك."
-              : "Payment, logistics and settlement options are confirmed by PGR UAE desk according to transaction requirements. Available/approved service channels where applicable."}
+              ? "يتم تأكيد قنوات الدفع واللوجستيات والتسوية من قبل ديوان PGR UAE وفق متطلبات المعاملة."
+              : "Payment, logistics and settlement channels are confirmed by PGR UAE desk according to transaction requirements."}
           </p>
         </div>
       </section>
@@ -45,8 +45,8 @@ export default function TrustedPartnersSection({ currentLang }: TrustedPartnersS
           </h2>
           <p className="text-sm text-text-secondary font-sans">
             {isAr
-              ? "يتم تأكيد خيارات الدفع واللوجستيات والتسوية من قبل ديوان PGR UAE وفق متطلبات المعاملة."
-              : "Payment, logistics and settlement options are confirmed by PGR UAE desk according to transaction requirements."}
+              ? "يتم تأكيد قنوات الدفع واللوجستيات والتسوية من قبل ديوان PGR UAE وفق متطلبات المعاملة."
+              : "Payment, logistics and settlement channels are confirmed by PGR UAE desk according to transaction requirements."}
           </p>
           <p className="text-xs text-text-secondary font-mono">
             {isAr

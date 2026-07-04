@@ -10,10 +10,10 @@ import { DEFAULT_PAYMENT_SETTINGS } from "../../data";
 import { dbService } from "../../lib/supabase";
 
 const PROVIDERS: PaymentProvider[] = [
-  "N-Genius / Network International",
-  "PayTabs",
-  "Amazon Payment Services",
   "Stripe",
+  "PayTabs",
+  "N-Genius / Network International",
+  "Amazon Payment Services",
   "Manual Bank Transfer",
   "Other"
 ];

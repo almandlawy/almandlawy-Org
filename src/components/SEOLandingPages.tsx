@@ -119,7 +119,7 @@ export default function SEOLandingPages({
       title = isAr ? "سبائك ذهب عيار ٢٤ في الإمارات | أسعار السبائك المعتمدة PGR UAE" : "24K Gold Bars UAE | Investment Grade Pure Bullion Dubai";
       desc = isAr 
         ? "اطلب سبائك الذهب الخالص عيار ٢٤ قيراط بنقاوة 999.9 في دبي وأبوظبي. نوفر الأوزان من ١ جرام إلى ١ كيلوجرام مع شهادات أصالة دولية."
-        : "Order 24K pure gold bars in the UAE with maximum price transparency. High-liquidity Swiss and Emirati minted gold bars certified for institutional storage.";
+        : "Order accredited gold bars in the UAE with firm-quote desk transparency. High-liquidity minted gold bars from accredited international refiners.";
     }
 
     document.title = title;
@@ -202,7 +202,7 @@ export default function SEOLandingPages({
               <p className="text-[#5E564D] text-xs md:text-sm leading-relaxed max-w-4xl">
                 {isAr 
                   ? "ترحب بكم PGR UAE في قلب سوق الذهب العالمي في دبي. نوفر ممرًا آمنًا وممتثلًا بالكامل للاستعلام وحيازة سبائك الذهب الفاخرة المطابقة لمعايير تسليم دبي الجيد ومعايير الـ LBMA العالمية. جميع طلبات التسعير تخضع لمراجعة فورية وعمولة مكتب تنافسية."
-                  : "Welcome to Dubai's premier precious metals conduit. PGR UAE provides institutional and private clients with direct access to physical gold bar allocation. Acquire gold bullion ranging from 1g minted bars to 400 oz Good Delivery bars, directly secured from world-class LBMA accredited Swiss and UAE refineries."}
+                  : "Welcome to Dubai's premier precious metals desk. PGR UAE provides institutional and private clients with access to physical gold bar allocation from 1g minted bars to 1kg bars, sourced from LBMA-accredited international refineries."}
               </p>
             </div>
 
@@ -561,7 +561,7 @@ export default function SEOLandingPages({
               <p className="text-[#5E564D] text-xs md:text-sm leading-relaxed max-w-4xl">
                 {isAr 
                   ? "سبائك الذهب عيار ٢٤ قيراط بنقاوة تامة تبلغ 999.9 هي الأداة المثالية لحفظ الأصول والثروات. نوفر في PGR UAE السبائك المعتمدة من مصافي سويسرية وإماراتية مرموقة مثل PAMP وValcambi وEmirates Gold."
-                  : "Invest exclusively in maximum purity. PGR UAE provides high-volume allocations of 24K pure minted and cast gold bars with a certified purity of 999.9. Sourced from the UAE's premier refineries and globally-renowned Swiss mints."}
+                  : "PGR UAE provides high-volume allocations of 999.9 fine minted and cast gold bars. Sourced from accredited UAE and international refineries. Firm quote confirmed by desk."}
               </p>
             </div>
 

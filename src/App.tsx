@@ -11,7 +11,11 @@ import HowFirmQuotesWork from "./components/HowFirmQuotesWork";
 import Catalog from "./components/Catalog";
 import TrustedPartnersSection from "./components/TrustedPartnersSection";
 import PaymentSettlementSection from "./components/PaymentSettlementSection";
+import BullionCollectionSection from "./components/BullionCollectionSection";
+import HomepageFAQ from "./components/HomepageFAQ";
+import CrawlableSeoBlock from "./components/CrawlableSeoBlock";
 import ComplianceKYCSection from "./components/ComplianceKYCSection";
+import { getRouteSeo, canonicalUrl } from "./lib/seoRoutes";
 import ProductDetailModal from "./components/ProductDetailModal";
 import QuoteForm from "./components/QuoteForm";
 import AIConcierge from "./components/AIConcierge";
@@ -160,105 +164,35 @@ export default function App() {
     return () => window.removeEventListener("popstate", handleLocation);
   }, []);
 
-  // Premium Dynamic SEO Metadata sync based on route and language
+  // Dynamic SEO metadata per public route
   useEffect(() => {
-    const routeTitlesEn: Record<string, string> = {
-      "/": "PGR UAE | Dubai Precious Metals & Bullion Desk",
-      "/gold": "Gold Bullion Collection | PGR UAE Dubai",
-      "/silver": "Silver Bullion Collection | PGR UAE Dubai",
-      "/coins": "Accredited Investment Coins | PGR UAE",
-      "/iraq-delivery": "Baghdad & Iraq Secure Gold Delivery | PGR UAE",
-      "/request-quote": "Request Firm Quote | PGR UAE Precious Metals",
-      "/calculator": "Precious Metals Investment Calculator | PGR UAE",
-      "/dashboard": "Client Vault & Allocation Dashboard | PGR UAE",
-      "/compliance": "Regulatory Compliance & Audit Desk | PGR UAE",
-      "/terms": "Terms & Conditions | PGR UAE",
-      "/privacy-policy": "Privacy Policy | PGR UAE",
-      "/kyc-aml-policy": "KYC & AML Policy | PGR UAE",
-      "/pricing-disclaimer": "Pricing & Settlement Disclaimer | PGR UAE"
-    };
-
-    const routeTitlesAr: Record<string, string> = {
-      "/": "PGR UAE | ديوان دبي لتداول المعادن الثمينة والسبائك",
-      "/gold": "مجموعة سبائك الذهب الاستثمارية | PGR UAE",
-      "/silver": "مجموعة سبائك الفضة الاستثمارية | PGR UAE",
-      "/coins": "المسكوكات والعملات الذهبية المعتمدة | PGR UAE",
-      "/iraq-delivery": "الشحن الآمن والتسليم في بغداد والعراق | PGR UAE",
-      "/request-quote": "طلب عرض سعر رسمي | PGR UAE للمعادن الثمينة",
-      "/calculator": "حاسبة استثمار الذهب والفضة | PGR UAE",
-      "/dashboard": "منصة الخزينة وحسابات المستثمرين | PGR UAE",
-      "/compliance": "مكتب الامتثال والتدقيق التنظيمي | PGR UAE",
-      "/terms": "الشروط والأحكام العامة | PGR UAE",
-      "/privacy-policy": "سياسة الخصوصية وحماية البيانات | PGR UAE",
-      "/kyc-aml-policy": "سياسة مكافحة غسيل الأموال واعرف عميلك | PGR UAE",
-      "/pricing-disclaimer": "إخلاء مسؤولية التسعير والتسوية | PGR UAE"
-    };
-
-    const routeDescsEn: Record<string, string> = {
-      "/": "Procure certified physical gold bars and silver bullion directly from world-famous accredited refiners. Secured settlement on the PGR UAE desk.",
-      "/gold": "Explore accredited Gold Bars from 1g to 1kg sourced from top LBMA-certified Swiss and UAE refiners.",
-      "/silver": "Explore physical investment Silver Bars including 100g, 500g, and 1kg sizes from leading international mints.",
-      "/coins": "Browse historic and highly liquid gold and silver investment coins backed by national treasuries.",
-      "/iraq-delivery": "Learn about our fully insured, high-security armored logistics from Dubai directly to accredited vaults in Baghdad, Iraq.",
-      "/request-quote": "Initiate a firm trade order on the PGR UAE desk. Secure your pricing against real-time gold and silver spot rates.",
-      "/calculator": "Calculate exact indicative pricing for gold and silver bullion bars based on real-time live global market rates.",
-      "/dashboard": "Manage your allocated physical reserves, review trading tickets, and verify KYC verification status securely."
-    };
-
-    const routeDescsAr: Record<string, string> = {
-      "/": "اشترِ سبائك الذهب والفضة المعتمدة دولياً مباشرة من مصافي دبي والعالم السويسرية. أسعار معتمدة قبل الدفع وتسليم آمن.",
-      "/gold": "تصفح سبائك الذهب الفاخرة من وزن ١ جرام إلى ١ كيلو جرام من أرقى المصافي السويسرية والمحلية المعتمدة.",
-      "/silver": "مجموعة الفضة الاستثمارية النقية بأوزان متنوعة تشمل ١٠٠ جرام، ٥٠٠ جرام، و١ كيلو جرام لأعلى مستويات التحوط المالي.",
-      "/coins": "العملات والمسكوكات الذهبية التاريخية الأكثر سيولة وأماناً الصادرة من حكومات العالم المعتمدة.",
-      "/iraq-delivery": "تفاصيل شحن الذهب المؤمن والمحمي من دبي مباشرة إلى الخزائن المعتمدة لعملائنا الكرام في بغداد وعموم العراق.",
-      "/request-quote": "ابدأ بطلب تسعير رسمي مؤكد لعمليات الشراء الكبرى من ديوان PGR UAE للمعادن الثمينة.",
-      "/calculator": "احسب القيمة الاسترشادية الدقيقة لمدخراتك من الذهب والفضة بناءً على أسعار الشاشات العالمية الفورية المباشرة.",
-      "/dashboard": "أدر حساب الخزينة الخاص بك، وتابع فواتير الشراء، وتحقق من حالة مستندات اعرف عميلك بأمان كامل."
-    };
-
-    const title = currentLang === "ar" 
-      ? (routeTitlesAr[currentPath] || routeTitlesAr["/"]) 
-      : (routeTitlesEn[currentPath] || routeTitlesEn["/"]);
-    
-    const desc = currentLang === "ar"
-      ? (routeDescsAr[currentPath] || routeDescsAr["/"])
-      : (routeDescsEn[currentPath] || routeDescsEn["/"]);
+    const seo = getRouteSeo(currentPath);
+    const title = currentLang === "ar" ? seo.titleAr : seo.titleEn;
+    const desc = currentLang === "ar" ? seo.descAr : seo.descEn;
+    const url = canonicalUrl(currentPath);
 
     document.title = title;
+    document.documentElement.lang = currentLang === "ar" ? "ar" : "en";
 
-    // Update meta description
-    let metaDesc = document.querySelector('meta[name="description"]');
-    if (metaDesc) {
-      metaDesc.setAttribute("content", desc);
-    } else {
-      metaDesc = document.createElement("meta");
-      metaDesc.setAttribute("name", "description");
-      metaDesc.setAttribute("content", desc);
-      document.head.appendChild(metaDesc);
-    }
+    const setMeta = (selector: string, attr: string, value: string) => {
+      const el = document.querySelector(selector);
+      if (el) el.setAttribute(attr, value);
+    };
 
-    // Update Open Graph and Twitter title/desc tags
-    const ogTitle = document.querySelector('meta[property="og:title"]');
-    if (ogTitle) ogTitle.setAttribute("content", title);
-    
-    const ogDesc = document.querySelector('meta[property="og:description"]');
-    if (ogDesc) ogDesc.setAttribute("content", desc);
+    setMeta('meta[name="description"]', "content", desc);
+    setMeta('meta[property="og:title"]', "content", title);
+    setMeta('meta[property="og:description"]', "content", desc);
+    setMeta('meta[property="og:url"]', "content", url);
+    setMeta('meta[name="twitter:title"]', "content", title);
+    setMeta('meta[name="twitter:description"]', "content", desc);
 
-    const twitterTitle = document.querySelector('meta[name="twitter:title"]');
-    if (twitterTitle) twitterTitle.setAttribute("content", title);
-
-    const twitterDesc = document.querySelector('meta[name="twitter:description"]');
-    if (twitterDesc) twitterDesc.setAttribute("content", desc);
-
-    // Add dynamic canonical tag update
     let canonical = document.querySelector('link[rel="canonical"]');
-    const absoluteUrl = `https://pgruae.com${currentPath === "/" ? "" : currentPath}`;
     if (canonical) {
-      canonical.setAttribute("href", absoluteUrl);
+      canonical.setAttribute("href", url);
     } else {
       canonical = document.createElement("link");
       canonical.setAttribute("rel", "canonical");
-      canonical.setAttribute("href", absoluteUrl);
+      canonical.setAttribute("href", url);
       document.head.appendChild(canonical);
     }
   }, [currentPath, currentLang]);
@@ -694,6 +628,12 @@ export default function App() {
 
       <HowFirmQuotesWork currentLang={currentLang} />
 
+      <BullionCollectionSection
+        currentLang={currentLang}
+        onOpenQuote={() => navigateTo("/request-quote")}
+        onScrollToCatalog={() => handleScrollToSection("catalog")}
+      />
+
       <Catalog
         currentLang={currentLang}
         rates={rates}
@@ -703,12 +643,12 @@ export default function App() {
         onOpenQuote={() => navigateTo("/request-quote")}
       />
 
-      <TrustedPartnersSection currentLang={currentLang} />
-
       <PaymentSettlementSection
         currentLang={currentLang}
         onOpenQuote={() => navigateTo("/request-quote")}
       />
+
+      <TrustedPartnersSection currentLang={currentLang} />
 
       <ComplianceKYCSection
         currentLang={currentLang}
@@ -723,6 +663,10 @@ export default function App() {
           setActiveLegalDoc(docId);
         }}
       />
+
+      <HomepageFAQ currentLang={currentLang} />
+
+      <CrawlableSeoBlock currentLang={currentLang} />
 
       <section className="py-16 px-4 md:px-8 bg-brand-section border-t border-soft-border" id="positioning">
         <div className="max-w-4xl mx-auto text-center space-y-6">
