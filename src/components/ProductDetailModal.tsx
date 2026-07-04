@@ -163,17 +163,17 @@ Phone: ${phone}
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto" id="product-detail-portal" style={{ direction: currentLang === "ar" ? "rtl" : "ltr" }}>
       {/* Background Dimmer */}
-      <div className="fixed inset-0 bg-[#070707]/90 backdrop-blur-md transition-opacity" onClick={onClose} />
+      <div className="fixed inset-0 bg-[#1F1A17]/75 backdrop-blur-md transition-opacity" onClick={onClose} />
 
       {/* Modal Console Container */}
       <div className="flex min-h-screen items-center justify-center p-4 md:p-8 relative">
-        <div className="relative w-full max-w-5xl bg-[#111111] border border-white/[0.05] rounded-sm overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.8)] z-10 animate-scaleUp">
+        <div className="relative w-full max-w-5xl bg-brand-card border border-soft-border rounded overflow-hidden shadow-2xl z-10 animate-scaleUp">
           
           {/* Top Header Close bar */}
           <div className="absolute top-4 right-4 z-30">
             <button
               onClick={onClose}
-              className="p-2 rounded-full bg-black/60 text-gray-400 hover:text-white hover:bg-black/95 transition-all cursor-pointer border border-white/[0.05]"
+              className="p-2 rounded-full bg-brand-bg text-text-secondary hover:text-text-charcoal hover:bg-brand-section transition-all cursor-pointer border border-soft-border shadow-sm"
             >
               <X size={18} />
             </button>
@@ -182,12 +182,12 @@ Phone: ${phone}
           <div className="grid grid-cols-1 lg:grid-cols-2">
             
             {/* LEFT COLUMN: Large Zoom Image & Visual Gallery */}
-            <div className="p-6 md:p-8 bg-[#0d0d0d] flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-white/[0.05]">
+            <div className="p-6 md:p-8 bg-brand-bg flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-soft-border">
               <div className="space-y-6">
                 
                 {/* Image Showcase Frame with Luxury Zoom capability */}
                 <div
-                  className="relative h-72 md:h-96 w-full rounded-sm overflow-hidden bg-black/40 border border-white/[0.03] flex items-center justify-center cursor-zoom-in group"
+                  className="relative h-72 md:h-96 w-full rounded overflow-hidden bg-brand-card border border-soft-border flex items-center justify-center cursor-zoom-in group"
                   onMouseMove={handleMouseMove}
                   onMouseEnter={() => setZoomScale(1.8)}
                   onMouseLeave={() => setZoomScale(1)}
@@ -217,7 +217,7 @@ Phone: ${phone}
                   <div className={`absolute inset-0 z-20 pointer-events-none ${isGold ? "shimmer-mask-gold" : "shimmer-mask"}`} />
 
                   {/* Overlay Helper Tag */}
-                  <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-sm px-2.5 py-1 rounded text-[10px] text-gray-400 flex items-center gap-1.5 font-mono pointer-events-none">
+                  <div className="absolute bottom-4 left-4 bg-brand-card/90 backdrop-blur-sm border border-soft-border px-2.5 py-1 rounded text-[10px] text-text-secondary flex items-center gap-1.5 font-mono pointer-events-none">
                     <ZoomIn size={11} className="text-gold-base" />
                     <span>{currentLang === "ar" ? "مرر الماوس للتكبير" : "Hover image to zoom"}</span>
                   </div>
@@ -235,8 +235,8 @@ Phone: ${phone}
                       onClick={() => setActiveView(view.id)}
                       className={`py-2 px-3 text-[10px] font-mono rounded border transition-all cursor-pointer text-center uppercase tracking-wider ${
                         activeView === view.id
-                          ? "bg-white/[0.03] text-white border-gold-base/50"
-                          : "bg-transparent text-gray-500 border-white/[0.04] hover:text-white"
+                          ? "bg-brand-section text-text-charcoal border-[#C6A15B] font-bold"
+                          : "bg-transparent text-text-secondary border-soft-border hover:text-text-charcoal hover:border-[#C6A15B]"
                       }`}
                     >
                       {currentLang === "ar" ? view.label_ar : view.label_en}
@@ -246,13 +246,13 @@ Phone: ${phone}
               </div>
 
               {/* Security certification status card */}
-              <div className="mt-8 p-4 rounded bg-white/[0.01] border border-white/[0.03] flex items-start gap-3">
-                <ShieldCheck size={18} className="text-emerald-400 shrink-0 mt-0.5" />
+              <div className="mt-8 p-4 rounded bg-brand-section border border-soft-border flex items-start gap-3 shadow-sm">
+                <ShieldCheck size={18} className="text-olive-accent shrink-0 mt-0.5" />
                 <div className="space-y-1">
-                  <span className="text-xs font-mono text-emerald-400 font-semibold uppercase tracking-wider block">
+                  <span className="text-xs font-mono text-olive-accent font-bold uppercase tracking-wider block">
                     {currentLang === "ar" ? "أصالة سبيكة معتمدة" : "Secured Assay Certified"}
                   </span>
-                  <p className="text-[11px] text-gray-500 leading-relaxed font-mono">
+                  <p className="text-[11px] text-text-secondary leading-relaxed font-mono">
                     {currentLang === "ar"
                       ? "هذا المنتج مختوم ورقياً ومحمي بالكامل برقم تسلسلي معتمد دولياً."
                       : "Sourced with tamper-proof assay documentation. Directly verifiable by global refiner assays and physical vault clearings."}
@@ -267,63 +267,63 @@ Phone: ${phone}
               {/* Product Info Block */}
               <div className="space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-xs font-mono text-gold-base uppercase tracking-widest">
+                  <span className="text-xs font-mono text-[#A47C36] uppercase tracking-widest font-bold">
                     {activeProduct.manufacturer}
                   </span>
                   
                   {/* Stock Indicator Node */}
-                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-mono font-semibold uppercase">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-soft-success border border-soft-border text-text-charcoal text-[10px] font-mono font-bold uppercase">
+                    <span className="h-1.5 w-1.5 rounded-full bg-olive-accent animate-pulse"></span>
                     {currentLang === "ar" ? "متاح في الخزينة" : "In Vault (Stock Available)"}
                   </span>
                 </div>
 
-                <h1 className="text-2xl md:text-3xl font-serif text-white tracking-wide font-medium">
+                <h1 className="text-2xl md:text-3xl font-serif text-text-charcoal tracking-wide font-medium">
                   {currentLang === "ar" ? activeProduct.name_ar : activeProduct.name_en}
                 </h1>
 
                 {/* Main Product Description */}
-                <p className="text-xs md:text-sm text-gray-400 leading-relaxed">
+                <p className="text-xs md:text-sm text-text-secondary leading-relaxed font-sans">
                   {currentLang === "ar" ? activeProduct.description_ar : activeProduct.description_en}
                 </p>
               </div>
 
               {/* Dynamic Indicative Market Valuation */}
-              <div className="p-4 rounded-sm bg-[#161616]/70 border border-white/[0.04] space-y-2">
-                <div className="flex justify-between items-center text-xs font-mono text-gray-400">
+              <div className="p-4 rounded bg-brand-section border border-soft-border space-y-2 shadow-sm">
+                <div className="flex justify-between items-center text-xs font-mono text-text-secondary">
                   <span>{currentLang === "ar" ? "التسعير الاسترشادي المباشر" : "Estimated Retail Valuation"}</span>
-                  <span className="text-[10px] bg-white/[0.04] px-1.5 py-0.5 rounded text-gray-400">SPOT + PREMIUM</span>
+                  <span className="text-[10px] bg-brand-card border border-soft-border px-1.5 py-0.5 rounded text-text-secondary font-bold">SPOT + PREMIUM</span>
                 </div>
 
                 <div className="flex items-baseline justify-between">
                   {getLivePrice() ? (
                     <>
                       <div className="flex items-baseline gap-1">
-                        <span className={`text-2xl md:text-3xl font-serif font-medium ${isGold ? "text-gold-gradient" : "text-silver-gradient"}`}>
+                        <span className={`text-2xl md:text-3xl font-serif font-bold text-[#A47C36]`}>
                           {getLivePrice()}
                         </span>
-                        <span className="text-xs text-gray-400 font-mono font-medium">{selectedCurrency}</span>
+                        <span className="text-xs text-text-secondary font-mono font-bold">{selectedCurrency}</span>
                       </div>
-                      <span className="text-[10px] text-emerald-400 font-mono font-semibold">
+                      <span className="text-[10px] text-olive-accent font-mono font-bold">
                         {currentLang === "ar" ? "محدث تلقائياً" : "Live synchronized"}
                       </span>
                     </>
                   ) : (
                     <>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-xl md:text-2xl font-serif font-medium text-gold-base">
+                        <span className="text-xl md:text-2xl font-serif font-bold text-gold-base">
                           {currentLang === "ar" ? "طلب عرض سعر" : "Request Quote"}
                         </span>
                       </div>
-                      <span className="text-[10px] text-amber-500 font-mono font-semibold flex items-center gap-1">
-                        <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                      <span className="text-[10px] text-[#A47C36] font-mono font-bold flex items-center gap-1">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[#C6A15B] animate-pulse"></span>
                         {currentLang === "ar" ? "سعر المباشر غير متوفر" : "Live price unavailable"}
                       </span>
                     </>
                   )}
                 </div>
 
-                <div className="text-[10px] font-mono text-gray-600 leading-relaxed pt-2 border-t border-white/[0.03]">
+                <div className="text-[10px] font-mono text-text-secondary leading-relaxed pt-2 border-t border-soft-border font-medium">
                   {currentLang === "ar"
                     ? "ملاحظة: تختلف الأسعار النهائية للصفقات الكبرى والمستندات الجمركية بالجملة. اطلب عرض السعر لمعرفة الأسعار اللحظية الدقيقة."
                     : "Indicative spot pricing only. Wholesale procurement, custom imports, and larger bullion allotments are structured individually via customized quotes."}
@@ -333,7 +333,7 @@ Phone: ${phone}
               {/* DYNAMIC SPECIFICATION & DOCUMENTATION TABS */}
               <div className="space-y-4">
                 {/* Tab Switch buttons */}
-                <div className="flex border-b border-white/[0.03] text-xs font-mono overflow-x-auto whitespace-nowrap">
+                <div className="flex border-b border-soft-border text-xs font-mono overflow-x-auto whitespace-nowrap">
                   {[
                     { id: "specs", label_en: "Attributes", label_ar: "المواصفات" },
                     { id: "cert", label_en: "Assay & Cert", label_ar: "شهادة الأصالة" },
@@ -345,8 +345,8 @@ Phone: ${phone}
                       onClick={() => setActiveTab(tab.id as any)}
                       className={`pb-2.5 px-3 border-b-2 transition-all cursor-pointer ${
                         activeTab === tab.id
-                          ? "text-gold-base border-gold-base font-semibold"
-                          : "text-gray-500 border-transparent hover:text-white"
+                          ? "text-[#A47C36] border-[#C6A15B] font-bold"
+                          : "text-text-secondary border-transparent hover:text-text-charcoal"
                       }`}
                     >
                       {currentLang === "ar" ? tab.label_ar : tab.label_en}
@@ -357,52 +357,52 @@ Phone: ${phone}
                 {/* Tab 1: Attribute specs table */}
                 {activeTab === "specs" && (
                   <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-xs font-mono animate-fadeIn">
-                    <div className="flex justify-between py-1 border-b border-white/[0.02]">
-                      <span className="text-gray-500">{currentLang === "ar" ? "المعدن النقدي" : "Assay Metal"}</span>
-                      <span className="text-gray-300 capitalize">{activeProduct.technical_specs.metal}</span>
+                    <div className="flex justify-between py-1 border-b border-soft-border">
+                      <span className="text-text-secondary">{currentLang === "ar" ? "المعدن النقدي" : "Assay Metal"}</span>
+                      <span className="text-text-charcoal font-bold capitalize">{activeProduct.technical_specs.metal}</span>
                     </div>
-                    <div className="flex justify-between py-1 border-b border-white/[0.02]">
-                      <span className="text-gray-500">{currentLang === "ar" ? "المصفاة والمصنع" : "Mint Refiner"}</span>
-                      <span className="text-gray-300">{activeProduct.manufacturer}</span>
+                    <div className="flex justify-between py-1 border-b border-soft-border">
+                      <span className="text-text-secondary">{currentLang === "ar" ? "المصفاة والمصنع" : "Mint Refiner"}</span>
+                      <span className="text-text-charcoal font-bold">{activeProduct.manufacturer}</span>
                     </div>
-                    <div className="flex justify-between py-1 border-b border-white/[0.02]">
-                      <span className="text-gray-500">{currentLang === "ar" ? "بلد المنشأ" : "Origin Country"}</span>
-                      <span className="text-gray-300">{currentLang === "ar" ? activeProduct.country_ar : activeProduct.country_en}</span>
+                    <div className="flex justify-between py-1 border-b border-soft-border">
+                      <span className="text-text-secondary">{currentLang === "ar" ? "بلد المنشأ" : "Origin Country"}</span>
+                      <span className="text-text-charcoal font-bold">{currentLang === "ar" ? activeProduct.country_ar : activeProduct.country_en}</span>
                     </div>
-                    <div className="flex justify-between py-1 border-b border-white/[0.02]">
-                      <span className="text-gray-500">{currentLang === "ar" ? "النقاوة الرسمية" : "Fineness"}</span>
-                      <span className="text-gray-300">{activeProduct.purity}</span>
+                    <div className="flex justify-between py-1 border-b border-soft-border">
+                      <span className="text-text-secondary">{currentLang === "ar" ? "النقاوة الرسمية" : "Fineness"}</span>
+                      <span className="text-text-charcoal font-bold">{activeProduct.purity}</span>
                     </div>
-                    <div className="flex justify-between py-1 border-b border-white/[0.02]">
-                      <span className="text-gray-500">{currentLang === "ar" ? "شهادة فحص" : "Certification"}</span>
-                      <span className="text-gray-300 text-right text-[10px] truncate max-w-[120px]">
+                    <div className="flex justify-between py-1 border-b border-soft-border">
+                      <span className="text-text-secondary">{currentLang === "ar" ? "شهادة فحص" : "Certification"}</span>
+                      <span className="text-text-charcoal font-bold text-right text-[10px] truncate max-w-[120px]">
                         {currentLang === "ar" ? "معتمدة بالكامل" : "Verifiable Assay"}
                       </span>
                     </div>
-                    <div className="flex justify-between py-1 border-b border-white/[0.02]">
-                      <span className="text-gray-500">{currentLang === "ar" ? "أبعاد السبيكة" : "Dimensions"}</span>
-                      <span className="text-gray-300">{activeProduct.technical_specs.dimensions || "Standard"}</span>
+                    <div className="flex justify-between py-1 border-b border-soft-border">
+                      <span className="text-text-secondary">{currentLang === "ar" ? "أبعاد السبيكة" : "Dimensions"}</span>
+                      <span className="text-text-charcoal font-bold">{activeProduct.technical_specs.dimensions || "Standard"}</span>
                     </div>
                   </div>
                 )}
 
                 {/* Tab 2: Assay standards & custom vault link */}
                 {activeTab === "cert" && (
-                  <div className="p-4 rounded border border-white/[0.02] bg-[#161618] text-xs font-mono space-y-3 animate-fadeIn">
-                    <div className="flex items-center gap-2 text-gold-base">
-                      <Award size={14} />
-                      <span className="font-semibold uppercase tracking-wider">
+                  <div className="p-4 rounded border border-soft-border bg-brand-bg text-xs font-mono space-y-3 animate-fadeIn shadow-sm">
+                    <div className="flex items-center gap-2 text-[#A47C36]">
+                      <Award size={14} className="text-olive-accent" />
+                      <span className="font-bold uppercase tracking-wider">
                         {currentLang === "ar" ? "معايير الجودة الدولية المعتمدة" : "International Quality Standards"}
                       </span>
                     </div>
-                    <p className="text-gray-400 leading-relaxed text-[11px] font-sans">
+                    <p className="text-text-secondary leading-relaxed text-[11px] font-sans">
                       {currentLang === "ar"
                         ? "كافة المصافي المعتمدة لدينا مدرجة في القوائم الرسمية المعتمدة للمصافي العالمية. يتم نقش الرقم التسلسلي الفريد بدقة على وجه كل سبيكة للتأكد المطلق من أصالتها."
                         : "Our represented Swiss and international mints adhere to stringent recognized international purity standards. Every single product has an individualized laser seal engraved into its face."}
                     </p>
-                    <div className="pt-2 border-t border-white/[0.02] flex justify-between items-center text-[10px]">
-                      <span className="text-gray-500">SECURE VAULT SERIAL:</span>
-                      <span className="text-emerald-400 font-bold tracking-widest">{isGold ? "PAMP-882941" : "VALC-119302"}</span>
+                    <div className="pt-2 border-t border-soft-border flex justify-between items-center text-[10px] font-bold">
+                      <span className="text-text-secondary">SECURE VAULT SERIAL:</span>
+                      <span className="text-olive-accent tracking-widest">{isGold ? "PAMP-882941" : "VALC-119302"}</span>
                     </div>
                   </div>
                 )}
@@ -415,21 +415,21 @@ Phone: ${phone}
                       { name: "PGR Storage Agreement (PDF)", file: "PGR_Vault_Storage_Guide.pdf" },
                       { name: "Dubai Bullion Advantage (PDF)", file: "Dubai_Gold_Advantage_Guide.pdf" }
                     ].map((doc, idx) => (
-                      <div key={idx} className="p-2.5 rounded bg-[#161618] border border-white/[0.02] flex items-center justify-between gap-3">
+                      <div key={idx} className="p-2.5 rounded bg-brand-bg border border-soft-border flex items-center justify-between gap-3 shadow-sm">
                         <div className="flex items-center gap-2">
-                          <FileText size={13} className="text-[#c5a85c]" />
-                          <span className="text-gray-300">{doc.name}</span>
+                          <FileText size={13} className="text-olive-accent" />
+                          <span className="text-text-charcoal font-bold">{doc.name}</span>
                         </div>
                         <button
                           onClick={() => triggerDownload(doc.name, doc.file)}
-                          className="p-1.5 bg-[#c5a85c]/10 hover:bg-[#c5a85c] text-[#c5a85c] hover:text-black rounded transition-colors cursor-pointer"
+                          className="p-1.5 bg-[#C6A15B]/10 hover:bg-[#C6A15B] text-[#A47C36] hover:text-white rounded transition-colors cursor-pointer"
                         >
                           {downloadSuccess === doc.name ? <Check size={12} /> : <Download size={12} />}
                         </button>
                       </div>
                     ))}
                     {downloadSuccess && (
-                      <div className="text-[10px] text-emerald-400 font-mono text-center pt-1.5">
+                      <div className="text-[10px] text-olive-accent font-mono text-center pt-1.5 font-bold">
                         {currentLang === "ar" ? "✓ تم بدء تحميل الملف الآمن بنجاح" : "✓ Secure document download dispatched successfully"}
                       </div>
                     )}
@@ -446,10 +446,10 @@ Phone: ${phone}
                           setActiveProduct(rel);
                           setActiveTab("specs");
                         }}
-                        className="p-3 rounded bg-[#161618] border border-white/[0.02] hover:border-gold-base/30 transition-all flex items-center justify-between gap-3 cursor-pointer group"
+                        className="p-3 rounded bg-brand-bg border border-soft-border hover:border-[#C6A15B] transition-all flex items-center justify-between gap-3 cursor-pointer group shadow-sm"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded bg-black/40 border border-white/[0.03] overflow-hidden shrink-0 flex items-center justify-center">
+                          <div className="h-10 w-10 rounded bg-brand-card border border-soft-border overflow-hidden shrink-0 flex items-center justify-center">
                             <img
                               src={
                                 rel.image_url || (rel.technical_specs.metal === "gold"
@@ -467,15 +467,15 @@ Phone: ${phone}
                             />
                           </div>
                           <div>
-                            <span className="text-[11px] font-serif font-semibold text-white group-hover:text-gold-base transition-colors block">
+                            <span className="text-[11px] font-serif font-bold text-text-charcoal group-hover:text-[#A47C36] transition-colors block">
                               {currentLang === "ar" ? rel.name_ar : rel.name_en}
                             </span>
-                            <span className="text-[9px] font-mono text-gray-500 block">
+                            <span className="text-[9px] font-mono text-text-secondary block font-bold">
                               {rel.manufacturer} • {rel.purity}
                             </span>
                           </div>
                         </div>
-                        <span className="text-[10px] font-mono text-gold-base group-hover:translate-x-1 transition-transform">
+                        <span className="text-[10px] font-mono text-[#A47C36] font-bold group-hover:translate-x-1 transition-transform">
                           {currentLang === "ar" ? "عرض ←" : "View →"}
                         </span>
                       </div>
@@ -486,7 +486,7 @@ Phone: ${phone}
               </div>
 
               {/* ACTION CENTER BUTTONS: Quote, WhatsApp */}
-              <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-white/[0.03]">
+              <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-soft-border">
                 {/* Bespoke Quote Request Form launch */}
                 <button
                   onClick={() => {
@@ -494,7 +494,7 @@ Phone: ${phone}
                     onOpenQuote(pName);
                     onClose();
                   }}
-                  className="flex-1 px-6 py-3.5 bg-gold-base hover:bg-gold-light text-black text-[12px] uppercase tracking-widest font-semibold transition-all duration-300 rounded-sm flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_15px_rgba(212,175,55,0.1)] animate-pulse"
+                  className="flex-1 px-6 py-3.5 bg-[#C6A15B] hover:bg-[#A47C36] text-text-charcoal hover:text-white text-[12px] uppercase tracking-widest font-bold transition-all duration-300 rounded flex items-center justify-center gap-2 cursor-pointer shadow-md"
                 >
                   <FileText size={14} />
                   <span>{currentLang === "ar" ? "طلب عرض سعر رسمي" : "Request Bespoke Quote"}</span>
@@ -505,9 +505,9 @@ Phone: ${phone}
                   href={getWhatsAppLink()}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 px-6 py-3.5 bg-transparent hover:bg-white/[0.03] border border-white/20 hover:border-white text-white text-[12px] uppercase tracking-widest font-semibold transition-all duration-300 rounded-sm flex items-center justify-center gap-2 cursor-pointer"
+                  className="flex-1 px-6 py-3.5 bg-transparent hover:bg-gold-base/5 border border-[#C6A15B] text-text-charcoal text-[12px] uppercase tracking-widest font-bold transition-all duration-300 rounded flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <Phone size={14} className="text-emerald-400" />
+                  <Phone size={14} className="text-olive-accent" />
                   <span>{currentLang === "ar" ? "طلب عبر الواتساب" : "Order via WhatsApp"}</span>
                 </a>
               </div>

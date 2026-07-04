@@ -1,5 +1,5 @@
 {
-  "name": "PGR UAE Precious Metals",
+  "name": "PGR UAE Precious Metals & Bullion Quote Desk",
   "description": "The official digital presence of PGR UAE Precious Metals & Bullion Quote Desk, Dubai's premier physical gold and silver bullion purchase inquiry and allocated storage platform, specializing in physical bullion and secure global delivery.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]

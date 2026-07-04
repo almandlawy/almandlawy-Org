@@ -253,7 +253,7 @@ export default function BlogSection({ currentLang }: BlogSectionProps) {
               <div className="bg-[#121315]/80 p-4 rounded border border-white/[0.03] font-mono text-[10px] text-gray-500 leading-relaxed">
                 {isAr 
                   ? "إخلاء مسؤولية: كافة التحليلات والتقارير الصادرة عن PGR UAE هي لأغراض تثقيفية واستراتيجية فقط، ولا تعد نصيحة مالية أو استثمارية رسمية لبيع أو شراء الأسهم أو العقود." 
-                  : "DISCLAIMER: Reports published by PGR UAE are prepared for general bullion inquiry context and strategic information purposes only. They do not constitute formal financial advice or brokerage solicitation."}
+                  : "DISCLAIMER: Reports published by PGR UAE are prepared for elite portfolio context and strategic information purposes only. They do not constitute formal investment advice or brokerage solicitation."}
               </div>
 
             </div>

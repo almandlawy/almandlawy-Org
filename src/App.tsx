@@ -23,10 +23,23 @@ import { LiveMarketRates, Product } from "./types";
 import { WHY_US_ITEMS, BRANDS } from "./data";
 import { Shield, Sparkles, Building, Truck, Landmark, Award } from "lucide-react";
 import { isLive, supabase, mockDb } from "./lib/supabase";
+import { DebugPanel } from "./components/DebugPanel";
+
+// Imported new high-end compliance and desk components
+import LoginPage from "./components/LoginPage";
+import RegisterPage from "./components/RegisterPage";
+import RequestQuotePage from "./components/RequestQuotePage";
+import ProductLandingPage from "./components/ProductLandingPage";
+import AllocatedStoragePage from "./components/AllocatedStoragePage";
+import SellBackPage from "./components/SellBackPage";
+import ClientDashboard from "./components/ClientDashboard";
+import MetalCalculator from "./components/MetalCalculator";
+import SEOLandingPages from "./components/SEOLandingPages";
 
 export default function App() {
   const [currentLang, setCurrentLang] = useState<"en" | "ar">("ar");
   const [selectedCurrency, setSelectedCurrency] = useState<string>("AED"); // Default to local UAE Dirham
+  const [currentPath, setCurrentPath] = useState<string>(window.location.pathname);
 
   // Pre-calculated default reference spot rates for flawless client experience
   const getInitialRates = (): LiveMarketRates => {
@@ -84,6 +97,13 @@ export default function App() {
   const [isAdminPortalOpen, setIsAdminPortalOpen] = useState(false);
   const [activeLegalDoc, setActiveLegalDoc] = useState<string | null>(null);
 
+  // Programmatic custom router
+  const navigateTo = (path: string) => {
+    window.history.pushState(null, "", path);
+    setCurrentPath(path);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   // Listen for Supabase Authentication changes
   useEffect(() => {
     if (isLive && supabase) {
@@ -107,10 +127,11 @@ export default function App() {
     }
   }, []);
 
-  // Pathname routing for compliance & legal policies, quote form, and FAQ
+  // Pathname routing for compliance & legal policies and full pages
   useEffect(() => {
     const handleLocation = () => {
       const path = window.location.pathname;
+      setCurrentPath(path);
       const pathMap: Record<string, string> = {
         "/terms": "terms",
         "/privacy-policy": "privacy",
@@ -126,17 +147,8 @@ export default function App() {
       };
       if (pathMap[path]) {
         setActiveLegalDoc(pathMap[path]);
-        return;
-      }
-      if (path === "/request-quote") {
-        setIsQuoteOpen(true);
-        return;
-      }
-      if (path === "/faq") {
-        setTimeout(() => {
-          const el = document.getElementById("faq");
-          if (el) el.scrollIntoView({ behavior: "smooth" });
-        }, 150);
+      } else {
+        setActiveLegalDoc(null);
       }
     };
     handleLocation();
@@ -263,23 +275,236 @@ export default function App() {
     handleScrollToSection("catalog");
   };
 
-  const isAdminRoute =
-    window.location.pathname === "/admin" ||
-    window.location.pathname.startsWith("/admin/");
-
-  if (isAdminRoute) {
+  // Intercept Admin & Custom routes for clean, un-nested display
+  if (currentPath === "/admin" || currentPath.startsWith("/admin/")) {
     return <AdminPanel currentLang={currentLang} />;
   }
 
+  if (currentPath === "/login") {
+    return (
+      <LoginPage 
+        currentLang={currentLang} 
+        onNavigate={navigateTo} 
+        onLoginSuccess={(u) => {
+          mockDb.auth.setUser(u);
+          navigateTo("/dashboard");
+        }} 
+      />
+    );
+  }
+
+  if (currentPath === "/register") {
+    return (
+      <RegisterPage 
+        currentLang={currentLang} 
+        onNavigate={navigateTo} 
+        onRegisterSuccess={(u) => {
+          mockDb.auth.setUser(u);
+          navigateTo("/dashboard");
+        }} 
+      />
+    );
+  }
+
+  if (currentPath === "/request-quote") {
+    return <RequestQuotePage currentLang={currentLang} onNavigate={navigateTo} />;
+  }
+
+  if (currentPath === "/calculator") {
+    return (
+      <div className={`min-h-screen text-stone-900 bg-[#FAF9F5] selection:bg-gold-base selection:text-black overflow-hidden relative ${
+        currentLang === "ar" ? "font-arabic" : "font-sans"
+      }`}>
+        <Header
+          currentLang={currentLang}
+          toggleLanguage={toggleLanguage}
+          rates={rates}
+          selectedCurrency={selectedCurrency}
+          onNavigate={(sec) => {
+            navigateTo("/");
+            setTimeout(() => handleScrollToSection(sec), 100);
+          }}
+          onOpenAIChat={() => setIsAIChatOpen(true)}
+          onOpenQuote={() => navigateTo("/request-quote")}
+          onOpenClientDashboard={() => navigateTo("/dashboard")}
+          onOpenAdminPortal={() => navigateTo("/admin")}
+        />
+        <div className="max-w-7xl mx-auto py-32 px-4 md:px-8">
+          <MetalCalculator
+            currentLang={currentLang}
+            rates={rates}
+            selectedCurrency={selectedCurrency}
+            onOpenQuote={(details) => {
+              navigateTo("/request-quote");
+            }}
+          />
+        </div>
+        <Footer
+          currentLang={currentLang}
+          onNavigate={(sec) => {
+            navigateTo("/");
+            setTimeout(() => handleScrollToSection(sec), 100);
+          }}
+          onOpenAIChat={() => setIsAIChatOpen(true)}
+          onOpenQuote={() => navigateTo("/request-quote")}
+          onOpenLegalDoc={(docId) => {
+            const rMap: Record<string, string> = {
+              "terms": "/terms",
+              "privacy": "/privacy-policy",
+              "aml": "/kyc-aml-policy",
+              "pricing": "/pricing-disclaimer",
+              "refund": "/refund-cancellation-policy",
+              "delivery": "/delivery-collection-policy",
+              "storage": "/allocated-storage-terms",
+              "sellback": "/sell-back-policy",
+              "risk": "/risk-disclosure",
+              "cookie": "/cookie-policy",
+              "compliance": "/compliance"
+            };
+            const p = rMap[docId] || "/";
+            window.history.pushState(null, "", p);
+            setActiveLegalDoc(docId);
+          }}
+          onOpenClientDashboard={() => navigateTo("/dashboard")}
+          onOpenAdminPortal={() => navigateTo("/admin")}
+        />
+      </div>
+    );
+  }
+
+  const seoPaths = [
+    "/buy-gold-bars-dubai",
+    "/buy-silver-bars-dubai",
+    "/gold-rate-dubai-today",
+    "/silver-rate-dubai-today",
+    "/sell-gold-dubai",
+    "/bullion-desk-dubai",
+    "/allocated-storage-dubai",
+    "/24k-gold-bars-uae"
+  ];
+
+  if (seoPaths.includes(currentPath)) {
+    return (
+      <div className={`min-h-screen text-stone-900 bg-[#FAF9F5] selection:bg-gold-base selection:text-black overflow-hidden relative ${
+        currentLang === "ar" ? "font-arabic" : "font-sans"
+      }`}>
+        <Header
+          currentLang={currentLang}
+          toggleLanguage={toggleLanguage}
+          rates={rates}
+          selectedCurrency={selectedCurrency}
+          onNavigate={(sec) => {
+            navigateTo("/");
+            setTimeout(() => handleScrollToSection(sec), 100);
+          }}
+          onOpenAIChat={() => setIsAIChatOpen(true)}
+          onOpenQuote={() => navigateTo("/request-quote")}
+          onOpenClientDashboard={() => navigateTo("/dashboard")}
+          onOpenAdminPortal={() => navigateTo("/admin")}
+        />
+        <div className="max-w-7xl mx-auto py-24 px-4 md:px-8">
+          <SEOLandingPages
+            currentPath={currentPath}
+            currentLang={currentLang}
+            rates={rates}
+            selectedCurrency={selectedCurrency}
+            onNavigate={navigateTo}
+            onOpenQuote={(details) => {
+              navigateTo("/request-quote");
+            }}
+          />
+        </div>
+        <Footer
+          currentLang={currentLang}
+          onNavigate={(sec) => {
+            navigateTo("/");
+            setTimeout(() => handleScrollToSection(sec), 100);
+          }}
+          onOpenAIChat={() => setIsAIChatOpen(true)}
+          onOpenQuote={() => navigateTo("/request-quote")}
+          onOpenLegalDoc={(docId) => {
+            const rMap: Record<string, string> = {
+              "terms": "/terms",
+              "privacy": "/privacy-policy",
+              "aml": "/kyc-aml-policy",
+              "pricing": "/pricing-disclaimer",
+              "refund": "/refund-cancellation-policy",
+              "delivery": "/delivery-collection-policy",
+              "storage": "/allocated-storage-terms",
+              "sellback": "/sell-back-policy",
+              "risk": "/risk-disclosure",
+              "cookie": "/cookie-policy",
+              "compliance": "/compliance"
+            };
+            const p = rMap[docId] || "/";
+            window.history.pushState(null, "", p);
+            setActiveLegalDoc(docId);
+          }}
+          onOpenClientDashboard={() => navigateTo("/dashboard")}
+          onOpenAdminPortal={() => navigateTo("/admin")}
+        />
+      </div>
+    );
+  }
+
+  if (currentPath === "/allocated-storage") {
+    return <AllocatedStoragePage currentLang={currentLang} onNavigate={navigateTo} />;
+  }
+
+  if (currentPath === "/sell-back") {
+    return <SellBackPage currentLang={currentLang} onNavigate={navigateTo} />;
+  }
+
+  if (currentPath === "/dashboard") {
+    const currentUser = mockDb.auth.getUser();
+    if (!currentUser) {
+      return (
+        <LoginPage 
+          currentLang={currentLang} 
+          onNavigate={navigateTo} 
+          onLoginSuccess={(u) => {
+            mockDb.auth.setUser(u);
+            navigateTo("/dashboard");
+          }} 
+        />
+      );
+    }
+    return (
+      <ClientDashboard 
+        currentLang={currentLang} 
+        user={currentUser} 
+        onLogout={() => {
+          mockDb.auth.logout();
+          navigateTo("/");
+        }} 
+        onNavigate={navigateTo} 
+      />
+    );
+  }
+
+  // Handle Product Category landing pages
+  const productCategories = ["/gold-bars", "/silver-bars", "/bullion-coins", "/custom-inquiry"];
+  if (productCategories.includes(currentPath)) {
+    return (
+      <ProductLandingPage 
+        categoryPath={currentPath as any} 
+        currentLang={currentLang} 
+        onNavigate={navigateTo} 
+        onOpenProductDetail={setSelectedProduct}
+      />
+    );
+  }
+
+  // ROOT / HOMEPAGE LAYOUT
   return (
-    <div className={`min-h-screen text-white bg-[#070707] selection:bg-gold-base selection:text-black overflow-hidden relative ${
+    <div className={`min-h-screen text-stone-900 bg-[#FAF9F5] selection:bg-gold-base selection:text-black overflow-hidden relative ${
       currentLang === "ar" ? "font-arabic" : "font-sans"
     }`} id="pgr-root-container">
       
       {/* Structural Glowing Accents in Backdrop */}
       <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-gold-dark/5 blur-[150px] rounded-full pointer-events-none z-0" />
-      <div className="absolute top-1/3 right-1/4 w-[600px] h-[600px] bg-white/[0.02] blur-[180px] rounded-full pointer-events-none z-0" />
-      <div className="absolute bottom-1/4 left-1/3 w-[500px] h-[500px] bg-gold-base/3 blur-[140px] rounded-full pointer-events-none z-0" />
+      <div className="absolute top-1/3 right-1/4 w-[600px] h-[600px] bg-gold-base/3 blur-[180px] rounded-full pointer-events-none z-0" />
+      <div className="absolute bottom-1/4 left-1/3 w-[500px] h-[500px] bg-gold-base/4 blur-[140px] rounded-full pointer-events-none z-0" />
 
       {/* Global Navigation Header component */}
       <Header
@@ -289,9 +514,9 @@ export default function App() {
         selectedCurrency={selectedCurrency}
         onNavigate={handleScrollToSection}
         onOpenAIChat={() => setIsAIChatOpen(true)}
-        onOpenQuote={() => handleOpenQuote()}
-        onOpenClientDashboard={() => setIsClientDashboardOpen(true)}
-        onOpenAdminPortal={() => setIsAdminPortalOpen(true)}
+        onOpenQuote={() => navigateTo("/request-quote")}
+        onOpenClientDashboard={() => navigateTo("/dashboard")}
+        onOpenAdminPortal={() => navigateTo("/admin")}
       />
 
       {/* Hero Epic Visual Landing stage */}
@@ -299,7 +524,7 @@ export default function App() {
         currentLang={currentLang}
         onScrollToCatalog={handleScrollToCatalogWithFilter}
         onScrollToMarket={() => handleScrollToSection("market")}
-        onOpenQuote={() => handleOpenQuote()}
+        onOpenQuote={() => navigateTo("/request-quote")}
       />
 
       {/* Live Market Spot rates section */}
@@ -310,19 +535,33 @@ export default function App() {
         onChangeCurrency={setSelectedCurrency}
         onRefresh={fetchRates}
         isRefreshing={isRefreshing}
-        onOpenQuote={() => setIsQuoteOpen(true)}
+        onOpenQuote={() => navigateTo("/request-quote")}
       />
 
+      {/* Interactive Precious Metals Quote Calculator Section */}
+      <section className="py-24 px-4 md:px-8 border-t border-amber-500/10 bg-white/40 relative z-10" id="calculator">
+        <div className="max-w-7xl mx-auto">
+          <MetalCalculator
+            currentLang={currentLang}
+            rates={rates}
+            selectedCurrency={selectedCurrency}
+            onOpenQuote={(details) => {
+              navigateTo("/request-quote");
+            }}
+          />
+        </div>
+      </section>
+
       {/* Specialized Positioning Section for Iraq & UAE */}
-      <section className="py-16 px-4 md:px-8 bg-[#0a0a0b] border-t border-b border-white/[0.03]" id="positioning">
+      <section className="py-16 px-4 md:px-8 bg-stone-100 border-t border-b border-stone-200/50" id="positioning">
         <div className="max-w-4xl mx-auto text-center space-y-6">
           <span className="text-gold-base font-mono uppercase text-xs tracking-[0.3em] font-semibold block">
             {currentLang === "ar" ? "خدمات الذهب والفضة الإقليمية" : "REGIONAL PRECIOUS METALS CONDUIT"}
           </span>
-          <h2 className="text-2xl sm:text-3xl font-serif tracking-tight text-white font-medium">
+          <h2 className="text-2xl sm:text-3xl font-serif tracking-tight text-stone-900 font-medium">
             {currentLang === "ar" ? "خدمات متخصصة للذهب والفضة بين الإمارات والعراق" : "Specialized Precious Metals Services for Iraq & UAE"}
           </h2>
-          <p className="text-sm text-gray-400 leading-relaxed max-w-3xl mx-auto">
+          <p className="text-sm text-stone-600 leading-relaxed max-w-3xl mx-auto">
             {currentLang === "ar"
               ? "تساعد PGR UAE العملاء على طلب منتجات الذهب والفضة من الإمارات، مع تأكيد السعر والتوفر وترتيب التوصيل أو الاستلام حسب التحقق والمستندات والمتطلبات الجمركية."
               : "PGR UAE helps customers request gold and silver products from the UAE, confirm availability and prices, and arrange delivery or pickup options subject to verification, documentation, and customs requirements."}
@@ -344,7 +583,7 @@ export default function App() {
       />
 
       {/* Bento Layout: WHY PGR UAE (Institutional trust pillars) */}
-      <section className="py-24 px-4 md:px-8 bg-[#070707] border-t border-white/[0.03]" id="why-us">
+      <section className="py-24 px-4 md:px-8 bg-white/60 border-t border-stone-200/50" id="why-us">
         <div className="max-w-7xl mx-auto space-y-16">
           
           <div className="text-center space-y-4 max-w-2xl mx-auto">
@@ -352,10 +591,10 @@ export default function App() {
               <Shield size={12} />
               {currentLang === "ar" ? "لماذا تختار بي بي جي آر دبي؟" : "The Preferred Choice"}
             </span>
-            <h2 className="text-3xl sm:text-4xl font-serif tracking-tight text-white font-medium">
+            <h2 className="text-3xl sm:text-4xl font-serif tracking-tight text-stone-900 font-medium">
               {currentLang === "ar" ? "المعايير والضمانات المؤسسية" : "Why Investors Choose PGR"}
             </h2>
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-stone-600">
               {currentLang === "ar"
                 ? "معايير تداول مطابقة للبورصات العالمية، وحلول شحن مؤمنة بالكامل لحفظ الثروات."
                 : "Combining global logistical reach with Dubai's unmatched precious metals tax-exempt status."}
@@ -365,20 +604,20 @@ export default function App() {
           {/* Grid Layout Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {WHY_US_ITEMS.map((item, idx) => {
-              return (
+               return (
                 <div
                   key={idx}
-                  className="glass-premium p-6 rounded-sm space-y-4 border border-white/[0.02] hover:border-gold-base/20 transition-all duration-300 relative overflow-hidden group"
+                  className="glass-premium p-6 rounded-sm space-y-4 border border-stone-200/50 hover:border-gold-base/20 transition-all duration-300 relative overflow-hidden group"
                 >
                   <div className="h-10 w-10 bg-gold-dark/10 rounded-sm border border-gold-base/10 flex items-center justify-center text-gold-base mb-2 group-hover:scale-105 transition-transform">
                     {idx === 0 ? <Landmark size={18} /> : idx === 1 ? <Building size={18} /> : idx === 2 ? <Truck size={18} /> : <Award size={18} />}
                   </div>
 
-                  <h3 className="text-lg font-serif text-white tracking-wide font-medium">
+                  <h3 className="text-lg font-serif text-stone-900 tracking-wide font-medium">
                     {currentLang === "ar" ? item.title_ar : item.title_en}
                   </h3>
 
-                  <p className="text-xs text-gray-400 leading-relaxed font-sans">
+                  <p className="text-xs text-stone-600 leading-relaxed font-sans">
                     {currentLang === "ar" ? item.desc_ar : item.desc_en}
                   </p>
                 </div>
@@ -396,7 +635,7 @@ export default function App() {
       <BlogSection currentLang={currentLang} />
 
       {/* Brands Showcase Section (Authorized distributors grid) */}
-      <section className="py-20 px-4 md:px-8 bg-[#0a0a0a] border-t border-white/[0.03]" id="brands">
+      <section className="py-20 px-4 md:px-8 bg-stone-50 border-t border-stone-200/50" id="brands">
         <div className="max-w-7xl mx-auto space-y-12">
           
           <div className="text-center space-y-3">
@@ -404,13 +643,13 @@ export default function App() {
               <Sparkles size={11} />
               {currentLang === "ar" ? "الاعتمادات والعلامات العالمية" : "Accredited Global Partners"}
             </span>
-            <h3 className="text-xl md:text-2xl font-serif text-white tracking-wide font-medium">
+            <h3 className="text-xl md:text-2xl font-serif text-stone-900 tracking-wide font-medium">
               {currentLang === "ar" ? "متوفر عبر ديوان PGR للذهب" : "Available Through PGR UAE"}
             </h3>
-            <p className="text-xs text-gray-500 max-w-xl mx-auto leading-relaxed">
+            <p className="text-xs text-stone-500 max-w-xl mx-auto leading-relaxed">
               {currentLang === "ar"
                 ? "نحن وكيل وموزع معتمد لكبرى مصافي الذهب العالمية المعتمدة."
-                : "Authorized logistics and bullion desk partner for world-renowned certified gold refineries."}
+                : "Authorized logistics and trading conduit for world-renowned certified gold refineries."}
             </p>
           </div>
 
@@ -419,10 +658,10 @@ export default function App() {
             {BRANDS.map((brand, idx) => (
               <div
                 key={idx}
-                className="p-5 rounded-sm bg-[#111111]/60 border border-white/[0.02] flex flex-col justify-center items-center text-center space-y-2 group hover:border-white/10 transition-colors"
+                className="p-5 rounded-sm bg-white/70 border border-stone-200/50 flex flex-col justify-center items-center text-center space-y-2 group hover:border-[#c5a85c]/30 hover:bg-white transition-all duration-300"
                 title={brand.description}
               >
-                <span className="text-xs font-serif font-bold text-gray-300 group-hover:text-white transition-colors">
+                <span className="text-xs font-serif font-bold text-stone-700 group-hover:text-stone-900 transition-colors">
                   {brand.name}
                 </span>
                 <span className="text-[9px] font-mono text-gold-base/60 uppercase tracking-widest">
@@ -435,66 +674,12 @@ export default function App() {
         </div>
       </section>
 
-      {/* FAQ section — linked from /faq sitemap route */}
-      <section className="py-20 px-4 md:px-8 bg-[#0a0a0b] border-t border-white/[0.03]" id="faq">
-        <div className="max-w-3xl mx-auto space-y-8">
-          <div className="text-center space-y-3">
-            <span className="text-gold-base font-mono uppercase text-xs tracking-[0.3em] font-semibold block">
-              {currentLang === "ar" ? "الأسئلة الشائعة" : "Frequently Asked Questions"}
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-serif text-white font-medium">
-              {currentLang === "ar" ? "أسئلة شائعة حول سبائك الذهب والفضة" : "Bullion Quote Desk FAQ"}
-            </h2>
-          </div>
-          <div className="space-y-4 text-sm text-gray-400">
-            <div className="p-4 rounded border border-white/[0.04] bg-[#111]">
-              <h3 className="text-white font-medium mb-2">
-                {currentLang === "ar" ? "هل يوجد ضريبة قيمة مضافة على سبائك الذهب في دبي؟" : "Is there VAT on gold bullion in Dubai, UAE?"}
-              </h3>
-              <p>
-                {currentLang === "ar"
-                  ? "قد تختلف المعاملة الضريبية حسب نوع المنتج، حالة العميل، طريقة التسليم، والأنظمة المطبقة في دولة الإمارات. سيتم توضيح أي ضريبة أو رسوم ضمن عرض السعر النهائي قبل المتابعة."
-                  : "VAT/tax treatment may vary depending on product type, customer status, delivery method, and applicable UAE rules. Any VAT, tax, or fee will be confirmed in the final quote before proceeding."}
-              </p>
-            </div>
-            <div className="p-4 rounded border border-white/[0.04] bg-[#111]">
-              <h3 className="text-white font-medium mb-2">
-                {currentLang === "ar" ? "هل تضمنون إعادة الشراء؟" : "Do you guarantee buyback?"}
-              </h3>
-              <p>
-                {currentLang === "ar"
-                  ? "لا تقدم PGR UAE ضماناً لإعادة الشراء. يمكنك تقديم طلب عرض سعر لإعادة البيع، وتخضع أي عملية لتحقق المنتج، فحوصات الامتثال، ظروف السوق، الرسوم، وتأكيد المكتب النهائي."
-                  : "PGR UAE does not guarantee buyback. You may request a sell-back quote, subject to product verification, compliance checks, market conditions, fees, and final desk confirmation."}
-              </p>
-            </div>
-            <div className="p-4 rounded border border-white/[0.04] bg-[#111]">
-              <h3 className="text-white font-medium mb-2">
-                {currentLang === "ar" ? "هل المنتجات معتمدة؟" : "Are bullion products certified?"}
-              </h3>
-              <p>
-                {currentLang === "ar"
-                  ? "يتم توفير سبائك الذهب والفضة من مصافي عالمية معتمدة مع شهادات فحص ومواصفات المنتج حسب التوفر والتحقق من المكتب."
-                  : "Gold and silver bullion is sourced from accredited global refineries with assay certificates and product specifications, subject to availability and desk verification."}
-              </p>
-            </div>
-          </div>
-          <div className="text-center">
-            <button
-              onClick={() => handleOpenQuote()}
-              className="px-6 py-2.5 bg-gold-base hover:bg-amber-600 text-black text-xs font-semibold uppercase tracking-widest rounded transition-colors cursor-pointer"
-            >
-              {currentLang === "ar" ? "طلب عرض سعر مؤكد" : "Request Firm Quote"}
-            </button>
-          </div>
-        </div>
-      </section>
-
       {/* Footer component */}
       <Footer
         currentLang={currentLang}
         onNavigate={handleScrollToSection}
         onOpenAIChat={() => setIsAIChatOpen(true)}
-        onOpenQuote={() => handleOpenQuote()}
+        onOpenQuote={() => navigateTo("/request-quote")}
         onOpenLegalDoc={(docId) => {
           const rMap: Record<string, string> = {
             "terms": "/terms",
@@ -513,8 +698,8 @@ export default function App() {
           window.history.pushState(null, "", p);
           setActiveLegalDoc(docId);
         }}
-        onOpenClientDashboard={() => setIsClientDashboardOpen(true)}
-        onOpenAdminPortal={() => setIsAdminPortalOpen(true)}
+        onOpenClientDashboard={() => navigateTo("/dashboard")}
+        onOpenAdminPortal={() => navigateTo("/admin")}
       />
 
       {/* Floating Action Buttons for WhatsApp & AI Concierge */}
@@ -570,7 +755,7 @@ export default function App() {
         />
       )}
 
-      {/* MODAL: Secured Client Logistics and Certificate Checking */}
+      {/* MODAL: Secured Client Logistics and Certificate Checking (Legacy overlay backup) */}
       {isClientDashboardOpen && (
         <ClientDashboardModal
           currentLang={currentLang}
@@ -593,7 +778,7 @@ export default function App() {
           currentLang={currentLang}
           defaultDoc={activeLegalDoc}
           onClose={() => {
-            window.history.pushState(null, "", "/");
+            navigateTo("/");
             setActiveLegalDoc(null);
           }}
         />
@@ -606,6 +791,9 @@ export default function App() {
           onClose={() => setIsAIChatOpen(false)}
         />
       )}
+
+      {/* Database Telemetry & Security Panel */}
+      <DebugPanel currentLang={currentLang} />
 
     </div>
   );

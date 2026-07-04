@@ -4,8 +4,18 @@ import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 import { createClient } from "@supabase/supabase-js";
+import crypto from "crypto";
 
 dotenv.config();
+
+const SIGNATURE_SECRET = process.env.PGR_SIGNATURE_SECRET || "pgr-super-secret-signature-key-2026";
+
+function generateHMACSignature(payload: any, secret: string): string {
+  const hmac = crypto.createHmac("sha256", secret);
+  const message = `${payload.quoteId}|${payload.customerId}|${Number(payload.quotedPrice).toFixed(2)}|${payload.expiresAt}|${payload.status}|${payload.createdAt}`;
+  hmac.update(message);
+  return hmac.digest("hex");
+}
 
 const app = express();
 const PORT = 3000;
@@ -785,7 +795,15 @@ app.get("/api/prices", async (req, res) => {
 // Post Custom Inquiry / Quote request
 app.post("/api/quote", async (req, res) => {
   try {
-    const { name, email, phone, company, metalInterest, productCategory, weight, message, sourceLanguage } = req.body;
+    const name = req.body.name || req.body.fullName;
+    const email = req.body.email;
+    const phone = req.body.phone;
+    const company = req.body.company || req.body.companyName;
+    const metalInterest = req.body.metalInterest || req.body.metal || "both";
+    const productCategory = req.body.productCategory || req.body.productInterest || "General Bullion Consultation";
+    const weight = req.body.weight || req.body.weightPreference || "";
+    const message = req.body.message || "";
+    const sourceLanguage = req.body.sourceLanguage || (req.body.source === "website_request_quote_page" ? "en" : "en");
     
     if (!name || !email || !phone) {
       return res.status(400).json({ error: "Required fields missing (name, email, phone)" });
@@ -798,11 +816,11 @@ app.post("/api/quote", async (req, res) => {
       email,
       phone,
       company: company || "",
-      metal_interest: metalInterest || "both",
-      product_category: productCategory || "General Bullion Consultation",
-      weight_preference: weight || "",
-      message: message || "",
-      status: "Pending",
+      metal_interest: metalInterest,
+      product_category: productCategory,
+      weight_preference: weight,
+      message,
+      status: "New Request",
       created_at: new Date().toISOString()
     };
 
@@ -827,6 +845,125 @@ app.post("/api/quote", async (req, res) => {
     });
   } catch (err: any) {
     res.status(500).json({ error: "Failed to record bespoke quote inquiry", details: err.message });
+  }
+});
+
+// Production-safe health check
+app.get("/api/health", async (req, res) => {
+  try {
+    let dbStatus = "unreachable";
+    if (supabase) {
+      try {
+        const { data, error } = await supabase.from("products").select("id").limit(1);
+        if (!error) {
+          dbStatus = "reachable";
+        }
+      } catch (e) {
+        dbStatus = "error";
+      }
+    } else {
+      dbStatus = "simulation_active";
+    }
+
+    res.json({
+      status: "healthy",
+      api_reachable: true,
+      database_status: dbStatus,
+      latest_market_price_timestamp: new Date().toISOString(),
+      system_version: "2026.1"
+    });
+  } catch (err: any) {
+    res.status(500).json({ status: "degraded", error: "Health check error" });
+  }
+});
+
+// Server-side quote cryptographic signing endpoint
+app.post("/api/quote/sign", (req, res) => {
+  try {
+    const { quoteId, customerId, quotedPrice, expiresAt, status, createdAt } = req.body;
+    if (!quoteId || !quotedPrice || !expiresAt) {
+      return res.status(400).json({ error: "Required fields missing for signature payload" });
+    }
+    const signature = generateHMACSignature({
+      quoteId,
+      customerId: customerId || "anonymous",
+      quotedPrice,
+      expiresAt,
+      status: status || "Pending Confirmation",
+      createdAt: createdAt || new Date().toISOString()
+    }, SIGNATURE_SECRET);
+    
+    res.json({ success: true, signature });
+  } catch (err: any) {
+    res.status(500).json({ error: "Failed to generate security signature", details: err.message });
+  }
+});
+
+// Server-side quote acceptance endpoint
+app.post("/api/quote/accept", async (req, res) => {
+  try {
+    const { quoteId, customerId, quotedPrice, expiresAt, status, createdAt, signature } = req.body;
+    
+    // 1. Verify tampered signatures
+    const expectedSig = generateHMACSignature({ quoteId, customerId, quotedPrice, expiresAt, status, createdAt }, SIGNATURE_SECRET);
+    if (expectedSig !== signature) {
+      return res.status(400).json({ error: "Security Violation: Cryptographic signature mismatch. Quote price, ID, or expiry has been tampered with!" });
+    }
+
+    // 2. Check current DB server time against expires_at
+    const expiresTime = new Date(expiresAt).getTime();
+    const serverTime = Date.now();
+    if (serverTime > expiresTime) {
+      return res.status(400).json({ error: "This quote has expired due to market volatility countdown and can no longer be accepted." });
+    }
+
+    // 3. Reject status changes from browser-side manipulation
+    if (req.body.targetStatus && req.body.targetStatus !== "Customer Accepted") {
+      return res.status(400).json({ error: "Security Violation: Illegal state transition detected." });
+    }
+
+    // 4. Update Supabase if live
+    if (supabase) {
+      const { data: quote, error: fetchErr } = await supabase
+        .from("quote_requests")
+        .select("*")
+        .eq("id", quoteId)
+        .single();
+        
+      if (fetchErr || !quote) {
+        return res.status(404).json({ error: "Quote Request ticket not found in database." });
+      }
+
+      if (quote.status === "Customer Accepted") {
+        return res.status(400).json({ error: "Replay Attack Blocked: This quote has already been accepted and price is locked." });
+      }
+
+      const { error: quoteUpdateErr } = await supabase
+        .from("quote_requests")
+        .update({ status: "Customer Accepted", accepted_at: new Date().toISOString() })
+        .eq("id", quoteId);
+        
+      if (quoteUpdateErr) {
+        throw new Error("Failed to update quote request in DB: " + quoteUpdateErr.message);
+      }
+
+      const { error: orderUpdateErr } = await supabase
+        .from("orders")
+        .update({ status: "Customer Accepted", payment_status: "Pending" })
+        .eq("quote_id", quoteId);
+
+      if (orderUpdateErr) {
+        console.warn("Failed to update associated order in DB (might not exist yet):", orderUpdateErr.message);
+      }
+    }
+
+    res.json({
+      success: true,
+      message: "Quote accepted successfully and price is permanently locked.",
+      acceptedAt: new Date().toISOString()
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: "Server error validating quote acceptance", details: err.message });
   }
 });
 

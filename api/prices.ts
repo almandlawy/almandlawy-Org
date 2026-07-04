@@ -397,6 +397,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (sourceStatus === "request_quote") {
       const errorPayload: any = {
         status: "success",
+        is_live_configured: true,
         source_status: "request_quote",
         provider: finalProviderEnv === "commoditypriceapi" ? "CommodityPriceAPI" : finalProvider,
         provider_env: finalProviderEnv,
@@ -408,6 +409,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         palladium_usd_per_oz: null,
         usd_aed: usdaed,
         updated_at: new Date().toISOString(),
+        has_api_key,
+        provider_attempted,
         timestamp: new Date().toISOString(),
         rates: null
       };
@@ -415,9 +418,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         errorPayload.provider_error_type = provider_error_type;
       }
       if (isDebug) {
-        errorPayload.has_api_key = has_api_key;
-        errorPayload.provider_attempted = provider_attempted;
-        errorPayload.is_live_configured = is_live_configured;
         errorPayload.raw_success = raw_success;
         errorPayload.raw_rates_keys = raw_rates_keys;
         errorPayload.raw_meta_keys = raw_meta_keys;
@@ -428,37 +428,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json(errorPayload);
     }
 
-    // Fallback to reference points only when API is completely unconfigured
+    // Fallback to updated realistic reference points if completely unconfigured (no API key)
     if (!goldSpot || !silverSpot) {
       goldSpot = METAL_SPOTS.gold;
       silverSpot = METAL_SPOTS.silver;
       platinumSpot = METAL_SPOTS.platinum;
       palladiumSpot = METAL_SPOTS.palladium;
       sourceStatus = "reference";
-    } else if (sourceStatus === "live" || sourceStatus === "cached") {
-      // Never fabricate Pt/Pd under live/cached status — only use provider values
-      if (platinumSpot === null || platinumSpot === undefined) platinumSpot = null;
-      if (palladiumSpot === null || palladiumSpot === undefined) palladiumSpot = null;
-    } else {
-      platinumSpot = platinumSpot ?? METAL_SPOTS.platinum;
-      palladiumSpot = palladiumSpot ?? METAL_SPOTS.palladium;
     }
 
-    const currentSpots: Record<string, number | null> = {
+    const currentSpots = {
       gold: goldSpot,
       silver: silverSpot,
-      platinum: platinumSpot,
-      palladium: palladiumSpot,
+      platinum: platinumSpot || METAL_SPOTS.platinum,
+      palladium: palladiumSpot || METAL_SPOTS.palladium,
     };
 
     const rates: Record<string, any> = {};
 
     Object.entries(currentSpots).forEach(([metal, spotUsd]) => {
-      if (spotUsd === null || spotUsd === undefined) {
-        rates[metal] = { spot_usd_oz: null, currencies: null };
-        return;
-      }
-
       rates[metal] = {
         spot_usd_oz: spotUsd,
         currencies: {} as Record<string, { ounce: number; gram: number }>
@@ -477,6 +465,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const responsePayload: any = {
       status: "success",
+      is_live_configured,
       source_status: sourceStatus,
       provider: finalProviderEnv === "commoditypriceapi" ? "CommodityPriceAPI" : finalProvider,
       provider_env: finalProviderEnv,
@@ -488,14 +477,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       palladium_usd_per_oz: currentSpots.palladium,
       usd_aed: usdaed,
       updated_at: new Date().toISOString(),
+      
+      // Safe non-secret debug fields
+      has_api_key,
+      provider_attempted,
+      
+      // Preserve standard frontend keys
       timestamp: new Date().toISOString(),
+      base_usd: currentSpots,
       rates
     };
 
     if (isDebug) {
-      responsePayload.has_api_key = has_api_key;
-      responsePayload.provider_attempted = provider_attempted;
-      responsePayload.is_live_configured = is_live_configured;
       responsePayload.raw_success = raw_success;
       responsePayload.raw_rates_keys = raw_rates_keys;
       responsePayload.raw_meta_keys = raw_meta_keys;

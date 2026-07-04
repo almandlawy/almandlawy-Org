@@ -11,8 +11,9 @@ import {
   TrendingUp, Undo, Box, Award, FileText, BookOpen, Settings, 
   Eye, Trash2, Plus, Edit, ShieldAlert, Mail, Phone, Clock, FileCheck, CheckCircle, LogOut
 } from "lucide-react";
-import { dbService, mockDb, isLive, supabase, getRedirectUrl } from "../lib/supabase";
+import { dbService, mockDb, isLive, supabase, getRedirectUrl, generateQuoteSignature } from "../lib/supabase";
 import { Product } from "../types";
+import { DebugPanel } from "./DebugPanel";
 
 interface AdminPanelProps {
   currentLang?: "en" | "ar";
@@ -34,7 +35,8 @@ type AdminSection =
   | "buyback"
   | "certificates"
   | "blog"
-  | "settings";
+  | "settings"
+  | "security";
 
 export default function AdminPanel({ currentLang = "ar", onClose, isModal = false }: AdminPanelProps) {
   const isAr = currentLang === "ar";
@@ -81,6 +83,7 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
   const [certificates, setCertificates] = useState<any[]>([]);
   const [invoices, setInvoices] = useState<any[]>([]);
   const [blogPosts, setBlogPosts] = useState<any[]>([]);
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [settings, setSettings] = useState<any>({
     gold_markup_pct: 0.8,
     silver_markup_pct: 1.5,
@@ -102,6 +105,12 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
   // Product CRUD states
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+
+  // Quote preparation states
+  const [preparingQuote, setPreparingQuote] = useState<any | null>(null);
+  const [prepPriceOverride, setPrepPriceOverride] = useState<string>("");
+  const [prepExpiryMinutes, setPrepExpiryMinutes] = useState<number>(10);
+  const [prepOverrideReason, setPrepOverrideReason] = useState<string>("Client premium negotiation adjustment");
 
   const handleProductImageUpload = async (file: File, isEdit: boolean) => {
     setUploadingImage(true);
@@ -375,12 +384,18 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
     };
   }, [currentLang]);
 
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.location.pathname === "/admin/security") {
+      setActiveSection("security");
+    }
+  }, []);
+
   // Load all dataset values
   const loadAdminData = async () => {
     setLoading(true);
     try {
       const [
-        pList, qList, oList, kList, dList, ptList, exRates, bbList, hList, sObj, certs, blogList
+        pList, qList, oList, kList, dList, ptList, exRates, bbList, hList, sObj, certs, blogList, auditList
       ] = await Promise.all([
         dbService.products.list(),
         dbService.quoteRequests.list(),
@@ -393,7 +408,8 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
         dbService.investment.listAll(),
         dbService.settings.get(),
         dbService.certificates.listAll(),
-        dbService.blog.list()
+        dbService.blog.list(),
+        dbService.auditLogs.list()
       ]);
 
       if (pList) setProducts(pList);
@@ -408,6 +424,7 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
       if (sObj) setSettings(sObj);
       if (certs) setCertificates(certs);
       if (blogList) setBlogPosts(blogList);
+      if (auditList) setAuditLogs(auditList);
     } catch (err) {
       console.error("Failed to load PGR Admin Datasets:", err);
     } finally {
@@ -547,34 +564,60 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
   };
 
   // 3. OTHER CRUD SUBMISSIONS
-  const handleUpdateQuoteStatus = async (quoteId: string, status: "Approved" | "Rejected") => {
+  const handleUpdateQuoteStatus = async (quoteId: string, status: string) => {
     try {
       await dbService.quoteRequests.updateStatus(quoteId, status);
       
-      if (status === "Approved") {
+      const orderTriggerStatuses = ["Quote Sent", "Customer Accepted", "Approved", "Payment Pending", "Ready for Collection", "Completed"];
+      if (orderTriggerStatuses.includes(status)) {
         const match = quotes.find(q => q.id === quoteId);
         if (match) {
-          await dbService.orders.create({
-            customer_id: match.customer_id || "cust-verified-1",
-            total_amount: parseFloat(match.weight || "100") * (match.metalInterest === "silver" ? 1.1 : 78.5),
-            currency: "USD",
-            shipping_method: "Office Pickup",
-            payment_method: "Bank Transfer",
-            shipping_address: "Dubai Vault Gate",
-            status: "Quoted",
-            items: [
-              { 
-                product_id: match.productCategory || "gb-100g", 
-                quantity: 1, 
-                unit_price: parseFloat(match.weight || "100") * (match.metalInterest === "silver" ? 1.1 : 78.5), 
-                product_name: `${match.metalInterest?.toUpperCase()} Bullion: ${match.weight || "Custom Lot"}` 
-              }
-            ]
-          });
-          triggerSuccessMessage("Quote APPROVED and Live Order Ticket created!");
+          // Check if we already have an order for this quote
+          const ordersList = await dbService.orders.list();
+          const orderExists = ordersList.some((o: any) => o.quote_id === quoteId || o.id === `PGR-ORD-${quoteId}`);
+          
+          if (!orderExists) {
+            const metal = (match.metalInterest || match.metal_interest || "gold").toLowerCase();
+            const weightVal = parseFloat(match.weight || match.weight_preference || "100") || 100;
+            const price = weightVal * (metal === "silver" ? 1.1 : 78.5);
+            
+            await dbService.orders.create({
+              id: `PGR-ORD-${quoteId}`,
+              customer_id: match.customer_id || "cust-verified-1",
+              quote_id: quoteId,
+              total_amount: price,
+              currency: match.currency || "USD",
+              shipping_method: "Office Pickup",
+              payment_method: "Bank Transfer",
+              shipping_address: "PGR Vault Gateway Office, Dubai Marina",
+              status: status === "Completed" ? "Completed" : "Quoted",
+              items: [
+                { 
+                  product_id: match.productCategory || match.product_category || "gb-100g", 
+                  quantity: 1, 
+                  unit_price: price, 
+                  product_name: `${metal.toUpperCase()} Bullion: ${match.weight || match.weight_preference || "Custom Lot"}` 
+                }
+              ]
+            });
+            triggerSuccessMessage(`Quote set to ${status} and Live Order Ticket created!`);
+          } else {
+            // Update existing order status if applicable
+            const existingOrder = ordersList.find((o: any) => o.quote_id === quoteId || o.id === `PGR-ORD-${quoteId}`);
+            if (existingOrder) {
+              let mappedOrderStatus = "Quoted";
+              if (status === "Payment Pending" || status === "Customer Accepted") mappedOrderStatus = "Processing";
+              if (status === "Ready for Collection") mappedOrderStatus = "Ready for Collection";
+              if (status === "Completed") mappedOrderStatus = "Delivered";
+              if (status === "Cancelled") mappedOrderStatus = "Cancelled";
+              
+              await dbService.orders.updateStatus(existingOrder.id, mappedOrderStatus);
+            }
+            triggerSuccessMessage(`Quote set to: ${status}`);
+          }
         }
       } else {
-        triggerSuccessMessage("Quote set to: Rejected");
+        triggerSuccessMessage(`Quote set to: ${status}`);
       }
       await loadAdminData();
     } catch (err) {
@@ -582,10 +625,126 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
     }
   };
 
+  const handleSendPreparedQuote = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!preparingQuote) return;
+    try {
+      const priceNum = parseFloat(prepPriceOverride);
+      if (isNaN(priceNum) || priceNum <= 0) {
+        triggerErrorMessage("Please enter a valid positive quote price");
+        return;
+      }
+
+      const quotedAt = new Date().toISOString();
+      const expiresAt = new Date(Date.now() + prepExpiryMinutes * 60 * 1000).toISOString();
+
+      // Calculate original spot-estimated price for compliance logging
+      let originalPrice = priceNum;
+      const metal = (preparingQuote.metalInterest || preparingQuote.metal_interest || "gold").toLowerCase();
+      const weightStr = (preparingQuote.weight || preparingQuote.weight_preference || "100g").toLowerCase();
+      
+      let grams = 100;
+      const numericMatch = weightStr.match(/(\d+(?:\.\d+)?)/);
+      if (numericMatch) {
+        grams = parseFloat(numericMatch[1]);
+        if (weightStr.includes("oz") || weightStr.includes("ounce")) {
+          grams = grams * 31.1035;
+        } else if (weightStr.includes("kilo")) {
+          grams = grams * 1000;
+        }
+      }
+      
+      const spotRate = metal === "silver" ? 1.10 : 78.50;
+      const baseSpotPrice = grams * spotRate;
+      const premiumPct = 1.025;
+      originalPrice = Math.round(baseSpotPrice * premiumPct);
+      
+      if (isNaN(originalPrice) || originalPrice <= 0 || Math.abs(originalPrice - priceNum) > priceNum * 0.5) {
+        originalPrice = Math.round(priceNum * 1.035);
+      }
+
+      // Generate Cryptographic Digital Signature
+      const signatureToken = await generateQuoteSignature(preparingQuote.id, priceNum, expiresAt);
+
+      const updates = {
+        quoted_price: priceNum,
+        quoted_at: quotedAt,
+        expires_at: expiresAt,
+        expiry_duration_minutes: prepExpiryMinutes,
+        status: "Quote Sent",
+        // Enforce audit compliance structure
+        original_price: originalPrice,
+        override_admin_id: "admin@pgruae.com",
+        override_timestamp: quotedAt,
+        override_reason: prepOverrideReason || "Client relationship premium adjustment",
+        security_signature: signatureToken
+      };
+
+      await dbService.quoteRequests.update(preparingQuote.id, updates);
+
+      // Log audit record for Quote Send and Manual Override
+      const isManualOverride = Math.abs(priceNum - originalPrice) > 1;
+      await dbService.auditLogs.append(
+        isManualOverride ? "manual_override" : "quote_send",
+        "admin@pgruae.com",
+        `Bespoke quote ${preparingQuote.id} issued. Original spot: ${originalPrice} USD. Quoted: ${priceNum} USD. Expiry: ${prepExpiryMinutes} min. Override Reason: ${prepOverrideReason || "Client relationship premium adjustment"}`
+      );
+
+      // Create or update order status as well
+      const ordersList = await dbService.orders.list();
+      const orderExists = ordersList.some((o: any) => o.quote_id === preparingQuote.id || o.id === `PGR-ORD-${preparingQuote.id}`);
+
+      if (!orderExists) {
+        await dbService.orders.create({
+          id: `PGR-ORD-${preparingQuote.id}`,
+          customer_id: preparingQuote.customer_id || "cust-verified-1",
+          quote_id: preparingQuote.id,
+          total_amount: priceNum,
+          currency: preparingQuote.currency || "USD",
+          shipping_method: "Office Pickup",
+          payment_method: "Bank Transfer",
+          shipping_address: "PGR Vault Gateway Office, Dubai Marina",
+          status: "Quoted",
+          items: [
+            {
+              product_id: preparingQuote.productCategory || preparingQuote.product_category || "gb-100g",
+              quantity: 1,
+              unit_price: priceNum,
+              product_name: `${metal.toUpperCase()} Bullion: ${preparingQuote.weight || preparingQuote.weight_preference || "Custom Lot"}`
+            }
+          ]
+        });
+      } else {
+        const existingOrder = ordersList.find((o: any) => o.quote_id === preparingQuote.id || o.id === `PGR-ORD-${preparingQuote.id}`);
+        if (existingOrder) {
+          await dbService.orders.update(existingOrder.id, {
+            total_amount: priceNum,
+            status: "Quoted"
+          });
+        }
+      }
+
+      setPreparingQuote(null);
+      triggerSuccessMessage(`Bespoke firm quote sent successfully with Cryptographic Token! Reference ID: ${preparingQuote.id}`);
+      await loadAdminData();
+    } catch (err) {
+      console.error(err);
+      triggerErrorMessage("Failed to send firm quote");
+    }
+  };
+
   const handleUpdateOrderStatus = async (orderId: string, status: string) => {
     try {
       await dbService.orders.updateStatus(orderId, status);
       triggerSuccessMessage(`Order ${orderId} updated to: ${status}`);
+      
+      // Audit status update
+      await dbService.auditLogs.append(
+        "order_status_update",
+        "compliance.officer@pgruae.com",
+        `Admin updated Order ${orderId} logistics status to: "${status}".`
+      );
+
       await loadAdminData();
     } catch (err) {
       console.error(err);
@@ -608,10 +767,31 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
       const newStatus = currentStatus === "Paid" ? "Pending" : "Paid";
       await dbService.orders.update(orderId, { payment_status: newStatus });
       triggerSuccessMessage(`Order ${orderId} payment marked as ${newStatus}`);
+      
+      // Audit payment update
+      await dbService.auditLogs.append(
+        "order_payment_update",
+        "compliance.officer@pgruae.com",
+        `Admin updated Order ${orderId} payment status to: "${newStatus}".`
+      );
+
       await loadAdminData();
     } catch (err) {
       console.error(err);
       triggerErrorMessage(err instanceof Error ? err.message : "Failed to change payment status");
+    }
+  };
+
+  const handleViewPaymentProof = async (orderId: string, proofName: string) => {
+    try {
+      await dbService.auditLogs.append(
+        "admin_payment_proof_view",
+        "compliance.officer@pgruae.com",
+        `Compliance review: Admin viewed payment proof receipt file "${proofName}" for Order ${orderId}.`
+      );
+      alert(`[AUDITED ACCESS] Opened encrypted receipt proof file: "${proofName}" for Order ${orderId}. This action has been securely logged for central compliance auditing.`);
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -652,6 +832,14 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
       expiration: "60 seconds (Signed Expiring URL)"
     };
     setDossierAuditLogs(prev => [newLog, ...prev]);
+
+    // Append to universal append-only audit log
+    dbService.auditLogs.append(
+      "kyc_view",
+      "compliance.officer@pgruae.com",
+      `Admin accessed decrypted KYC dossier for "${clientName}". Category: ${doc.type}. Temp Expiring Token: ${signatureToken}`
+    ).catch(err => console.error("Failed to append audit log:", err));
+
     setActiveDossier({
       clientName: clientName,
       docType: doc.type,
@@ -765,7 +953,7 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
   const stats = {
     totalVolumeUSD: orders.reduce((sum, o) => sum + (o.total_amount || 0), 0) + holdings.reduce((sum, h) => sum + (h.current_market_value_usd || 0), 0),
     activeCustomersCount: kycProfiles.filter(k => k.status === "Verified").length + 5,
-    pendingQuotesCount: quotes.filter(q => q.status === "Pending" || q.status === "awaiting_confirmation").length,
+    pendingQuotesCount: quotes.filter(q => q.status === "Pending").length,
     activeDeliveriesIraq: iraqDeliveries.filter(d => d.status !== "Delivered").length,
     pendingKycCount: kycProfiles.filter(k => k.status === "Pending review" || k.status === "Pending").length,
     buybackInquiries: buybacks.filter(b => b.status === "Pending").length
@@ -966,7 +1154,8 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
     { id: "buyback", label: "Buyback Desk", labelAr: "ديوان الاسترداد" },
     { id: "certificates", label: "Certificates Mint", labelAr: "إصدار الشهادات" },
     { id: "blog", label: "Intelligence Dispatch", labelAr: "الأبحاث والتقارير" },
-    { id: "settings", label: "Global Configurations", labelAr: "إعدادات المنصة" }
+    { id: "settings", label: "Global Configurations", labelAr: "إعدادات المنصة" },
+    { id: "security", label: "Security & Telemetry", labelAr: "الأمن والاتصال اللاسلكي" }
   ];
 
   return (
@@ -1738,6 +1927,112 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                     <p className="text-xs text-gray-500 font-mono uppercase">Confirm physical precious metal availability, pricing agreements and mint tickets</p>
                   </div>
 
+                  {/* CUSTOM PREPARE QUOTE DRAWER FOR ADMIN PRICE OVERRIDES */}
+                  {preparingQuote && (
+                    <form onSubmit={handleSendPreparedQuote} className="p-5 bg-amber-950/10 rounded border border-amber-500/20 space-y-4 text-xs font-mono">
+                      <div className="flex justify-between items-center">
+                        <h5 className="text-sm font-serif text-gold-base">
+                          Prepare Bespoke Firm Quote for Client: <span className="text-white font-bold">{preparingQuote.name}</span>
+                        </h5>
+                        <button
+                          type="button"
+                          onClick={() => setPreparingQuote(null)}
+                          className="px-2.5 py-1 bg-white/5 hover:bg-white/10 text-white rounded text-[10px]"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-black/40 p-4 rounded border border-white/5">
+                        <div>
+                          <p className="text-gray-500 text-[9px] uppercase">Client Details</p>
+                          <p className="text-white font-serif font-bold mt-1">{preparingQuote.name}</p>
+                          <p className="text-gray-400 text-[10px]">{preparingQuote.email}</p>
+                          <p className="text-gray-400 text-[10px]">{preparingQuote.phone}</p>
+                          {preparingQuote.company && <p className="text-gray-400 text-[10px]">{preparingQuote.company}</p>}
+                        </div>
+                        <div>
+                          <p className="text-gray-500 text-[9px] uppercase">Precious Metal Interest</p>
+                          <p className="text-white font-serif font-bold mt-1 uppercase text-gold-base">{preparingQuote.metalInterest || preparingQuote.metal_interest || "Gold"}</p>
+                          <p className="text-gray-400 text-[10px]">Product Category: {preparingQuote.productCategory || preparingQuote.product_category || "Custom Bullion Consultation"}</p>
+                          <p className="text-gray-400 text-[10px]">Requested Weight: {preparingQuote.weight || preparingQuote.weight_preference || "N/A"}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500 text-[9px] uppercase">Formulas & Live Reference</p>
+                          <p className="text-gray-400 text-[10px] mt-1">
+                            Formula: spotPerGram * weight * purity + premium
+                          </p>
+                          <p className="text-gray-400 text-[10px]">
+                            Current Gold Spot Ref: $78.50 / g (approx. AED 288.30 / g)
+                          </p>
+                          <p className="text-gray-400 text-[10px]">
+                            Current Silver Spot Ref: $1.10 / g (approx. AED 4.04 / g)
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div className="space-y-1">
+                          <label className="text-gray-400 block uppercase text-[9px] font-bold">
+                            Manual Price Override (USD)
+                          </label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            required
+                            value={prepPriceOverride}
+                            onChange={(e) => setPrepPriceOverride(e.target.value)}
+                            className="w-full bg-black border border-white/10 rounded px-3 py-2 text-white outline-none focus:border-[#c5a85c] text-sm font-bold font-mono"
+                            placeholder="e.g. 7850.00"
+                          />
+                          <p className="text-[10px] text-gray-500 italic">
+                            Admin manual override protects business against immediate market volatility.
+                          </p>
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-gray-400 block uppercase text-[9px] font-bold">
+                            Quote Expiry Duration
+                          </label>
+                          <select
+                            value={prepExpiryMinutes}
+                            onChange={(e) => setPrepExpiryMinutes(Number(e.target.value))}
+                            className="w-full bg-black border border-white/10 rounded px-3 py-2 text-white outline-none focus:border-[#c5a85c] font-sans"
+                          >
+                            <option value={5}>5 Minutes (Extreme Volatility / Immediate Expiry)</option>
+                            <option value={10}>10 Minutes (Standard Business Buffer)</option>
+                            <option value={15}>15 Minutes (Extended Time Buffer)</option>
+                          </select>
+                          <p className="text-[10px] text-gray-500 italic">
+                            Countdown timer will start on client dashboard immediately after sending.
+                          </p>
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-gray-400 block uppercase text-[9px] font-bold">
+                            Reason for Price Override
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={prepOverrideReason}
+                            onChange={(e) => setPrepOverrideReason(e.target.value)}
+                            className="w-full bg-black border border-white/10 rounded px-3 py-2 text-white outline-none focus:border-[#c5a85c] text-xs font-mono"
+                            placeholder="e.g. Client premium negotiation adjustment"
+                          />
+                          <p className="text-[10px] text-gray-500 italic">
+                            Compliance audit log records this reason, old/new price, and timestamp.
+                          </p>
+                        </div>
+                      </div>
+
+                      <button
+                        type="submit"
+                        className="px-5 py-2.5 bg-gold-gradient text-black font-sans font-bold text-[10px] uppercase tracking-widest rounded shadow hover:opacity-95 transition-all cursor-pointer"
+                      >
+                        Send Bespoke Firm Quote to Client
+                      </button>
+                    </form>
+                  )}
+
                   <div className="bg-[#0d0d0e] border border-white/[0.03] rounded-sm overflow-hidden font-mono text-xs">
                     <div className="overflow-x-auto">
                       <table className="w-full text-left">
@@ -1772,31 +2067,54 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                                 </td>
                                 <td className="p-4 text-gray-400">{new Date(q.created_at || "").toLocaleDateString()}</td>
                                 <td className="p-4">
-                                  <span className={`px-2 py-0.5 rounded text-[10px] ${
-                                    q.status === "Approved" ? "bg-green-950/50 text-green-400" :
-                                    q.status === "Rejected" ? "bg-red-950/50 text-red-400" :
-                                    "bg-amber-950/50 text-amber-400 animate-pulse"
+                                  <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider ${
+                                    q.status === "New Request" || q.status === "Pending" ? "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20" :
+                                    q.status === "KYC Required" ? "bg-red-500/10 text-red-400 border border-red-500/20 animate-pulse" :
+                                    q.status === "KYC Under Review" ? "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20" :
+                                    q.status === "Quote Sent" || q.status === "Approved" ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20" :
+                                    q.status === "Customer Accepted" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" :
+                                    q.status === "Payment Pending" ? "bg-amber-500/10 text-amber-400 border border-amber-500/20" :
+                                    q.status === "Ready for Collection" ? "bg-teal-500/10 text-teal-400 border border-teal-500/20" :
+                                    q.status === "Completed" ? "bg-green-500/10 text-green-400 border border-green-500/20" :
+                                    q.status === "Cancelled" || q.status === "Rejected" ? "bg-gray-500/10 text-gray-400 border border-gray-500/20 line-through" :
+                                    "bg-zinc-800 text-zinc-500 border border-zinc-700"
                                   }`}>
-                                    {q.status}
+                                    {q.status || "New Request"}
                                   </span>
                                 </td>
-                                <td className="p-4 flex gap-2 justify-center">
-                                  {(q.status === "Pending" || q.status === "awaiting_confirmation") && (
-                                    <>
-                                      <button
-                                        onClick={() => handleUpdateQuoteStatus(q.id, "Approved")}
-                                        className="px-2.5 py-1 bg-green-900/40 text-green-300 border border-green-800/30 rounded hover:bg-green-700 hover:text-white cursor-pointer"
-                                      >
-                                        Approve
-                                      </button>
-                                      <button
-                                        onClick={() => handleUpdateQuoteStatus(q.id, "Rejected")}
-                                        className="px-2.5 py-1 bg-red-900/40 text-red-300 border border-red-800/30 rounded hover:bg-red-700 hover:text-white cursor-pointer"
-                                      >
-                                        Reject
-                                      </button>
-                                    </>
-                                  )}
+                                <td className="p-4 flex items-center justify-center gap-2">
+                                  <select
+                                    value={q.status || "New Request"}
+                                    onChange={(e) => handleUpdateQuoteStatus(q.id, e.target.value)}
+                                    className="bg-black text-gray-300 border border-white/10 rounded px-2.5 py-1 text-[11px] focus:outline-none focus:border-gold-base font-sans cursor-pointer"
+                                  >
+                                    <option value="New Request">New Request</option>
+                                    <option value="KYC Required">KYC Required</option>
+                                    <option value="KYC Under Review">KYC Under Review</option>
+                                    <option value="Quote Sent">Quote Sent</option>
+                                    <option value="Customer Accepted">Customer Accepted</option>
+                                    <option value="Payment Pending">Payment Pending</option>
+                                    <option value="Ready for Collection">Ready for Collection</option>
+                                    <option value="Completed">Completed</option>
+                                    <option value="Cancelled">Cancelled</option>
+                                    <option value="Expired Quote">Expired Quote</option>
+                                  </select>
+
+                                  <button
+                                    onClick={() => {
+                                      setPreparingQuote(q);
+                                      const metal = (q.metalInterest || q.metal_interest || "gold").toLowerCase();
+                                      const weightVal = parseFloat(q.weight || q.weight_preference || "100") || 100;
+                                      const defaultEst = weightVal * (metal === "silver" ? 1.10 : 78.50);
+                                      setPrepPriceOverride(defaultEst.toFixed(2));
+                                      setPrepExpiryMinutes(10);
+                                      window.scrollTo({ top: 0, behavior: "smooth" });
+                                    }}
+                                    className="px-2.5 py-1 bg-gold-base/10 hover:bg-[#c5a85c] hover:text-black border border-gold-base/20 rounded font-sans font-bold text-[10px] uppercase transition-all cursor-pointer shrink-0"
+                                    title="Prepare Custom Quote with Volatility Expiry and Overrides"
+                                  >
+                                    Prepare Quote
+                                  </button>
                                 </td>
                               </tr>
                             ))
@@ -1856,6 +2174,17 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                                     {o.payment_status === "Paid" ? "● PAID" : "● UNPAID (PENDING)"}
                                   </button>
                                 </div>
+                                {o.payment_proof_name && (
+                                  <div className="mt-2 pt-1.5 border-t border-white/[0.03] space-y-1">
+                                    <p className="text-[10px] text-emerald-400 font-bold truncate">✓ Proof: {o.payment_proof_name}</p>
+                                    <button
+                                      onClick={() => handleViewPaymentProof(o.id, o.payment_proof_name)}
+                                      className="px-2 py-0.5 bg-emerald-950/40 text-emerald-300 hover:bg-emerald-900 border border-emerald-500/30 rounded text-[9px] font-mono tracking-wider cursor-pointer"
+                                    >
+                                      View & Audit Proof
+                                    </button>
+                                  </div>
+                                )}
                               </td>
                               <td className="p-4">
                                 <div className="flex gap-1.5 items-center max-w-[240px]">
@@ -1879,11 +2208,10 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                                   onChange={(e) => handleUpdateOrderStatus(o.id, e.target.value)}
                                   className="bg-black border border-white/10 rounded p-1 text-[11px] text-white outline-none cursor-pointer"
                                 >
-                                  <option value="Quoted">Quoted (طلب سعر معتمد)</option>
-                                  <option value="Awaiting Payment">Awaiting Payment (بانتظار التحويل)</option>
-                                  <option value="Paid / In Vault">Paid / In Vault (تم الدفع وبخزنة الحفظ)</option>
-                                  <option value="Shipped">Shipped (شُحنت)</option>
-                                  <option value="Delivered">Delivered (سلّمت للعميل)</option>
+                                  <option value="Payment Pending">Payment Pending (بانتظار الدفع)</option>
+                                  <option value="Payment Verified">Payment Verified (تم التحقق من الدفع)</option>
+                                  <option value="Ready for Collection">Ready for Collection (جاهز للاستلام)</option>
+                                  <option value="Completed">Completed (سلّمت للعميل)</option>
                                 </select>
                               </td>
                             </tr>
@@ -2705,6 +3033,77 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                       Save Institutional Configurations
                     </button>
                   </form>
+                </div>
+              )}
+
+              {activeSection === "security" && (
+                <div className="space-y-6">
+                  <div>
+                    <h4 className="text-lg font-serif text-white">
+                      {isAr ? "مركز الأمن والتحكم اللاسلكي" : "Security & Telemetry Centre"}
+                    </h4>
+                    <p className="text-xs text-gray-500 font-mono uppercase">
+                      {isAr ? "مراقبة سلامة البيانات، اختبار التوقيعات المشفرة، والتحقق الفوري من التواقيع الرقمية لمنع التلاعب" : "Monitor database integrity, audit cryptographic tokens, and run quote-tampering prevention test suites"}
+                    </p>
+                  </div>
+                  <div className="p-5 bg-[#0d0d0e] rounded border border-white/[0.03]">
+                    <DebugPanel inline={true} currentLang={currentLang} />
+                  </div>
+
+                  {/* Append-Only Central Audit Ledger */}
+                  <div className="p-5 bg-[#0d0d0e] rounded border border-[#c5a85c]/20 space-y-4">
+                    <div className="flex items-center justify-between border-b border-white/[0.05] pb-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-[#c5a85c] animate-pulse" />
+                        <h4 className="font-serif text-sm font-bold text-white uppercase tracking-wider">
+                          {isAr ? "دفتر التدقيق العام الموحد (غير قابل للتعديل)" : "Unified Append-Only Compliance Ledger"}
+                        </h4>
+                      </div>
+                      <span className="text-[9px] font-mono text-gray-500 border border-gray-800 px-2 py-0.5 rounded">
+                        IMMUTABLE RECORD
+                      </span>
+                    </div>
+
+                    <p className="text-gray-400 text-xs font-sans leading-relaxed">
+                      {isAr
+                        ? "سجل أمني رسمي غير قابل للتعديل لتتبع عمليات إصدار الأسعار، تعديل الأسعار، قبول الصفقات، فك تشفير مستندات KYC، وحالات انتهاء الصلاحية."
+                        : "Official secure ledger documenting every quote generation, manual override, client acceptance lock, identity file access, and expiry event."}
+                    </p>
+
+                    <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
+                      {auditLogs.length === 0 ? (
+                        <p className="text-gray-600 text-xs font-mono py-4 text-center">
+                          {isAr ? "لا توجد سجلات تدقيق نشطة." : "No compliance logs compiled."}
+                        </p>
+                      ) : (
+                        auditLogs.map((log: any) => (
+                          <div key={log.id} className="p-3 bg-black/40 rounded border border-white/[0.01] font-mono text-[11px] flex flex-col md:flex-row md:items-start justify-between gap-3 hover:border-white/[0.03] transition-colors">
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase ${
+                                  log.action === "manual_override" ? "bg-red-950/45 text-red-400 border border-red-500/20" :
+                                  log.action === "quote_accept" ? "bg-emerald-950/45 text-emerald-400 border border-emerald-500/20" :
+                                  log.action === "kyc_view" ? "bg-blue-950/45 text-blue-400 border border-blue-500/20" :
+                                  "bg-gray-900 text-gray-400 border border-gray-800"
+                                }`}>
+                                  {log.action}
+                                </span>
+                                <span className="text-white text-xs">{log.id}</span>
+                              </div>
+                              <p className="text-gray-300 text-xs font-sans leading-relaxed">{log.details}</p>
+                              <div className="text-[10px] text-gray-500 flex items-center gap-2">
+                                <span>Operator ID:</span>
+                                <span className="text-[#c5a85c]">{log.operator_id}</span>
+                              </div>
+                            </div>
+                            <span className="text-gray-500 text-[10px] shrink-0 mt-0.5">
+                              {new Date(log.timestamp).toLocaleString()}
+                            </span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
 

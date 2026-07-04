@@ -66,10 +66,10 @@ export default function LiveMarket({
 
       (["gold", "silver", "platinum", "palladium"] as const).forEach((metal) => {
         const metalData = rates[metal];
-        const currentPrice = metalData?.spot_usd_oz ?? undefined;
+        const currentPrice = metalData ? metalData.spot_usd_oz : undefined;
         const previousPrice = lastPrices[metal];
 
-        if (currentPrice != null && currentPrice > 0 && currentPrice !== previousPrice) {
+        if (currentPrice && currentPrice !== previousPrice) {
           changed = true;
           // Append new price
           const list = [...(updatedHistory[metal] || [])];
@@ -143,54 +143,45 @@ export default function LiveMarket({
 
   const getPriceData = (metal: "gold" | "silver" | "platinum" | "palladium") => {
     if (!rates) return { ounce: 0, gram: 0 };
-    const metalData = rates[metal];
-    if (
-      !metalData ||
-      metalData.spot_usd_oz === null ||
-      metalData.spot_usd_oz === undefined ||
-      !metalData.currencies
-    ) {
-      return { ounce: 0, gram: 0 };
-    }
     const cur = selectedCurrency as any;
-    return metalData.currencies[cur] || { ounce: 0, gram: 0 };
+    return rates[metal].currencies[cur] || { ounce: 0, gram: 0 };
   };
 
   const currencies = ["AED", "USD", "EUR", "GBP", "SAR"];
 
   return (
-    <section className="py-24 px-4 md:px-8 border-t border-white/[0.03] bg-[#070707] relative" id="market" style={{ direction: currentLang === "ar" ? "rtl" : "ltr" }}>
+    <section className="py-24 px-4 md:px-8 border-t border-soft-border bg-brand-bg relative" id="market" style={{ direction: currentLang === "ar" ? "rtl" : "ltr" }}>
       <div className="max-w-7xl mx-auto space-y-16">
         
         {/* Title Container */}
-        <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-6 border-b border-white/[0.04] pb-8">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-6 border-b border-soft-border pb-8">
           <div className="space-y-3">
-            <span className="text-gold-base font-mono uppercase text-xs tracking-[0.25em] font-semibold flex items-center gap-2">
-              <Sparkles size={12} />
+            <span className="text-gold-base font-mono uppercase text-xs tracking-[0.25em] font-bold flex items-center gap-2">
+              <Sparkles size={12} className="text-olive-accent" />
               {currentLang === "ar" ? "لوحة الأسعار الاسترشادية للمعادن الثمينة" : "Indicative Precious Metals Price Board"}
             </span>
-            <h2 className="text-3xl sm:text-4xl font-serif tracking-tight text-white font-medium">
-              {currentLang === "ar" ? "لوحة الأسعار الاسترشادية للمعادن الثمينة" : "Indicative Precious Metals Price Board"}
+            <h2 className="text-3xl sm:text-4xl font-serif tracking-tight text-text-charcoal font-medium">
+              {currentLang === "ar" ? "الأسعار الفورية للمعادن الثمينة" : "Precious Metals Spot Pricing"}
             </h2>
-            <p className="text-sm text-gray-400 max-w-xl">
+            <p className="text-sm text-text-secondary max-w-xl">
               {currentLang === "ar" 
-                ? "أسعار استرشادية للذهب والفضة. يتم تأكيد السعر النهائي قبل الدفع حسب توفر المنتج وحركة السوق." 
-                : "Indicative gold and silver reference prices. Final price is confirmed before payment based on product availability and market movement."}
+                ? "أسعار استرشادية للذهب والفضة. يتم تأكيد السعر النهائي المعتمد عبر ديوان المبيعات قبل إرسال الحوالة." 
+                : "Indicative live spot rates for institutional and private gold and silver desk allocation. Exact price locks are validated directly with our Dubai desk."}
             </p>
           </div>
 
           {/* Currency Switcher & Refresh buttons */}
           <div className="flex flex-wrap items-center gap-3">
             {rates && (
-              <div className="flex bg-[#111111]/80 rounded border border-white/[0.05] p-1">
+              <div className="flex bg-brand-card rounded border border-soft-border p-1">
                 {currencies.map((cur) => (
                   <button
                     key={cur}
                     onClick={() => onChangeCurrency(cur)}
-                    className={`px-3 py-1.5 rounded-sm text-xs font-semibold tracking-wider transition-all cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-sm text-xs font-bold tracking-wider transition-all cursor-pointer ${
                       selectedCurrency === cur
-                        ? "bg-gold-base text-black shadow-[0_0_12px_rgba(212,175,55,0.2)]"
-                        : "text-gray-400 hover:text-white"
+                        ? "bg-gold-base text-text-charcoal shadow-sm"
+                        : "text-text-secondary hover:text-text-charcoal"
                     }`}
                   >
                     {cur}
@@ -202,7 +193,7 @@ export default function LiveMarket({
             {rates && (
               <button
                 onClick={onRefresh}
-                className={`p-2.5 rounded bg-white/[0.02] border border-white/[0.05] hover:border-gold-base/30 text-gray-400 hover:text-white transition-colors cursor-pointer ${
+                className={`p-2.5 rounded bg-brand-card border border-soft-border hover:border-gold-base text-text-secondary hover:text-text-charcoal transition-all cursor-pointer shadow-sm ${
                   isRefreshing ? "animate-spin text-gold-base" : ""
                 }`}
                 title="Force market sync"
@@ -212,6 +203,21 @@ export default function LiveMarket({
             )}
           </div>
         </div>
+
+        {/* Warning banner when live API pricing is unavailable/stale */}
+        {rates && rates.source_status !== "live" && (
+          <div className="bg-soft-danger border border-gold-base/30 text-text-charcoal rounded p-4 font-mono text-xs sm:text-sm flex items-center gap-3 shadow-sm">
+            <span className="flex h-2 w-2 relative">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gold-base opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-gold-dark"></span>
+            </span>
+            <span className="font-bold">
+              {currentLang === "ar"
+                ? "مرجع السوق المباشر غير متوفر مؤقتًا. يرجى طلب عرض سعر معتمد من مكتبنا الإقليمي."
+                : "Live market reference temporarily unavailable. Please request a firm quote via our Dubai HQ."}
+            </span>
+          </div>
+        )}
 
         {/* Live Grid Display */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -226,48 +232,43 @@ export default function LiveMarket({
             // Verify if this specific metal has a live spot price available
             const isMetalLive = !!(rates && 
               rates[metal] && 
-              rates[metal].spot_usd_oz !== null &&
-              rates[metal].spot_usd_oz !== undefined &&
+              rates[metal].spot_usd_oz !== null && 
               rates[metal].spot_usd_oz > 0 && 
-              (
-                (isGold || isSilver) 
-                  ? (rates.source_status === "live" || rates.source_status === "cached")
-                  : (rates.source_status === "live" || rates.source_status === "cached")
-              )
+              rates.source_status === "live"
             );
 
             // Setup border flash effect
-            let flashClass = "border-white/[0.04]";
-            if (rates && isMetalLive && flash === "up") flashClass = "border-emerald-500/50 shadow-[0_0_20px_rgba(16,185,129,0.1)]";
-            if (rates && isMetalLive && flash === "down") flashClass = "border-rose-500/50 shadow-[0_0_20px_rgba(244,63,94,0.1)]";
+            let flashClass = "border-soft-border bg-brand-card shadow-sm";
+            if (rates && isMetalLive && flash === "up") flashClass = "border-emerald-500/50 shadow-[0_0_20px_rgba(16,185,129,0.15)] bg-brand-card";
+            if (rates && isMetalLive && flash === "down") flashClass = "border-rose-500/50 shadow-[0_0_20px_rgba(244,63,94,0.15)] bg-brand-card";
 
             return (
               <div
                 key={metal}
-                className={`glass-premium rounded p-6 space-y-6 transition-all duration-500 relative overflow-hidden group border ${flashClass}`}
+                className={`rounded p-6 space-y-6 transition-all duration-500 relative overflow-hidden group border ${flashClass}`}
               >
                 {/* Visual Glow Layer for Metals */}
-                <div className={`absolute top-0 right-0 w-24 h-24 rounded-full blur-[60px] opacity-10 pointer-events-none transition-opacity group-hover:opacity-20 ${
-                  isGold ? "bg-gold-base" : isSilver ? "bg-silver-base" : "bg-white"
+                <div className={`absolute top-0 right-0 w-24 h-24 rounded-full blur-[60px] opacity-[0.05] pointer-events-none transition-opacity group-hover:opacity-10 ${
+                  isGold ? "bg-gold-base" : isSilver ? "bg-[#808080]" : "bg-olive-accent"
                 }`} />
 
                 {/* Card Header (Metal Name & Tag) */}
                 <div className="flex justify-between items-start">
                   <div>
-                    <h3 className="text-xl font-serif text-white tracking-wide capitalize font-medium">
+                    <h3 className="text-xl font-serif text-text-charcoal tracking-wide capitalize font-semibold">
                       {currentLang === "ar" ? (
                         metal === "gold" ? "الذهب النقي" :
                         metal === "silver" ? "الفضة النقية" :
                         metal === "platinum" ? "البلاتين" : "البلاديوم"
                       ) : metal}
                     </h3>
-                    <span className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">
+                    <span className="text-[10px] font-mono text-text-secondary uppercase tracking-widest font-bold">
                       {isGold ? "999.9 Purity" : isSilver ? "999.0 Purity" : "999.5 Purity"}
                     </span>
                   </div>
                   {isMetalLive && (
-                    <span className={`text-xs font-mono font-semibold px-2 py-0.5 rounded-sm ${
-                      isPositive ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"
+                    <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded-sm ${
+                      isPositive ? "bg-soft-success text-text-charcoal" : "bg-soft-danger text-text-charcoal"
                     }`}>
                       {changePct}
                     </span>
@@ -276,25 +277,25 @@ export default function LiveMarket({
 
                 {/* Spot Prices Details */}
                 <div className="space-y-2">
-                  <div className="text-xs text-gray-500 font-mono uppercase tracking-widest">
+                  <div className="text-xs text-text-secondary font-mono uppercase tracking-widest font-bold">
                     {currentLang === "ar" ? "سعر الأونصة الاسترشادي" : "Indicative Price per Ounce"}
                   </div>
                   {isMetalLive ? (
                     <>
                       <div className="flex items-baseline gap-1.5">
-                        <span className={`text-3xl font-serif tracking-tight font-medium transition-colors ${
-                          isGold ? "text-gold-gradient" : isSilver ? "text-silver-gradient" : "text-white"
+                        <span className={`text-3xl font-serif tracking-tight font-bold transition-colors ${
+                          isGold ? "text-[#C6A15B]" : "text-text-charcoal"
                         }`}>
                           {metalPrice.ounce ? metalPrice.ounce.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "..."}
                         </span>
-                        <span className="text-xs text-gray-400 font-mono font-medium">{selectedCurrency}</span>
+                        <span className="text-xs text-text-secondary font-mono font-bold">{selectedCurrency}</span>
                       </div>
 
-                      <div className="flex justify-between items-center pt-3 border-t border-white/[0.03] text-xs font-mono">
-                        <span className="text-gray-500">
+                      <div className="flex justify-between items-center pt-3 border-t border-soft-border text-xs font-mono">
+                        <span className="text-text-secondary font-bold">
                           {currentLang === "ar" ? "سعر الجرام" : "Rate per Gram (g)"}
                         </span>
-                        <span className="text-gray-300 font-medium">
+                        <span className="text-text-charcoal font-extrabold">
                           {metalPrice.gram ? metalPrice.gram.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 }) : "..."} {selectedCurrency}
                         </span>
                       </div>
@@ -302,22 +303,22 @@ export default function LiveMarket({
                   ) : (
                     <div className="space-y-3 pt-1">
                       {(isGold || isSilver) && (
-                        <div className="text-xs text-rose-400 font-mono flex items-center gap-1.5 bg-rose-500/5 border border-rose-500/10 p-2 rounded">
-                          <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+                        <div className="text-xs text-text-charcoal font-mono flex items-center gap-1.5 bg-soft-danger border border-gold-base/20 p-2 rounded">
+                          <span className="h-1.5 w-1.5 rounded-full bg-rose-600 animate-pulse"></span>
                           <span>
                             {currentLang === "ar" ? "سعر المباشر غير متوفر مؤقتاً" : "Live price temporarily unavailable"}
                           </span>
                         </div>
                       )}
-                      <div className="text-sm font-medium text-amber-500 font-mono min-h-[36px] flex items-center gap-1.5 bg-amber-500/5 border border-amber-500/10 p-2 rounded">
-                        <span className="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+                      <div className="text-sm font-semibold text-text-charcoal font-mono min-h-[36px] flex items-center gap-1.5 bg-brand-bg border border-soft-border p-2 rounded">
+                        <span className="h-1.5 w-1.5 rounded-full bg-gold-base"></span>
                         <span>
                           {currentLang === "ar" ? "إرشادي — تأكيد من المكتب" : "Indicative — confirm with desk"}
                         </span>
                       </div>
                       <button
                         onClick={onOpenQuote}
-                        className="w-full text-center py-2.5 bg-gold-base/10 hover:bg-gold-base/20 border border-gold-base/20 hover:border-gold-base/40 text-gold-base text-xs font-mono font-semibold uppercase rounded transition-all cursor-pointer shadow-[0_2px_8px_rgba(212,175,55,0.05)]"
+                        className="w-full text-center py-2.5 bg-gold-base text-text-charcoal hover:bg-gold-dark hover:text-white text-xs font-mono font-bold uppercase rounded transition-all cursor-pointer shadow-sm"
                       >
                         {currentLang === "ar" ? "طلب عرض سعر" : "Request Quote"}
                       </button>
@@ -332,8 +333,8 @@ export default function LiveMarket({
                       {/* Glowing drop-shadow filters */}
                       <defs>
                         <linearGradient id={`grad-${metal}`} x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor={isGold ? "#D4AF37" : isSilver ? "#C0C0C0" : "#FFFFFF"} stopOpacity="0.15" />
-                          <stop offset="100%" stopColor={isGold ? "#D4AF37" : isSilver ? "#C0C0C0" : "#FFFFFF"} stopOpacity="0.0" />
+                          <stop offset="0%" stopColor={isGold ? "#C6A15B" : "#556B5D"} stopOpacity="0.15" />
+                          <stop offset="100%" stopColor={isGold ? "#C6A15B" : "#556B5D"} stopOpacity="0.0" />
                         </linearGradient>
                       </defs>
                       
@@ -341,7 +342,7 @@ export default function LiveMarket({
                       <path
                         d={generateSparklineSvgPath(history[metal] || [], 280, 70)}
                         fill="none"
-                        stroke={isGold ? "#D4AF37" : isSilver ? "#C0C0C0" : "#E2E2E2"}
+                        stroke={isGold ? "#C6A15B" : "#556B5D"}
                         strokeWidth="1.8"
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -352,7 +353,7 @@ export default function LiveMarket({
                 )}
 
                 {/* Technical Footnote */}
-                <div className="flex justify-between text-[10px] font-mono text-gray-600 pt-2 border-t border-white/[0.03]">
+                <div className="flex justify-between text-[10px] font-mono text-text-secondary pt-2 border-t border-soft-border font-bold">
                   <span>{currentLang === "ar" ? "مرجع السوق الاسترشادي" : "Indicative market reference"}</span>
                   <span>{currentLang === "ar" ? "يتم تأكيد السعر قبل الدفع" : "Price confirmed before payment"}</span>
                 </div>
@@ -362,34 +363,34 @@ export default function LiveMarket({
         </div>
 
         {/* Informative Disclaimer Alert */}
-        <div className="p-5 rounded border border-white/[0.03] bg-[#0a0a0a] space-y-3 text-xs text-gray-400">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-white/[0.02] pb-3">
+        <div className="p-6 rounded border border-soft-border bg-brand-section space-y-3 text-xs text-text-secondary">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-soft-border pb-3">
             <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-gold-base animate-pulse"></span>
-              <span className="font-mono">
+              <span className="h-2 w-2 rounded-full bg-olive-accent animate-pulse"></span>
+              <span className="font-mono text-text-charcoal font-bold">
                 {currentLang === "ar" 
                   ? "يتم التحقق من تفاصيل المنتج قبل الطلب. يتم التحديث عند توفر مصدر التسعير."
-                  : "Product details verified before order. Updated when pricing source is available."}
+                  : "Accredited pricing registry & clearing system. Verification locks operate during standard UAE trading hours."}
               </span>
             </div>
-            <div className="text-gray-400 font-mono text-xs">
+            <div className="text-text-charcoal font-mono text-xs">
               {rates ? (
                 rates.source_status === "cached" ? (
-                  <span className="text-amber-400 flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded">
+                  <span className="text-text-charcoal flex items-center gap-1.5 bg-brand-bg border border-soft-border px-2.5 py-1 rounded">
                     <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse"></span>
                     <span>
                       {currentLang === "ar" ? `آخر تحديث (مخزن مؤقتاً): ${getFormattedCacheTime()}` : `Last updated (cached): ${getFormattedCacheTime()}`}
                     </span>
                   </span>
                 ) : rates.source_status === "live" ? (
-                  <span className="text-emerald-400 flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span className="text-text-charcoal flex items-center gap-1.5 bg-soft-success border border-gold-base/20 px-2.5 py-1 rounded">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
                     <span>
                       {currentLang === "ar" ? `آخر تحديث مباشر: ${lastUpdatedTime}` : `Last updated (live): ${lastUpdatedTime}`}
                     </span>
                   </span>
                 ) : (
-                  <span className="text-rose-400 flex items-center gap-1.5 bg-rose-500/10 border border-rose-500/20 px-2.5 py-1 rounded">
+                  <span className="text-text-charcoal flex items-center gap-1.5 bg-soft-danger border border-soft-border px-2.5 py-1 rounded">
                     <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse"></span>
                     <span>
                       {currentLang === "ar" ? "الأسعار المباشرة غير متوفرة مؤقتاً" : "Live price temporarily unavailable"}
@@ -397,7 +398,7 @@ export default function LiveMarket({
                   </span>
                 )
               ) : (
-                <span className="text-rose-400 flex items-center gap-1.5 bg-rose-500/10 border border-rose-500/20 px-2.5 py-1 rounded">
+                <span className="text-text-charcoal flex items-center gap-1.5 bg-soft-danger border border-soft-border px-2.5 py-1 rounded">
                   <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse"></span>
                   <span>
                     {currentLang === "ar" ? "الأسعار المباشرة غير متوفرة مؤقتاً" : "Live price temporarily unavailable"}
@@ -406,10 +407,10 @@ export default function LiveMarket({
               )}
             </div>
           </div>
-          <p className="leading-relaxed font-sans text-[11px] text-gray-500">
+          <p className="leading-relaxed font-sans text-[11px] text-text-secondary">
             {currentLang === "ar"
               ? "الأسعار إرشادية وتتحدث بشكل دوري. يتم تأكيد التوفر، المصنعية أو الهامش، الضرائب، التسليم، وشروط التسوية من قبل PGR UAE قبل أي عملية."
-              : "Prices are indicative and updated periodically. Final availability, premiums, taxes, delivery, and settlement terms are confirmed by PGR UAE before any transaction."}
+              : "Prices listed above are indicative and subject to final physical gold inventory premium checks. Formal clearance, UAE custom logs, and secure logistics arrangements will be processed by our compliance team prior to client dispatch."}
           </p>
         </div>
 

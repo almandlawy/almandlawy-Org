@@ -71,8 +71,8 @@ export default function Header({
       return currentLang === "ar" ? "طلب عرض سعر" : "Request Quote";
     }
     const cur = selectedCurrency as any;
-    const goldRate = rates.gold?.currencies?.[cur];
-    if (!goldRate || rates.gold?.spot_usd_oz == null) return currentLang === "ar" ? "طلب عرض سعر" : "Request Quote";
+    const goldRate = rates.gold.currencies[cur];
+    if (!goldRate) return currentLang === "ar" ? "طلب عرض سعر" : "Request Quote";
     return `${goldRate.ounce.toLocaleString()} ${selectedCurrency}`;
   };
 
@@ -82,8 +82,8 @@ export default function Header({
       return currentLang === "ar" ? "طلب عرض سعر" : "Request Quote";
     }
     const cur = selectedCurrency as any;
-    const silverRate = rates.silver?.currencies?.[cur];
-    if (!silverRate || rates.silver?.spot_usd_oz == null) return currentLang === "ar" ? "طلب عرض سعر" : "Request Quote";
+    const silverRate = rates.silver.currencies[cur];
+    if (!silverRate) return currentLang === "ar" ? "طلب عرض سعر" : "Request Quote";
     return `${silverRate.ounce.toLocaleString()} ${selectedCurrency}`;
   };
 
@@ -91,8 +91,9 @@ export default function Header({
 
   const navLinks = [
     { id: "market", label_en: "Live Rates", label_ar: "الأسعار المباشرة" },
+    { id: "calculator", label_en: "Calculator", label_ar: "حاسبة الأسعار" },
     { id: "catalog", label_en: "Bullion Catalog", label_ar: "كتالوج السبائك" },
-    { id: "investment", label_en: "Quotes & Orders", label_ar: "العروض والطلبات" },
+    { id: "investment", label_en: "Buy & Track", label_ar: "شراء وتتبع" },
     { id: "why-us", label_en: "Institutional Edge", label_ar: "المعايير المؤسسية" },
     { id: "office", label_en: "Dubai Office", label_ar: "مكتب دبي" },
     { id: "blog", label_en: "Intelligence", label_ar: "تقارير الأبحاث" }
@@ -101,11 +102,11 @@ export default function Header({
   return (
     <header className="fixed top-0 left-0 w-full z-50 transition-all duration-300" id="pgr-global-header" style={{ direction: currentLang === "ar" ? "rtl" : "ltr" }}>
       {/* Top Live Ticker Marquee Bar */}
-      <div className="w-full bg-[#0a0a0a] border-b border-white/[0.03] text-[11px] font-mono py-1.5 px-4 flex justify-between items-center text-gray-400">
+      <div className="w-full bg-brand-bg border-b border-soft-border text-[11px] font-mono py-1.5 px-4 flex justify-between items-center text-text-secondary">
         <div className="flex items-center gap-4 overflow-hidden">
           <span className="flex items-center gap-1.5 text-gold-base text-[10px] uppercase tracking-widest font-semibold">
             <span className={`h-1.5 w-1.5 rounded-full animate-pulse ${
-              (rates && (rates.source_status === "live" || rates.source_status === "cached")) ? "bg-emerald-500" : "bg-amber-500"
+              (rates && (rates.source_status === "live" || rates.source_status === "cached")) ? "bg-emerald-600" : "bg-amber-500"
             }`}></span>
             {(rates && (rates.source_status === "live" || rates.source_status === "cached")) ? (
               currentLang === "ar" ? "مباشر دبي" : "Dubai Spot Live"
@@ -114,41 +115,41 @@ export default function Header({
             )}
           </span>
           <div className="flex items-center gap-6 text-[11px]">
-            <span className="hover:text-white transition-colors cursor-pointer">
+            <span className="hover:text-gold-dark transition-colors cursor-pointer text-text-charcoal">
               {currentLang === "ar" ? "الذهب:" : "GOLD:"}{" "}
-              <span className="text-white font-medium">{getGoldMiniPrice()}</span>/oz
+              <span className="text-text-charcoal font-semibold">{getGoldMiniPrice()}</span>/oz
             </span>
-            <span className="hover:text-white transition-colors cursor-pointer">
+            <span className="hover:text-gold-dark transition-colors cursor-pointer text-text-charcoal">
               {currentLang === "ar" ? "الفضة:" : "SILVER:"}{" "}
-              <span className="text-white font-medium">{getMiniSilverPrice()}</span>/oz
+              <span className="text-text-charcoal font-semibold">{getMiniSilverPrice()}</span>/oz
             </span>
           </div>
         </div>
         <div className="hidden md:flex items-center gap-4">
-          <span className="text-gray-500 text-[10px]">
+          <span className="text-text-secondary text-[10px]">
             {currentLang === "ar" ? "خدمات المعادن الثمينة الاحترافية" : "Professional Precious Metals Services"}
           </span>
-          <span className="text-gold-base hover:underline cursor-pointer flex items-center gap-1" onClick={onOpenQuote}>
+          <span className="text-gold-base hover:text-gold-dark font-semibold hover:underline cursor-pointer flex items-center gap-1" onClick={onOpenQuote}>
             {currentLang === "ar" ? "طلب تسعير" : "Request Quote"} <ArrowRight size={10} />
           </span>
         </div>
       </div>
 
       {/* Main Glass Navbar */}
-      <div className="w-full bg-[#070707]/60 backdrop-blur-md border-b border-white/[0.03] py-4 px-4 md:px-8">
+      <div className="w-full bg-brand-card/90 backdrop-blur-md border-b border-soft-border py-4 px-4 md:px-8">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           {/* Logo Brand Title */}
           <div className="flex flex-col cursor-pointer" onClick={() => onNavigate("hero")}>
-            <span className="text-xl md:text-2xl font-serif font-semibold tracking-[0.25em] text-white leading-none">
+            <span className="text-xl md:text-2xl font-serif font-semibold tracking-[0.25em] text-text-charcoal leading-none">
               PGR <span className="text-gold-base">UAE</span>
             </span>
-            <span className="text-[8px] md:text-[9px] uppercase tracking-[0.45em] text-gray-400 mt-1 leading-none">
+            <span className="text-[8px] md:text-[9px] uppercase tracking-[0.45em] text-text-secondary mt-1 leading-none font-mono">
               Precious Metals Services
             </span>
           </div>
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-8 text-[13px] uppercase tracking-widest text-gray-300 font-medium">
+          <nav className="hidden lg:flex items-center gap-8 text-[12px] uppercase tracking-widest text-text-secondary font-semibold">
             {navLinks.map((link) => (
               <button
                 key={link.id}
@@ -159,7 +160,7 @@ export default function Header({
                     onNavigate(link.id);
                   }
                 }}
-                className={`hover:text-gold-base transition-all duration-300 cursor-pointer ${
+                className={`hover:text-gold-base text-text-charcoal transition-all duration-300 cursor-pointer ${
                   currentLang === "ar" ? "font-arabic text-sm" : ""
                 }`}
               >
@@ -174,10 +175,10 @@ export default function Header({
             {/* Customer Dashboard (Tracker) */}
             <button
               onClick={onOpenClientDashboard}
-              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded bg-white/[0.02] border border-white/[0.05] hover:border-[#c5a85c]/30 text-[11px] text-gray-300 transition-colors cursor-pointer uppercase font-mono"
+              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded bg-brand-bg border border-soft-border hover:border-gold-base text-[11px] text-text-charcoal hover:text-gold-dark transition-colors cursor-pointer uppercase font-mono"
               title={currentLang === "ar" ? "ديوان العملاء" : "Customer Dashboard"}
             >
-              <ShieldCheck size={13} className="text-[#c5a85c]" />
+              <ShieldCheck size={13} className="text-gold-base" />
               <span>{currentLang === "ar" ? "ديوان العملاء" : "Customer Dashboard"}</span>
             </button>
 
@@ -185,11 +186,11 @@ export default function Header({
             {isAdmin && (
               <button
                 onClick={onOpenAdminPortal}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-amber-950/25 border border-[#c5a85c]/40 hover:border-[#c5a85c] text-[11px] text-[#c5a85c] font-semibold transition-colors cursor-pointer uppercase font-mono"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-soft-success border border-gold-base/50 hover:border-gold-base text-[11px] text-text-charcoal font-semibold transition-colors cursor-pointer uppercase font-mono"
                 title={currentLang === "ar" ? "لوحة الإدارة" : "Admin Panel"}
                 id="header-admin-portal-btn"
               >
-                <Terminal size={12} className="text-[#c5a85c]" />
+                <Terminal size={12} className="text-gold-base" />
                 <span>{currentLang === "ar" ? "لوحة الإدارة" : "Admin Panel"}</span>
               </button>
             )}
@@ -197,7 +198,7 @@ export default function Header({
             {/* Language Toggle */}
             <button
               onClick={toggleLanguage}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-white/[0.02] border border-white/[0.05] hover:border-gold-base/30 text-[12px] text-gray-300 transition-colors uppercase cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-brand-bg border border-soft-border hover:border-gold-base text-[12px] text-text-charcoal transition-colors uppercase cursor-pointer font-sans"
               title={currentLang === "ar" ? "Switch to English" : "العربية"}
             >
               <Globe size={13} className="text-gold-base" />
@@ -209,16 +210,16 @@ export default function Header({
             {/* AI Assistant Button */}
             <button
               onClick={onOpenAIChat}
-              className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded bg-gradient-to-r from-gold-dark/20 to-gold-base/10 border border-gold-base/30 hover:border-gold-base text-[12px] tracking-wider uppercase text-gold-light font-medium transition-all duration-300 cursor-pointer shadow-[0_0_15px_rgba(212,175,55,0.1)]"
+              className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded bg-brand-bg border border-gold-base/40 hover:border-gold-base text-[12px] tracking-wider uppercase text-text-charcoal hover:bg-gold-base/5 font-semibold transition-all duration-300 cursor-pointer shadow-sm"
             >
-              <MessageSquare size={13} className="animate-pulse text-gold-base" />
+              <MessageSquare size={13} className="text-gold-base" />
               <span>{currentLang === "ar" ? "مساعد المنتجات وطلبات التسعير" : "Product & Quote Assistant"}</span>
             </button>
 
             {/* Custom Quote Request */}
             <button
               onClick={onOpenQuote}
-              className="hidden md:flex items-center gap-2 px-4 py-2 text-[12px] tracking-widest uppercase font-semibold text-black bg-gold-base hover:bg-gold-light rounded transition-all duration-300 cursor-pointer shadow-[0_0_20px_rgba(212,175,55,0.2)] hover:shadow-[0_0_25px_rgba(212,175,55,0.45)] animate-pulse"
+              className="hidden md:flex items-center gap-2 px-4 py-2 text-[12px] tracking-widest uppercase font-semibold text-text-charcoal bg-gold-base hover:bg-gold-dark rounded transition-all duration-300 cursor-pointer shadow-md"
             >
               <Coins size={13} />
               <span>{currentLang === "ar" ? "طلب عرض سعر" : "Request Quote"}</span>
@@ -227,7 +228,7 @@ export default function Header({
             {/* Mobile Menu Toggle */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 rounded text-gray-300 hover:text-white hover:bg-white/[0.04]"
+              className="lg:hidden p-2 rounded text-text-charcoal hover:bg-brand-bg"
             >
               {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
@@ -237,7 +238,7 @@ export default function Header({
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden w-full bg-[#070707] border-b border-white/[0.05] py-6 px-4 animate-fadeIn transition-all duration-300">
+        <div className="lg:hidden w-full bg-brand-card border-b border-soft-border py-6 px-4 animate-fadeIn transition-all duration-300">
           <div className="flex flex-col gap-4 text-center">
             {navLinks.map((link) => (
               <button
@@ -250,7 +251,7 @@ export default function Header({
                   }
                   setMobileMenuOpen(false);
                 }}
-                className={`py-2 text-[14px] uppercase tracking-widest text-gray-300 hover:text-gold-base border-b border-white/[0.02] text-center w-full ${
+                className={`py-2 text-[14px] uppercase tracking-widest text-text-charcoal hover:text-gold-base border-b border-brand-bg text-center w-full ${
                   currentLang === "ar" ? "font-arabic text-base" : ""
                 }`}
               >
@@ -264,9 +265,9 @@ export default function Header({
                   onOpenClientDashboard();
                   setMobileMenuOpen(false);
                 }}
-                className="py-2.5 bg-white/[0.02] border border-white/[0.05] text-gray-300 rounded flex items-center justify-center gap-1.5"
+                className="py-2.5 bg-brand-bg border border-soft-border text-text-charcoal rounded flex items-center justify-center gap-1.5"
               >
-                <ShieldCheck size={13} className="text-[#c5a85c]" />
+                <ShieldCheck size={13} className="text-gold-base" />
                 <span>{currentLang === "ar" ? "ديوان العملاء" : "Customer Dashboard"}</span>
               </button>
               {isAdmin && (
@@ -275,9 +276,9 @@ export default function Header({
                     onOpenAdminPortal();
                     setMobileMenuOpen(false);
                   }}
-                  className="py-2.5 bg-amber-950/20 border border-[#c5a85c]/30 text-[#c5a85c] font-semibold rounded flex items-center justify-center gap-1.5"
+                  className="py-2.5 bg-soft-success border border-gold-base/50 text-text-charcoal font-semibold rounded flex items-center justify-center gap-1.5"
                 >
-                  <Terminal size={12} className="text-[#c5a85c]" />
+                  <Terminal size={12} className="text-gold-base" />
                   <span>{currentLang === "ar" ? "لوحة الإدارة" : "Admin Panel"}</span>
                 </button>
               )}
@@ -290,7 +291,7 @@ export default function Header({
                   onOpenAIChat();
                   setMobileMenuOpen(false);
                 }}
-                className="flex justify-center items-center gap-2 px-4 py-3 rounded bg-gold-dark/10 border border-gold-base/30 text-[13px] tracking-wider uppercase text-gold-light font-medium"
+                className="flex justify-center items-center gap-2 px-4 py-3 rounded bg-brand-bg border border-gold-base/40 text-[13px] tracking-wider uppercase text-text-charcoal font-medium"
               >
                 <MessageSquare size={14} className="text-gold-base" />
                 <span>{currentLang === "ar" ? "مساعد المنتجات وطلبات التسعير" : "Product & Quote Assistant"}</span>
@@ -302,7 +303,7 @@ export default function Header({
                   onOpenQuote();
                   setMobileMenuOpen(false);
                 }}
-                className="flex justify-center items-center gap-2 px-4 py-3 text-[13px] tracking-widest uppercase font-semibold text-black bg-gold-base rounded"
+                className="flex justify-center items-center gap-2 px-4 py-3 text-[13px] tracking-widest uppercase font-semibold text-text-charcoal bg-gold-base rounded"
               >
                 <Coins size={14} />
                 <span>{currentLang === "ar" ? "طلب عرض سعر" : "Request Quote"}</span>
