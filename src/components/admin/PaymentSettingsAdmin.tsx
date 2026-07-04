@@ -70,14 +70,14 @@ export default function PaymentSettingsAdmin({ adminEmail, onAudit }: PaymentSet
   return (
     <div className="space-y-6">
       <div>
-        <h4 className="text-lg font-serif text-white">Payment Settings</h4>
-        <p className="text-xs text-gray-500 font-mono">
+        <h4 className="text-lg font-serif text-text-charcoal">Payment Settings</h4>
+        <p className="text-xs text-text-secondary font-mono">
           No gateway secret keys here — use server environment variables only. Customers cannot pay before firm quote.
         </p>
       </div>
 
-      <form onSubmit={handleSave} className="p-5 bg-[#0d0d0e] rounded border border-white/[0.03] space-y-5 font-mono text-xs">
-        <label className="flex items-center gap-3 text-gray-300 cursor-pointer">
+      <form onSubmit={handleSave} className="p-5 bg-brand-card rounded border border-soft-border space-y-5 font-mono text-xs">
+        <label className="flex items-center gap-3 text-text-charcoal/85 cursor-pointer">
           <input
             type="checkbox"
             checked={settings.payment_gateway_enabled}
@@ -89,11 +89,11 @@ export default function PaymentSettingsAdmin({ adminEmail, onAudit }: PaymentSet
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="text-gray-400 uppercase text-[9px] font-bold">Provider</label>
+            <label className="text-text-secondary uppercase text-[9px] font-bold">Provider</label>
             <select
               value={settings.provider}
               onChange={(e) => setSettings({ ...settings, provider: e.target.value as PaymentProvider })}
-              className="w-full bg-black border border-white/10 rounded px-3 py-2 text-white outline-none focus:border-gold-base"
+              className="w-full bg-brand-bg border border-soft-border focus:border-gold-base rounded-lg px-3 py-2 text-text-charcoal outline-none focus:border-gold-base"
             >
               {PROVIDERS.map((p) => (
                 <option key={p} value={p}>{p}</option>
@@ -101,11 +101,11 @@ export default function PaymentSettingsAdmin({ adminEmail, onAudit }: PaymentSet
             </select>
           </div>
           <div className="space-y-2">
-            <label className="text-gray-400 uppercase text-[9px] font-bold">Payment mode</label>
+            <label className="text-text-secondary uppercase text-[9px] font-bold">Payment mode</label>
             <select
               value={settings.payment_mode}
               onChange={(e) => setSettings({ ...settings, payment_mode: e.target.value as PaymentMode })}
-              className="w-full bg-black border border-white/10 rounded px-3 py-2 text-white outline-none focus:border-gold-base"
+              className="w-full bg-brand-bg border border-soft-border focus:border-gold-base rounded-lg px-3 py-2 text-text-charcoal outline-none focus:border-gold-base"
             >
               {MODES.map((m) => (
                 <option key={m} value={m}>{m}</option>
@@ -115,10 +115,10 @@ export default function PaymentSettingsAdmin({ adminEmail, onAudit }: PaymentSet
         </div>
 
         <div className="space-y-2">
-          <label className="text-gray-400 uppercase text-[9px] font-bold">Supported currencies</label>
+          <label className="text-text-secondary uppercase text-[9px] font-bold">Supported currencies</label>
           <div className="flex gap-4">
             {(["AED", "USD"] as const).map((cur) => (
-              <label key={cur} className="flex items-center gap-2 text-gray-300 cursor-pointer">
+              <label key={cur} className="flex items-center gap-2 text-text-charcoal/85 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={settings.supported_currencies.includes(cur)}
@@ -133,28 +133,28 @@ export default function PaymentSettingsAdmin({ adminEmail, onAudit }: PaymentSet
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="text-gray-400 uppercase text-[9px] font-bold">Minimum payment amount</label>
+            <label className="text-text-secondary uppercase text-[9px] font-bold">Minimum payment amount</label>
             <input
               type="number"
               min={0}
               value={settings.minimum_payment_amount}
               onChange={(e) => setSettings({ ...settings, minimum_payment_amount: Number(e.target.value) })}
-              className="w-full bg-black border border-white/10 rounded px-3 py-2 text-white outline-none focus:border-gold-base"
+              className="w-full bg-brand-bg border border-soft-border focus:border-gold-base rounded-lg px-3 py-2 text-text-charcoal outline-none focus:border-gold-base"
             />
           </div>
           <div className="space-y-2">
-            <label className="text-gray-400 uppercase text-[9px] font-bold">Max before manual review</label>
+            <label className="text-text-secondary uppercase text-[9px] font-bold">Max before manual review</label>
             <input
               type="number"
               min={0}
               value={settings.max_payment_amount_before_manual_review}
               onChange={(e) => setSettings({ ...settings, max_payment_amount_before_manual_review: Number(e.target.value) })}
-              className="w-full bg-black border border-white/10 rounded px-3 py-2 text-white outline-none focus:border-gold-base"
+              className="w-full bg-brand-bg border border-soft-border focus:border-gold-base rounded-lg px-3 py-2 text-text-charcoal outline-none focus:border-gold-base"
             />
           </div>
         </div>
 
-        <label className="flex items-center gap-3 text-gray-300 cursor-pointer">
+        <label className="flex items-center gap-3 text-text-charcoal/85 cursor-pointer">
           <input
             type="checkbox"
             checked={settings.require_kyc_before_payment}
@@ -165,34 +165,34 @@ export default function PaymentSettingsAdmin({ adminEmail, onAudit }: PaymentSet
         </label>
 
         <div className="space-y-2">
-          <label className="text-gray-400 uppercase text-[9px] font-bold">Public payment note</label>
+          <label className="text-text-secondary uppercase text-[9px] font-bold">Public payment note</label>
           <textarea
             rows={3}
             value={settings.public_payment_note}
             onChange={(e) => setSettings({ ...settings, public_payment_note: e.target.value })}
-            className="w-full bg-black border border-white/10 rounded px-3 py-2 text-white outline-none focus:border-gold-base font-sans"
+            className="w-full bg-brand-bg border border-soft-border focus:border-gold-base rounded-lg px-3 py-2 text-text-charcoal outline-none focus:border-gold-base font-sans"
           />
         </div>
 
         <div className="space-y-2">
-          <label className="text-gray-400 uppercase text-[9px] font-bold">Payment link instructions (public)</label>
+          <label className="text-text-secondary uppercase text-[9px] font-bold">Payment link instructions (public)</label>
           <textarea
             rows={2}
             value={settings.payment_link_instructions}
             onChange={(e) => setSettings({ ...settings, payment_link_instructions: e.target.value })}
-            className="w-full bg-black border border-white/10 rounded px-3 py-2 text-white outline-none focus:border-gold-base font-sans"
+            className="w-full bg-brand-bg border border-soft-border focus:border-gold-base rounded-lg px-3 py-2 text-text-charcoal outline-none focus:border-gold-base font-sans"
           />
         </div>
 
         <div className="space-y-2">
-          <label className="text-gray-400 uppercase text-[9px] font-bold flex items-center gap-2">
+          <label className="text-text-secondary uppercase text-[9px] font-bold flex items-center gap-2">
             Internal payment note (admin only)
           </label>
           <textarea
             rows={2}
             value={settings.internal_payment_note}
             onChange={(e) => setSettings({ ...settings, internal_payment_note: e.target.value })}
-            className="w-full bg-black border border-white/10 rounded px-3 py-2 text-white outline-none focus:border-gold-base font-sans"
+            className="w-full bg-brand-bg border border-soft-border focus:border-gold-base rounded-lg px-3 py-2 text-text-charcoal outline-none focus:border-gold-base font-sans"
           />
         </div>
 

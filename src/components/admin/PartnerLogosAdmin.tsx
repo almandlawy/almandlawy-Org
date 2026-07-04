@@ -80,17 +80,17 @@ export default function PartnerLogosAdmin({ adminEmail, onAudit }: PartnerLogosA
   return (
     <div className="space-y-6">
       <div>
-        <h4 className="text-lg font-serif text-white">Partners & Trust Logos</h4>
-        <p className="text-xs text-gray-500 font-mono">
+        <h4 className="text-lg font-serif text-text-charcoal">Partners & Trust Logos</h4>
+        <p className="text-xs text-text-secondary font-mono">
           Only logos with public display enabled appear on the site. Internal notes are never shown to customers.
         </p>
       </div>
 
       <form onSubmit={handleSave} className="space-y-4">
         {partners.map((partner) => (
-          <div key={partner.id} className="p-4 bg-[#0d0d0e] rounded border border-white/[0.06] space-y-3 font-mono text-xs">
+          <div key={partner.id} className="p-4 bg-brand-card rounded border border-soft-border space-y-3 font-mono text-xs">
             <div className="flex justify-between items-center">
-              <span className="text-gray-400 uppercase text-[9px]">Partner entry</span>
+              <span className="text-text-secondary uppercase text-[9px]">Partner entry</span>
               <button type="button" onClick={() => removePartner(partner.id)} className="text-red-400 hover:text-red-300">
                 <Trash2 size={14} />
               </button>
@@ -101,12 +101,12 @@ export default function PartnerLogosAdmin({ adminEmail, onAudit }: PartnerLogosA
                 placeholder="Company name"
                 value={partner.name}
                 onChange={(e) => updatePartner(partner.id, { name: e.target.value })}
-                className="bg-black border border-white/10 rounded px-3 py-2 text-white outline-none focus:border-gold-base"
+                className="bg-brand-bg border border-soft-border focus:border-gold-base rounded-lg px-3 py-2 text-text-charcoal outline-none focus:border-gold-base"
               />
               <select
                 value={partner.category}
                 onChange={(e) => updatePartner(partner.id, { category: e.target.value as PartnerLogoCategory })}
-                className="bg-black border border-white/10 rounded px-3 py-2 text-white outline-none focus:border-gold-base"
+                className="bg-brand-bg border border-soft-border focus:border-gold-base rounded-lg px-3 py-2 text-text-charcoal outline-none focus:border-gold-base"
               >
                 {CATEGORIES.map((c) => (
                   <option key={c} value={c}>{c}</option>
@@ -117,24 +117,24 @@ export default function PartnerLogosAdmin({ adminEmail, onAudit }: PartnerLogosA
                 placeholder="Logo URL"
                 value={partner.logo_url}
                 onChange={(e) => updatePartner(partner.id, { logo_url: e.target.value })}
-                className="bg-black border border-white/10 rounded px-3 py-2 text-white outline-none focus:border-gold-base sm:col-span-2"
+                className="bg-brand-bg border border-soft-border focus:border-gold-base rounded-lg px-3 py-2 text-text-charcoal outline-none focus:border-gold-base sm:col-span-2"
               />
               <input
                 type="url"
                 placeholder="Website URL (optional)"
                 value={partner.website_url || ""}
                 onChange={(e) => updatePartner(partner.id, { website_url: e.target.value })}
-                className="bg-black border border-white/10 rounded px-3 py-2 text-white outline-none focus:border-gold-base"
+                className="bg-brand-bg border border-soft-border focus:border-gold-base rounded-lg px-3 py-2 text-text-charcoal outline-none focus:border-gold-base"
               />
               <input
                 type="number"
                 placeholder="Display order"
                 value={partner.display_order}
                 onChange={(e) => updatePartner(partner.id, { display_order: Number(e.target.value) })}
-                className="bg-black border border-white/10 rounded px-3 py-2 text-white outline-none focus:border-gold-base"
+                className="bg-brand-bg border border-soft-border focus:border-gold-base rounded-lg px-3 py-2 text-text-charcoal outline-none focus:border-gold-base"
               />
             </div>
-            <label className="flex items-center gap-2 text-gray-300 cursor-pointer">
+            <label className="flex items-center gap-2 text-text-charcoal/85 cursor-pointer">
               <input
                 type="checkbox"
                 checked={partner.public_display_enabled}
@@ -148,7 +148,7 @@ export default function PartnerLogosAdmin({ adminEmail, onAudit }: PartnerLogosA
               placeholder="Internal note (admin only)"
               value={partner.internal_note || ""}
               onChange={(e) => updatePartner(partner.id, { internal_note: e.target.value })}
-              className="w-full bg-black border border-white/10 rounded px-3 py-2 text-white outline-none focus:border-gold-base font-sans"
+              className="w-full bg-brand-bg border border-soft-border focus:border-gold-base rounded-lg px-3 py-2 text-text-charcoal outline-none focus:border-gold-base font-sans"
             />
           </div>
         ))}
@@ -156,7 +156,7 @@ export default function PartnerLogosAdmin({ adminEmail, onAudit }: PartnerLogosA
         <button
           type="button"
           onClick={addPartner}
-          className="flex items-center gap-2 px-4 py-2 border border-dashed border-white/20 rounded text-gray-400 hover:text-white text-xs"
+          className="flex items-center gap-2 px-4 py-2 border border-dashed border-soft-border rounded text-text-secondary hover:text-gold-dark text-xs"
         >
           <Plus size={14} /> Add partner
         </button>
