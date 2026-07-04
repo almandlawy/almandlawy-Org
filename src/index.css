@@ -16,6 +16,9 @@
   --color-text-secondary: #5E564D;
   --color-soft-border: #E8DEC9;
   --color-olive-accent: #556B5D;
+  --color-panel-dark: #2A2F28;
+  --color-panel-charcoal: #1F2420;
+  --color-champagne: #E8DEC9;
   --color-soft-success: #DCE8DF;
   --color-soft-danger: #F4E4E1;
   
@@ -73,6 +76,34 @@ body {
 
 .bg-dark-gradient {
   background: linear-gradient(180deg, #FFFFFF 0%, #F7F4ED 100%);
+}
+
+.bg-panel-dark {
+  background: linear-gradient(165deg, #2A2F28 0%, #1F2420 100%);
+}
+
+.bg-panel-olive {
+  background: linear-gradient(180deg, #3A4238 0%, #2A2F28 100%);
+}
+
+.text-panel-muted {
+  color: rgba(247, 244, 237, 0.65);
+}
+
+.border-champagne {
+  border-color: #E8DEC9;
+}
+
+.shadow-premium {
+  box-shadow: 0 8px 32px rgba(31, 26, 23, 0.08), 0 2px 8px rgba(198, 161, 91, 0.06);
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
 
 /* Premium Gold Glow & Border Shadows */
