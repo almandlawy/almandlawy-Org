@@ -117,6 +117,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       created_at: new Date().toISOString()
     };
 
+    const fullMessage = [
+      `Inquiry: ${inquiryId}`,
+      `Name: ${name}`,
+      `Phone: ${phone}`,
+      `Email: ${resolvedEmail}`,
+      `Location: ${countryCity}`,
+      `Product: ${productCategory}`,
+      `Quantity/Budget: ${quantityBudget}`,
+      `Contact: ${preferredContact}`,
+      message ? `Notes: ${message}` : ""
+    ]
+      .filter(Boolean)
+      .join("\n");
+
     const service = getServiceClient();
     let persisted = false;
     let persistError: string | undefined;
@@ -125,9 +139,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (service) {
       const result = await tryInsertQuote(service, [
         { id: inquiryId, ...baseRow },
-        { inquiry_id: inquiryId, ...baseRow },
-        { reference_id: inquiryId, ...baseRow },
-        baseRow
+        { id: inquiryId, inquiry_id: inquiryId, ...baseRow },
+        {
+          id: inquiryId,
+          name,
+          phone,
+          company: countryCity,
+          metal_interest: metalFromProduct(productKey),
+          product_category: productCategory,
+          weight_preference: quantityBudget,
+          message: fullMessage,
+          status: "New Request",
+          created_at: baseRow.created_at
+        },
+        {
+          id: inquiryId,
+          name,
+          phone,
+          message: fullMessage,
+          status: "New Request",
+          created_at: baseRow.created_at
+        },
+        {
+          inquiry_id: inquiryId,
+          name,
+          phone,
+          message: fullMessage,
+          status: "New Request",
+          created_at: baseRow.created_at
+        }
       ]);
       persisted = result.ok;
       persistError = result.error;

@@ -19,7 +19,7 @@ CREATE POLICY "authenticated_can_verify_own_admin_email"
   ON public.admin_users FOR SELECT TO authenticated
   USING (lower(email) = lower(auth.jwt() ->> 'email'));
 
--- 2. Quote requests — compatible with /api/quote + admin dashboard
+-- 2. Quote requests — align existing table with /api/quote + admin dashboard
 CREATE TABLE IF NOT EXISTS public.quote_requests (
   id text PRIMARY KEY,
   inquiry_id text UNIQUE,
@@ -35,7 +35,11 @@ CREATE TABLE IF NOT EXISTS public.quote_requests (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
+-- Add missing columns if table already existed with older schema
 ALTER TABLE public.quote_requests ADD COLUMN IF NOT EXISTS inquiry_id text;
+ALTER TABLE public.quote_requests ADD COLUMN IF NOT EXISTS name text;
+ALTER TABLE public.quote_requests ADD COLUMN IF NOT EXISTS email text;
+ALTER TABLE public.quote_requests ADD COLUMN IF NOT EXISTS phone text;
 ALTER TABLE public.quote_requests ADD COLUMN IF NOT EXISTS company text;
 ALTER TABLE public.quote_requests ADD COLUMN IF NOT EXISTS metal_interest text;
 ALTER TABLE public.quote_requests ADD COLUMN IF NOT EXISTS product_category text;
