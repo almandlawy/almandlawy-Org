@@ -333,10 +333,6 @@ export default function App() {
     );
   }
 
-  if (currentPath === "/request-quote") {
-    return <RequestQuotePage currentLang={currentLang} onNavigate={navigateTo} />;
-  }
-
   if (currentPath === "/calculator") {
     return (
       <div className={`min-h-screen text-stone-900 bg-[#FAF9F5] selection:bg-gold-base selection:text-black overflow-hidden relative ${
@@ -471,7 +467,7 @@ export default function App() {
     return <SellBackPage currentLang={currentLang} onNavigate={navigateTo} />;
   }
 
-  const standaloneDeskPaths = ["/iraq-bullion-quote", "/faq", "/contact"] as const;
+  const standaloneDeskPaths = ["/iraq-bullion-quote", "/request-quote", "/faq", "/contact"] as const;
   if ((standaloneDeskPaths as readonly string[]).includes(currentPath)) {
     return (
       <div
@@ -496,6 +492,9 @@ export default function App() {
         <div className="max-w-7xl mx-auto py-24 px-4 md:px-8">
           {currentPath === "/iraq-bullion-quote" && (
             <IraqBullionQuotePage currentLang={currentLang} onNavigate={navigateTo} />
+          )}
+          {currentPath === "/request-quote" && (
+            <RequestQuotePage currentLang={currentLang} onNavigate={navigateTo} />
           )}
           {currentPath === "/faq" && (
             <div className="space-y-6">

@@ -1115,24 +1115,41 @@ app.get("/api/prices", async (req, res) => {
 app.post("/api/quote", async (req, res) => {
   try {
     const name = req.body.name || req.body.fullName;
-    const email = req.body.email;
+    const email = req.body.email || "";
     const phone = req.body.phone;
-    const company = req.body.company || req.body.companyName;
-    const metalInterest = req.body.metalInterest || req.body.metal || "both";
-    const productCategory = req.body.productCategory || req.body.productInterest || "PGR UAE Bullion Collection";
-    const weight = req.body.weight || req.body.weightPreference || "";
-    const message = req.body.message || "";
+    const company = req.body.countryCity || req.body.company || req.body.companyName || "";
+    const productKey = req.body.productInterest || req.body.productCategory || "gold-bars";
+    const productLabels: Record<string, string> = {
+      "gold-bars": "Gold bars",
+      "silver-bars": "Silver bars",
+      "bullion-coins": "Bullion coins",
+      "custom-inquiry": "Custom inquiry"
+    };
+    const metalInterest =
+      req.body.metalInterest ||
+      req.body.metal ||
+      (productKey === "silver-bars" ? "silver" : productKey === "bullion-coins" || productKey === "custom-inquiry" ? "both" : "gold");
+    const productCategory = productLabels[productKey] || req.body.productCategory || req.body.productInterest || "Gold bars";
+    const weight = req.body.quantityBudget || req.body.weight || req.body.weightPreference || "";
+    const preferredContact = req.body.preferredContact || "WhatsApp";
+    const messageParts = [
+      company ? `Country/City: ${company}` : "",
+      preferredContact ? `Preferred contact: ${preferredContact}` : "",
+      weight ? `Quantity/Budget: ${weight}` : "",
+      req.body.message || ""
+    ].filter(Boolean);
+    const message = messageParts.join("\n");
     const sourceLanguage = req.body.sourceLanguage || (req.body.source === "website_request_quote_page" ? "en" : "en");
     
-    if (!name || !email || !phone) {
-      return res.status(400).json({ error: "Required fields missing (name, email, phone)" });
+    if (!name || !phone) {
+      return res.status(400).json({ error: "Required fields missing (name, phone)" });
     }
 
     const inquiryId = "PGR-" + Math.floor(100000 + Math.random() * 900000);
     const newQuote = {
       id: inquiryId,
       name,
-      email,
+      email: email || `whatsapp+${String(phone).replace(/\D/g, "").slice(-12)}@quote.pgruae.com`,
       phone,
       company: company || "",
       metal_interest: metalInterest,
@@ -1158,8 +1175,8 @@ app.post("/api/quote", async (req, res) => {
       success: true,
       inquiryId,
       message: sourceLanguage === "ar" 
-        ? "لقد تم تسجيل طلب عرض السعر بنجاح. سيتواصل معك أحد ممثلي مكتب طلبات التسعير لدينا قريباً."
-        : "Your bespoke quote request has been cataloged successfully. A PGR Product & Quote Desk Representative will contact you shortly.",
+        ? "تم استلام طلبك. سيراجع PGR UAE التوفر ويتواصل معك على واتساب."
+        : "Your request has been received. PGR UAE will review availability and contact you on WhatsApp.",
       timestamp: new Date().toISOString()
     });
   } catch (err: any) {

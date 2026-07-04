@@ -209,6 +209,36 @@ export default function IraqBullionQuotePage({
           </span>
         ))}
       </div>
+
+      <section className="rounded-xl border border-soft-border bg-brand-card p-6 sm:p-8 space-y-5 text-center">
+        <h2 className="text-xl font-serif text-text-charcoal font-medium">
+          {isAr ? "جاهز لطلب عرض سعر؟" : "Ready to request a quote?"}
+        </h2>
+        <p className="text-sm text-text-secondary max-w-lg mx-auto">
+          {isAr
+            ? "أرسل نموذج طلب عرض السعر أو تواصل مباشرة مع مكتب واتساب PGR UAE في دبي."
+            : "Submit the quote request form or contact the PGR UAE WhatsApp quote desk in Dubai directly."}
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center pt-1">
+          <button
+            type="button"
+            onClick={() => onNavigate("/request-quote")}
+            className="px-6 py-3.5 bg-gold-base hover:bg-gold-dark text-text-charcoal font-mono text-xs font-bold uppercase tracking-widest rounded transition-colors flex items-center justify-center gap-2"
+          >
+            <FileText size={14} />
+            {isAr ? "طلب عرض سعر مؤكد" : "Request Firm Quote"}
+          </button>
+          <a
+            href={waLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-6 py-3.5 bg-panel-dark hover:bg-panel-charcoal text-brand-bg font-mono text-xs font-bold uppercase tracking-widest rounded border border-champagne/30 transition-colors flex items-center justify-center gap-2"
+          >
+            <Phone size={14} />
+            {isAr ? "واتساب المكتب" : "WhatsApp Quote Desk"}
+          </a>
+        </div>
+      </section>
     </div>
   );
 }
