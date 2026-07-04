@@ -156,6 +156,109 @@ export default function App() {
     return () => window.removeEventListener("popstate", handleLocation);
   }, []);
 
+  // Premium Dynamic SEO Metadata sync based on route and language
+  useEffect(() => {
+    const routeTitlesEn: Record<string, string> = {
+      "/": "PGR UAE | Dubai Precious Metals & Bullion Desk",
+      "/gold": "Gold Bullion Collection | PGR UAE Dubai",
+      "/silver": "Silver Bullion Collection | PGR UAE Dubai",
+      "/coins": "Accredited Investment Coins | PGR UAE",
+      "/iraq-delivery": "Baghdad & Iraq Secure Gold Delivery | PGR UAE",
+      "/request-quote": "Request Firm Quote | PGR UAE Precious Metals",
+      "/calculator": "Precious Metals Investment Calculator | PGR UAE",
+      "/dashboard": "Client Vault & Allocation Dashboard | PGR UAE",
+      "/compliance": "Regulatory Compliance & Audit Desk | PGR UAE",
+      "/terms": "Terms & Conditions | PGR UAE",
+      "/privacy-policy": "Privacy Policy | PGR UAE",
+      "/kyc-aml-policy": "KYC & AML Policy | PGR UAE",
+      "/pricing-disclaimer": "Pricing & Settlement Disclaimer | PGR UAE"
+    };
+
+    const routeTitlesAr: Record<string, string> = {
+      "/": "PGR UAE | ديوان دبي لتداول المعادن الثمينة والسبائك",
+      "/gold": "مجموعة سبائك الذهب الاستثمارية | PGR UAE",
+      "/silver": "مجموعة سبائك الفضة الاستثمارية | PGR UAE",
+      "/coins": "المسكوكات والعملات الذهبية المعتمدة | PGR UAE",
+      "/iraq-delivery": "الشحن الآمن والتسليم في بغداد والعراق | PGR UAE",
+      "/request-quote": "طلب عرض سعر رسمي | PGR UAE للمعادن الثمينة",
+      "/calculator": "حاسبة استثمار الذهب والفضة | PGR UAE",
+      "/dashboard": "منصة الخزينة وحسابات المستثمرين | PGR UAE",
+      "/compliance": "مكتب الامتثال والتدقيق التنظيمي | PGR UAE",
+      "/terms": "الشروط والأحكام العامة | PGR UAE",
+      "/privacy-policy": "سياسة الخصوصية وحماية البيانات | PGR UAE",
+      "/kyc-aml-policy": "سياسة مكافحة غسيل الأموال واعرف عميلك | PGR UAE",
+      "/pricing-disclaimer": "إخلاء مسؤولية التسعير والتسوية | PGR UAE"
+    };
+
+    const routeDescsEn: Record<string, string> = {
+      "/": "Procure certified physical gold bars and silver bullion directly from world-famous accredited refiners. Secured settlement on the PGR UAE desk.",
+      "/gold": "Explore accredited Gold Bars from 1g to 1kg sourced from top LBMA-certified Swiss and UAE refiners.",
+      "/silver": "Explore physical investment Silver Bars including 100g, 500g, and 1kg sizes from leading international mints.",
+      "/coins": "Browse historic and highly liquid gold and silver investment coins backed by national treasuries.",
+      "/iraq-delivery": "Learn about our fully insured, high-security armored logistics from Dubai directly to accredited vaults in Baghdad, Iraq.",
+      "/request-quote": "Initiate a firm trade order on the PGR UAE desk. Secure your pricing against real-time gold and silver spot rates.",
+      "/calculator": "Calculate exact indicative pricing for gold and silver bullion bars based on real-time live global market rates.",
+      "/dashboard": "Manage your allocated physical reserves, review trading tickets, and verify KYC verification status securely."
+    };
+
+    const routeDescsAr: Record<string, string> = {
+      "/": "اشترِ سبائك الذهب والفضة المعتمدة دولياً مباشرة من مصافي دبي والعالم السويسرية. أسعار معتمدة قبل الدفع وتسليم آمن.",
+      "/gold": "تصفح سبائك الذهب الفاخرة من وزن ١ جرام إلى ١ كيلو جرام من أرقى المصافي السويسرية والمحلية المعتمدة.",
+      "/silver": "مجموعة الفضة الاستثمارية النقية بأوزان متنوعة تشمل ١٠٠ جرام، ٥٠٠ جرام، و١ كيلو جرام لأعلى مستويات التحوط المالي.",
+      "/coins": "العملات والمسكوكات الذهبية التاريخية الأكثر سيولة وأماناً الصادرة والمضمونة من حكومات العالم.",
+      "/iraq-delivery": "تفاصيل شحن الذهب المؤمن والمحمي من دبي مباشرة إلى الخزائن المعتمدة لعملائنا الكرام في بغداد وعموم العراق.",
+      "/request-quote": "ابدأ بطلب تسعير رسمي مؤكد لعمليات الشراء الكبرى من ديوان PGR UAE للمعادن الثمينة.",
+      "/calculator": "احسب القيمة الاسترشادية الدقيقة لمدخراتك من الذهب والفضة بناءً على أسعار الشاشات العالمية الفورية المباشرة.",
+      "/dashboard": "أدر حساب الخزينة الخاص بك، وتابع فواتير الشراء، وتحقق من حالة مستندات اعرف عميلك بأمان كامل."
+    };
+
+    const title = currentLang === "ar" 
+      ? (routeTitlesAr[currentPath] || routeTitlesAr["/"]) 
+      : (routeTitlesEn[currentPath] || routeTitlesEn["/"]);
+    
+    const desc = currentLang === "ar"
+      ? (routeDescsAr[currentPath] || routeDescsAr["/"])
+      : (routeDescsEn[currentPath] || routeDescsEn["/"]);
+
+    document.title = title;
+
+    // Update meta description
+    let metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) {
+      metaDesc.setAttribute("content", desc);
+    } else {
+      metaDesc = document.createElement("meta");
+      metaDesc.setAttribute("name", "description");
+      metaDesc.setAttribute("content", desc);
+      document.head.appendChild(metaDesc);
+    }
+
+    // Update Open Graph and Twitter title/desc tags
+    const ogTitle = document.querySelector('meta[property="og:title"]');
+    if (ogTitle) ogTitle.setAttribute("content", title);
+    
+    const ogDesc = document.querySelector('meta[property="og:description"]');
+    if (ogDesc) ogDesc.setAttribute("content", desc);
+
+    const twitterTitle = document.querySelector('meta[name="twitter:title"]');
+    if (twitterTitle) twitterTitle.setAttribute("content", title);
+
+    const twitterDesc = document.querySelector('meta[name="twitter:description"]');
+    if (twitterDesc) twitterDesc.setAttribute("content", desc);
+
+    // Add dynamic canonical tag update
+    let canonical = document.querySelector('link[rel="canonical"]');
+    const absoluteUrl = `https://pgruae.com${currentPath === "/" ? "" : currentPath}`;
+    if (canonical) {
+      canonical.setAttribute("href", absoluteUrl);
+    } else {
+      canonical = document.createElement("link");
+      canonical.setAttribute("rel", "canonical");
+      canonical.setAttribute("href", absoluteUrl);
+      document.head.appendChild(canonical);
+    }
+  }, [currentPath, currentLang]);
+
   const handleUserLogin = async (supabaseUser: any) => {
     const email = supabaseUser.email;
     const fullName = supabaseUser.user_metadata?.full_name || supabaseUser.email?.split("@")[0] || "Accredited Investor";
@@ -486,12 +589,66 @@ export default function App() {
   const productCategories = ["/gold-bars", "/silver-bars", "/bullion-coins", "/custom-inquiry"];
   if (productCategories.includes(currentPath)) {
     return (
-      <ProductLandingPage 
-        categoryPath={currentPath as any} 
-        currentLang={currentLang} 
-        onNavigate={navigateTo} 
-        onOpenProductDetail={setSelectedProduct}
-      />
+      <div className={`min-h-screen text-[#1F1A17] bg-[#FAF9F5] selection:bg-gold-base selection:text-black overflow-hidden relative ${
+        currentLang === "ar" ? "font-arabic" : "font-sans"
+      }`} id="product-landing-page-wrapper">
+        <Header
+          currentLang={currentLang}
+          toggleLanguage={toggleLanguage}
+          rates={rates}
+          selectedCurrency={selectedCurrency}
+          onNavigate={(sec) => {
+            navigateTo("/");
+            setTimeout(() => handleScrollToSection(sec), 100);
+          }}
+          onOpenAIChat={() => setIsAIChatOpen(true)}
+          onOpenQuote={() => navigateTo("/request-quote")}
+          onOpenClientDashboard={() => navigateTo("/dashboard")}
+          onOpenAdminPortal={() => navigateTo("/admin")}
+        />
+        <div className="max-w-7xl mx-auto py-24 px-4 md:px-8">
+          <ProductLandingPage 
+            categoryPath={currentPath as any} 
+            currentLang={currentLang} 
+            onNavigate={navigateTo} 
+            onOpenProductDetail={setSelectedProduct}
+            rates={rates}
+            selectedCurrency={selectedCurrency}
+            onOpenQuote={(pName) => {
+              navigateTo("/request-quote");
+            }}
+          />
+        </div>
+        <Footer
+          currentLang={currentLang}
+          onNavigate={(sec) => {
+            navigateTo("/");
+            setTimeout(() => handleScrollToSection(sec), 100);
+          }}
+          onOpenAIChat={() => setIsAIChatOpen(true)}
+          onOpenQuote={() => navigateTo("/request-quote")}
+          onOpenLegalDoc={(docId) => {
+            const rMap: Record<string, string> = {
+              "terms": "/terms",
+              "privacy": "/privacy-policy",
+              "aml": "/kyc-aml-policy",
+              "pricing": "/pricing-disclaimer",
+              "refund": "/refund-cancellation-policy",
+              "delivery": "/delivery-collection-policy",
+              "storage": "/allocated-storage-terms",
+              "sellback": "/sell-back-policy",
+              "risk": "/risk-disclosure",
+              "cookie": "/cookie-policy",
+              "compliance": "/compliance"
+            };
+            const p = rMap[docId] || "/";
+            window.history.pushState(null, "", p);
+            setActiveLegalDoc(docId);
+          }}
+          onOpenClientDashboard={() => navigateTo("/dashboard")}
+          onOpenAdminPortal={() => navigateTo("/admin")}
+        />
+      </div>
     );
   }
 
@@ -569,6 +726,74 @@ export default function App() {
 
           <div className="pt-4">
             <IraqTrustBadge currentLang={currentLang} />
+          </div>
+        </div>
+      </section>
+
+      {/* PGR UAE Bullion Collection Showcase Section */}
+      <section className="py-20 px-4 md:px-8 bg-white border-b border-stone-200/50" id="bullion-collection-showcase">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            
+            {/* Visual Column */}
+            <div className="relative rounded overflow-hidden border border-[#E8DEC9] bg-[#FAF9F5] p-6 flex items-center justify-center shadow-md group">
+              <img
+                src="/images/products/01-bullion-collection.webp"
+                alt={currentLang === "ar" ? "مجموعة سبائك بي جي آر الإمارات" : "PGR UAE Bullion Collection"}
+                className="w-full h-auto max-h-[450px] object-contain rounded transition-transform duration-700 group-hover:scale-[1.02]"
+                loading="lazy"
+              />
+              <div className="absolute inset-0 bg-radial-gradient from-transparent via-stone-100/10 to-white/50 pointer-events-none" />
+            </div>
+
+            {/* Content Column */}
+            <div className="space-y-6 text-center lg:text-left animate-fadeIn" style={{ direction: currentLang === "ar" ? "rtl" : "ltr" }}>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-[#FAF9F5] border border-[#E8DEC9]">
+                <span className="h-2 w-2 rounded-full bg-[#C6A15B]"></span>
+                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#5E564D]">
+                  {currentLang === "ar" ? "عرض المجموعة الفاخرة" : "Premium Portfolio Showcase"}
+                </span>
+              </div>
+
+              <div className="space-y-3">
+                <h2 className="text-3xl md:text-4xl font-serif tracking-tight text-[#1F1A17] font-medium leading-tight">
+                  {currentLang === "ar" ? "مجموعة سبائك PGR دبي" : "PGR UAE Bullion Collection"}
+                </h2>
+                <p className="text-[#A47C36] text-xs font-mono tracking-widest uppercase font-bold">
+                  {currentLang === "ar" ? "سبائك الذهب • سبائك الفضة • مسكوكات وعملات مصفاة" : "Gold Bars • Silver Bars • Mint Bars & Coins"}
+                </p>
+              </div>
+
+              <p className="text-sm text-stone-600 leading-relaxed max-w-lg mx-auto lg:mx-0">
+                {currentLang === "ar"
+                  ? "اكتشف أرقى سبائك الذهب والفضة المعتمدة دولياً من جمعية سوق السبائك في لندن (LBMA). تتوفر أوزان الخزينة المتعددة من جرام واحد إلى كيلو جرام، مصحوبة بوثائق الفحص والرقم التسلسلي المسجل رسمياً."
+                  : "Discover physical gold and silver certified treasury assets directly sourced from accredited London Bullion Market Association (LBMA) refiners. Ranging from 1 Gram up to 1 Kilogram bars, all options feature official serializations."}
+              </p>
+
+              {/* Compliance quote status note */}
+              <div className="p-4 rounded border border-[#E8DEC9] bg-[#FAF9F5]/50 text-left space-y-1.5 max-w-md mx-auto lg:mx-0">
+                <p className="text-[11px] font-mono text-stone-700 font-bold flex items-center gap-1.5 justify-center lg:justify-start">
+                  <span className="h-1.5 w-1.5 rounded-full bg-olive-accent"></span>
+                  {currentLang === "ar" ? "تنويه تسعير إرشادي" : "Indicative Quote Status"}
+                </p>
+                <p className="text-[10px] text-stone-500 font-sans leading-normal">
+                  {currentLang === "ar"
+                    ? "الأسعار المعروضة هي أسعار استرشادية مبدئية فقط. يتم تأكيد السعر النهائي المعتمد للتسوية من قبل ديوان تداول PGR UAE."
+                    : "Indicative prices available. Final quote confirmed by PGR UAE desk before physical order settlement."}
+                </p>
+              </div>
+
+              {/* CTA Button */}
+              <div className="pt-2 flex justify-center lg:justify-start">
+                <button
+                  onClick={() => navigateTo("/request-quote")}
+                  className="px-8 py-4 bg-[#C6A15B] hover:bg-[#A47C36] text-[#1F1A17] hover:text-white font-mono text-[11px] font-bold uppercase tracking-widest rounded transition-all duration-300 shadow-md hover:scale-[1.01]"
+                >
+                  {currentLang === "ar" ? "طلب تسعير مؤكد" : "Request Firm Quote"}
+                </button>
+              </div>
+            </div>
+
           </div>
         </div>
       </section>

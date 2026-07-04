@@ -8,6 +8,7 @@ import { X, ShieldCheck, Phone, CheckCircle, Mail, AlertTriangle, FileText, Zoom
 import { Product, LiveMarketRates } from "../types";
 import { PRODUCTS } from "../data";
 import { dbService, isProduction } from "../lib/supabase";
+import { getProductImage } from "../lib/productImages";
 
 interface ProductDetailModalProps {
   currentLang: "en" | "ar";
@@ -96,9 +97,11 @@ export default function ProductDetailModal({
 
   // Pre-compile the WhatsApp message depending on selected language
   const getWhatsAppLink = () => {
+    const pName = currentLang === "ar" ? activeProduct.name_ar : activeProduct.name_en;
+    const isGold = activeProduct.technical_specs.metal === "gold";
     const baseMsg = currentLang === "ar"
-      ? "مرحباً، أريد طلب عرض سعر من PGR UAE للذهب أو الفضة."
-      : "Hello, I would like to request a quote from PGR UAE for gold or silver products.";
+      ? `مرحباً ديوان تسعير PGR UAE، أود طلب عرض سعر رسمي مؤكد لمنتج: ${pName} (وزن: ${activeProduct.weight_label}، نقاوة: ${activeProduct.purity})`
+      : `Hello PGR UAE Quote Desk, I would like to request a firm quote for: ${pName} (${activeProduct.weight_label} - ${activeProduct.purity})`;
     
     return `https://wa.me/971559688837?text=${encodeURIComponent(baseMsg)}`;
   };
@@ -193,18 +196,14 @@ Phone: ${phone}
                   onMouseLeave={() => setZoomScale(1)}
                 >
                   <img
-                    src={
-                      activeProduct.image_url || (isGold
-                        ? "/gold_bar_luxury_1782445126673.jpg"
-                        : "/silver_bar_luxury_1782445139922.jpg")
-                    }
+                    src={getProductImage(activeProduct)}
                     alt={activeProduct.name_en}
                     referrerPolicy="no-referrer"
                     onError={(e) => {
                       e.currentTarget.onerror = null;
                       e.currentTarget.src = isGold
-                        ? "/gold_bar_luxury_1782445126673.jpg"
-                        : "/silver_bar_luxury_1782445139922.jpg";
+                        ? "/images/products/02-gold-bars-1g-5g-10g.webp"
+                        : "/images/products/06-silver-bars-1oz-100g.webp";
                     }}
                     className="w-full h-full object-contain transition-transform duration-200"
                     style={{
@@ -451,17 +450,13 @@ Phone: ${phone}
                         <div className="flex items-center gap-3">
                           <div className="h-10 w-10 rounded bg-brand-card border border-soft-border overflow-hidden shrink-0 flex items-center justify-center">
                             <img
-                              src={
-                                rel.image_url || (rel.technical_specs.metal === "gold"
-                                  ? "/gold_bar_luxury_1782445126673.jpg"
-                                  : "/silver_bar_luxury_1782445139922.jpg")
-                              }
+                              src={getProductImage(rel)}
                               alt={rel.name_en}
                               onError={(e) => {
                                 e.currentTarget.onerror = null;
                                 e.currentTarget.src = rel.technical_specs.metal === "gold"
-                                  ? "/gold_bar_luxury_1782445126673.jpg"
-                                  : "/silver_bar_luxury_1782445139922.jpg";
+                                  ? "/images/products/02-gold-bars-1g-5g-10g.webp"
+                                  : "/images/products/06-silver-bars-1oz-100g.webp";
                               }}
                               className="h-full w-full object-contain"
                             />

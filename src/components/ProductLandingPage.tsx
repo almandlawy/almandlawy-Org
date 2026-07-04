@@ -1,17 +1,29 @@
 import React, { useState } from "react";
-import Logo from "./Logo";
 import { PRODUCTS } from "../data";
-import { Product } from "../types";
-import { ArrowLeft, ArrowRight, Shield, Award, HelpCircle, CheckSquare, MessageSquare, ExternalLink } from "lucide-react";
+import { Product, LiveMarketRates } from "../types";
+import { ArrowLeft, ArrowRight, Shield, Award, HelpCircle, Phone, FileText, CheckCircle } from "lucide-react";
+import { getProductImage } from "../lib/productImages";
 
 interface ProductLandingPageProps {
   currentLang: "en" | "ar";
   categoryPath: "/gold-bars" | "/silver-bars" | "/bullion-coins" | "/custom-inquiry";
   onNavigate: (path: string) => void;
   onOpenProductDetail: (product: Product) => void;
+  rates?: LiveMarketRates | null;
+  selectedCurrency?: string;
+  onOpenQuote?: (productName?: string) => void;
 }
 
-export default function ProductLandingPage({ currentLang, categoryPath, onNavigate, onOpenProductDetail }: ProductLandingPageProps) {
+export default function ProductLandingPage({
+  currentLang,
+  categoryPath,
+  onNavigate,
+  onOpenProductDetail,
+  rates,
+  selectedCurrency = "AED",
+  onOpenQuote
+}: ProductLandingPageProps) {
+  const isAr = currentLang === "ar";
   
   // Determine metadata based on category
   const getCategoryMeta = () => {
@@ -58,7 +70,7 @@ export default function ProductLandingPage({ currentLang, categoryPath, onNaviga
             },
             {
               q_en: "What is the minimum weight for silver quotes?",
-              q_ar: "ما هو الحد الأدنى لطلب عرض أسعار الفضة؟",
+              q_ar: "ما هو الحد الأدنى لطلب عرض أسعار الفضة？",
               a_en: "While we showcase 10g and 1oz items, large bullion inquiries typically involve weights of 1 KILO, 100 oz, or 5 KILOs to maximize cost efficiency on desk premiums.",
               a_ar: "بينما نعرض أوزاناً تبدأ من ١٠ جرام وأونصة، فإن طلبات عروض الأسعار المفضلة تبدأ من ١ كيلو جرام أو ١٠٠ أونصة لضمان فروق أسعار منافسة للغاية."
             }
@@ -110,191 +122,282 @@ export default function ProductLandingPage({ currentLang, categoryPath, onNaviga
   };
 
   const meta = getCategoryMeta();
-  
-  // Filter products by category
   const filteredProducts = PRODUCTS.filter(p => p.category === meta.categoryKey);
 
+  // Calculate live indicative prices
+  const calculateIndicativePrice = (prod: Product) => {
+    if (!rates) return null;
+    const cur = selectedCurrency as any;
+    const isGoldMetal = prod.technical_specs.metal === "gold";
+    const baseSpot = isGoldMetal ? rates.gold.currencies[cur] : rates.silver.currencies[cur];
+
+    if (!baseSpot) return null;
+
+    let totalGrams = 0;
+    if (prod.technical_specs.weight_grams) {
+      totalGrams = prod.technical_specs.weight_grams;
+    } else if (prod.technical_specs.weight_oz) {
+      totalGrams = prod.technical_specs.weight_oz * 31.1034768;
+    }
+
+    if (totalGrams === 0) return null;
+
+    const baseCost = totalGrams * baseSpot.gram;
+    const finalCost = baseCost * prod.premium_multiplier;
+
+    return finalCost.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  };
+
+  const getWhatsAppLink = (prod: Product) => {
+    const pName = isAr ? prod.name_ar : prod.name_en;
+    const baseMsg = isAr
+      ? `مرحباً، أريد طلب عرض سعر رسمي لمنتج: ${pName}`
+      : `Hello, I would like to request a firm quote from the PGR UAE desk for: ${pName}`;
+    return `https://wa.me/971559688837?text=${encodeURIComponent(baseMsg)}`;
+  };
+
   return (
-    <div className="min-h-screen bg-[#070707] text-gray-300 font-mono text-xs py-24 px-4 md:px-8 relative overflow-hidden">
-      {/* Visual background glows */}
-      <div className="absolute top-1/4 right-1/4 w-[600px] h-[600px] bg-gold-dark/5 blur-[150px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-1/4 left-1/4 w-[400px] h-[400px] bg-white/[0.01] blur-[150px] rounded-full pointer-events-none" />
-
-      {/* Breadcrumb Header */}
-      <div className="max-w-7xl mx-auto mb-10 flex justify-between items-center relative z-10">
-        <button
-          onClick={() => onNavigate("/")}
-          className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors cursor-pointer uppercase tracking-wider text-[10px]"
-        >
-          {currentLang === "ar" ? <ArrowRight size={14} /> : <ArrowLeft size={14} />}
-          <span>{currentLang === "ar" ? "العودة للرئيسية" : "Back to Home"}</span>
-        </button>
-        <Logo className="w-9 h-9" showText={false} />
-      </div>
-
-      <div className="max-w-7xl mx-auto relative z-10 space-y-12">
+    <div className="bg-[#FAF9F5] py-12" style={{ direction: isAr ? "rtl" : "ltr" }}>
+      <div className="space-y-12">
         
-        {/* Category Hero Block */}
-        <div className="bg-[#0d0d0e] border border-white/[0.03] rounded-lg p-8 md:p-12 shadow-2xl space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.02] border border-white/[0.05]">
-            <span className="h-1.5 w-1.5 rounded-full bg-gold-base"></span>
-            <span className="text-[10px] uppercase tracking-[0.2em] text-gray-400">
-              {currentLang === "ar" ? "كتالوج السبائك الفاخرة" : "Premium Bullion Catalog"}
+        {/* Category Hero Banner */}
+        <div className="bg-white border border-[#E8DEC9] rounded p-8 md:p-12 shadow-sm space-y-4 relative overflow-hidden">
+          {/* Subtle gold decoration */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-[#C6A15B]/5 rounded-full blur-2xl pointer-events-none" />
+          
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FAF9F5] border border-[#E8DEC9]">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#C6A15B] animate-pulse"></span>
+            <span className="text-[10px] uppercase tracking-[0.2em] text-[#5E564D] font-mono">
+              {isAr ? "كتالوج السبائك الفاخرة" : "Premium Bullion Catalog"}
             </span>
           </div>
           
-          <h1 className="text-white font-serif text-3xl md:text-4xl font-extrabold tracking-tight">
-            {currentLang === "ar" ? meta.title_ar : meta.title_en}
+          <h1 className="text-[#1F1A17] font-serif text-3xl md:text-4xl font-medium tracking-wide">
+            {isAr ? meta.title_ar : meta.title_en}
           </h1>
-          <p className="text-[#c5a85c] text-sm tracking-widest uppercase font-semibold">
-            {currentLang === "ar" ? meta.subtitle_ar : meta.subtitle_en}
+          <p className="text-[#A47C36] text-xs font-mono tracking-widest uppercase font-bold">
+            {isAr ? meta.subtitle_ar : meta.subtitle_en}
           </p>
-          <p className="text-gray-400 text-sm leading-relaxed max-w-4xl font-sans pt-2">
-            {currentLang === "ar" ? meta.description_ar : meta.description_en}
+          <p className="text-[#5E564D] text-xs md:text-sm leading-relaxed max-w-4xl pt-1">
+            {isAr ? meta.description_ar : meta.description_en}
           </p>
 
-          <div className="pt-4 flex flex-wrap gap-4 text-[10px] uppercase tracking-wider">
-            <span className="flex items-center gap-1 text-[#c5a85c] font-bold">
+          <div className="pt-4 flex flex-wrap gap-4 text-[10px] uppercase tracking-wider font-mono">
+            <span className="flex items-center gap-1.5 text-[#556B5D] font-bold">
               <Shield size={12} />
-              {currentLang === "ar" ? "سبائك معتمدة ١٠٠٪" : "100% Certified Purity"}
+              {isAr ? "سبائك معتمدة ١٠٠٪" : "100% Certified Purity"}
             </span>
-            <span className="text-white/10 hidden sm:inline">•</span>
-            <span className="flex items-center gap-1 text-emerald-400 font-bold">
+            <span className="text-[#E8DEC9] hidden sm:inline">|</span>
+            <span className="flex items-center gap-1.5 text-[#A47C36] font-bold">
               <Award size={12} />
-              {currentLang === "ar" ? "الأسعار مرتبطة بالسعر العالمي المباشر" : "Rates Linked to Live Spot"}
+              {isAr ? "أسعار مرتبطة بالبورصة المباشرة" : "Rates Linked to Live Spot"}
             </span>
           </div>
         </div>
 
-        {/* Dynamic Display of Catalog Items */}
+        {/* Catalog Items Display Grid */}
         {filteredProducts.length > 0 ? (
           <div className="space-y-6">
-            <div className="flex justify-between items-center border-b border-white/[0.04] pb-2">
-              <h2 className="text-white uppercase tracking-widest font-bold text-sm font-serif">
-                {currentLang === "ar" ? "الأوزان والمواصفات المتاحة" : "Available Weight Formats"}
+            <div className="flex justify-between items-center border-b border-[#E8DEC9] pb-3">
+              <h2 className="text-[#1F1A17] uppercase tracking-wider font-serif text-base font-medium">
+                {isAr ? "الأوزان والمواصفات المتاحة" : "Available Weight Formats"}
               </h2>
-              <span className="text-gray-500 uppercase tracking-widest text-[10px]">
-                {filteredProducts.length} {currentLang === "ar" ? "منتج" : "Specifications Listed"}
+              <span className="text-[#5E564D] uppercase tracking-widest text-[10px] font-mono">
+                {filteredProducts.length} {isAr ? "مواصفات مسجلة" : "Specifications Listed"}
               </span>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredProducts.map((prod) => (
-                <div 
-                  key={prod.id}
-                  onClick={() => onOpenProductDetail(prod)}
-                  className="bg-[#0d0d0e] border border-white/[0.04] hover:border-[#c5a85c]/40 rounded p-6 shadow-md transition-all duration-300 hover:scale-[1.01] flex flex-col justify-between group cursor-pointer relative"
-                >
-                  {/* Subtle hover glow accent */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-[#c5a85c]/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded" />
+              {filteredProducts.map((prod) => {
+                const livePrice = calculateIndicativePrice(prod);
+                return (
+                  <div 
+                    key={prod.id}
+                    className="bg-white border border-[#E8DEC9] hover:border-[#C6A15B] rounded p-6 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between relative group"
+                  >
+                    <div className="space-y-4">
+                      {/* Metal tag, purity and weight */}
+                      <div className="flex justify-between items-start">
+                        <span className="text-[#5E564D] text-[10px] uppercase tracking-widest font-mono font-bold bg-[#FAF9F5] px-2.5 py-1 rounded border border-[#E8DEC9]">
+                          {prod.weight_label}
+                        </span>
+                        <span className="text-[#A47C36] text-[10px] uppercase tracking-wider font-mono font-bold bg-[#FAF9F5] px-2 py-0.5 rounded border border-[#E8DEC9]/50">
+                          {prod.purity}
+                        </span>
+                      </div>
 
-                  <div className="space-y-4 relative z-10">
-                    <div className="flex justify-between items-start">
-                      <span className="text-gray-500 text-[10px] uppercase tracking-widest font-bold bg-[#070707] px-2.5 py-1 rounded border border-white/5">
-                        {prod.weight_label}
-                      </span>
-                      <span className="text-[#c5a85c] text-[10px] uppercase tracking-wider font-bold">
-                        {prod.purity}
-                      </span>
+                      {/* Product image (optional, styled beautifully) */}
+                      <div 
+                        onClick={() => onOpenProductDetail(prod)}
+                        className="h-40 w-full rounded bg-[#FAF9F5] border border-[#E8DEC9]/50 overflow-hidden flex items-center justify-center p-4 cursor-pointer relative"
+                      >
+                        <img
+                          src={getProductImage(prod)}
+                          alt={prod.name_en}
+                          referrerPolicy="no-referrer"
+                          onError={(e) => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = prod.technical_specs.metal === "gold"
+                              ? "/images/products/02-gold-bars-1g-5g-10g.webp"
+                              : "/images/products/06-silver-bars-1oz-100g.webp";
+                          }}
+                          className="h-full object-contain transition-transform duration-300 group-hover:scale-105"
+                        />
+                        <div className={`absolute inset-0 pointer-events-none ${prod.technical_specs.metal === 'gold' ? 'shimmer-mask-gold' : 'shimmer-mask'}`} />
+                      </div>
+
+                      {/* Title & Metadata */}
+                      <div onClick={() => onOpenProductDetail(prod)} className="space-y-1 cursor-pointer">
+                        <div className="text-[10px] uppercase font-mono text-[#A47C36] font-bold tracking-wider">
+                          {prod.manufacturer} • <span className="capitalize">{prod.technical_specs.metal === "gold" ? (isAr ? "ذهب" : "Gold") : (isAr ? "فضة" : "Silver")}</span>
+                        </div>
+                        <h3 className="text-[#1F1A17] text-sm font-serif font-medium leading-snug group-hover:text-[#A47C36] transition-colors">
+                          {isAr ? prod.name_ar : prod.name_en}
+                        </h3>
+                        <p className="text-[#5E564D] text-[11px] leading-relaxed line-clamp-2 font-sans">
+                          {isAr ? prod.description_ar : prod.description_en}
+                        </p>
+                      </div>
+
+                      {/* Pricing section with required compliance wording */}
+                      <div className="pt-3 border-t border-[#E8DEC9]/60 space-y-1.5">
+                        <div className="flex justify-between items-baseline">
+                          <span className="text-[10px] font-mono text-[#5E564D]">
+                            {isAr ? "السعر الاسترشادي المباشر:" : "Indicative Live Price:"}
+                          </span>
+                          {livePrice ? (
+                            <span className="text-sm font-mono font-bold text-[#A47C36]">
+                              {livePrice} <span className="text-[10px] text-[#5E564D]">{selectedCurrency}</span>
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-mono text-[#A47C36] font-bold">
+                              {isAr ? "يتطلب تسعير فوري" : "Quote on Request"}
+                            </span>
+                          )}
+                        </div>
+                        
+                        {/* Final Quote Confirmed wording mandated by compliance QA */}
+                        <div className="bg-[#FAF9F5] border border-[#E8DEC9] px-2 py-1.5 rounded text-[9px] font-mono text-[#556B5D] leading-tight flex items-start gap-1">
+                          <CheckCircle size={10} className="shrink-0 mt-0.5 text-[#556B5D]" />
+                          <span>
+                            {isAr 
+                              ? "السعر الاسترشادي خاضع للتأكيد النهائي من مكتب تداول بي جي آر الإمارات."
+                              : "Final quote confirmed by PGR UAE desk before order settlement."}
+                          </span>
+                        </div>
+                      </div>
                     </div>
 
-                    <h3 className="text-white text-sm font-serif group-hover:text-[#c5a85c] transition-colors leading-snug">
-                      {currentLang === "ar" ? prod.name_ar : prod.name_en}
-                    </h3>
-                    
-                    <p className="text-gray-500 text-[11px] leading-relaxed line-clamp-2 font-sans">
-                      {currentLang === "ar" ? prod.description_ar : prod.description_en}
-                    </p>
-                  </div>
+                    {/* Request Quote Buttons */}
+                    <div className="pt-4 mt-4 border-t border-[#E8DEC9]/60 flex flex-col sm:flex-row gap-2">
+                      <button 
+                        onClick={() => {
+                          if (onOpenQuote) {
+                            onOpenQuote(isAr ? prod.name_ar : prod.name_en);
+                          } else {
+                            onNavigate("/request-quote");
+                          }
+                        }}
+                        className="flex-1 py-2 px-2.5 bg-[#C6A15B] hover:bg-[#A47C36] text-[#1F1A17] hover:text-white font-mono text-[10px] font-bold uppercase tracking-wider rounded transition-colors text-center cursor-pointer flex items-center justify-center gap-1 shadow-sm"
+                      >
+                        <FileText size={11} />
+                        <span>{isAr ? "طلب تسعير مؤكد" : "Request Firm Quote"}</span>
+                      </button>
 
-                  <div className="pt-6 border-t border-white/[0.03] mt-6 flex justify-between items-center relative z-10">
-                    <span className="text-emerald-500 font-bold uppercase text-[9px] bg-emerald-500/10 px-2.5 py-1 rounded">
-                      {currentLang === "ar" ? "متاح للطلب" : prod.availability}
-                    </span>
-                    <button 
-                      className="text-white/60 group-hover:text-white uppercase text-[10px] font-bold tracking-wider flex items-center gap-1"
-                    >
-                      <span>{currentLang === "ar" ? "التفاصيل والطلب" : "Details"}</span>
-                      <ExternalLink size={11} />
-                    </button>
+                      <a 
+                        href={getWhatsAppLink(prod)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 py-2 px-2.5 bg-white hover:bg-[#FAF9F5] border border-[#E8DEC9] text-[#1F1A17] font-mono text-[10px] font-bold uppercase tracking-wider rounded transition-colors text-center flex items-center justify-center gap-1"
+                      >
+                        <Phone size={11} className="text-[#556B5D]" />
+                        <span>{isAr ? "طلب واتساب" : "WhatsApp Desk"}</span>
+                      </a>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         ) : (
-          /* Custom inquiry form or message when no listed standard items */
-          <div className="bg-[#0d0d0e] border border-white/[0.04] rounded-lg p-8 md:p-12 text-center space-y-6 max-w-xl mx-auto">
-            <h3 className="text-white text-base font-serif font-bold uppercase">
-              {currentLang === "ar" ? "طلب تخصيص سبائك أو صهر مخصص" : "Bespoke Refining Custom Quote"}
+          /* Custom/Bespoke Inquiry View */
+          <div className="bg-white border border-[#E8DEC9] rounded-lg p-8 md:p-12 text-center space-y-6 max-w-xl mx-auto shadow-sm">
+            <h3 className="text-[#1F1A17] text-base font-serif font-medium uppercase tracking-wide">
+              {isAr ? "طلب تخصيص سبائك أو صهر مخصص" : "Bespoke Refining Custom Quote"}
             </h3>
-            <p className="text-gray-400 text-[11px] leading-relaxed">
-              {currentLang === "ar"
+            <p className="text-[#5E564D] text-xs leading-relaxed font-sans">
+              {isAr
                 ? "هل تحتاج لسبائك بأوزان مخصصة أو طلبيات تجارية كبيرة؟ يتخصص مكتبنا في صياغة المعادن وصهرها بالتعاون مع مصافي LBMA لتأمين أوزان الخزانة وحبوب الذهب والفضة الفاخرة."
                 : "Looking for customized weights, large wholesale volumes, or industrial grain format? Submit a custom quote request, and our desk will secure tailored pricing and refiner availability."}
             </p>
             <button
               onClick={() => onNavigate("/request-quote")}
-              className="px-8 py-3 bg-gold-gradient text-black font-sans font-bold uppercase tracking-widest rounded shadow-lg hover:scale-[1.02] transform transition-all duration-300 cursor-pointer text-[10px]"
+              className="px-8 py-3.5 bg-[#C6A15B] hover:bg-[#A47C36] text-[#1F1A17] hover:text-white font-mono font-bold uppercase tracking-widest rounded shadow transition-all duration-300 cursor-pointer text-[10px]"
             >
-              {currentLang === "ar" ? "تعبئة نموذج الطلبات المخصصة" : "Open Custom Inquiry Form"}
+              {isAr ? "تعبئة نموذج الطلبات المخصصة" : "Open Custom Inquiry Form"}
             </button>
           </div>
         )}
 
-        {/* Indicative Pricing Policy Notice */}
-        <div className="bg-amber-950/10 border border-[#c5a85c]/10 rounded p-5 space-y-2">
-          <h4 className="text-[#c5a85c] text-[10px] uppercase tracking-widest font-bold flex items-center gap-2">
-            ⚠️ {currentLang === "ar" ? "تنويه تسعير إرشادي مهم" : "IMPORTANT INDICATIVE PRICING NOTICE"}
+        {/* Pricing Policy Disclaimer Banner */}
+        <div className="bg-[#FFFDF8] border border-[#E8DEC9] rounded p-5 space-y-2 shadow-sm">
+          <h4 className="text-[#A47C36] text-[10px] uppercase tracking-widest font-bold font-mono flex items-center gap-2">
+            ⚠️ {isAr ? "تنويه تسعير إرشادي مهم" : "IMPORTANT INDICATIVE PRICING NOTICE"}
           </h4>
-          <p className="text-gray-400 text-[11px] leading-normal font-sans">
-            {currentLang === "ar"
-              ? "الأسعار المعروضة على الموقع هي أسعار مرجعية وإرشادية فقط تعكس تقلبات البورصة الفورية وتخلف علاوات التصنيع وتكاليف الشحن. لا يمكن إبرام تسوية أو تثبيت سعر شراء نهائي إلا بصدور عينات عروض الأسعار النهائية المؤكدة من ديوان PGR UAE."
-              : "All values, rates, and catalog prices are indicative only and based on global spot market inputs. Physical metal premiums, logistical handling, and VAT treatments apply. You must contact our desk to lock the spot and receive a Final Desk Confirmation."}
+          <p className="text-[#5E564D] text-[11px] leading-relaxed font-sans">
+            {isAr
+              ? "الأسعار المعروضة على الموقع هي أسعار مرجعية وإرشادية فقط تعكس تقلبات البورصة الفورية وتخلف علاوات التصنيع وتكاليف الشحن. لا يمكن إبرام تسوية أو تثبيت سعر شراء نهائي إلا بصدور عينات عروض الأسعار النهائية المؤكدة من ديوان PGR UAE. قد تكون مراجعة الامتثال مطلوبة قبل تأكيد أي معاملة."
+              : "All values, rates, and catalog prices are indicative only and based on global spot market inputs. Physical metal premiums, logistical handling, and VAT treatments apply. You must contact our desk to lock the spot and receive a Final Desk Confirmation. Regulatory compliance reviews may be required."}
           </p>
         </div>
 
-        {/* Category FAQs */}
+        {/* FAQs */}
         <div className="space-y-6">
-          <div className="border-b border-white/[0.04] pb-2">
-            <h3 className="text-white uppercase tracking-widest font-bold text-sm font-serif flex items-center gap-2">
-              <HelpCircle size={15} className="text-[#c5a85c]" />
-              {currentLang === "ar" ? "الأسئلة الشائعة حول الكتالوج" : "Category FAQ & Guidelines"}
+          <div className="border-b border-[#E8DEC9] pb-3">
+            <h3 className="text-[#1F1A17] uppercase tracking-wider font-serif text-base font-medium flex items-center gap-2">
+              <HelpCircle size={16} className="text-[#A47C36]" />
+              {isAr ? "الأسئلة الشائعة حول الكتالوج" : "Category FAQ & Guidelines"}
             </h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {meta.faqs.map((faq, i) => (
-              <div key={i} className="bg-[#0d0d0e] border border-white/[0.03] p-5 rounded space-y-2">
-                <h4 className="text-white font-serif font-bold text-[11px] leading-snug">
-                  {currentLang === "ar" ? faq.q_ar : faq.q_en}
+              <div key={i} className="bg-white border border-[#E8DEC9] p-5 rounded space-y-2 shadow-sm">
+                <h4 className="text-[#1F1A17] font-serif font-medium text-xs leading-snug">
+                  {isAr ? faq.q_ar : faq.q_en}
                 </h4>
-                <p className="text-gray-400 font-sans leading-relaxed text-[11px] pt-1">
-                  {currentLang === "ar" ? faq.a_ar : faq.a_en}
+                <p className="text-[#5E564D] font-sans leading-relaxed text-[11px] pt-1">
+                  {isAr ? faq.a_ar : faq.a_en}
                 </p>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Process flow summary and CTA */}
-        <div className="bg-[#0d0d0e] border border-white/[0.03] p-8 rounded-lg flex flex-col md:flex-row justify-between items-center gap-6">
+        {/* CTA Banner */}
+        <div className="bg-[#F7F4ED] border border-[#E8DEC9] p-8 rounded flex flex-col md:flex-row justify-between items-center gap-6 shadow-sm">
           <div className="space-y-2 text-center md:text-left">
-            <h4 className="text-white font-serif text-base font-bold uppercase">
-              {currentLang === "ar" ? "هل ترغب في الحصول على تسعير نهائي؟" : "Ready to Request a Firm Quote?"}
+            <h4 className="text-[#1F1A17] font-serif text-base font-medium uppercase">
+              {isAr ? "هل ترغب في الحصول على تسعير نهائي؟" : "Ready to Request a Firm Quote?"}
             </h4>
-            <p className="text-gray-500 text-[11px] max-w-2xl font-sans leading-normal">
-              {currentLang === "ar"
+            <p className="text-[#5E564D] text-[11px] max-w-2xl font-sans leading-normal">
+              {isAr
                 ? "يستغرق تقديم الطلب أقل من دقيقتين. بعد تقديم النموذج، سيتصل بك فريقنا لتوجيهك بخطوات مراجعة الهوية وتلقي السعر المؤكد."
                 : "Submit your requirements. PGR UAE will review stock levels, spot values, and direct you with our simple digital KYC workflow to issue a firm desk quote."}
             </p>
           </div>
           
           <button
-            onClick={() => onNavigate("/request-quote")}
-            className="w-full md:w-auto px-8 py-3.5 bg-gold-gradient text-black font-sans font-bold uppercase tracking-widest rounded shadow-lg transition-all duration-300 hover:scale-[1.02] shrink-0 text-[10px]"
+            onClick={() => {
+              if (onOpenQuote) {
+                onOpenQuote();
+              } else {
+                onNavigate("/request-quote");
+              }
+            }}
+            className="w-full md:w-auto px-8 py-3.5 bg-[#1F1A17] hover:bg-[#A47C36] text-white hover:text-white font-mono font-bold uppercase tracking-widest rounded shadow transition-all duration-300 hover:scale-[1.01] shrink-0 text-[10px] cursor-pointer"
           >
-            {currentLang === "ar" ? "طلب تسعير مؤكد الآن" : "Request Firm Quote"}
+            {isAr ? "طلب تسعير مؤكد الآن" : "Request Firm Quote"}
           </button>
         </div>
 

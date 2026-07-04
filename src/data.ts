@@ -945,6 +945,25 @@ export const PRODUCTS: Product[] = [
     technical_specs: { weight_grams: 30, purity: "Ag 99.9%", metal: "silver", dimensions: "Diameter 40.0 mm", thickness: "2.98 mm", packaging: "Official China Mint optical capsule", serial_number: false },
     image_placeholder: "silver_coin",
     premium_multiplier: 1.25
+  },
+  {
+    id: "custom-bullion-inquiry",
+    name_en: "Custom Bullion Sizing & Bulk Sourcing",
+    name_ar: "طلبات السبائك المخصصة والتوريد الخاص للجملة",
+    category: "gold_bars",
+    weight_label: "Custom Weights / Bulk Sourcing",
+    purity: "999.9 Fine Gold / 999.0 Silver",
+    manufacturer: "PGR UAE Partner Refiners",
+    country_en: "International",
+    country_ar: "دولي",
+    availability: "Available on Order",
+    certificate_en: "Official Assayer Certificate & Full Documents",
+    certificate_ar: "مرفق بشهادة فحص معتمدة وكافة المستندات الرسمية",
+    description_en: "Bespoke sourcing and refining for institutional clients, industrial grains, custom weight cast bars, and family offices.",
+    description_ar: "خدمات التوريد المخصصة والصهر المتكامل للمؤسسات، الصناديق العائلية، حبوب الذهب الصناعية، والسبائك بأوزان خاصة.",
+    technical_specs: { weight_grams: 0, purity: "Au 99.99% / Ag 99.9%", metal: "gold", dimensions: "Varies by request", thickness: "Varies", packaging: "Segregated secure boxing", serial_number: true },
+    image_placeholder: "gold_bar",
+    premium_multiplier: 1.02
   }
 ];
 

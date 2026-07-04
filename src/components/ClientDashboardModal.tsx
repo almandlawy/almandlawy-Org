@@ -1000,8 +1000,8 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
                         </div>
                         <div className="text-[10px] text-gray-500 italic mt-1">
                           {isAr 
-                            ? "الأرقام مؤشرات تشغيلية ولا تمثل عوائد استثمارية مضمونة." 
-                            : "Figures are operational indicators and do not represent guaranteed investment returns."}
+                            ? "الأرقام مؤشرات تشغيلية ولا تمثل عوائد استثمارية مؤكدة." 
+                            : "Figures are operational indicators and do not represent estimated or assured investment returns."}
                         </div>
                       </div>
 
