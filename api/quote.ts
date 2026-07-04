@@ -1,42 +1,17 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createClient } from "@supabase/supabase-js";
 
-function getSupabasePublicEnv() {
-  const supabaseUrl =
-    process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "";
-  const supabaseAnonKey =
-    process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || "";
-
-  const configured = Boolean(
-    supabaseUrl &&
-      supabaseAnonKey &&
-      !supabaseUrl.includes("placeholder") &&
-      supabaseUrl.startsWith("https://")
-  );
-
-  return { supabaseUrl, supabaseAnonKey, configured };
+function getSupabaseUrl() {
+  return process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "";
 }
 
-function getSupabaseServiceRoleKey() {
-  return process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-}
-
-function getSupabase() {
-  const { supabaseUrl, supabaseAnonKey, configured } = getSupabasePublicEnv();
-  const serviceRoleKey = getSupabaseServiceRoleKey();
-
-  const key = serviceRoleKey || supabaseAnonKey;
-  if (!configured && !serviceRoleKey) return null;
-
-  const url = supabaseUrl;
-  if (!url || url.includes("placeholder")) return null;
-
-  try {
-    return createClient(url, key);
-  } catch (err) {
-    console.error("[api/quote] Supabase init failed:", err);
-    return null;
-  }
+function getServiceClient() {
+  const url = getSupabaseUrl();
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+  if (!url || !serviceKey) return null;
+  return createClient(url, serviceKey, {
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
 }
 
 const PRODUCT_LABELS: Record<string, string> = {
@@ -67,6 +42,22 @@ function buildMessage(body: Record<string, unknown>): string {
   return parts.join("\n");
 }
 
+async function tryInsertQuote(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  client: any,
+  payloads: Array<Record<string, unknown>>
+): Promise<{ ok: boolean; error?: string; code?: string }> {
+  for (const payload of payloads) {
+    const { error } = await client.from("quote_requests").insert(payload);
+    if (!error) return { ok: true };
+    console.error("[api/quote] insert attempt failed:", error.message, payload);
+    if (payloads.indexOf(payload) === payloads.length - 1) {
+      return { ok: false, error: error.message, code: error.code };
+    }
+  }
+  return { ok: false, error: "All insert attempts failed" };
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Access-Control-Allow-Credentials", "true");
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -76,13 +67,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version"
   );
 
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
-
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed. Use POST." });
-  }
+  if (req.method === "OPTIONS") return res.status(200).end();
+  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed. Use POST." });
 
   try {
     const body = (req.body || {}) as Record<string, unknown>;
@@ -109,50 +95,57 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const inquiryId = "PGR-" + Math.floor(100000 + Math.random() * 900000);
-    const newQuote = {
-      id: inquiryId,
+    const resolvedEmail = email || `whatsapp+${phone.replace(/\D/g, "").slice(-12)}@quote.pgruae.com`;
+    const message = buildMessage({
+      countryCity,
+      preferredContact,
+      quantityBudget,
+      message: body.message,
+      source
+    });
+
+    const baseRow = {
       name,
-      email: email || `whatsapp+${phone.replace(/\D/g, "").slice(-12)}@quote.pgruae.com`,
+      email: resolvedEmail,
       phone,
       company: countryCity,
       metal_interest: metalFromProduct(productKey),
       product_category: productCategory,
       weight_preference: quantityBudget,
-      message: buildMessage({
-        countryCity,
-        preferredContact,
-        quantityBudget,
-        message: body.message,
-        source
-      }),
+      message,
       status: "New Request",
       created_at: new Date().toISOString()
     };
 
-    const supabase = getSupabase();
+    const service = getServiceClient();
     let persisted = false;
+    let persistError: string | undefined;
+    let persistCode: string | undefined;
 
-    if (supabase) {
-      const { error } = await supabase.from("quote_requests").insert(newQuote);
-      if (error) {
-        console.error("[api/quote] Supabase insert failed:", error.message, error);
-      } else {
-        persisted = true;
-        console.log(`[api/quote] Saved inquiry ${inquiryId} to Supabase`);
+    if (service) {
+      const result = await tryInsertQuote(service, [
+        { id: inquiryId, ...baseRow },
+        { inquiry_id: inquiryId, ...baseRow },
+        { reference_id: inquiryId, ...baseRow },
+        baseRow
+      ]);
+      persisted = result.ok;
+      persistError = result.error;
+      persistCode = result.code;
+      if (persisted) {
+        console.log(`[api/quote] Saved inquiry ${inquiryId}`);
       }
     } else {
-      console.warn("[api/quote] Supabase not configured — recording inquiry in logs only", {
-        inquiryId,
-        name,
-        phone,
-        productCategory
-      });
+      persistError = "SUPABASE_SERVICE_ROLE_KEY not set in Vercel";
+      console.warn("[api/quote] No service role client — quote logged only", { inquiryId, name, phone });
     }
 
     return res.status(200).json({
       success: true,
       inquiryId,
       persisted,
+      persistError: persisted ? undefined : persistError,
+      persistCode: persisted ? undefined : persistCode,
       message:
         sourceLanguage === "ar"
           ? "تم استلام طلبك. سيراجع PGR UAE التوفر ويتواصل معك على واتساب."
@@ -162,9 +155,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (err: unknown) {
     const details = err instanceof Error ? err.message : "Unknown error";
     console.error("[api/quote] Unhandled error:", details, err);
-    return res.status(500).json({
-      error: "Failed to record quote inquiry",
-      details
-    });
+    return res.status(500).json({ error: "Failed to record quote inquiry", details });
   }
 }

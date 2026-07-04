@@ -368,6 +368,28 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
   }, []);
 
   // Load all dataset values
+  const fetchAdminQuotes = async (): Promise<any[]> => {
+    if (isLive && supabase) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        try {
+          const res = await fetch("/api/admin-quotes", {
+            headers: { Authorization: `Bearer ${session.access_token}` }
+          });
+          if (res.ok) {
+            const json = await res.json();
+            if (Array.isArray(json.quotes)) return json.quotes;
+          } else {
+            console.error("[AdminPanel] /api/admin-quotes failed:", res.status, await res.text());
+          }
+        } catch (err) {
+          console.error("[AdminPanel] Failed to fetch admin quotes:", err);
+        }
+      }
+    }
+    return dbService.quoteRequests.list();
+  };
+
   const loadAdminData = async () => {
     setLoading(true);
     try {
@@ -375,7 +397,7 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
         pList, qList, oList, kList, dList, ptList, exRates, bbList, hList, sObj, certs, blogList, auditList
       ] = await Promise.all([
         dbService.products.list("admin"),
-        dbService.quoteRequests.list(),
+        fetchAdminQuotes(),
         dbService.orders.list(),
         dbService.kyc.listAll(),
         dbService.iraqDelivery.list(),
@@ -1021,7 +1043,7 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
   const stats = {
     totalVolumeUSD: orders.reduce((sum, o) => sum + (o.total_amount || 0), 0) + holdings.reduce((sum, h) => sum + (h.current_market_value_usd || 0), 0),
     activeCustomersCount: kycProfiles.filter(k => k.status === "Verified").length + 5,
-    pendingQuotesCount: quotes.filter(q => q.status === "Pending").length,
+    pendingQuotesCount: quotes.filter((q) => q.status === "Pending" || q.status === "New Request").length,
     activeDeliveriesIraq: iraqDeliveries.filter(d => d.status !== "Delivered").length,
     pendingKycCount: kycProfiles.filter(k => k.status === "Pending review" || k.status === "Pending").length,
     buybackInquiries: buybacks.filter(b => b.status === "Pending").length
@@ -2007,9 +2029,18 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
               {/* 3. SECTION: QUOTES REQUESTS */}
               {activeSection === "quotes" && (
                 <div className="space-y-6">
-                  <div>
-                    <h4 className="text-lg font-serif text-text-charcoal">Live Institutional & Custom Inquiries</h4>
-                    <p className="text-xs text-text-secondary font-mono uppercase">Confirm physical precious metal availability, pricing agreements and mint tickets</p>
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <h4 className="text-lg font-serif text-text-charcoal">Quote Requests</h4>
+                      <p className="text-xs text-text-secondary font-mono uppercase">Website form submissions from /request-quote</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => loadAdminData()}
+                      className="px-3 py-2 text-[10px] font-mono uppercase tracking-wider border border-soft-border rounded-lg hover:bg-brand-bg text-text-secondary"
+                    >
+                      Refresh
+                    </button>
                   </div>
 
                   {/* CUSTOM PREPARE QUOTE DRAWER FOR ADMIN PRICE OVERRIDES */}
@@ -2183,11 +2214,13 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                                   <p className="text-text-secondary text-[10px]">{q.email} | {q.phone}</p>
                                 </td>
                                 <td className="p-4">
-                                  <span className="px-2 py-0.5 rounded bg-gold-base/10 text-gold-base font-bold uppercase">{q.metalInterest}</span>
+                                  <span className="px-2 py-0.5 rounded bg-gold-base/10 text-gold-base font-bold uppercase">
+                                    {q.metalInterest || q.metal_interest || "gold"}
+                                  </span>
                                 </td>
                                 <td className="p-4 space-y-0.5">
-                                  <p className="text-text-charcoal">{q.productCategory || "Custom Lot"}</p>
-                                  <p className="text-text-secondary text-[10px]">{q.weight || "N/A"}</p>
+                                  <p className="text-text-charcoal">{q.productCategory || q.product_category || "Custom Lot"}</p>
+                                  <p className="text-text-secondary text-[10px]">{q.weight || q.weight_preference || "N/A"}</p>
                                 </td>
                                 <td className="p-4 text-text-secondary">{new Date(q.created_at || "").toLocaleDateString()}</td>
                                 <td className="p-4">
