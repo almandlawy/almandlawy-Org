@@ -5,6 +5,7 @@ import { dbService } from "../lib/supabase";
 import { PRODUCTS } from "../data";
 import { resolvePublicCatalog } from "../lib/productCatalog";
 import PricingDisclaimer from "./PricingDisclaimer";
+import { trackGoogleAdsContactConversion } from "../lib/gtag";
 
 interface RequestQuotePageProps {
   currentLang: "en" | "ar";
@@ -98,6 +99,7 @@ export default function RequestQuotePage({ currentLang, onNavigate }: RequestQuo
           status: "New Request"
         });
         setSubmitted(true);
+        trackGoogleAdsContactConversion();
       } else {
         throw new Error("API Submission failed");
       }
