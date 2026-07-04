@@ -11,17 +11,11 @@ import HowFirmQuotesWork from "./components/HowFirmQuotesWork";
 import ProductShowroom from "./components/ProductShowroom";
 import TrustedPartnersSection from "./components/TrustedPartnersSection";
 import PaymentSettlementSection from "./components/PaymentSettlementSection";
-import HomepageFAQ, { FAQ_ITEMS } from "./components/HomepageFAQ";
+import HomepageFAQ from "./components/HomepageFAQ";
 import CrawlableSeoBlock from "./components/CrawlableSeoBlock";
 import ComplianceKYCSection from "./components/ComplianceKYCSection";
 import { getRouteSeo, SEO_LANDING_PATHS } from "./lib/seoRoutes";
-import {
-  applyPageSeo,
-  injectJsonLd,
-  buildOrganizationSchema,
-  buildWebSiteSchema,
-  buildFaqSchema
-} from "./lib/seoMeta";
+import { applyPageSeo } from "./lib/seoMeta";
 import ProductDetailModal from "./components/ProductDetailModal";
 import QuoteForm from "./components/QuoteForm";
 import AIConcierge from "./components/AIConcierge";
@@ -177,16 +171,6 @@ export default function App() {
     const desc = currentLang === "ar" ? seo.descAr : seo.descEn;
 
     applyPageSeo({ path: currentPath, title, description: desc, lang: currentLang });
-
-    injectJsonLd("pgr-org-schema", buildOrganizationSchema());
-    injectJsonLd("pgr-website-schema", buildWebSiteSchema());
-
-    if (currentPath === "/" || currentPath === "") {
-      injectJsonLd("pgr-faq-schema", buildFaqSchema(FAQ_ITEMS, currentLang));
-    } else {
-      const faqEl = document.getElementById("pgr-faq-schema");
-      if (faqEl) faqEl.remove();
-    }
   }, [currentPath, currentLang]);
 
   const handleUserLogin = async (supabaseUser: any) => {
