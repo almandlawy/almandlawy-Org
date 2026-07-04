@@ -176,6 +176,33 @@ let serverSettings = {
     estimated_delivery_time: "1–3 business days (UAE)",
     public_shipping_note: "Desk-confirmed secure delivery. Subject to KYC verification and compliance review before dispatch.",
     internal_shipping_notes: "Default UAE domestic route. Iraq/Baghdad routes require separate customs clearance dossier."
+  },
+  partner_logos: [] as Array<{
+    id: string;
+    name: string;
+    category: string;
+    logo_url: string;
+    website_url?: string;
+    public_display_enabled: boolean;
+    display_order: number;
+    internal_note?: string;
+    created_at?: string;
+    updated_at?: string;
+  }>,
+  payment_settings: {
+    payment_gateway_enabled: false,
+    provider: "Manual Bank Transfer",
+    payment_mode: "Bank transfer only",
+    public_payment_note:
+      "Payment is arranged only after your firm quote is accepted. PGR UAE desk will issue a payment link or bank transfer instructions. Subject to compliance review.",
+    internal_payment_note:
+      "Gateway API keys must be set in server environment variables only. Never expose secrets to the client bundle.",
+    payment_link_instructions:
+      "After quote acceptance, the desk will send a secure payment link or UAE bank transfer details. Upload payment proof if paying by bank transfer.",
+    supported_currencies: ["AED", "USD"],
+    minimum_payment_amount: 1000,
+    max_payment_amount_before_manual_review: 250000,
+    require_kyc_before_payment: true
   }
 };
 
@@ -246,6 +273,16 @@ async function hydrateServerSettings(): Promise<void> {
       ...serverSettings.shipping_settings,
       ...(fromFile.shipping_settings as object || {}),
       ...((fromDb?.shipping_settings as object) || {})
+    },
+    partner_logos: Array.isArray(fromFile.partner_logos)
+      ? fromFile.partner_logos
+      : Array.isArray(fromDb?.partner_logos)
+        ? fromDb.partner_logos
+        : serverSettings.partner_logos,
+    payment_settings: {
+      ...serverSettings.payment_settings,
+      ...(fromFile.payment_settings as object || {}),
+      ...((fromDb?.payment_settings as object) || {})
     }
   };
 }
@@ -290,6 +327,22 @@ function stripInternalShippingFields(settings: Record<string, unknown>) {
   return publicShipping;
 }
 
+function stripInternalPaymentFields(ps: Record<string, unknown>) {
+  const { internal_payment_note, minimum_payment_amount, max_payment_amount_before_manual_review, ...publicFields } = ps;
+  return publicFields;
+}
+
+function publicPartnerLogos(partners: unknown[]) {
+  if (!Array.isArray(partners)) return [];
+  return partners
+    .filter((p: any) => p && p.public_display_enabled && p.logo_url)
+    .sort((a: any, b: any) => (a.display_order || 0) - (b.display_order || 0))
+    .map((p: any) => {
+      const { internal_note, ...rest } = p;
+      return rest;
+    });
+}
+
 // Hydrate persisted settings before routes bind — called from bootServer()
 
 // Admin settings endpoints (admin-only for mutations)
@@ -330,16 +383,59 @@ app.patch("/api/admin/shipping-settings", requireAdmin, async (req, res) => {
 app.get("/api/shipping", (req, res) => {
   const s = (serverSettings as any).shipping_settings || {};
   res.json({
-    shipping_enabled: s.shipping_enabled ?? true,
-    shipping_company_name: s.shipping_company_name || "",
-    shipping_method: s.shipping_method || "",
-    shipping_price: s.shipping_price ?? 0,
-    currency: s.currency || "AED",
-    destination_country: s.destination_country || "",
-    destination_city_region: s.destination_city_region || "",
-    estimated_delivery_time: s.estimated_delivery_time || "",
-    public_shipping_note: s.public_shipping_note || ""
+    shipping_enabled: s.shipping_enabled,
+    shipping_company_name: s.shipping_company_name,
+    shipping_method: s.shipping_method,
+    shipping_price: s.shipping_price,
+    currency: s.currency,
+    destination_country: s.destination_country,
+    destination_city_region: s.destination_city_region,
+    estimated_delivery_time: s.estimated_delivery_time,
+    public_shipping_note: s.public_shipping_note
   });
+});
+
+/** Public partner logos — only when public_display_enabled; no internal notes */
+app.get("/api/partners", (req, res) => {
+  res.json({ partners: publicPartnerLogos((serverSettings as any).partner_logos || []) });
+});
+
+/** Public payment info — no secrets or internal notes */
+app.get("/api/payment-public", (req, res) => {
+  const ps = (serverSettings as any).payment_settings || {};
+  res.json(stripInternalPaymentFields(ps));
+});
+
+/** Admin: full partner logo list */
+app.get("/api/admin/partners", requireAdmin, (req, res) => {
+  res.json({ partners: (serverSettings as any).partner_logos || [] });
+});
+
+/** Admin: replace partner logos (audit logged client-side via dbService) */
+app.put("/api/admin/partners", requireAdmin, async (req, res) => {
+  const partners = Array.isArray(req.body.partners) ? req.body.partners : [];
+  (serverSettings as any).partner_logos = partners;
+  await persistAllSettings();
+  res.json({ success: true, partners });
+});
+
+/** Admin: payment settings including internal notes */
+app.get("/api/admin/payment-settings", requireAdmin, (req, res) => {
+  res.json({ payment_settings: (serverSettings as any).payment_settings || {} });
+});
+
+/** Admin: update payment settings */
+app.patch("/api/admin/payment-settings", requireAdmin, async (req, res) => {
+  const incoming = { ...req.body };
+  delete incoming.gateway_secret_key;
+  delete incoming.api_key;
+  const payment_settings = {
+    ...(serverSettings as any).payment_settings,
+    ...incoming
+  };
+  (serverSettings as any).payment_settings = payment_settings;
+  await persistAllSettings();
+  res.json({ success: true, payment_settings });
 });
 
 // Secure multi-metal cache setup
@@ -1297,6 +1393,22 @@ async function bootServer() {
             res.setHeader("Content-Type", "image/png");
           } else if (filePath.endsWith(".jpg") || filePath.endsWith(".jpeg")) {
             res.setHeader("Content-Type", "image/jpeg");
+          }
+          res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+        },
+      })
+    );
+
+    app.use(
+      "/videos",
+      express.static(path.join(distPath, "videos"), {
+        setHeaders: (res, filePath) => {
+          if (filePath.endsWith(".webm")) {
+            res.setHeader("Content-Type", "video/webm");
+          } else if (filePath.endsWith(".mp4")) {
+            res.setHeader("Content-Type", "video/mp4");
+          } else if (filePath.endsWith(".webp")) {
+            res.setHeader("Content-Type", "image/webp");
           }
           res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
         },

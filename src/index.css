@@ -25,7 +25,20 @@
   --color-silver-dark: #909090;
 }
 
-/* Custom Base Styles for Luxury Light Theme */
+@layer utilities {
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+}
+
 body {
   background-color: #F7F4ED; /* Premium main background */
   color: #1F1A17; /* Text dark charcoal */

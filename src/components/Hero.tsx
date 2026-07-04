@@ -4,7 +4,7 @@
  */
 
 import React from "react";
-import { ChevronDown, ArrowRight, Shield, Award, MapPin } from "lucide-react";
+import { ChevronDown, Phone, FileText } from "lucide-react";
 
 interface HeroProps {
   currentLang: "en" | "ar";
@@ -13,115 +13,89 @@ interface HeroProps {
   onOpenQuote: () => void;
 }
 
+const WHATSAPP_BASE = "https://wa.me/971559688837";
+
 export default function Hero({ currentLang, onScrollToCatalog, onScrollToMarket, onOpenQuote }: HeroProps) {
+  const isAr = currentLang === "ar";
+  const waMsg = isAr
+    ? "مرحباً، أريد التواصل مع ديوان تسعير PGR UAE لطلب عرض سعر معتمد."
+    : "Hello, I would like to contact the PGR UAE Quote Desk for a firm quote.";
+  const waLink = `${WHATSAPP_BASE}?text=${encodeURIComponent(waMsg)}`;
+
   return (
-    <section className="relative min-h-screen w-full flex items-center justify-center pt-32 pb-20 overflow-hidden bg-brand-bg" id="pgr-hero">
-      {/* Background Image with Deep Luxury Shadows */}
-      <div className="absolute inset-0 z-0">
+    <section className="relative min-h-[85vh] w-full flex items-center justify-center pt-28 pb-16 bg-brand-bg" id="pgr-hero">
+      <div className="absolute inset-0 z-0 opacity-[0.04]">
         <img
           src="/dubai_skyline_gold_1782445111463.jpg"
-          alt="Dubai Skyline Gold"
+          alt=""
+          className="w-full h-full object-cover"
           referrerPolicy="no-referrer"
-          className="w-full h-full object-cover opacity-[0.05] scale-105 transform transition-transform duration-1000"
         />
-        {/* Radical Vignette and Soft Overlays to protect text legibility and contrast */}
-        <div className="absolute inset-0 bg-gradient-to-t from-brand-bg via-brand-bg/85 to-brand-bg/95 z-10" />
-        <div className="absolute inset-0 bg-radial-gradient from-transparent via-brand-bg/15 to-brand-bg z-10" />
       </div>
+      <div className="absolute inset-0 bg-gradient-to-b from-brand-bg via-brand-bg/95 to-brand-bg z-[1]" />
 
-      {/* Floating Gold Dust Micro-Particles (CSS animations for top performance) */}
-      <div className="absolute inset-0 z-15 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-1.5 h-1.5 rounded-full bg-gold-base opacity-30 animate-ping" style={{ animationDuration: "3s" }} />
-        <div className="absolute top-1/3 left-2/3 w-1 h-1 rounded-full bg-gold-light opacity-50 animate-pulse" style={{ animationDuration: "5s" }} />
-        <div className="absolute top-2/3 left-1/3 w-2 h-2 rounded-full bg-gold-dark opacity-20 animate-pulse" style={{ animationDuration: "8s" }} />
-        <div className="absolute top-1/2 left-3/4 w-1 h-1 rounded-full bg-white opacity-40 animate-ping" style={{ animationDuration: "4s" }} />
-      </div>
+      <div className="relative max-w-4xl mx-auto px-4 text-center z-10 flex flex-col items-center">
+        <p className="text-[10px] font-mono uppercase tracking-[0.35em] text-olive-accent font-bold mb-6">
+          {isAr ? "ديوان تداول سبائك معتمد — دبي" : "Dubai Firm-Quote Bullion Desk"}
+        </p>
 
-      {/* Hero Content Container */}
-      <div className="relative max-w-5xl mx-auto px-4 text-center z-20 flex flex-col items-center justify-center">
-        {/* Dubai Premium Badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded bg-brand-section border border-soft-border shadow-sm mb-8 animate-fadeIn" style={{ animationDelay: "100ms" }}>
-          <span className="h-1.5 w-1.5 rounded-full bg-olive-accent"></span>
-          <span className="text-[10px] md:text-[11px] uppercase tracking-[0.3em] text-text-secondary font-mono font-bold">
-            {currentLang === "ar" ? "بوابة الذهب والمعادن الثمينة المعتمدة" : "Dubai Certified Precious Metals Desk"}
-          </span>
-        </div>
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif text-text-charcoal leading-tight font-medium mb-6">
+          {isAr ? (
+            <span className="font-arabic">
+              <span className="text-gold-dark">PGR UAE</span> — عروض أسعار معتمدة للسبائك
+            </span>
+          ) : (
+            <>
+              <span className="text-gold-dark">PGR UAE</span> Firm Quote Bullion Desk
+            </>
+          )}
+        </h1>
 
-        {/* Dynamic Typography Bilingual Headlines */}
-        <div className="max-w-4xl space-y-6">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif tracking-tight text-text-charcoal leading-[1.1] animate-fadeIn">
-            {currentLang === "ar" ? (
-              <span className="font-arabic leading-snug block font-medium">
-                بوابة <span className="text-gold-gradient font-bold">PGR UAE</span> للمعادن الثمينة والذهب الفعلي
-              </span>
-            ) : (
-              <span>
-                PGR UAE <span className="text-gold-gradient font-bold">Physical Bullion</span> Private Desk
-              </span>
-            )}
-          </h1>
+        <p className="max-w-2xl text-base text-text-secondary font-sans leading-relaxed mb-10">
+          {isAr
+            ? "ديوان تداول سبائك ذهب وفضة في دبي. اختر منتجك، اطلب عرض سعر معتمد، وأكمل التسوية بعد مراجعة الامتثال — بدون دفع مباشر قبل العرض."
+            : "PGR UAE is a firm-quote bullion desk for gold and silver. Select your product, request a firm quote, and complete settlement after compliance review — no direct payment before your quote is confirmed."}
+        </p>
 
-          <p className="max-w-3xl mx-auto text-sm sm:text-base md:text-lg text-text-secondary font-sans tracking-wide leading-relaxed animate-fadeIn" style={{ animationDelay: "300ms" }}>
-            {currentLang === "ar" ? (
-              <span className="font-arabic">
-                الذهب والفضة للإمارات والعراق — شراء، تخزين آمن، تتبع المحفظة، وتوصيل فعلي تحت إشراف معايير الامتثال دبي.
-              </span>
-            ) : (
-              "Secure allocated physical gold & silver bullion for family offices and institutional desk clients. Full Dubai custody, security vaulting, and accredited UAE-to-Iraq transit logistcs."
-            )}
-          </p>
-        </div>
-
-        {/* Subtitles Highlights Box with Olive Secondary Accents */}
-        <div className="flex flex-wrap justify-center items-center gap-x-6 gap-y-2 mt-10 text-[11px] md:text-[12px] uppercase tracking-widest text-olive-accent font-mono font-bold">
-          <span className="flex items-center gap-1.5 bg-brand-section border border-soft-border/50 px-3 py-1 rounded">
-            <Shield size={12} className="text-gold-base" />
-            {currentLang === "ar" ? "تأكيد السعر المعتمد" : "Firm Price Locks"}
-          </span>
-          <span className="flex items-center gap-1.5 bg-brand-section border border-soft-border/50 px-3 py-1 rounded">
-            <Award size={12} className="text-gold-base" />
-            {currentLang === "ar" ? "امتثال وغرفة مقاصة" : "Compliant Clearing Desk"}
-          </span>
-          <span className="flex items-center gap-1.5 bg-brand-section border border-soft-border/50 px-3 py-1 rounded">
-            <MapPin size={12} className="text-gold-base" />
-            {currentLang === "ar" ? "تأمين الشحن والتحصيل" : "Insured Gulf Delivery"}
-          </span>
-        </div>
-
-        {/* Buttons Section (Bespoke UX styling with custom animations) */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-12 w-full max-w-xl mx-auto animate-fadeIn" style={{ animationDelay: "500ms" }}>
-          {/* Buy Gold Link - Primary gold button */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 w-full max-w-lg">
           <button
-            onClick={() => onScrollToCatalog("gold_bars")}
-            className="w-full sm:w-auto px-8 py-3.5 text-[12px] uppercase tracking-[0.2em] font-sans font-bold text-text-charcoal bg-[#C6A15B] hover:bg-[#A47C36] hover:text-white rounded transition-all duration-300 cursor-pointer shadow-md"
-          >
-            {currentLang === "ar" ? "شراء سبائك الذهب" : "Buy Gold Bullion"}
-          </button>
-
-          {/* Buy Silver Link - Secondary Button */}
-          <button
-            onClick={() => onScrollToCatalog("silver_bars")}
-            className="w-full sm:w-auto px-8 py-3.5 text-[12px] uppercase tracking-[0.2em] font-sans font-bold text-text-charcoal bg-transparent border border-[#C6A15B] hover:bg-gold-base/5 rounded transition-all duration-300 cursor-pointer"
-          >
-            {currentLang === "ar" ? "شراء الفضة النقية" : "Buy Silver Bullion"}
-          </button>
-
-          {/* Request Bespoke Quote - Primary gold outline style button */}
-          <button
+            type="button"
             onClick={onOpenQuote}
-            className="w-full sm:w-auto px-8 py-3.5 text-[12px] uppercase tracking-[0.2em] font-sans font-bold text-text-charcoal bg-brand-card hover:bg-brand-bg border border-soft-border hover:border-[#C6A15B] rounded transition-all duration-300 cursor-pointer shadow-sm"
+            className="w-full sm:flex-1 px-8 py-4 bg-gold-base hover:bg-gold-dark text-text-charcoal font-mono text-xs font-bold uppercase tracking-widest rounded transition-colors flex items-center justify-center gap-2"
           >
-            {currentLang === "ar" ? "طلب تسعير معتمد" : "Request Firm Quote"}
+            <FileText size={14} />
+            {isAr ? "طلب عرض سعر معتمد" : "Request Firm Quote"}
           </button>
+          <a
+            href={waLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full sm:flex-1 px-8 py-4 bg-[#25D366] hover:bg-[#128C7E] text-white font-mono text-xs font-bold uppercase tracking-widest rounded transition-colors flex items-center justify-center gap-2"
+          >
+            <Phone size={14} />
+            {isAr ? "ديوان واتساب" : "WhatsApp Quote Desk"}
+          </a>
         </div>
 
-        {/* Scroll Indicator Chevron */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-2 cursor-pointer text-text-secondary hover:text-text-charcoal transition-colors animate-bounce" onClick={onScrollToMarket}>
-          <span className="text-[10px] uppercase tracking-[0.3em] font-mono">
-            {currentLang === "ar" ? "الأسعار المباشرة" : "Explore Rates"}
+        <button
+          type="button"
+          onClick={() => onScrollToCatalog()}
+          className="mt-8 text-xs font-mono text-text-secondary hover:text-gold-dark uppercase tracking-widest transition-colors"
+        >
+          {isAr ? "استعرض الكتالوج" : "Browse catalog"} ↓
+        </button>
+
+        <button
+          type="button"
+          onClick={onScrollToMarket}
+          className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-text-secondary hover:text-text-charcoal transition-colors"
+          aria-label="Market reference"
+        >
+          <span className="text-[9px] font-mono uppercase tracking-widest">
+            {isAr ? "مرجع السوق" : "Market reference"}
           </span>
           <ChevronDown size={14} className="text-gold-base" />
-        </div>
+        </button>
       </div>
     </section>
   );

@@ -4,8 +4,8 @@
  */
 
 import { createClient } from "@supabase/supabase-js";
-import { Product, QuoteSignaturePayload } from "../types";
-import { PRODUCTS, BRANDS, DEFAULT_DAILY_PRICING, DEFAULT_SHIPPING_SETTINGS } from "../data";
+import { Product, QuoteSignaturePayload, PartnerLogo, PaymentSettings, PublicPaymentSettings } from "../types";
+import { PRODUCTS, BRANDS, DEFAULT_DAILY_PRICING, DEFAULT_SHIPPING_SETTINGS, DEFAULT_PAYMENT_SETTINGS } from "../data";
 import {
   CATALOG_SEED_VERSION,
   catalogNeedsMigration,
@@ -381,8 +381,12 @@ const seedLocalStorage = () => {
     default_product_premium_pct: 2.0,
     disable_live_pricing: false,
     daily_pricing: { ...DEFAULT_DAILY_PRICING },
-    shipping_settings: { ...DEFAULT_SHIPPING_SETTINGS }
+    shipping_settings: { ...DEFAULT_SHIPPING_SETTINGS },
+    payment_settings: { ...DEFAULT_PAYMENT_SETTINGS }
   });
+
+  // Partner / trust logos (admin-managed; empty by default — no hardcoded logos)
+  getOrSet("pgr_partner_logos", [] as PartnerLogo[]);
 
   // 12. Exchange Rates (AED / USD / IQD)
   getOrSet("pgr_exchange_rates", {
@@ -1800,6 +1804,120 @@ export const dbService = {
         };
         reader.readAsDataURL(file);
       });
+    }
+  },
+
+  partnerLogos: {
+    list: async (): Promise<PartnerLogo[]> => {
+      try {
+        const res = await fetch("/api/admin/partners", { headers: getAdminRequestHeaders() });
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.partners)) {
+            mockDb.set("pgr_partner_logos", data.partners);
+            return data.partners;
+          }
+        }
+      } catch (err) {
+        console.warn("Could not fetch partner logos from server", err);
+      }
+      return mockDb.get("pgr_partner_logos") || [];
+    },
+    listPublic: async (): Promise<Omit<PartnerLogo, "internal_note">[]> => {
+      try {
+        const res = await fetch("/api/partners");
+        if (res.ok) {
+          const data = await res.json();
+          return Array.isArray(data.partners) ? data.partners : [];
+        }
+      } catch (err) {
+        console.warn("Could not fetch public partner logos", err);
+      }
+      const all: PartnerLogo[] = mockDb.get("pgr_partner_logos") || [];
+      return all
+        .filter((p) => p.public_display_enabled && p.logo_url)
+        .sort((a, b) => a.display_order - b.display_order)
+        .map(({ internal_note: _n, ...rest }) => rest);
+    },
+    saveAll: async (partners: PartnerLogo[], adminEmail: string): Promise<PartnerLogo[]> => {
+      mockDb.set("pgr_partner_logos", partners);
+      try {
+        const res = await fetch("/api/admin/partners", {
+          method: "PUT",
+          headers: { ...getAdminRequestHeaders(), "X-PGR-Admin-Email": adminEmail },
+          body: JSON.stringify({ partners })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.partners)) {
+            mockDb.set("pgr_partner_logos", data.partners);
+            return data.partners;
+          }
+        }
+      } catch (err) {
+        console.warn("Failed to sync partner logos with server", err);
+      }
+      return partners;
+    }
+  },
+
+  paymentSettings: {
+    get: async (): Promise<PaymentSettings> => {
+      try {
+        const res = await fetch("/api/admin/payment-settings", { headers: getAdminRequestHeaders() });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.payment_settings) {
+            const current = mockDb.get("pgr_settings") || {};
+            mockDb.set("pgr_settings", { ...current, payment_settings: data.payment_settings });
+            return data.payment_settings;
+          }
+        }
+      } catch (err) {
+        console.warn("Could not fetch payment settings from server", err);
+      }
+      const settings = mockDb.get("pgr_settings") || {};
+      return { ...DEFAULT_PAYMENT_SETTINGS, ...(settings.payment_settings || {}) };
+    },
+    getPublic: async (): Promise<PublicPaymentSettings> => {
+      try {
+        const res = await fetch("/api/payment-public");
+        if (res.ok) {
+          return await res.json();
+        }
+      } catch (err) {
+        console.warn("Could not fetch public payment settings", err);
+      }
+      const settings = mockDb.get("pgr_settings") || {};
+      const ps = { ...DEFAULT_PAYMENT_SETTINGS, ...(settings.payment_settings || {}) };
+      return {
+        payment_gateway_enabled: ps.payment_gateway_enabled,
+        provider: ps.provider,
+        payment_mode: ps.payment_mode,
+        public_payment_note: ps.public_payment_note,
+        payment_link_instructions: ps.payment_link_instructions,
+        supported_currencies: ps.supported_currencies,
+        require_kyc_before_payment: ps.require_kyc_before_payment
+      };
+    },
+    update: async (paymentSettings: PaymentSettings, adminEmail: string): Promise<PaymentSettings> => {
+      const current = mockDb.get("pgr_settings") || {};
+      const updated = { ...current, payment_settings: paymentSettings };
+      mockDb.set("pgr_settings", updated);
+      try {
+        const res = await fetch("/api/admin/payment-settings", {
+          method: "PATCH",
+          headers: { ...getAdminRequestHeaders(), "X-PGR-Admin-Email": adminEmail },
+          body: JSON.stringify(paymentSettings)
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.payment_settings) return data.payment_settings;
+        }
+      } catch (err) {
+        console.warn("Failed to sync payment settings with server", err);
+      }
+      return paymentSettings;
     }
   }
 };

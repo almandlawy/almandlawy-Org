@@ -6,8 +6,16 @@
 import React, { useState, useEffect } from "react";
 import Header from "./components/Header";
 import Hero from "./components/Hero";
-import LiveMarket from "./components/LiveMarket";
+import MarketReferenceStrip from "./components/MarketReferenceStrip";
+import HowFirmQuotesWork from "./components/HowFirmQuotesWork";
 import Catalog from "./components/Catalog";
+import TrustedPartnersSection from "./components/TrustedPartnersSection";
+import PaymentSettlementSection from "./components/PaymentSettlementSection";
+import BullionCollectionSection from "./components/BullionCollectionSection";
+import HomepageFAQ from "./components/HomepageFAQ";
+import CrawlableSeoBlock from "./components/CrawlableSeoBlock";
+import ComplianceKYCSection from "./components/ComplianceKYCSection";
+import { getRouteSeo, canonicalUrl } from "./lib/seoRoutes";
 import ProductDetailModal from "./components/ProductDetailModal";
 import QuoteForm from "./components/QuoteForm";
 import AIConcierge from "./components/AIConcierge";
@@ -20,10 +28,9 @@ import LegalOverlayModal from "./components/LegalOverlayModal";
 import IraqTrustBadge from "./components/IraqTrustBadge";
 import Footer from "./components/Footer";
 import { LiveMarketRates, Product } from "./types";
-import { WHY_US_ITEMS, BRANDS } from "./data";
-import { Shield, Sparkles, Building, Truck, Landmark, Award } from "lucide-react";
+import { WHY_US_ITEMS } from "./data";
+import { Shield, Building, Truck, Award, Sparkles } from "lucide-react";
 import { isLive, supabase, mockDb } from "./lib/supabase";
-import { productPosterUrl } from "./lib/productImages";
 import { DebugPanel } from "./components/DebugPanel";
 
 // Imported new high-end compliance and desk components
@@ -157,105 +164,35 @@ export default function App() {
     return () => window.removeEventListener("popstate", handleLocation);
   }, []);
 
-  // Premium Dynamic SEO Metadata sync based on route and language
+  // Dynamic SEO metadata per public route
   useEffect(() => {
-    const routeTitlesEn: Record<string, string> = {
-      "/": "PGR UAE | Dubai Precious Metals & Bullion Desk",
-      "/gold": "Gold Bullion Collection | PGR UAE Dubai",
-      "/silver": "Silver Bullion Collection | PGR UAE Dubai",
-      "/coins": "Accredited Investment Coins | PGR UAE",
-      "/iraq-delivery": "Baghdad & Iraq Secure Gold Delivery | PGR UAE",
-      "/request-quote": "Request Firm Quote | PGR UAE Precious Metals",
-      "/calculator": "Precious Metals Investment Calculator | PGR UAE",
-      "/dashboard": "Client Vault & Allocation Dashboard | PGR UAE",
-      "/compliance": "Regulatory Compliance & Audit Desk | PGR UAE",
-      "/terms": "Terms & Conditions | PGR UAE",
-      "/privacy-policy": "Privacy Policy | PGR UAE",
-      "/kyc-aml-policy": "KYC & AML Policy | PGR UAE",
-      "/pricing-disclaimer": "Pricing & Settlement Disclaimer | PGR UAE"
-    };
-
-    const routeTitlesAr: Record<string, string> = {
-      "/": "PGR UAE | ديوان دبي لتداول المعادن الثمينة والسبائك",
-      "/gold": "مجموعة سبائك الذهب الاستثمارية | PGR UAE",
-      "/silver": "مجموعة سبائك الفضة الاستثمارية | PGR UAE",
-      "/coins": "المسكوكات والعملات الذهبية المعتمدة | PGR UAE",
-      "/iraq-delivery": "الشحن الآمن والتسليم في بغداد والعراق | PGR UAE",
-      "/request-quote": "طلب عرض سعر رسمي | PGR UAE للمعادن الثمينة",
-      "/calculator": "حاسبة استثمار الذهب والفضة | PGR UAE",
-      "/dashboard": "منصة الخزينة وحسابات المستثمرين | PGR UAE",
-      "/compliance": "مكتب الامتثال والتدقيق التنظيمي | PGR UAE",
-      "/terms": "الشروط والأحكام العامة | PGR UAE",
-      "/privacy-policy": "سياسة الخصوصية وحماية البيانات | PGR UAE",
-      "/kyc-aml-policy": "سياسة مكافحة غسيل الأموال واعرف عميلك | PGR UAE",
-      "/pricing-disclaimer": "إخلاء مسؤولية التسعير والتسوية | PGR UAE"
-    };
-
-    const routeDescsEn: Record<string, string> = {
-      "/": "Procure certified physical gold bars and silver bullion directly from world-famous accredited refiners. Secured settlement on the PGR UAE desk.",
-      "/gold": "Explore accredited Gold Bars from 1g to 1kg sourced from top LBMA-certified Swiss and UAE refiners.",
-      "/silver": "Explore physical investment Silver Bars including 100g, 500g, and 1kg sizes from leading international mints.",
-      "/coins": "Browse historic and highly liquid gold and silver investment coins backed by national treasuries.",
-      "/iraq-delivery": "Learn about our fully insured, high-security armored logistics from Dubai directly to accredited vaults in Baghdad, Iraq.",
-      "/request-quote": "Initiate a firm trade order on the PGR UAE desk. Secure your pricing against real-time gold and silver spot rates.",
-      "/calculator": "Calculate exact indicative pricing for gold and silver bullion bars based on real-time live global market rates.",
-      "/dashboard": "Manage your allocated physical reserves, review trading tickets, and verify KYC verification status securely."
-    };
-
-    const routeDescsAr: Record<string, string> = {
-      "/": "اشترِ سبائك الذهب والفضة المعتمدة دولياً مباشرة من مصافي دبي والعالم السويسرية. أسعار معتمدة قبل الدفع وتسليم آمن.",
-      "/gold": "تصفح سبائك الذهب الفاخرة من وزن ١ جرام إلى ١ كيلو جرام من أرقى المصافي السويسرية والمحلية المعتمدة.",
-      "/silver": "مجموعة الفضة الاستثمارية النقية بأوزان متنوعة تشمل ١٠٠ جرام، ٥٠٠ جرام، و١ كيلو جرام لأعلى مستويات التحوط المالي.",
-      "/coins": "العملات والمسكوكات الذهبية التاريخية الأكثر سيولة وأماناً الصادرة من حكومات العالم المعتمدة.",
-      "/iraq-delivery": "تفاصيل شحن الذهب المؤمن والمحمي من دبي مباشرة إلى الخزائن المعتمدة لعملائنا الكرام في بغداد وعموم العراق.",
-      "/request-quote": "ابدأ بطلب تسعير رسمي مؤكد لعمليات الشراء الكبرى من ديوان PGR UAE للمعادن الثمينة.",
-      "/calculator": "احسب القيمة الاسترشادية الدقيقة لمدخراتك من الذهب والفضة بناءً على أسعار الشاشات العالمية الفورية المباشرة.",
-      "/dashboard": "أدر حساب الخزينة الخاص بك، وتابع فواتير الشراء، وتحقق من حالة مستندات اعرف عميلك بأمان كامل."
-    };
-
-    const title = currentLang === "ar" 
-      ? (routeTitlesAr[currentPath] || routeTitlesAr["/"]) 
-      : (routeTitlesEn[currentPath] || routeTitlesEn["/"]);
-    
-    const desc = currentLang === "ar"
-      ? (routeDescsAr[currentPath] || routeDescsAr["/"])
-      : (routeDescsEn[currentPath] || routeDescsEn["/"]);
+    const seo = getRouteSeo(currentPath);
+    const title = currentLang === "ar" ? seo.titleAr : seo.titleEn;
+    const desc = currentLang === "ar" ? seo.descAr : seo.descEn;
+    const url = canonicalUrl(currentPath);
 
     document.title = title;
+    document.documentElement.lang = currentLang === "ar" ? "ar" : "en";
 
-    // Update meta description
-    let metaDesc = document.querySelector('meta[name="description"]');
-    if (metaDesc) {
-      metaDesc.setAttribute("content", desc);
-    } else {
-      metaDesc = document.createElement("meta");
-      metaDesc.setAttribute("name", "description");
-      metaDesc.setAttribute("content", desc);
-      document.head.appendChild(metaDesc);
-    }
+    const setMeta = (selector: string, attr: string, value: string) => {
+      const el = document.querySelector(selector);
+      if (el) el.setAttribute(attr, value);
+    };
 
-    // Update Open Graph and Twitter title/desc tags
-    const ogTitle = document.querySelector('meta[property="og:title"]');
-    if (ogTitle) ogTitle.setAttribute("content", title);
-    
-    const ogDesc = document.querySelector('meta[property="og:description"]');
-    if (ogDesc) ogDesc.setAttribute("content", desc);
+    setMeta('meta[name="description"]', "content", desc);
+    setMeta('meta[property="og:title"]', "content", title);
+    setMeta('meta[property="og:description"]', "content", desc);
+    setMeta('meta[property="og:url"]', "content", url);
+    setMeta('meta[name="twitter:title"]', "content", title);
+    setMeta('meta[name="twitter:description"]', "content", desc);
 
-    const twitterTitle = document.querySelector('meta[name="twitter:title"]');
-    if (twitterTitle) twitterTitle.setAttribute("content", title);
-
-    const twitterDesc = document.querySelector('meta[name="twitter:description"]');
-    if (twitterDesc) twitterDesc.setAttribute("content", desc);
-
-    // Add dynamic canonical tag update
     let canonical = document.querySelector('link[rel="canonical"]');
-    const absoluteUrl = `https://pgruae.com${currentPath === "/" ? "" : currentPath}`;
     if (canonical) {
-      canonical.setAttribute("href", absoluteUrl);
+      canonical.setAttribute("href", url);
     } else {
       canonical = document.createElement("link");
       canonical.setAttribute("rel", "canonical");
-      canonical.setAttribute("href", absoluteUrl);
+      canonical.setAttribute("href", url);
       document.head.appendChild(canonical);
     }
   }, [currentPath, currentLang]);
@@ -655,16 +592,10 @@ export default function App() {
 
   // ROOT / HOMEPAGE LAYOUT
   return (
-    <div className={`min-h-screen text-stone-900 bg-[#FAF9F5] selection:bg-gold-base selection:text-black overflow-hidden relative ${
+    <div className={`min-h-screen text-text-charcoal bg-brand-bg selection:bg-gold-base selection:text-black relative ${
       currentLang === "ar" ? "font-arabic" : "font-sans"
     }`} id="pgr-root-container">
-      
-      {/* Structural Glowing Accents in Backdrop */}
-      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-gold-dark/5 blur-[150px] rounded-full pointer-events-none z-0" />
-      <div className="absolute top-1/3 right-1/4 w-[600px] h-[600px] bg-gold-base/3 blur-[180px] rounded-full pointer-events-none z-0" />
-      <div className="absolute bottom-1/4 left-1/3 w-[500px] h-[500px] bg-gold-base/4 blur-[140px] rounded-full pointer-events-none z-0" />
 
-      {/* Global Navigation Header component */}
       <Header
         currentLang={currentLang}
         toggleLanguage={toggleLanguage}
@@ -685,8 +616,13 @@ export default function App() {
         onOpenQuote={() => navigateTo("/request-quote")}
       />
 
-      {/* Live Market Spot rates section */}
-      <LiveMarket
+      <BullionCollectionSection
+        currentLang={currentLang}
+        onOpenQuote={() => navigateTo("/request-quote")}
+        onScrollToCatalog={() => handleScrollToSection("catalog")}
+      />
+
+      <MarketReferenceStrip
         currentLang={currentLang}
         rates={rates}
         selectedCurrency={selectedCurrency}
@@ -696,211 +632,92 @@ export default function App() {
         onOpenQuote={() => navigateTo("/request-quote")}
       />
 
-      {/* Interactive Precious Metals Quote Calculator Section */}
-      <section className="py-24 px-4 md:px-8 border-t border-amber-500/10 bg-white/40 relative z-10" id="calculator">
-        <div className="max-w-7xl mx-auto">
-          <MetalCalculator
-            currentLang={currentLang}
-            rates={rates}
-            selectedCurrency={selectedCurrency}
-            onOpenQuote={(details) => {
-              navigateTo("/request-quote");
-            }}
-          />
-        </div>
-      </section>
+      <HowFirmQuotesWork currentLang={currentLang} />
 
-      {/* Specialized Positioning Section for Iraq & UAE */}
-      <section className="py-16 px-4 md:px-8 bg-stone-100 border-t border-b border-stone-200/50" id="positioning">
-        <div className="max-w-4xl mx-auto text-center space-y-6">
-          <span className="text-gold-base font-mono uppercase text-xs tracking-[0.3em] font-semibold block">
-            {currentLang === "ar" ? "خدمات الذهب والفضة الإقليمية" : "REGIONAL PRECIOUS METALS CONDUIT"}
-          </span>
-          <h2 className="text-2xl sm:text-3xl font-serif tracking-tight text-stone-900 font-medium">
-            {currentLang === "ar" ? "خدمات متخصصة للذهب والفضة بين الإمارات والعراق" : "Specialized Precious Metals Services for Iraq & UAE"}
-          </h2>
-          <p className="text-sm text-stone-600 leading-relaxed max-w-3xl mx-auto">
-            {currentLang === "ar"
-              ? "تساعد PGR UAE العملاء على طلب منتجات الذهب والفضة من الإمارات، مع تأكيد السعر والتوفر وترتيب التوصيل أو الاستلام حسب التحقق والمستندات والمتطلبات الجمركية."
-              : "PGR UAE helps customers request gold and silver products from the UAE, confirm availability and prices, and arrange delivery or pickup options subject to verification, documentation, and customs requirements."}
-          </p>
-
-          <div className="pt-4">
-            <IraqTrustBadge currentLang={currentLang} />
-          </div>
-        </div>
-      </section>
-
-      {/* PGR UAE Bullion Collection Showcase Section */}
-      <section className="py-20 px-4 md:px-8 bg-white border-b border-stone-200/50" id="bullion-collection-showcase">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            
-            {/* Visual Column */}
-            <div className="relative rounded overflow-hidden border border-[#E8DEC9] bg-[#FAF9F5] p-6 flex items-center justify-center shadow-md group">
-              <img
-                src={productPosterUrl("01-bullion-collection.webp")}
-                alt={currentLang === "ar" ? "مجموعة سبائك بي جي آر الإمارات" : "PGR UAE Bullion Collection"}
-                className="w-full h-auto max-h-[450px] object-contain rounded transition-transform duration-700 group-hover:scale-[1.02]"
-                loading="lazy"
-              />
-              <div className="absolute inset-0 bg-radial-gradient from-transparent via-stone-100/10 to-white/50 pointer-events-none" />
-            </div>
-
-            {/* Content Column */}
-            <div className="space-y-6 text-center lg:text-left animate-fadeIn" style={{ direction: currentLang === "ar" ? "rtl" : "ltr" }}>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-[#FAF9F5] border border-[#E8DEC9]">
-                <span className="h-2 w-2 rounded-full bg-[#C6A15B]"></span>
-                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#5E564D]">
-                  {currentLang === "ar" ? "عرض المجموعة الفاخرة" : "Premium Portfolio Showcase"}
-                </span>
-              </div>
-
-              <div className="space-y-3">
-                <h2 className="text-3xl md:text-4xl font-serif tracking-tight text-[#1F1A17] font-medium leading-tight">
-                  {currentLang === "ar" ? "مجموعة سبائك PGR دبي" : "PGR UAE Bullion Collection"}
-                </h2>
-                <p className="text-[#A47C36] text-xs font-mono tracking-widest uppercase font-bold">
-                  {currentLang === "ar" ? "سبائك الذهب • سبائك الفضة • مسكوكات وعملات مصفاة" : "Gold Bars • Silver Bars • Mint Bars & Coins"}
-                </p>
-              </div>
-
-              <p className="text-sm text-stone-600 leading-relaxed max-w-lg mx-auto lg:mx-0">
-                {currentLang === "ar"
-                  ? "اكتشف أرقى سبائك الذهب والفضة المعتمدة دولياً من جمعية سوق السبائك في لندن (LBMA). تتوفر أوزان الخزينة المتعددة من جرام واحد إلى كيلو جرام، مصحوبة بوثائق الفحص والرقم التسلسلي المسجل رسمياً."
-                  : "Discover physical gold and silver certified treasury assets directly sourced from accredited London Bullion Market Association (LBMA) refiners. Ranging from 1 Gram up to 1 Kilogram bars, all options feature official serializations."}
-              </p>
-
-              {/* Compliance quote status note */}
-              <div className="p-4 rounded border border-[#E8DEC9] bg-[#FAF9F5]/50 text-left space-y-1.5 max-w-md mx-auto lg:mx-0">
-                <p className="text-[11px] font-mono text-stone-700 font-bold flex items-center gap-1.5 justify-center lg:justify-start">
-                  <span className="h-1.5 w-1.5 rounded-full bg-olive-accent"></span>
-                  {currentLang === "ar" ? "تنويه تسعير إرشادي" : "Indicative Quote Status"}
-                </p>
-                <p className="text-[10px] text-stone-500 font-sans leading-normal">
-                  {currentLang === "ar"
-                    ? "الأسعار المعروضة هي أسعار استرشادية مبدئية فقط. يتم تأكيد السعر النهائي المعتمد للتسوية من قبل ديوان تداول PGR UAE."
-                    : "Indicative prices available. Final quote confirmed by PGR UAE desk before physical order settlement."}
-                </p>
-              </div>
-
-              {/* CTA Button */}
-              <div className="pt-2 flex justify-center lg:justify-start">
-                <button
-                  onClick={() => navigateTo("/request-quote")}
-                  className="px-8 py-4 bg-[#C6A15B] hover:bg-[#A47C36] text-[#1F1A17] hover:text-white font-mono text-[11px] font-bold uppercase tracking-widest rounded transition-all duration-300 shadow-md hover:scale-[1.01]"
-                >
-                  {currentLang === "ar" ? "طلب تسعير مؤكد" : "Request Firm Quote"}
-                </button>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* Product Catalog list and dynamic pricing */}
       <Catalog
         currentLang={currentLang}
         rates={rates}
         selectedCurrency={selectedCurrency}
         onSelectProduct={setSelectedProduct}
         selectedCategoryFilter={catalogCategoryFilter}
+        onOpenQuote={() => navigateTo("/request-quote")}
       />
 
-      {/* Bento Layout: WHY PGR UAE (Institutional trust pillars) */}
-      <section className="py-24 px-4 md:px-8 bg-white/60 border-t border-stone-200/50" id="why-us">
-        <div className="max-w-7xl mx-auto space-y-16">
-          
-          <div className="text-center space-y-4 max-w-2xl mx-auto">
-            <span className="text-gold-base font-mono uppercase text-xs tracking-[0.3em] font-semibold flex items-center justify-center gap-2">
-              <Shield size={12} />
-              {currentLang === "ar" ? "لماذا تختار بي بي جي آر دبي؟" : "The Preferred Choice"}
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-serif tracking-tight text-stone-900 font-medium">
-              {currentLang === "ar" ? "المعايير المؤسسية المعتمدة" : "Why Investors Choose PGR"}
-            </h2>
-            <p className="text-sm text-stone-600">
-              {currentLang === "ar"
-                ? "معايير تداول مطابقة للبورصات العالمية، وحلول شحن مؤمنة بالكامل لحفظ الثروات."
-                : "Combining global logistical reach with Dubai's unmatched precious metals tax-exempt status."}
-            </p>
-          </div>
+      <PaymentSettlementSection
+        currentLang={currentLang}
+        onOpenQuote={() => navigateTo("/request-quote")}
+      />
 
-          {/* Grid Layout Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {WHY_US_ITEMS.map((item, idx) => {
-               return (
-                <div
-                  key={idx}
-                  className="glass-premium p-6 rounded-sm space-y-4 border border-stone-200/50 hover:border-gold-base/20 transition-all duration-300 relative overflow-hidden group"
-                >
-                  <div className="h-10 w-10 bg-gold-dark/10 rounded-sm border border-gold-base/10 flex items-center justify-center text-gold-base mb-2 group-hover:scale-105 transition-transform">
-                    {idx === 0 ? <Landmark size={18} /> : idx === 1 ? <Building size={18} /> : idx === 2 ? <Truck size={18} /> : <Award size={18} />}
-                  </div>
+      <TrustedPartnersSection currentLang={currentLang} />
 
-                  <h3 className="text-lg font-serif text-stone-900 tracking-wide font-medium">
-                    {currentLang === "ar" ? item.title_ar : item.title_en}
-                  </h3>
+      <ComplianceKYCSection
+        currentLang={currentLang}
+        onOpenLegal={(docId) => {
+          const rMap: Record<string, string> = {
+            aml: "/kyc-aml-policy",
+            pricing: "/pricing-disclaimer",
+            compliance: "/compliance"
+          };
+          const p = rMap[docId] || "/";
+          window.history.pushState(null, "", p);
+          setActiveLegalDoc(docId);
+        }}
+      />
 
-                  <p className="text-xs text-stone-600 leading-relaxed font-sans">
-                    {currentLang === "ar" ? item.desc_ar : item.desc_en}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
+      <HomepageFAQ currentLang={currentLang} />
 
+      <CrawlableSeoBlock currentLang={currentLang} />
+
+      <section className="py-16 px-4 md:px-8 bg-brand-section border-t border-soft-border" id="positioning">
+        <div className="max-w-4xl mx-auto text-center space-y-6">
+          <h2 className="text-2xl font-serif text-text-charcoal font-medium">
+            {currentLang === "ar" ? "خدمات الإمارات والعراق" : "UAE & Iraq Desk Services"}
+          </h2>
+          <p className="text-sm text-text-secondary leading-relaxed max-w-3xl mx-auto font-sans">
+            {currentLang === "ar"
+              ? "تساعد PGR UAE العملاء على طلب منتجات الذهب والفضة من الإمارات، مع تأكيد السعر والتوفر وترتيب التوصيل أو الاستلام حسب التحقق والمستندات والمتطلبات الجمركية."
+              : "PGR UAE helps customers request gold and silver from the UAE, confirm availability and firm quotes, and arrange delivery or pickup subject to verification and compliance review."}
+          </p>
+          <IraqTrustBadge currentLang={currentLang} />
         </div>
       </section>
 
-      {/* Official Headquarters physical details & map */}
-      <OfficeSection currentLang={currentLang} />
-
-      {/* Precious metals advisory & analysis news blog */}
-      <BlogSection currentLang={currentLang} />
-
-      {/* Brands Showcase Section (Authorized distributors grid) */}
-      <section className="py-20 px-4 md:px-8 bg-stone-50 border-t border-stone-200/50" id="brands">
+      <section className="py-20 px-4 md:px-8 bg-brand-bg border-t border-soft-border" id="why-us">
         <div className="max-w-7xl mx-auto space-y-12">
-          
-          <div className="text-center space-y-3">
-            <span className="text-gold-base font-mono uppercase text-xs tracking-[0.3em] font-semibold flex items-center justify-center gap-2">
-              <Sparkles size={11} />
-              {currentLang === "ar" ? "الاعتمادات والعلامات العالمية" : "Accredited Global Partners"}
+          <div className="text-center space-y-3 max-w-2xl mx-auto">
+            <span className="text-gold-base font-mono uppercase text-xs tracking-[0.3em] font-bold flex items-center justify-center gap-2">
+              <Shield size={12} />
+              {currentLang === "ar" ? "لماذا PGR UAE" : "Why PGR UAE"}
             </span>
-            <h3 className="text-xl md:text-2xl font-serif text-stone-900 tracking-wide font-medium">
-              {currentLang === "ar" ? "متوفر عبر ديوان PGR للذهب" : "Available Through PGR UAE"}
-            </h3>
-            <p className="text-xs text-stone-500 max-w-xl mx-auto leading-relaxed">
-              {currentLang === "ar"
-                ? "نحن وكيل وموزع معتمد لكبرى مصافي الذهب العالمية المعتمدة."
-                : "Authorized logistics and trading conduit for world-renowned certified gold refineries."}
-            </p>
+            <h2 className="text-3xl font-serif text-text-charcoal font-medium">
+              {currentLang === "ar" ? "ديوان تداول سبائك معتمد" : "Accredited Bullion Desk Standards"}
+            </h2>
           </div>
-
-          {/* List of Brands */}
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-            {BRANDS.map((brand, idx) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {WHY_US_ITEMS.map((item, idx) => (
               <div
                 key={idx}
-                className="p-5 rounded-sm bg-white/70 border border-stone-200/50 flex flex-col justify-center items-center text-center space-y-2 group hover:border-[#c5a85c]/30 hover:bg-white transition-all duration-300"
-                title={brand.description}
+                className="p-6 rounded border border-soft-border bg-brand-card space-y-3 hover:border-gold-base transition-colors"
               >
-                <span className="text-xs font-serif font-bold text-stone-700 group-hover:text-stone-900 transition-colors">
-                  {brand.name}
-                </span>
-                <span className="text-[9px] font-mono text-gold-base/60 uppercase tracking-widest">
-                  {brand.origin}
-                </span>
+                <div className="h-10 w-10 rounded border border-soft-border bg-brand-bg flex items-center justify-center text-olive-accent">
+                  {idx === 0 ? <Shield size={18} /> : idx === 1 ? <Building size={18} /> : idx === 2 ? <Truck size={18} /> : <Award size={18} />}
+                </div>
+                <h3 className="text-base font-serif text-text-charcoal font-medium">
+                  {currentLang === "ar" ? item.title_ar : item.title_en}
+                </h3>
+                <p className="text-xs text-text-secondary leading-relaxed font-sans">
+                  {currentLang === "ar" ? item.desc_ar : item.desc_en}
+                </p>
               </div>
             ))}
           </div>
-
         </div>
       </section>
 
-      {/* Footer component */}
+      <OfficeSection currentLang={currentLang} />
+
+      <BlogSection currentLang={currentLang} />
+
       <Footer
         currentLang={currentLang}
         onNavigate={handleScrollToSection}
