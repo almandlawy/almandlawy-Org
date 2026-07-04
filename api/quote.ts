@@ -1,6 +1,25 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createClient } from "@supabase/supabase-js";
-import { getSupabasePublicEnv, getSupabaseServiceRoleKey } from "./supabaseEnv";
+
+function getSupabasePublicEnv() {
+  const supabaseUrl =
+    process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "";
+  const supabaseAnonKey =
+    process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || "";
+
+  const configured = Boolean(
+    supabaseUrl &&
+      supabaseAnonKey &&
+      !supabaseUrl.includes("placeholder") &&
+      supabaseUrl.startsWith("https://")
+  );
+
+  return { supabaseUrl, supabaseAnonKey, configured };
+}
+
+function getSupabaseServiceRoleKey() {
+  return process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+}
 
 function getSupabase() {
   const { supabaseUrl, supabaseAnonKey, configured } = getSupabasePublicEnv();
