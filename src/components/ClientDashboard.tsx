@@ -98,17 +98,40 @@ function QuoteItem({ q, kycUploadingForQuoteId, handleClientUploadKYC, handleCli
       </div>
 
       {q.quoted_price && (
-        <div className="p-2.5 bg-brand-section border border-soft-border rounded mt-1">
-          <div className="text-text-secondary text-[8px] uppercase font-mono font-bold">Firm Quote Price:</div>
-          <div className="text-text-charcoal text-sm font-bold text-gold-base font-mono flex justify-between items-center mt-0.5">
-            <span className="text-[#A47C36] font-bold">${q.quoted_price.toLocaleString(undefined, { minimumFractionDigits: 2 })} {q.currency || "USD"}</span>
-            {isQuoteSent && timeLeft && (
+        <div className="p-2.5 bg-brand-section border border-soft-border rounded mt-1 space-y-1">
+          {(q.product_firm_price != null && q.product_firm_price > 0) ? (
+            <>
+              <div className="flex justify-between text-[8px] uppercase font-mono text-text-secondary">
+                <span>Product Firm Price:</span>
+                <span className="text-text-charcoal font-bold">${Number(q.product_firm_price).toLocaleString(undefined, { minimumFractionDigits: 2 })} {q.currency || "USD"}</span>
+              </div>
+              {(q.shipping_fee != null && Number(q.shipping_fee) > 0) && (
+                <div className="flex justify-between text-[8px] uppercase font-mono text-text-secondary">
+                  <span>Shipping Fee{q.shipping_company ? ` (${q.shipping_company})` : ""}:</span>
+                  <span className="text-text-charcoal font-bold">${Number(q.shipping_fee).toLocaleString(undefined, { minimumFractionDigits: 2 })} {q.currency || "USD"}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-[9px] uppercase font-mono font-bold border-t border-soft-border pt-1">
+                <span className="text-text-secondary">Total Firm Quote:</span>
+                <span className="text-[#A47C36]">${q.quoted_price.toLocaleString(undefined, { minimumFractionDigits: 2 })} {q.currency || "USD"}</span>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="text-text-secondary text-[8px] uppercase font-mono font-bold">Firm Quote Price:</div>
+              <div className="text-text-charcoal text-sm font-bold text-gold-base font-mono flex justify-between items-center mt-0.5">
+                <span className="text-[#A47C36] font-bold">${q.quoted_price.toLocaleString(undefined, { minimumFractionDigits: 2 })} {q.currency || "USD"}</span>
+              </div>
+            </>
+          )}
+          {isQuoteSent && timeLeft && (
+            <div className="flex justify-end">
               <span className="text-[9px] bg-soft-danger text-[#A47C36] border border-soft-border px-1.5 py-0.5 rounded font-bold tracking-widest flex items-center gap-1">
                 <span className="h-1.5 w-1.5 bg-[#A47C36] rounded-full animate-ping"></span>
                 ⏱ {timeLeft}
               </span>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       )}
 

@@ -1001,7 +1001,7 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
                         <div className="text-[10px] text-gray-500 italic mt-1">
                           {isAr 
                             ? "الأرقام مؤشرات تشغيلية ولا تمثل عوائد استثمارية مؤكدة." 
-                            : "Figures are operational indicators and do not represent estimated or assured investment returns."}
+                            : "Figures are operational indicators only. Indicative market reference — not a firm quote. Subject to market movement."}
                         </div>
                       </div>
 
@@ -1138,7 +1138,7 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
                           <strong>{isAr ? "إخلاء مسؤولية:" : "Important Market Notice:"}</strong>{" "}
                           {isAr 
                             ? "هذا تقدير للأداء السوقي المقترح بناء على حركة المعادن وليس عائداً مضموناً. أسعار الذهب والفضة متقلبة وتخضع لقوانين العرض والطلب العالمية."
-                            : "This is a model of possible market scenarios. Precious metals carry market price risks and can fluctuate. Past performance is never a guarantee of future outcomes."}
+                            : "Indicative market reference model only. Subject to market movement. Final quote confirmed by PGR UAE desk."}
                         </div>
                       </div>
 
@@ -1716,7 +1716,7 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
                                         : (isAr ? "● بانتظار الدفع" : "● PENDING PAYMENT")}
                                     </span>
                                     <span className="text-[10px] text-gray-500">
-                                      {isAr ? "تأكيد السعر المباشر قبل السداد" : "Price confirmed before payment checkout"}
+                                      {isAr ? "عرض السعر المؤكد قبل السداد" : "Firm quote confirmed by PGR UAE desk before settlement"}
                                     </span>
                                   </div>
                                 </div>
@@ -2017,7 +2017,7 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
                               {isAr ? "وثيقة مطابقة الأصالة والمقايسة" : "OFFICIAL PRECIOUS METALS STATEMENT OF INTEGRITY"}
                             </span>
                             <h4 className="text-md md:text-lg font-serif text-white uppercase tracking-wide">
-                              {verifiedCert.manufacturer} {isAr ? "مضمونة بالكامل" : "Verified Genuine"}
+                              {verifiedCert.manufacturer} {isAr ? "معتمدة بالكامل" : "Verified Genuine"}
                             </h4>
                             <span className="text-[9px] font-mono text-emerald-400 block uppercase tracking-widest">
                               {isAr ? "● تم التحقق من الفحص والشهادة الرقمية" : "● STATUS: AUDIT COMPLIANT & RECORD ACTIVE"}

@@ -51,7 +51,7 @@ export function generateQuotePDF(q: any, customerName: string = "Accredited Inve
   // Specifications Box
   doc.setFillColor(lightBg[0], lightBg[1], lightBg[2]);
   doc.setDrawColor(230, 225, 210);
-  doc.rect(15, 58, 180, 75, "DF");
+  doc.rect(15, 58, 180, 90, "DF");
 
   // Inner grid details
   doc.setFontSize(10);
@@ -70,7 +70,10 @@ export function generateQuotePDF(q: any, customerName: string = "Accredited Inve
   const category = q.productCategory || q.product_category || `${metal.toUpperCase()} Bullion`;
   const weight = q.weight || q.weight_preference || "100 Grams";
   const purity = q.purity || "Au 99.99% (24 Karats)";
-  const priceFormatted = `${(q.quoted_price || q.price || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })} ${q.currency || "USD"}`;
+  const productFirm = q.product_firm_price ?? q.quoted_price ?? q.price ?? 0;
+  const shippingFee = q.shipping_fee ?? 0;
+  const totalPrice = q.quoted_price ?? q.price ?? (Number(productFirm) + Number(shippingFee));
+  const currency = q.currency || "USD";
 
   drawRow("Quote Reference Number:", quoteId);
   drawRow("Authorized Client Name:", customerName);
@@ -78,7 +81,11 @@ export function generateQuotePDF(q: any, customerName: string = "Accredited Inve
   drawRow("Metal Specification:", metal.toUpperCase());
   drawRow("Allocated Net Weight:", weight);
   drawRow("Refinery Certified Purity:", purity);
-  drawRow("Contract Price (Locked):", priceFormatted);
+  drawRow("Product Firm Price:", `${Number(productFirm).toLocaleString(undefined, { minimumFractionDigits: 2 })} ${currency}`);
+  if (Number(shippingFee) > 0) {
+    drawRow("Shipping Fee:", `${Number(shippingFee).toLocaleString(undefined, { minimumFractionDigits: 2 })} ${currency}${q.shipping_company ? ` (${q.shipping_company})` : ""}`);
+  }
+  drawRow("Total Firm Quote Amount:", `${Number(totalPrice).toLocaleString(undefined, { minimumFractionDigits: 2 })} ${currency}`);
 
   // 3. Status Badge & Timer
   doc.setDrawColor(accentColor[0], accentColor[1], accentColor[2]);
@@ -88,7 +95,7 @@ export function generateQuotePDF(q: any, customerName: string = "Accredited Inve
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
-  doc.text("CONTRACT STATUS: FIRM PRICE SECURED", 22, 151);
+  doc.text("CONTRACT STATUS: FIRM QUOTE CONFIRMED BY PGR UAE DESK", 22, 151);
 
   doc.setTextColor(accentColor[0], accentColor[1], accentColor[2]);
   doc.setFont("helvetica", "normal");

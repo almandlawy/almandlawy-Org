@@ -5,7 +5,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { Product } from "../types";
-import { PRODUCTS, BRANDS } from "../data";
+import { PRODUCTS, BRANDS, DEFAULT_DAILY_PRICING, DEFAULT_SHIPPING_SETTINGS } from "../data";
 
 // 1. Fetch environment variables safely (client-side only using import.meta.env)
 const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL || "";
@@ -377,7 +377,9 @@ const seedLocalStorage = () => {
     manual_silver_usd_oz: 29.85,
     usd_aed_rate: 3.6725,
     default_product_premium_pct: 2.0,
-    disable_live_pricing: false
+    disable_live_pricing: false,
+    daily_pricing: { ...DEFAULT_DAILY_PRICING },
+    shipping_settings: { ...DEFAULT_SHIPPING_SETTINGS }
   });
 
   // 12. Exchange Rates (AED / USD / IQD)
@@ -1230,6 +1232,20 @@ export const dbService = {
         console.warn("Failed to sync updated settings with server", err);
       }
       return updated;
+    },
+    getPublicShipping: async () => {
+      try {
+        const res = await fetch("/api/shipping");
+        if (res.ok) {
+          return await res.json();
+        }
+      } catch (err) {
+        console.warn("Could not fetch public shipping settings", err);
+      }
+      const settings = mockDb.get("pgr_settings") || {};
+      const s = settings.shipping_settings || DEFAULT_SHIPPING_SETTINGS;
+      const { internal_shipping_notes, ...publicFields } = s;
+      return publicFields;
     }
   },
 

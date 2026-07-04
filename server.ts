@@ -107,6 +107,29 @@ let serverSettings = {
   usd_aed_rate: 3.6725,
   default_product_premium_pct: 2.0,
   disable_live_pricing: false,
+  daily_pricing: {
+    gold_daily_reference_price: 288.30,
+    silver_daily_reference_price: 4.04,
+    currency: "AED",
+    unit: "per_gram",
+    manual_pricing_enabled: false,
+    effective_date: new Date().toISOString().split("T")[0],
+    reason_for_update: "",
+    updated_by_admin: "",
+    last_updated_at: ""
+  },
+  shipping_settings: {
+    shipping_enabled: true,
+    shipping_company_name: "Transguard / Brink's UAE",
+    shipping_method: "Insured Armored Courier",
+    shipping_price: 150,
+    currency: "AED",
+    destination_country: "United Arab Emirates",
+    destination_city_region: "Dubai Marina / UAE Wide",
+    estimated_delivery_time: "1–3 business days (UAE)",
+    public_shipping_note: "Fully insured door-to-door delivery. Subject to KYC verification and compliance review before dispatch.",
+    internal_shipping_notes: "Default UAE domestic route. Iraq/Baghdad routes require separate customs clearance dossier."
+  }
 };
 
 // Admin settings endpoints
@@ -117,6 +140,22 @@ app.get("/api/admin/settings", (req, res) => {
 app.post("/api/admin/settings", (req, res) => {
   serverSettings = { ...serverSettings, ...req.body };
   res.json({ success: true, settings: serverSettings });
+});
+
+/** Public shipping info — internal notes are never exposed */
+app.get("/api/shipping", (req, res) => {
+  const s = (serverSettings as any).shipping_settings || {};
+  res.json({
+    shipping_enabled: s.shipping_enabled ?? true,
+    shipping_company_name: s.shipping_company_name || "",
+    shipping_method: s.shipping_method || "",
+    shipping_price: s.shipping_price ?? 0,
+    currency: s.currency || "AED",
+    destination_country: s.destination_country || "",
+    destination_city_region: s.destination_city_region || "",
+    estimated_delivery_time: s.estimated_delivery_time || "",
+    public_shipping_note: s.public_shipping_note || ""
+  });
 });
 
 // Secure multi-metal cache setup
