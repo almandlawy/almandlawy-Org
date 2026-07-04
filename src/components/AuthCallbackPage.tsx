@@ -1,0 +1,83 @@
+/**
+ * OAuth callback — exchanges PKCE code and returns user to /admin.
+ */
+
+import React, { useEffect, useState } from "react";
+import { RefreshCw, ShieldAlert } from "lucide-react";
+import { ensureSupabaseReady, supabase } from "../lib/supabase";
+
+export default function AuthCallbackPage() {
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function completeAuth() {
+      const ready = await ensureSupabaseReady();
+      if (!ready || !supabase) {
+        if (!cancelled) {
+          setError("Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel.");
+        }
+        return;
+      }
+
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get("code");
+        const next = params.get("next") || "/admin";
+
+        if (code) {
+          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          if (exchangeError) throw exchangeError;
+        } else {
+          const { error: sessionError } = await supabase.auth.getSession();
+          if (sessionError) throw sessionError;
+        }
+
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) {
+          throw new Error("No session after OAuth callback.");
+        }
+
+        window.history.replaceState({}, document.title, next);
+        window.location.assign(next);
+      } catch (err: unknown) {
+        console.error("[AuthCallback] OAuth failed:", err);
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Authentication failed.");
+        }
+      }
+    }
+
+    completeAuth();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-brand-bg flex items-center justify-center p-6">
+      <div className="max-w-md w-full bg-brand-card border border-soft-border rounded-xl p-8 text-center space-y-4 shadow-premium">
+        {error ? (
+          <>
+            <ShieldAlert className="mx-auto text-red-600" size={36} />
+            <h1 className="text-lg font-serif text-text-charcoal">Sign-in could not be completed</h1>
+            <p className="text-sm text-text-secondary">{error}</p>
+            <a
+              href="/admin"
+              className="inline-block mt-2 px-5 py-2.5 bg-gold-base hover:bg-gold-dark text-text-charcoal text-xs font-mono font-bold uppercase tracking-widest rounded-lg"
+            >
+              Back to admin
+            </a>
+          </>
+        ) : (
+          <>
+            <RefreshCw className="animate-spin text-gold-base mx-auto" size={36} />
+            <h1 className="text-lg font-serif text-text-charcoal">Completing sign-in…</h1>
+            <p className="text-sm text-text-secondary">Redirecting to PGR UAE admin.</p>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}

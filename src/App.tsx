@@ -30,7 +30,7 @@ import SeoSiteLinks from "./components/SeoSiteLinks";
 import { LiveMarketRates, Product } from "./types";
 import { WHY_US_ITEMS } from "./data";
 import { Shield, Building, Truck, Award, Sparkles } from "lucide-react";
-import { isLive, supabase, mockDb } from "./lib/supabase";
+import { isLive, supabase, mockDb, ensureSupabaseReady } from "./lib/supabase";
 import { DebugPanel } from "./components/DebugPanel";
 
 // Imported new high-end compliance and desk components
@@ -44,6 +44,7 @@ import ClientDashboard from "./components/ClientDashboard";
 import MetalCalculator from "./components/MetalCalculator";
 import SEOLandingPages from "./components/SEOLandingPages";
 import IraqBullionQuotePage from "./components/IraqBullionQuotePage";
+import AuthCallbackPage from "./components/AuthCallbackPage";
 import PricingDisclaimer from "./components/PricingDisclaimer";
 
 export default function App() {
@@ -116,25 +117,29 @@ export default function App() {
 
   // Listen for Supabase Authentication changes
   useEffect(() => {
-    if (isLive && supabase) {
-      // 1. Get initial session
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session && session.user) {
-          handleUserLogin(session.user);
-        }
-      });
+    let subscription: { unsubscribe: () => void } | undefined;
 
-      // 2. Listen for auth changes
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-        if (session && session.user) {
+    const initAuth = async () => {
+      const ready = await ensureSupabaseReady();
+      if (!ready || !isLive || !supabase) return;
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        await handleUserLogin(session.user);
+      }
+
+      const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
+        if (session?.user) {
           await handleUserLogin(session.user);
         } else if (event === "SIGNED_OUT") {
           mockDb.auth.logout();
         }
       });
+      subscription = data.subscription;
+    };
 
-      return () => subscription.unsubscribe();
-    }
+    initAuth();
+    return () => subscription?.unsubscribe();
   }, []);
 
   // Pathname routing for compliance & legal policies and full pages
@@ -303,6 +308,10 @@ export default function App() {
   };
 
   // Intercept Admin & Custom routes for clean, un-nested display
+  if (currentPath === "/auth/callback") {
+    return <AuthCallbackPage />;
+  }
+
   if (currentPath === "/admin" || currentPath.startsWith("/admin/")) {
     return <AdminPanel currentLang={currentLang} />;
   }

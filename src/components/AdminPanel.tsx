@@ -11,7 +11,7 @@ import {
   TrendingUp, Undo, Box, Award, FileText, BookOpen, Settings, 
   Eye, Trash2, Plus, Edit, ShieldAlert, Mail, Phone, Clock, FileCheck, CheckCircle, LogOut
 } from "lucide-react";
-import { dbService, mockDb, isLive, supabase, getRedirectUrl, generateQuoteSignature } from "../lib/supabase";
+import { dbService, mockDb, isLive, supabase, getAuthCallbackUrl, ensureSupabaseReady, configStatus, isBootstrapAdmin, generateQuoteSignature } from "../lib/supabase";
 import { Product, DailyPricingSettings, ShippingSettings } from "../types";
 import { DEFAULT_DAILY_PRICING, DEFAULT_SHIPPING_SETTINGS } from "../data";
 import { resolveProductIdFromLabel } from "../lib/productCatalog";
@@ -213,73 +213,26 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
   const checkAdmin = async (email: string): Promise<boolean> => {
     setLoading(true);
     try {
-      if (isLive && supabase) {
-        const { data, error } = await supabase
-          .from("admin_users")
-          .select("email, is_active")
-          .eq("email", email.trim().toLowerCase())
-          .maybeSingle();
-
-        if (error) {
-          console.error("Error querying admin_users:", error);
-          setDebugAdminCheck("NO");
-          setDebugReason("Error querying database: " + error.message);
-          setIsAdminLoggedIn(false);
-          setAuthErrorMsg(isAr ? "حدث خطأ أثناء التحقق من الصلاحيات الإدارية." : "Error verifying admin privileges.");
-          return false;
-        }
-
-        if (data) {
-          const isActive = data.is_active === true || data.is_active === null || data.is_active === undefined;
-          if (isActive) {
-            setIsAdminLoggedIn(true);
-            setAuthErrorMsg("");
-            setDebugAdminCheck("YES");
-            setDebugReason("admin verified");
-            // Only after session exists, clean up URL hash
-            window.history.replaceState({}, document.title, "/admin");
-            await loadAdminData();
-            return true;
-          } else {
-            setIsAdminLoggedIn(false);
-            setAuthErrorMsg(isAr ? "تم إيقاف حساب المسؤول هذا." : "This admin account is inactive.");
-            setDebugAdminCheck("NO");
-            setDebugReason("admin inactive");
-            return false;
-          }
-        } else {
-          setIsAdminLoggedIn(false);
-          setAuthErrorMsg(
-            isAr 
-              ? "تم رفض الدخول. حسابك ليس مدرجاً في قائمة المشرفين." 
-              : "Access denied. Your email is not in the admin directory."
-          );
-          setDebugAdminCheck("NO");
-          setDebugReason("not admin");
-          return false;
-        }
-      } else {
-        // Local fallback check
-        const isAuthorized = await dbService.adminUsers.checkEmail(email);
-        if (isAuthorized) {
-          setIsAdminLoggedIn(true);
-          setAuthErrorMsg("");
-          setDebugAdminCheck("YES");
-          setDebugReason("admin verified (simulation)");
-          await loadAdminData();
-          return true;
-        } else {
-          setIsAdminLoggedIn(false);
-          setAuthErrorMsg(
-            isAr 
-              ? "تم رفض الدخول. صلاحية الإدارة مطلوبة." 
-              : "Access denied. Admin permission required."
-          );
-          setDebugAdminCheck("NO");
-          setDebugReason("not admin");
-          return false;
-        }
+      const isAuthorized = await dbService.adminUsers.checkEmail(email);
+      if (isAuthorized) {
+        setIsAdminLoggedIn(true);
+        setAuthErrorMsg("");
+        setDebugAdminCheck("YES");
+        setDebugReason(isBootstrapAdmin(email) ? "admin verified (bootstrap)" : "admin verified");
+        window.history.replaceState({}, document.title, "/admin");
+        await loadAdminData();
+        return true;
       }
+
+      setIsAdminLoggedIn(false);
+      setAuthErrorMsg(
+        isAr
+          ? "تم رفض الدخول. حسابك ليس مدرجاً في قائمة المشرفين."
+          : "Access denied. Your email is not in the admin directory."
+      );
+      setDebugAdminCheck("NO");
+      setDebugReason("not admin");
+      return false;
     } catch (err) {
       console.error("Exception checking admin:", err);
       setDebugAdminCheck("NO");
@@ -299,6 +252,16 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
       setDebugAdminCheck("PENDING");
 
       try {
+        const supabaseReady = await ensureSupabaseReady();
+        if (!supabaseReady) {
+          setDebugSessionDetected("NO");
+          setDebugUserEmail("NONE");
+          setDebugAdminCheck("NO");
+          setDebugReason("supabase not configured");
+          setIsAdminLoggedIn(false);
+          return;
+        }
+
         let activeUser = null;
 
         if (isLive && supabase) {
@@ -1184,11 +1147,20 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                   onClick={async () => {
                     try {
                       setCheckingAuth(true);
+                      const ready = await ensureSupabaseReady();
+                      if (!ready) {
+                        setAuthErrorMsg(
+                          isAr
+                            ? "إعدادات Supabase غير مكتملة في Vercel."
+                            : "Supabase is not configured in Vercel environment variables."
+                        );
+                        return;
+                      }
                       if (isLive && supabase) {
                         await supabase.auth.signInWithOAuth({
                           provider: "google",
                           options: {
-                            redirectTo: getRedirectUrl()
+                            redirectTo: `${getAuthCallbackUrl()}?next=/admin`
                           }
                         });
                       } else {
@@ -1228,10 +1200,16 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
             <p className="text-text-secondary uppercase tracking-wider font-bold text-[10px] mb-2 border-b border-soft-border pb-1">
               SYSTEM SECURITY DEBUG INFO:
             </p>
-            <p>Session detected: <span className={debugSessionDetected === "YES" ? "text-green-400 font-bold" : debugSessionDetected === "NO" ? "text-red-400" : "text-amber-400"}>{debugSessionDetected}</span></p>
+            <p>Supabase mode: <span className="text-text-charcoal font-bold">{configStatus.currentMode}</span></p>
+            <p>Build URL set: <span className="text-text-charcoal">{configStatus.urlConfigured}</span></p>
+            <p>Build key set: <span className="text-text-charcoal">{configStatus.keyConfigured}</span></p>
+            <p>Session detected: <span className={debugSessionDetected === "YES" ? "text-green-600 font-bold" : debugSessionDetected === "NO" ? "text-red-600" : "text-amber-600"}>{debugSessionDetected}</span></p>
             <p>User email: <span className="text-text-charcoal">{debugUserEmail}</span></p>
-            <p>Admin check: <span className={debugAdminCheck === "YES" ? "text-green-400 font-bold" : debugAdminCheck === "NO" ? "text-red-400" : "text-amber-400"}>{debugAdminCheck}</span></p>
-            <p>Reason: <span className="text-amber-400">{debugReason}</span></p>
+            <p>Admin check: <span className={debugAdminCheck === "YES" ? "text-green-600 font-bold" : debugAdminCheck === "NO" ? "text-red-600" : "text-amber-600"}>{debugAdminCheck}</span></p>
+            <p>Reason: <span className="text-amber-700">{debugReason}</span></p>
+            {!isLive && (
+              <p className="text-[10px] text-red-700 pt-1">{configStatus.explainMissing}</p>
+            )}
           </div>
 
           {/* Home Link */}

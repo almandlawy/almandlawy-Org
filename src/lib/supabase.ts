@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { Product, QuoteSignaturePayload, PartnerLogo, PaymentSettings, PublicPaymentSettings } from "../types";
 import { PRODUCTS, BRANDS, DEFAULT_DAILY_PRICING, DEFAULT_SHIPPING_SETTINGS, DEFAULT_PAYMENT_SETTINGS } from "../data";
 import {
@@ -15,64 +15,126 @@ import {
 } from "./productCatalog";
 
 // 1. Fetch environment variables safely (client-side only using import.meta.env)
-const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL || "";
-const supabaseAnonKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || "";
+const buildTimeSupabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL || "";
+const buildTimeSupabaseAnonKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || "";
 
-// Check configuration completeness with strict URL and key verification
-const isUrlConfigured = Boolean(
-  supabaseUrl && 
-  supabaseUrl !== "YOUR_SUPABASE_URL" && 
-  supabaseUrl !== "VITE_SUPABASE_URL" &&
-  !supabaseUrl.includes("placeholder") &&
-  (supabaseUrl.startsWith("http://") || supabaseUrl.startsWith("https://"))
-);
+export const BOOTSTRAP_ADMIN_EMAILS = [
+  "almandlawy112@gmail.com",
+  "admin@pgruae.com"
+] as const;
 
-const isKeyConfigured = Boolean(
-  supabaseAnonKey && 
-  supabaseAnonKey !== "YOUR_SUPABASE_ANON_KEY" && 
-  supabaseAnonKey !== "VITE_SUPABASE_ANON_KEY" &&
-  !supabaseAnonKey.includes("placeholder") &&
-  supabaseAnonKey.length > 10
-);
+function isValidSupabaseUrl(url: string): boolean {
+  return Boolean(
+    url &&
+      url !== "YOUR_SUPABASE_URL" &&
+      url !== "VITE_SUPABASE_URL" &&
+      !url.includes("placeholder") &&
+      (url.startsWith("http://") || url.startsWith("https://"))
+  );
+}
 
-// We will initialize these safely
-const supabaseOptions = {
+function isValidSupabaseKey(key: string): boolean {
+  return Boolean(
+    key &&
+      key !== "YOUR_SUPABASE_ANON_KEY" &&
+      key !== "VITE_SUPABASE_ANON_KEY" &&
+      !key.includes("placeholder") &&
+      key.length > 10
+  );
+}
+
+const createSupabaseOptions = () => ({
   auth: {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    flowType: "implicit" as const
+    flowType: "pkce" as const
   }
-};
+});
 
-let supabaseClient = null;
-let initializedSuccessfully = false;
+export const isProduction =
+  typeof window !== "undefined" && window.location.hostname.includes("pgruae.com");
 
-if (isUrlConfigured && isKeyConfigured) {
+/** Live Supabase client — reassigned after runtime config load. */
+export let supabase: SupabaseClient | null = null;
+export let isLive = false;
+
+function tryInitSupabaseClient(url: string, key: string): boolean {
+  if (!isValidSupabaseUrl(url) || !isValidSupabaseKey(key)) return false;
   try {
-    supabaseClient = createClient(supabaseUrl, supabaseAnonKey, supabaseOptions);
-    initializedSuccessfully = true;
+    supabase = createClient(url, key, createSupabaseOptions());
+    isLive = true;
+    return true;
   } catch (err) {
-    console.error("Supabase createClient failed synchronously:", err);
-    initializedSuccessfully = false;
+    console.error("Supabase createClient failed:", err);
+    supabase = null;
+    isLive = false;
+    return false;
   }
 }
 
-export const isProduction = typeof window !== "undefined" && window.location.hostname.includes("pgruae.com");
+if (tryInitSupabaseClient(buildTimeSupabaseUrl, buildTimeSupabaseAnonKey)) {
+  console.info("[PGR] Supabase initialized from build-time env.");
+}
 
-export const isLive = isProduction ? true : (isUrlConfigured && isKeyConfigured && initializedSuccessfully);
+let ensureSupabasePromise: Promise<boolean> | null = null;
 
-// 2. Initialize Supabase client safely using the pre-initialized instance
-export const supabase = isLive ? supabaseClient : null;
+/** Load Supabase from build env or /api/config (Vercel runtime). */
+export async function ensureSupabaseReady(): Promise<boolean> {
+  if (supabase && isLive) return true;
+  if (ensureSupabasePromise) return ensureSupabasePromise;
+
+  ensureSupabasePromise = (async () => {
+    if (tryInitSupabaseClient(buildTimeSupabaseUrl, buildTimeSupabaseAnonKey)) {
+      return true;
+    }
+
+    try {
+      const res = await fetch("/api/config");
+      if (res.ok) {
+        const cfg = await res.json();
+        if (cfg.configured && tryInitSupabaseClient(cfg.supabaseUrl, cfg.supabaseAnonKey)) {
+          console.info("[PGR] Supabase initialized from /api/config.");
+          return true;
+        }
+      }
+    } catch (err) {
+      console.error("[PGR] Failed to load runtime Supabase config:", err);
+    }
+
+    supabase = null;
+    isLive = false;
+    return false;
+  })();
+
+  const ready = await ensureSupabasePromise;
+  ensureSupabasePromise = null;
+  return ready;
+}
+
+export function isBootstrapAdmin(email: string): boolean {
+  const normalized = email.trim().toLowerCase();
+  return (BOOTSTRAP_ADMIN_EMAILS as readonly string[]).includes(normalized);
+}
 
 export const configStatus = {
-  urlConfigured: isUrlConfigured ? "YES" : "NO",
-  keyConfigured: isKeyConfigured ? "YES" : "NO",
-  currentMode: isLive ? "LIVE DATABASE" : "LOCAL SIMULATION",
-  supabaseUrl: isUrlConfigured ? supabaseUrl : "Not Configured",
-  explainMissing: !isLive 
-    ? "Provide VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your env secrets/variables to connect to your live Supabase DB."
-    : "Connected to live database."
+  get urlConfigured() {
+    return isValidSupabaseUrl(buildTimeSupabaseUrl) ? "YES" : "NO";
+  },
+  get keyConfigured() {
+    return isValidSupabaseKey(buildTimeSupabaseAnonKey) ? "YES" : "NO";
+  },
+  get currentMode() {
+    return isLive ? "LIVE DATABASE" : "LOCAL SIMULATION";
+  },
+  get supabaseUrl() {
+    return isValidSupabaseUrl(buildTimeSupabaseUrl) ? buildTimeSupabaseUrl : "Not Configured";
+  },
+  get explainMissing() {
+    return !isLive
+      ? "Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel (build + runtime) and redeploy."
+      : "Connected to live database.";
+  }
 };
 
 // Safe storage wrapper that falls back to in-memory dictionary if localStorage throws SecurityError or is unavailable
@@ -619,23 +681,31 @@ export const mockDb = {
   }
 };
 
+export const getAuthCallbackUrl = () => {
+  if (typeof window !== "undefined") {
+    if (window.location.origin.includes("pgruae.com")) {
+      return "https://www.pgruae.com/auth/callback";
+    }
+    return `${window.location.origin}/auth/callback`;
+  }
+  return "https://www.pgruae.com/auth/callback";
+};
+
 export const getRedirectUrl = () => {
   if (typeof window !== "undefined") {
-    const origin = window.location.origin;
     const pathname = window.location.pathname;
 
-    if (origin.includes("pgruae.com") && pathname.startsWith("/admin")) {
-      return "https://pgruae.com/admin";
+    if (window.location.origin.includes("pgruae.com")) {
+      if (pathname.startsWith("/admin")) {
+        return "https://www.pgruae.com/admin";
+      }
+      return "https://www.pgruae.com";
     }
 
-    if (origin.includes("pgruae.com")) {
-      return "https://pgruae.com";
-    }
-
-    return origin + pathname;
+    return window.location.origin + (pathname.startsWith("/admin") ? "/admin" : "");
   }
 
-  return "https://pgruae.com";
+  return "https://www.pgruae.com";
 };
 
 // Bidirectional mappers for product to resolve table field mismatches in Supabase
@@ -1096,7 +1166,10 @@ export const dbService = {
   quoteRequests: {
     list: async () => {
       if (isLive && supabase) {
-        const { data } = await supabase.from("quote_requests").select("*");
+        const { data } = await supabase
+          .from("quote_requests")
+          .select("*")
+          .order("created_at", { ascending: false });
         if (data) return data;
       }
       return mockDb.get("pgr_quote_requests");
@@ -1685,20 +1758,25 @@ export const dbService = {
 
   adminUsers: {
     checkEmail: async (email: string): Promise<boolean> => {
+      const normalized = email.trim().toLowerCase();
+      if (isBootstrapAdmin(normalized)) return true;
+
       if (isLive && supabase) {
         try {
           const { data, error } = await supabase
             .from("admin_users")
-            .select("email")
-            .eq("email", email.trim().toLowerCase());
-          if (!error && data && data.length > 0) return true;
+            .select("email, is_active")
+            .eq("email", normalized)
+            .maybeSingle();
+          if (!error && data && (data.is_active === true || data.is_active == null)) {
+            return true;
+          }
         } catch (err) {
           console.error("Failed to check admin_users in Supabase:", err);
         }
       }
-      // Local fallback check
-      const adminList = mockDb.get("pgr_admin_users") || ["almandlawy112@gmail.com", "admin@pgruae.com"];
-      return adminList.map((e: string) => e.toLowerCase()).includes(email.trim().toLowerCase());
+      const adminList = mockDb.get("pgr_admin_users") || [...BOOTSTRAP_ADMIN_EMAILS];
+      return adminList.map((e: string) => e.toLowerCase()).includes(normalized);
     }
   },
 
@@ -1746,12 +1824,17 @@ export const dbService = {
 
   auth: {
     signInWithGoogle: async (redirectToUrl?: string) => {
-      const redirect = redirectToUrl || getRedirectUrl();
+      await ensureSupabaseReady();
+      const redirect = redirectToUrl || getAuthCallbackUrl();
       if (isLive && supabase) {
         const { error } = await supabase.auth.signInWithOAuth({
           provider: "google",
           options: {
-            redirectTo: redirect
+            redirectTo: redirect,
+            queryParams: {
+              access_type: "offline",
+              prompt: "consent"
+            }
           }
         });
         if (error) throw error;
