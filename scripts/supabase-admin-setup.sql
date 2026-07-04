@@ -19,8 +19,8 @@ CREATE POLICY "authenticated_can_verify_own_admin_email"
   ON public.admin_users FOR SELECT TO authenticated
   USING (lower(email) = lower(auth.jwt() ->> 'email'));
 
--- 2. Quote requests — align existing table with /api/quote + admin dashboard
-CREATE TABLE IF NOT EXISTS public.quote_requests (
+-- 2. Website quote requests (form submissions from /request-quote)
+CREATE TABLE IF NOT EXISTS public.website_quote_requests (
   id text PRIMARY KEY,
   inquiry_id text UNIQUE,
   name text NOT NULL,
@@ -35,29 +35,16 @@ CREATE TABLE IF NOT EXISTS public.quote_requests (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
--- Add missing columns if table already existed with older schema
-ALTER TABLE public.quote_requests ADD COLUMN IF NOT EXISTS inquiry_id text;
-ALTER TABLE public.quote_requests ADD COLUMN IF NOT EXISTS name text;
-ALTER TABLE public.quote_requests ADD COLUMN IF NOT EXISTS email text;
-ALTER TABLE public.quote_requests ADD COLUMN IF NOT EXISTS phone text;
-ALTER TABLE public.quote_requests ADD COLUMN IF NOT EXISTS company text;
-ALTER TABLE public.quote_requests ADD COLUMN IF NOT EXISTS metal_interest text;
-ALTER TABLE public.quote_requests ADD COLUMN IF NOT EXISTS product_category text;
-ALTER TABLE public.quote_requests ADD COLUMN IF NOT EXISTS weight_preference text;
-ALTER TABLE public.quote_requests ADD COLUMN IF NOT EXISTS message text;
-ALTER TABLE public.quote_requests ADD COLUMN IF NOT EXISTS status text DEFAULT 'New Request';
-ALTER TABLE public.quote_requests ADD COLUMN IF NOT EXISTS created_at timestamptz DEFAULT now();
+ALTER TABLE public.website_quote_requests ENABLE ROW LEVEL SECURITY;
 
-ALTER TABLE public.quote_requests ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS "anon_insert_quote_requests" ON public.quote_requests;
-CREATE POLICY "anon_insert_quote_requests"
-  ON public.quote_requests FOR INSERT TO anon, authenticated
+DROP POLICY IF EXISTS "anon_insert_website_quote_requests" ON public.website_quote_requests;
+CREATE POLICY "anon_insert_website_quote_requests"
+  ON public.website_quote_requests FOR INSERT TO anon, authenticated
   WITH CHECK (true);
 
-DROP POLICY IF EXISTS "admin_select_quote_requests" ON public.quote_requests;
-CREATE POLICY "admin_select_quote_requests"
-  ON public.quote_requests FOR SELECT TO authenticated
+DROP POLICY IF EXISTS "admin_select_website_quote_requests" ON public.website_quote_requests;
+CREATE POLICY "admin_select_website_quote_requests"
+  ON public.website_quote_requests FOR SELECT TO authenticated
   USING (
     EXISTS (
       SELECT 1 FROM public.admin_users au
@@ -66,7 +53,7 @@ CREATE POLICY "admin_select_quote_requests"
     )
   );
 
--- Service role bypasses RLS for serverless /api/quote and /api/admin-quotes
+-- Legacy quote_requests table left unchanged if used elsewhere
 
 -- 3. Supabase Auth → URL Configuration
 -- Site URL: https://www.pgruae.com

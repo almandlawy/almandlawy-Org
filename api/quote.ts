@@ -42,13 +42,15 @@ function buildMessage(body: Record<string, unknown>): string {
   return parts.join("\n");
 }
 
+const QUOTE_TABLE = "website_quote_requests";
+
 async function tryInsertQuote(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   client: any,
   payloads: Array<Record<string, unknown>>
 ): Promise<{ ok: boolean; error?: string; code?: string }> {
   for (const payload of payloads) {
-    const { error } = await client.from("quote_requests").insert(payload);
+    const { error } = await client.from(QUOTE_TABLE).insert(payload);
     if (!error) return { ok: true };
     console.error("[api/quote] insert attempt failed:", error.message, payload);
     if (payloads.indexOf(payload) === payloads.length - 1) {
@@ -117,58 +119,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       created_at: new Date().toISOString()
     };
 
-    const fullMessage = [
-      `Inquiry: ${inquiryId}`,
-      `Name: ${name}`,
-      `Phone: ${phone}`,
-      `Email: ${resolvedEmail}`,
-      `Location: ${countryCity}`,
-      `Product: ${productCategory}`,
-      `Quantity/Budget: ${quantityBudget}`,
-      `Contact: ${preferredContact}`,
-      message ? `Notes: ${message}` : ""
-    ]
-      .filter(Boolean)
-      .join("\n");
-
     const service = getServiceClient();
     let persisted = false;
     let persistError: string | undefined;
     let persistCode: string | undefined;
 
     if (service) {
-      const result = await tryInsertQuote(service, [
-        { id: inquiryId, ...baseRow },
-        { id: inquiryId, inquiry_id: inquiryId, ...baseRow },
-        {
-          id: inquiryId,
-          name,
-          phone,
-          company: countryCity,
-          metal_interest: metalFromProduct(productKey),
-          product_category: productCategory,
-          weight_preference: quantityBudget,
-          message: fullMessage,
-          status: "New Request",
-          created_at: baseRow.created_at
-        },
-        {
-          id: inquiryId,
-          name,
-          phone,
-          message: fullMessage,
-          status: "New Request",
-          created_at: baseRow.created_at
-        },
-        {
-          inquiry_id: inquiryId,
-          name,
-          phone,
-          message: fullMessage,
-          status: "New Request",
-          created_at: baseRow.created_at
-        }
-      ]);
+      const result = await tryInsertQuote(service, [{ id: inquiryId, ...baseRow }]);
       persisted = result.ok;
       persistError = result.error;
       persistCode = result.code;

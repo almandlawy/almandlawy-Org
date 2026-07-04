@@ -75,7 +75,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const { data, error } = await service
-      .from("quote_requests")
+      .from("website_quote_requests")
       .select("*")
       .order("created_at", { ascending: false });
 
