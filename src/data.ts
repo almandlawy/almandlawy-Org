@@ -4,6 +4,7 @@
  */
 
 import { Product } from "./types";
+import { productPosterUrl } from "./lib/productImages";
 
 export const BRANDS = [
   { name: "PAMP Suisse", origin: "Switzerland", description: "World-leading bullion brand renowned for artistic craftsmanship and security certificates." },
@@ -37,7 +38,7 @@ export const PRODUCTS: Product[] = [
     description_ar: "المجموعة الكاملة لسبائك PGR UAE. سبائك ذهب وفضة ومنتجات مصكوكة من مصافٍ معتمدة. أسعار استرشادية متاحة — السعر النهائي يؤكده ديوان PGR UAE.",
     technical_specs: { weight_grams: 0, purity: "Au 99.99% / Ag 99.9%", metal: "gold", dimensions: "Varies by product", packaging: "Assay-sealed secure packaging", serial_number: true },
     image_placeholder: "gold_bar",
-    image_url: "/images/products/01-bullion-collection.webp",
+    image_url: productPosterUrl("01-bullion-collection.webp"),
     premium_multiplier: 1.03
   },
   {
@@ -57,7 +58,7 @@ export const PRODUCTS: Product[] = [
     description_ar: "سبائك ذهب سويسرية مصكوكة من ١ إلى ١٠ جرام. سعر استرشادي خاضع لحركة السوق.",
     technical_specs: { weight_grams: 10, purity: "Au 99.99%", metal: "gold", dimensions: "8.4 – 25.4 mm", packaging: "Tamper-proof assay blister", serial_number: true },
     image_placeholder: "gold_bar",
-    image_url: "/images/products/02-gold-bars-1g-5g-10g.webp",
+    image_url: productPosterUrl("02-gold-bars-1g-5g-10g.webp"),
     premium_multiplier: 1.10
   },
   {
@@ -77,7 +78,7 @@ export const PRODUCTS: Product[] = [
     description_ar: "سبائك ذهب متوسطة الوزن من مصافٍ معتمدة. تخضع لمراجعة الامتثال قبل إصدار عرض السعر المؤكد.",
     technical_specs: { weight_grams: 50, purity: "Au 99.99%", metal: "gold", dimensions: "19 – 47 mm", packaging: "Secure assay blister card", serial_number: true },
     image_placeholder: "gold_bar",
-    image_url: "/images/products/03-gold-bars-20g-50g.webp",
+    image_url: productPosterUrl("03-gold-bars-20g-50g.webp"),
     premium_multiplier: 1.05
   },
   {
@@ -97,7 +98,7 @@ export const PRODUCTS: Product[] = [
     description_ar: "سبيكة ذهب ١٠٠ جرام — وزن أساسي للتخصيص المادي. مرجع سوقي استرشادي متاح عند الطلب.",
     technical_specs: { weight_grams: 100, purity: "Au 99.99%", metal: "gold", dimensions: "24.0 x 41.0 mm", thickness: "5.5 mm", packaging: "CertiPAMP hard pack", serial_number: true },
     image_placeholder: "gold_bar",
-    image_url: "/images/products/04-gold-bar-100g.webp",
+    image_url: productPosterUrl("04-gold-bar-100g.webp"),
     premium_multiplier: 1.03
   },
   {
@@ -117,7 +118,7 @@ export const PRODUCTS: Product[] = [
     description_ar: "سبيكة ذهب ١ كيلو جرام للتخصيص المؤسسي. السعر النهائي يؤكده ديوان PGR UAE.",
     technical_specs: { weight_grams: 1000, purity: "Au 99.99%", metal: "gold", dimensions: "52.0 x 115.0 mm", packaging: "Executive box with certificates", serial_number: true },
     image_placeholder: "gold_bar",
-    image_url: "/images/products/05-gold-bar-1kg.webp",
+    image_url: productPosterUrl("05-gold-bar-1kg.webp"),
     premium_multiplier: 1.015
   },
   {
@@ -137,7 +138,7 @@ export const PRODUCTS: Product[] = [
     description_ar: "سبائك فضة سويسرية من أونصة إلى ١٠٠ جرام. سعر استرشادي خاضع لحركة السوق.",
     technical_specs: { weight_grams: 100, purity: "Ag 99.9%", metal: "silver", dimensions: "15 – 47 mm", packaging: "CertiPAMP blister pack", serial_number: true },
     image_placeholder: "silver_bar",
-    image_url: "/images/products/06-silver-bars-1oz-100g.webp",
+    image_url: productPosterUrl("06-silver-bars-1oz-100g.webp"),
     premium_multiplier: 1.12
   },
   {
@@ -157,7 +158,7 @@ export const PRODUCTS: Product[] = [
     description_ar: "سبيكة فضة نصف كيلو مصبوبة في الإمارات. تخضع لمراجعة الامتثال.",
     technical_specs: { weight_grams: 500, purity: "Ag 99.9%", metal: "silver", dimensions: "40.0 x 80.0 mm", packaging: "Vacuum-sealed protection", serial_number: true },
     image_placeholder: "silver_bar",
-    image_url: "/images/products/07-silver-bar-500g.webp",
+    image_url: productPosterUrl("07-silver-bar-500g.webp"),
     premium_multiplier: 1.06
   },
   {
@@ -177,7 +178,7 @@ export const PRODUCTS: Product[] = [
     description_ar: "سبيكة فضة ١ كيلو جرام سويسرية للتخصيص بالجملة. عرض سعر مؤكد بعد تأكيد التوفر.",
     technical_specs: { weight_grams: 1000, purity: "Ag 99.9%", metal: "silver", dimensions: "52.0 x 117.0 mm", packaging: "Vacuum sealed wrap", serial_number: true },
     image_placeholder: "silver_bar",
-    image_url: "/images/products/08-silver-bar-1kg.webp",
+    image_url: productPosterUrl("08-silver-bar-1kg.webp"),
     premium_multiplier: 1.05
   },
   {
@@ -197,7 +198,7 @@ export const PRODUCTS: Product[] = [
     description_ar: "سبائك مصكوكة وعملات سيادية من دور سك وطنية عالمية. تسعير استرشادي متاح.",
     technical_specs: { weight_oz: 1, purity: "Au 99.99% / Ag 99.9%", metal: "gold", dimensions: "Diameter 22 – 40 mm", packaging: "Protective acrylic capsule", serial_number: false },
     image_placeholder: "gold_coin",
-    image_url: "/images/products/09-mint-bars-coins.webp",
+    image_url: productPosterUrl("09-mint-bars-coins.webp"),
     premium_multiplier: 1.06
   },
   {
@@ -217,7 +218,7 @@ export const PRODUCTS: Product[] = [
     description_ar: "خدمات التوريد المخصصة للمؤسسات والسبائك بأوزان خاصة. تخضع لمراجعة الامتثال.",
     technical_specs: { weight_grams: 0, purity: "Au 99.99% / Ag 99.9%", metal: "gold", dimensions: "Varies by request", packaging: "Segregated secure boxing", serial_number: true },
     image_placeholder: "gold_bar",
-    image_url: "/images/products/10-custom-bullion-inquiry.webp",
+    image_url: productPosterUrl("10-custom-bullion-inquiry.webp"),
     premium_multiplier: 1.02
   }
 ];
