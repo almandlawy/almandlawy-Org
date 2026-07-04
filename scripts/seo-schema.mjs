@@ -1,6 +1,13 @@
 /** Homepage JSON-LD schemas for Google rich results (FAQ + Video + Products). */
+
 export const SITE_ORIGIN = "https://www.pgruae.com";
 export const OG_IMAGE = `${SITE_ORIGIN}/images/products/01-bullion-collection.webp`;
+export const VIDEO_UPLOAD_DATE = "2026-07-04T21:45:19+04:00";
+
+export const OFFICIAL_SAME_AS = [
+  "https://www.linkedin.com/company/pgr-uae",
+  "https://twitter.com/pgruae"
+];
 
 export const FAQ_SCHEMA_EN = [
   {
@@ -43,15 +50,15 @@ export function buildHomepageSchemaGraph() {
     "@context": "https://schema.org",
     "@graph": [
       {
-        "@type": ["LocalBusiness", "JewelryStore"],
+        "@type": ["Organization", "LocalBusiness"],
         "@id": `${SITE_ORIGIN}/#organization`,
         name: "PGR UAE Precious Metals Trading",
         alternateName: "PGR UAE",
-        url: SITE_ORIGIN,
+        url: `${SITE_ORIGIN}/`,
         image: OG_IMAGE,
         logo: OG_IMAGE,
         description:
-          "Dubai firm-quote bullion desk for physical gold and silver. Indicative market reference. Final quote confirmed by PGR UAE desk.",
+          "Dubai precious metals and bullion quote desk serving Iraq and UAE. Physical gold and silver. Indicative market reference. Final quote confirmed by PGR UAE desk.",
         telephone: "+971559688837",
         email: "desk@pgruae.com",
         address: {
@@ -74,7 +81,11 @@ export function buildHomepageSchemaGraph() {
             closes: "18:00"
           }
         ],
-        areaServed: { "@type": "Country", name: "United Arab Emirates" }
+        areaServed: [
+          { "@type": "Country", name: "Iraq" },
+          { "@type": "Country", name: "United Arab Emirates" }
+        ],
+        sameAs: OFFICIAL_SAME_AS
       },
       {
         "@type": "WebSite",
@@ -102,7 +113,7 @@ export function buildHomepageSchemaGraph() {
         thumbnailUrl: `${SITE_ORIGIN}/videos/pgr-bullion-collection-poster.webp`,
         contentUrl: `${SITE_ORIGIN}/videos/pgr-bullion-collection.mp4`,
         embedUrl: SITE_ORIGIN,
-        uploadDate: "2026-07-04",
+        uploadDate: VIDEO_UPLOAD_DATE,
         duration: "PT10S",
         publisher: { "@id": `${SITE_ORIGIN}/#organization` }
       },

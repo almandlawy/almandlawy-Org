@@ -11,6 +11,7 @@ import { PRODUCTS } from "../data";
 import { dbService } from "../lib/supabase";
 import { getProductImage } from "../lib/productImages";
 import { resolvePublicCatalog, ALLOWED_PRODUCT_IDS } from "../lib/productCatalog";
+import PricingDisclaimer from "./PricingDisclaimer";
 
 interface ProductShowroomProps {
   currentLang: "en" | "ar";
@@ -358,6 +359,8 @@ export default function ProductShowroom({
               </p>
             </div>
 
+            <PricingDisclaimer currentLang={currentLang} compact />
+
             <p className="text-xs text-text-secondary font-sans leading-relaxed">
               {isAr ? selectedProduct.description_ar : selectedProduct.description_en}
             </p>
@@ -423,11 +426,7 @@ export default function ProductShowroom({
           </div>
         </div>
 
-        <p className="text-[10px] text-center text-text-secondary font-mono max-w-3xl mx-auto leading-relaxed">
-          {isAr
-            ? "الأسعار استرشادية وخاضعة لحركة السوق. لا يوجد دفع مباشر — عرض سعر معتمد أولاً."
-            : "Indicative market reference only. Subject to market movement. No direct checkout — firm quote first."}
-        </p>
+            <PricingDisclaimer currentLang={currentLang} className="max-w-3xl mx-auto" />
       </div>
     </section>
   );

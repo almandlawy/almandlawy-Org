@@ -20,9 +20,9 @@ interface HeroProps {
 }
 
 const TRUST_ITEMS = [
-  { icon: FileText, en: "Firm Quotes", ar: "عروض أسعار معتمدة" },
-  { icon: Shield, en: "Secure & Compliant", ar: "آمن ومتوافق" },
-  { icon: Truck, en: "Safe Delivery", ar: "تسليم آمن" }
+  { icon: FileText, en: "Desk-Confirmed Quotes", ar: "عروض أسعار مؤكدة من المكتب" },
+  { icon: Shield, en: "KYC & Compliance", ar: "التحقق والامتثال" },
+  { icon: Truck, en: "Iraq Collection & Delivery", ar: "استلام وتوصيل للعراق" }
 ];
 
 export default function Hero({
@@ -95,27 +95,24 @@ export default function Hero({
             <h1 className="text-4xl sm:text-5xl lg:text-[3.25rem] font-serif text-text-charcoal leading-[1.1] font-medium">
               {isAr ? (
                 <span className="font-arabic block">
-                  <span className="text-gold-dark">المعادن الثمينة</span>
+                  ديوان عروض أسعار
                   <br />
-                  ديوان السبائك
+                  <span className="text-gold-dark">سبائك الذهب والفضة من دبي إلى العراق</span>
                 </span>
               ) : (
                 <>
-                  Precious Metals
+                  Gold &amp; Silver Bullion
                   <br />
-                  <span className="text-gold-dark">Bullion Desk</span>
+                  <span className="text-gold-dark">Quote Desk from Dubai to Iraq</span>
                 </>
               )}
             </h1>
 
             <div className="space-y-2">
-              <p className="text-sm font-mono uppercase tracking-[0.2em] text-olive-accent font-bold">
-                {isAr ? "آمن. شفاف. موثوق." : "Secure. Transparent. Trusted."}
-              </p>
               <p className="text-base text-text-secondary font-sans leading-relaxed max-w-lg">
                 {isAr
-                  ? "شريكك الموثوق للسبائك الذهبية والفضية المادية في الإمارات."
-                  : "Your trusted partner for physical gold and silver bullion in the UAE."}
+                  ? "اطلب عروض أسعار مؤكدة لسبائك الذهب والفضة وعملات السبائك المادية. يخدم PGR UAE العملاء العراقيين بتسعير مؤكد من المكتب ومراجعة الامتثال وخيارات الاستلام أو التوصيل المرتبة."
+                  : "Request confirmed quotes for physical gold bars, silver bars and bullion coins. PGR UAE serves Iraqi customers with desk-confirmed pricing, compliance review, and arranged collection or delivery options."}
               </p>
             </div>
 

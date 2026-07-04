@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from "react";
 import { Sparkles, ArrowRight, HelpCircle, Shield, RefreshCw, Calculator, MessageSquare, Info, CheckCircle } from "lucide-react";
 import { LiveMarketRates } from "../types";
+import PricingDisclaimer from "./PricingDisclaimer";
 
 interface MetalCalculatorProps {
   currentLang: "en" | "ar";
@@ -355,17 +356,7 @@ export default function MetalCalculator({
           </div>
 
           <div className="space-y-4 pt-4 border-t border-[#E8DEC9]">
-            {/* Compliance warning */}
-            <div className="bg-[#FFFDF8] border border-[#E8DEC9] rounded p-4 space-y-1.5 text-[10px] font-sans leading-relaxed text-[#5E564D] shadow-sm">
-              <span className="font-bold text-[#A47C36] uppercase tracking-wider block">
-                ⚠️ {isAr ? "تنبيه هام ومراجعة امتثال" : "MANDATORY REGULATORY DISCLOSURE"}
-              </span>
-              <span>
-                {isAr
-                  ? "الأسعار استرشادية لغرض التخطيط فقط. لا يمكن تأكيد السعر النهائي وحجز العقد الفوري إلا عبر إصدار تسعير معتمد من ديوان PGR UAE، مع إتمام مراجعة التحقق من الهوية كواجب أمني وطني."
-                  : "Estimations are based on fluctuating market feeds and include estimated refiner margins. Final binding contract pricing must be confirmed on our quote desk, subject to mandatory KYC compliance."}
-              </span>
-            </div>
+            <PricingDisclaimer currentLang={currentLang} />
 
             {/* Direct Call To Action buttons */}
             <div className="flex flex-col gap-2.5 font-mono">

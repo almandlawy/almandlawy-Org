@@ -53,7 +53,7 @@ export default function SEOLandingPages({
               "@type": "Answer",
               "text": isAr 
                 ? "نعم، سبائك الذهب الاستثمارية ذات النقاوة 99.9% فما فوق معفاة تماماً من ضريبة القيمة المضافة (VAT) في دولة الإمارات."
-                : "Yes, investment-grade gold bars with a purity of 99% or higher are exempt from Value Added Tax (VAT) in the UAE."
+                : "Yes, fine gold bars with a purity of 99% or higher may be exempt from Value Added Tax (VAT) in the UAE. Confirm with the desk."
             }
           },
           {
@@ -69,7 +69,7 @@ export default function SEOLandingPages({
         ]
       };
     } else if (currentPath === "/buy-silver-bars-dubai") {
-      title = isAr ? "شراء سبائك الفضة في دبي | فضة استثمارية نقية PGR UAE" : "Buy Silver Bars in Dubai | Investment Silver Bullion PGR UAE";
+      title = isAr ? "شراء سبائك الفضة في دبي | فضة نقية PGR UAE" : "Buy Silver Bars in Dubai | Physical Silver Bullion PGR UAE";
       desc = isAr 
         ? "تصفح واطلب سبائك الفضة الاستثمارية النقية فئة ١٠٠ جرام و٥٠٠ جرام و١ كيلو في دبي بأسعار تداول حقيقية وعلاوات ممتازة."
         : "Secure bulk physical silver bars and coins in Dubai with secure collection. Offering 100g, 500g, and 1kg fine silver bullion from top mints.";
@@ -85,7 +85,7 @@ export default function SEOLandingPages({
               "@type": "Answer",
               "text": isAr 
                 ? "نوفر أوزان تبدأ من أونصة واحدة، ١٠٠ جرام، ٥٠٠ جرام، وسبائك صناعية واستثمارية ثقيلة بوزن ١ كيلوجرام بنقاوة ٩٩.٩٪."
-                : "We supply physical silver starting from 1 oz, 100g, 500g, up to 1kg investment cast bars with 99.9% fine silver certification."
+                : "We supply physical silver starting from 1 oz, 100g, 500g, up to 1kg cast bars with 99.9% fine silver certification."
             }
           }
         ]
@@ -109,14 +109,14 @@ export default function SEOLandingPages({
       title = isAr ? "ديوان تداول السبائك في دبي | مكتب تداول المعادن PGR UAE" : "Physical Bullion Desk Dubai | Secure Metal Quote Desk PGR UAE";
       desc = isAr 
         ? "تعرف على ديوان PGR UAE في دبي، شريكك الموثوق لتوفير كميات سبائك المعادن الثمينة وتوفير الشحن المؤمن والتخزين الآمن Segregated."
-        : "Discover Dubai's premier physical gold and silver quote desk. Secure custom allocations, high-volume trading contracts, and institutional gold custody.";
+        : "Discover Dubai's physical gold and silver quote desk. Secure allocations, wholesale bullion inquiries, and allocated custody options.";
     } else if (currentPath === "/allocated-storage-dubai") {
       title = isAr ? "تخزين الذهب المخصص دبي | خزائن ومستودعات مؤمنة PGR UAE" : "Allocated Gold Storage Dubai | Vaulting and Segregated Custody";
       desc = isAr 
         ? "خدمات حفظ وتخزين الذهب والفضة المخصصة والمؤمنة بالكامل في خزائن دبي العالمية بالتعاون مع كبرى الشركات الأمنية العالمية."
         : "Protect your physical gold and silver assets with fully allocated, segregated vaulting in Dubai. Audited storage with global security leaders.";
     } else if (currentPath === "/24k-gold-bars-uae") {
-      title = isAr ? "سبائك ذهب عيار ٢٤ في الإمارات | أسعار السبائك المعتمدة PGR UAE" : "24K Gold Bars UAE | Investment Grade Pure Bullion Dubai";
+      title = isAr ? "سبائك ذهب عيار ٢٤ في الإمارات | أسعار السبائك المعتمدة PGR UAE" : "24K Gold Bars UAE | Accredited Pure Bullion Dubai";
       desc = isAr 
         ? "اطلب سبائك الذهب الخالص عيار ٢٤ قيراط بنقاوة 999.9 في دبي وأبوظبي. نوفر الأوزان من ١ جرام إلى ١ كيلوجرام مع شهادات أصالة دولية."
         : "Order accredited gold bars in the UAE with firm-quote desk transparency. High-liquidity minted gold bars from accredited international refiners.";
@@ -288,7 +288,7 @@ export default function SEOLandingPages({
                 {isAr ? "تراكم الأصول والتحوط" : "SEGREGATED SILVER ACQUISITION"}
               </span>
               <h1 className="text-3xl md:text-5xl font-serif text-[#1F1A17] tracking-tight font-medium">
-                {isAr ? "شراء سبائك الفضة الاستثمارية في دبي" : "Buy Investment Silver Bars in Dubai"}
+                {isAr ? "شراء سبائك الفضة المادية في دبي" : "Buy Physical Silver Bars in Dubai"}
               </h1>
               <p className="text-[#5E564D] text-xs md:text-sm leading-relaxed max-w-4xl">
                 {isAr 
@@ -528,7 +528,7 @@ export default function SEOLandingPages({
               <p className="text-[#5E564D] text-xs md:text-sm leading-relaxed max-w-4xl">
                 {isAr 
                   ? "توفر PGR UAE خدمات التخزين المخصص (Allocated Storage) لسبائكك الذهبية والفضية في خزائن دبي المتطورة والآمنة. نضمن الحراسة Segregated والأكثر أماناً بالتعاون مع كبرى الشركات الرائدة عالمياً في النقل المؤمن لحفظ ثرواتك بعيداً عن تقلبات الأنظمة المالية."
-                  : "Protect your physical investments under the gold standard of safety. PGR UAE offers fully allocated, audited, and segregated custody. Your gold and silver bars are held individually in highly secure Dubai custom vault facilities, complete with transparent serial number tracking."}
+                  : "Protect physical bullion holdings with allocated, audited, and segregated custody. PGR UAE offers storage in secure Dubai vault facilities with serial number tracking."}
               </p>
             </div>
 
@@ -556,7 +556,7 @@ export default function SEOLandingPages({
                 {isAr ? "الذهب الخالص عيار ٢٤ قيراط" : "PREMIUM PURE GOLD STANDARDS"}
               </span>
               <h1 className="text-3xl md:text-5xl font-serif text-[#1F1A17] tracking-tight font-medium">
-                {isAr ? "سبائك ذهب عيار ٢٤ في الإمارات والشرق الأوسط" : "24K Investment Gold Bars in the UAE"}
+                {isAr ? "سبائك ذهب عيار ٢٤ في الإمارات والشرق الأوسط" : "24K Physical Gold Bars in the UAE"}
               </h1>
               <p className="text-[#5E564D] text-xs md:text-sm leading-relaxed max-w-4xl">
                 {isAr 
@@ -617,13 +617,13 @@ export default function SEOLandingPages({
         q: isAr ? "هل الأسعار المعروضة نهائية؟" : "Are the listed prices final and binding?",
         a: isAr 
           ? "لا، جميع الأسعار والتقديرات استرشادية فقط بناءً على أسعار البورصة العالمية المباشرة. الأسعار النهائية وحجز العقود يتم فقط عبر ديوان PGR UAE بعد مراجعة الأوراق، وعلاوة الصب والتخزين المعتمدة."
-          : "No. All pricing estimates shown are indicative based on direct global spot markets. Final binding prices are locked manually on our trading counter subject to KYC, specific refiner premiums, and instant stock verification."
+          : "No. All pricing estimates shown are indicative based on global spot references. Final desk-confirmed prices are issued on our quote desk subject to KYC, refiner premiums, and availability confirmation."
       },
       {
         q: isAr ? "كيف يمكنني تقديم مستندات KYC؟" : "How do I submit my KYC documents?",
         a: isAr 
           ? "يمكنك رفع وثائق التحقق بأمان من خلال بوابة العميل الرقمية لدينا، أو من خلال إرسالها بشكل مباشر وسري إلى فريق الامتثال ومكافحة غسيل الأموال في مكتبنا."
-          : "You can securely upload your government-issued ID/Passport and corporate trading credentials through your secure PGR Client Dashboard, or coordinate with our compliance officer via WhatsApp."
+          : "You can upload government-issued ID or passport and corporate credentials through your PGR Client Dashboard, or coordinate with our compliance officer via WhatsApp."
       },
       {
         q: isAr ? "هل تدعمون الشحن الآمن وال Segregated التخزين؟" : "Do you offer physical delivery and vault storage?",

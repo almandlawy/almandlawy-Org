@@ -43,6 +43,8 @@ import SellBackPage from "./components/SellBackPage";
 import ClientDashboard from "./components/ClientDashboard";
 import MetalCalculator from "./components/MetalCalculator";
 import SEOLandingPages from "./components/SEOLandingPages";
+import IraqBullionQuotePage from "./components/IraqBullionQuotePage";
+import PricingDisclaimer from "./components/PricingDisclaimer";
 
 export default function App() {
   const [currentLang, setCurrentLang] = useState<"en" | "ar">("ar");
@@ -467,6 +469,74 @@ export default function App() {
 
   if (currentPath === "/sell-back") {
     return <SellBackPage currentLang={currentLang} onNavigate={navigateTo} />;
+  }
+
+  const standaloneDeskPaths = ["/iraq-bullion-quote", "/faq", "/contact"] as const;
+  if ((standaloneDeskPaths as readonly string[]).includes(currentPath)) {
+    return (
+      <div
+        className={`min-h-screen text-text-charcoal bg-brand-bg selection:bg-gold-base selection:text-black overflow-hidden relative ${
+          currentLang === "ar" ? "font-arabic" : "font-sans"
+        }`}
+      >
+        <Header
+          currentLang={currentLang}
+          toggleLanguage={toggleLanguage}
+          rates={rates}
+          selectedCurrency={selectedCurrency}
+          onNavigate={(sec) => {
+            navigateTo("/");
+            setTimeout(() => handleScrollToSection(sec), 100);
+          }}
+          onOpenAIChat={() => setIsAIChatOpen(true)}
+          onOpenQuote={() => navigateTo("/request-quote")}
+          onOpenClientDashboard={() => navigateTo("/dashboard")}
+          onOpenAdminPortal={() => navigateTo("/admin")}
+        />
+        <div className="max-w-7xl mx-auto py-24 px-4 md:px-8">
+          {currentPath === "/iraq-bullion-quote" && (
+            <IraqBullionQuotePage currentLang={currentLang} onNavigate={navigateTo} />
+          )}
+          {currentPath === "/faq" && (
+            <div className="space-y-6">
+              <HomepageFAQ currentLang={currentLang} />
+              <PricingDisclaimer currentLang={currentLang} />
+            </div>
+          )}
+          {currentPath === "/contact" && <OfficeSection currentLang={currentLang} sectionId="contact" />}
+        </div>
+        <Footer
+          currentLang={currentLang}
+          onNavigate={(sec) => {
+            navigateTo("/");
+            setTimeout(() => handleScrollToSection(sec), 100);
+          }}
+          onOpenAIChat={() => setIsAIChatOpen(true)}
+          onOpenQuote={() => navigateTo("/request-quote")}
+          onOpenLegalDoc={(docId) => {
+            const rMap: Record<string, string> = {
+              terms: "/terms",
+              privacy: "/privacy-policy",
+              aml: "/kyc-aml-policy",
+              pricing: "/pricing-disclaimer",
+              refund: "/refund-cancellation-policy",
+              delivery: "/delivery-collection-policy",
+              storage: "/allocated-storage-terms",
+              sellback: "/sell-back-policy",
+              risk: "/risk-disclosure",
+              cookie: "/cookie-policy",
+              compliance: "/compliance"
+            };
+            const p = rMap[docId] || "/";
+            window.history.pushState(null, "", p);
+            setActiveLegalDoc(docId);
+          }}
+          onOpenClientDashboard={() => navigateTo("/dashboard")}
+          onOpenAdminPortal={() => navigateTo("/admin")}
+        />
+        <SeoSiteLinks currentLang={currentLang} />
+      </div>
+    );
   }
 
   if (currentPath === "/dashboard") {

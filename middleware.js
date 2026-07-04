@@ -2,23 +2,23 @@
 const STATIC_ROUTE_MAP = {
   "/": "/static-seo/index.html",
   "/request-quote": "/static-seo/request-quote.html",
+  "/iraq-bullion-quote": "/static-seo/iraq-bullion-quote.html",
   "/gold-bars": "/static-seo/gold-bars.html",
   "/silver-bars": "/static-seo/silver-bars.html",
   "/bullion-coins": "/static-seo/bullion-coins.html",
   "/custom-inquiry": "/static-seo/custom-inquiry.html",
-  "/buy-gold-bars-dubai": "/static-seo/buy-gold-bars-dubai.html",
-  "/buy-silver-bars-dubai": "/static-seo/buy-silver-bars-dubai.html",
-  "/gold-rate-dubai-today": "/static-seo/gold-rate-dubai-today.html",
-  "/silver-rate-dubai-today": "/static-seo/silver-rate-dubai-today.html",
-  "/sell-gold-dubai": "/static-seo/sell-gold-dubai.html",
-  "/bullion-desk-dubai": "/static-seo/bullion-desk-dubai.html",
-  "/allocated-storage-dubai": "/static-seo/allocated-storage-dubai.html",
-  "/24k-gold-bars-uae": "/static-seo/24k-gold-bars-uae.html",
+  "/allocated-storage": "/static-seo/allocated-storage.html",
+  "/sell-back": "/static-seo/sell-back.html",
+  "/faq": "/static-seo/faq.html",
+  "/contact": "/static-seo/contact.html",
   "/compliance": "/static-seo/compliance.html",
+  "/terms": "/static-seo/terms.html",
+  "/privacy-policy": "/static-seo/privacy-policy.html",
   "/kyc-aml-policy": "/static-seo/kyc-aml-policy.html",
   "/pricing-disclaimer": "/static-seo/pricing-disclaimer.html",
-  "/terms": "/static-seo/terms.html",
-  "/privacy-policy": "/static-seo/privacy-policy.html"
+  "/refund-cancellation-policy": "/static-seo/refund-cancellation-policy.html",
+  "/delivery-collection-policy": "/static-seo/delivery-collection-policy.html",
+  "/risk-disclosure": "/static-seo/risk-disclosure.html"
 };
 
 const BOT_RE =

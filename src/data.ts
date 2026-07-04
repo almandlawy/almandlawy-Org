@@ -194,7 +194,7 @@ export const PRODUCTS: Product[] = [
     availability: "In Stock",
     certificate_en: "Government Mint Legal Tender Backing",
     certificate_ar: "إصدار دار سك حكومية معتمدة",
-    description_en: "Accredited mint bars and sovereign investment coins from world-renowned national mints. Indicative market reference pricing available.",
+    description_en: "Accredited mint bars and sovereign bullion coins from world-renowned national mints. Indicative market reference pricing available.",
     description_ar: "سبائك مصكوكة وعملات سيادية من دور سك وطنية عالمية. تسعير استرشادي متاح.",
     technical_specs: { weight_oz: 1, purity: "Au 99.99% / Ag 99.9%", metal: "gold", dimensions: "Diameter 22 – 40 mm", packaging: "Protective acrylic capsule", serial_number: false },
     image_placeholder: "gold_coin",
@@ -227,13 +227,13 @@ export const WHY_US_ITEMS = [
   {
     title_en: "International Institutional Compliance",
     title_ar: "امتثال مؤسسي بمعايير دولية",
-    desc_en: "Operating in the heart of Dubai, the absolute global epicentre of precious metals trading, with strict international standards of compliance.",
+    desc_en: "Operating from Dubai, a global centre for physical precious metals, with strict international standards of compliance.",
     desc_ar: "نعمل من قلب دبي، العاصمة العالمية لتداول الذهب والمعادن الثمينة، بامتثال تام للأنظمة المرعية والاعتمادات الدولية."
   },
   {
     title_en: "Wholesale Global Solutions",
     title_ar: "حلول تداول بالجملة وعالمية",
-    desc_en: "We offer tailored, highly competitive direct pricing for institutional bullion procurement, private funds, high-volume trading, and institutional reserves.",
+    desc_en: "We offer tailored, competitive desk pricing for institutional bullion procurement, private clients, high-volume orders, and institutional reserves.",
     desc_ar: "نقدم تسعيراً مباشراً وتنافسياً مخصصاً لعمليات شراء السبائك الكبرى للمؤسسات، الصناديق الخاصة، تداول الكميات الضخمة، والاحتياطيات المؤسسية."
   },
   {

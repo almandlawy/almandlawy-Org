@@ -4,6 +4,7 @@ import { Coins, Phone, Mail, CheckCircle, ShieldAlert, FileText, ArrowLeft, Arro
 import { dbService } from "../lib/supabase";
 import { PRODUCTS } from "../data";
 import { resolvePublicCatalog } from "../lib/productCatalog";
+import PricingDisclaimer from "./PricingDisclaimer";
 
 interface RequestQuotePageProps {
   currentLang: "en" | "ar";
@@ -454,6 +455,8 @@ export default function RequestQuotePage({ currentLang, onNavigate }: RequestQuo
                 </label>
               </div>
             </div>
+
+            <PricingDisclaimer currentLang={currentLang} className="bg-[#0a0a0a] border-white/10 text-gray-400" />
 
             {/* Submission triggers */}
             <div className="flex flex-col sm:flex-row gap-3 pt-2">

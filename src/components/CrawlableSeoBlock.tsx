@@ -24,8 +24,13 @@ export default function CrawlableSeoBlock({ currentLang }: CrawlableSeoBlockProp
       <h2>{isAr ? "كتالوج سبائك PGR UAE" : "PGR UAE Bullion Product Catalog"}</h2>
       <p>
         {isAr
-          ? "ديوان PGR UAE لعروض الأسعار المعتمدة. مرجع سوقي استرشادي. خاضع لحركة السوق ومراجعة الامتثال."
-          : "PGR UAE firm quote bullion desk. Indicative market reference. Subject to market movement and compliance review."}
+          ? "ديوان PGR UAE لعروض الأسعار المعتمدة من دبي إلى العراق. مرجع سوقي استرشادي. خاضع لحركة السوق ومراجعة الامتثال."
+          : "PGR UAE bullion quote desk from Dubai to Iraq. Indicative market reference. Subject to market movement and compliance review."}
+      </p>
+      <p>
+        <a href="/iraq-bullion-quote">
+          {isAr ? "عروض أسعار سبائك الذهب والفضة للعراق" : "Gold & Silver Bullion Quotes for Iraq"}
+        </a>
       </p>
       <ul>
         {products.map((p) => (

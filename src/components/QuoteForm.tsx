@@ -8,6 +8,7 @@ import { X, CheckCircle, Mail, Phone, Users, Landmark, FileText } from "lucide-r
 import { dbService } from "../lib/supabase";
 import { PRODUCTS } from "../data";
 import { resolvePublicCatalog } from "../lib/productCatalog";
+import PricingDisclaimer from "./PricingDisclaimer";
 
 interface QuoteFormProps {
   currentLang: "en" | "ar";
@@ -398,6 +399,8 @@ export default function QuoteForm({ currentLang, prefilledProduct, onClose }: Qu
                     </span>
                   </label>
                 </div>
+
+                <PricingDisclaimer currentLang={currentLang} />
 
                 {/* Error Banner */}
                 {errorMessage && (

@@ -6,21 +6,22 @@
 const SITE_LINKS: { href: string; labelEn: string; labelAr: string }[] = [
   { href: "/", labelEn: "Home", labelAr: "الرئيسية" },
   { href: "/request-quote", labelEn: "Request Firm Quote", labelAr: "طلب عرض سعر معتمد" },
+  { href: "/iraq-bullion-quote", labelEn: "Iraq Bullion Quotes", labelAr: "عروض أسعار العراق" },
   { href: "/gold-bars", labelEn: "Gold Bars", labelAr: "سبائك الذهب" },
   { href: "/silver-bars", labelEn: "Silver Bars", labelAr: "سبائك الفضة" },
   { href: "/bullion-coins", labelEn: "Mint Bars & Coins", labelAr: "المسكوكات والعملات" },
   { href: "/custom-inquiry", labelEn: "Custom Inquiry", labelAr: "طلب مخصص" },
-  { href: "/buy-gold-bars-dubai", labelEn: "Buy Gold Bars Dubai", labelAr: "شراء ذهب دبي" },
-  { href: "/buy-silver-bars-dubai", labelEn: "Buy Silver Bars Dubai", labelAr: "شراء فضة دبي" },
-  { href: "/gold-rate-dubai-today", labelEn: "Gold Rate Dubai", labelAr: "سعر الذهب دبي" },
-  { href: "/silver-rate-dubai-today", labelEn: "Silver Rate Dubai", labelAr: "سعر الفضة دبي" },
-  { href: "/bullion-desk-dubai", labelEn: "Bullion Desk Dubai", labelAr: "ديوان السبائك دبي" },
-  { href: "/24k-gold-bars-uae", labelEn: "24K Gold Bars UAE", labelAr: "سبائك 24 قيراط" },
+  { href: "/allocated-storage", labelEn: "Allocated Storage", labelAr: "تخزين مخصص" },
+  { href: "/sell-back", labelEn: "Sell-Back Inquiry", labelAr: "استفسار إعادة البيع" },
+  { href: "/faq", labelEn: "FAQ", labelAr: "الأسئلة الشائعة" },
+  { href: "/contact", labelEn: "Contact", labelAr: "اتصل بنا" },
   { href: "/compliance", labelEn: "Compliance", labelAr: "الامتثال" },
   { href: "/kyc-aml-policy", labelEn: "KYC & AML", labelAr: "اعرف عميلك" },
   { href: "/pricing-disclaimer", labelEn: "Pricing Disclaimer", labelAr: "إخلاء التسعير" },
   { href: "/terms", labelEn: "Terms", labelAr: "الشروط" },
-  { href: "/privacy-policy", labelEn: "Privacy", labelAr: "الخصوصية" }
+  { href: "/privacy-policy", labelEn: "Privacy", labelAr: "الخصوصية" },
+  { href: "/delivery-collection-policy", labelEn: "Delivery Policy", labelAr: "سياسة التوصيل" },
+  { href: "/risk-disclosure", labelEn: "Risk Disclosure", labelAr: "إفصاح المخاطر" }
 ];
 
 interface SeoSiteLinksProps {
