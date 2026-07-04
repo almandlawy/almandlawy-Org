@@ -104,11 +104,14 @@ export default function Footer({
               {currentLang === "ar" ? "روابط سريعة" : "Quick Links"}
             </h4>
             <ul className="space-y-2.5 text-[11px] text-text-secondary font-bold">
-              <li><button type="button" onClick={() => onNavigate("about")} className="hover:text-gold-dark transition-colors cursor-pointer text-left">{currentLang === "ar" ? "من نحن" : "About Us"}</button></li>
-              <li><button type="button" onClick={() => onOpenLegalDoc("terms")} className="hover:text-gold-dark transition-colors cursor-pointer text-left">{currentLang === "ar" ? "الشروط والأحكام" : "Terms & Conditions"}</button></li>
-              <li><button type="button" onClick={() => onOpenLegalDoc("privacy")} className="hover:text-gold-dark transition-colors cursor-pointer text-left">{currentLang === "ar" ? "سياسة الخصوصية" : "Privacy Policy"}</button></li>
-              <li><button type="button" onClick={() => onNavigate("contact")} className="hover:text-gold-dark transition-colors cursor-pointer text-left">{currentLang === "ar" ? "اتصل بنا" : "Contact Us"}</button></li>
-              <li><button type="button" onClick={() => onNavigate("catalog")} className="hover:text-gold-dark transition-colors cursor-pointer text-left">{currentLang === "ar" ? "الكتالوج" : "Catalog"}</button></li>
+              <li><a href="/#about" className="hover:text-gold-dark transition-colors">{currentLang === "ar" ? "من نحن" : "About Us"}</a></li>
+              <li><a href="/terms" className="hover:text-gold-dark transition-colors">{currentLang === "ar" ? "الشروط والأحكام" : "Terms & Conditions"}</a></li>
+              <li><a href="/privacy-policy" className="hover:text-gold-dark transition-colors">{currentLang === "ar" ? "سياسة الخصوصية" : "Privacy Policy"}</a></li>
+              <li><a href="/#contact" className="hover:text-gold-dark transition-colors">{currentLang === "ar" ? "اتصل بنا" : "Contact Us"}</a></li>
+              <li><a href="/#catalog" className="hover:text-gold-dark transition-colors">{currentLang === "ar" ? "الكتالوج" : "Catalog"}</a></li>
+              <li><a href="/request-quote" className="hover:text-gold-dark transition-colors">{currentLang === "ar" ? "طلب عرض سعر" : "Request Quote"}</a></li>
+              <li><a href="/buy-gold-bars-dubai" className="hover:text-gold-dark transition-colors">{currentLang === "ar" ? "شراء ذهب دبي" : "Buy Gold Dubai"}</a></li>
+              <li><a href="/gold-rate-dubai-today" className="hover:text-gold-dark transition-colors">{currentLang === "ar" ? "سعر الذهب دبي" : "Gold Rate Dubai"}</a></li>
             </ul>
           </div>
 
