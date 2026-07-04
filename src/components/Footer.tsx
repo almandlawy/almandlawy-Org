@@ -238,6 +238,7 @@ export default function Footer({
               <button onClick={() => onOpenLegalDoc("privacy")} className="hover:text-[#A47C36] transition-colors cursor-pointer">{currentLang === "ar" ? "سياسة الخصوصية" : "Privacy Policy"}</button>
               <span>•</span>
               <button onClick={() => onOpenLegalDoc("compliance")} className="hover:text-[#A47C36] transition-colors cursor-pointer">{currentLang === "ar" ? "ديوان الامتثال" : "Compliance Desk"}</button>
+              <a href="/sitemap.xml" className="hover:text-[#A47C36] transition-colors">{currentLang === "ar" ? "خريطة الموقع" : "Sitemap"}</a>
               <span>•</span>
               <span>UAE VAT Law No. 8</span>
             </div>
