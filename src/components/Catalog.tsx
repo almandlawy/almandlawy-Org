@@ -311,7 +311,7 @@ export default function Catalog({
                     className="bg-brand-card rounded overflow-hidden flex flex-col justify-between cursor-pointer group transition-all duration-500 hover:scale-[1.01] border border-soft-border hover:border-[#C6A15B] shadow-sm"
                   >
                     {/* Visual Imagery Canvas using actual generated high-res illustrations */}
-                    <div className="relative h-64 w-full bg-brand-bg overflow-hidden flex items-center justify-center border-b border-soft-border">
+                    <div className="relative h-80 w-full bg-brand-bg overflow-hidden flex items-center justify-center border-b border-soft-border">
                       {/* Backdrop glowing dust */}
                       <div className="absolute inset-0 bg-gradient-to-t from-brand-card to-transparent opacity-85 z-10" />
                       

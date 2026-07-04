@@ -23,6 +23,7 @@ import { LiveMarketRates, Product } from "./types";
 import { WHY_US_ITEMS, BRANDS } from "./data";
 import { Shield, Sparkles, Building, Truck, Landmark, Award } from "lucide-react";
 import { isLive, supabase, mockDb } from "./lib/supabase";
+import { productPosterUrl } from "./lib/productImages";
 import { DebugPanel } from "./components/DebugPanel";
 
 // Imported new high-end compliance and desk components
@@ -738,7 +739,7 @@ export default function App() {
             {/* Visual Column */}
             <div className="relative rounded overflow-hidden border border-[#E8DEC9] bg-[#FAF9F5] p-6 flex items-center justify-center shadow-md group">
               <img
-                src="/images/products/01-bullion-collection.webp"
+                src={productPosterUrl("01-bullion-collection.webp")}
                 alt={currentLang === "ar" ? "مجموعة سبائك بي جي آر الإمارات" : "PGR UAE Bullion Collection"}
                 className="w-full h-auto max-h-[450px] object-contain rounded transition-transform duration-700 group-hover:scale-[1.02]"
                 loading="lazy"
