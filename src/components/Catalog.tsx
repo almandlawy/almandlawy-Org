@@ -6,9 +6,10 @@
 import React from "react";
 import { Search, Filter, ShieldCheck, ChevronRight, Sparkles, AlertCircle, Phone, FileText } from "lucide-react";
 import { Product, LiveMarketRates } from "../types";
+import { PRODUCTS } from "../data";
 import { dbService } from "../lib/supabase";
 import { getProductImage } from "../lib/productImages";
-import { CATALOG_PRODUCT_COUNT } from "../lib/productCatalog";
+import { CATALOG_PRODUCT_COUNT, resolvePublicCatalog } from "../lib/productCatalog";
 
 interface CatalogProps {
   currentLang: "en" | "ar";
@@ -25,7 +26,7 @@ export default function Catalog({
   onSelectProduct,
   selectedCategoryFilter
 }: CatalogProps) {
-  const [products, setProducts] = React.useState<Product[]>([]);
+  const [products, setProducts] = React.useState<Product[]>(() => resolvePublicCatalog(PRODUCTS));
   const [searchQuery, setSearchQuery] = React.useState("");
   const [selectedFilter, setSelectedFilter] = React.useState<string>(selectedCategoryFilter || "all");
   const [sortBy, setSortBy] = React.useState<"default" | "price_asc" | "price_desc" | "weight_asc" | "weight_desc" | "name_asc">("default");
@@ -56,11 +57,11 @@ export default function Catalog({
     const fetchProducts = async () => {
       try {
         const list = await dbService.products.list("public");
-        setProducts(list);
+        setProducts(list.length > 0 ? list : resolvePublicCatalog(PRODUCTS));
         setIsProductsFetchFailed(list.length !== CATALOG_PRODUCT_COUNT);
       } catch (err) {
         console.error("Failed to load products dynamically:", err);
-        setProducts([]);
+        setProducts(resolvePublicCatalog(PRODUCTS));
         setIsProductsFetchFailed(true);
       }
     };

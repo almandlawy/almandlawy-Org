@@ -650,7 +650,7 @@ export const mapDbProductToFrontend = (dbProd: any): any => {
       name_ar: dbProd.arabic_name || canonical.name_ar,
       description_en: dbProd.description || canonical.description_en,
       description_ar: dbProd.arabic_description || canonical.description_ar,
-      image_url: dbProd.image_url || canonical.image_url,
+      image_url: canonical.image_url || dbProd.image_url,
       price: Number(dbProd.price) || canonical.price || 0,
       price_mode: (dbProd.price_mode || canonical.price_mode || "spot") as "spot" | "fixed",
       stock_status: dbProd.stock_status || canonical.stock_status || "In Stock",

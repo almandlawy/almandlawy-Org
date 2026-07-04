@@ -20,13 +20,13 @@ const PRODUCT_IMAGE_MAP: Record<string, string> = {
 };
 
 export function getProductImage(product: Product): string {
-  if (product.image_url) {
-    return product.image_url;
-  }
-
   const mapped = PRODUCT_IMAGE_MAP[product.id || ""];
   if (mapped) {
     return mapped;
+  }
+
+  if (product.image_url) {
+    return product.image_url;
   }
 
   if (!import.meta.env.PROD) {
