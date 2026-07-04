@@ -1,30 +1,19 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createClient } from "@supabase/supabase-js";
+import { getSupabasePublicEnv, getSupabaseServiceRoleKey } from "./supabaseEnv";
 
 function getSupabase() {
-  const supabaseUrl = process.env.VITE_SUPABASE_URL || "";
-  const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || "";
+  const { supabaseUrl, supabaseAnonKey, configured } = getSupabasePublicEnv();
+  const serviceRoleKey = getSupabaseServiceRoleKey();
 
-  const isUrlConfigured = Boolean(
-    supabaseUrl &&
-      supabaseUrl !== "YOUR_SUPABASE_URL" &&
-      supabaseUrl !== "VITE_SUPABASE_URL" &&
-      !supabaseUrl.includes("placeholder") &&
-      (supabaseUrl.startsWith("http://") || supabaseUrl.startsWith("https://"))
-  );
+  const key = serviceRoleKey || supabaseAnonKey;
+  if (!configured && !serviceRoleKey) return null;
 
-  const isKeyConfigured = Boolean(
-    supabaseAnonKey &&
-      supabaseAnonKey !== "YOUR_SUPABASE_ANON_KEY" &&
-      supabaseAnonKey !== "VITE_SUPABASE_ANON_KEY" &&
-      !supabaseAnonKey.includes("placeholder") &&
-      supabaseAnonKey.length > 10
-  );
-
-  if (!isUrlConfigured || !isKeyConfigured) return null;
+  const url = supabaseUrl;
+  if (!url || url.includes("placeholder")) return null;
 
   try {
-    return createClient(supabaseUrl, supabaseAnonKey);
+    return createClient(url, key);
   } catch (err) {
     console.error("[api/quote] Supabase init failed:", err);
     return null;

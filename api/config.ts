@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { getSupabasePublicEnv } from "./supabaseEnv";
 
 /** Public runtime config — anon key is safe to expose to the browser. */
 export default function handler(req: VercelRequest, res: VercelResponse) {
@@ -9,15 +10,7 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).end();
   }
 
-  const supabaseUrl = process.env.VITE_SUPABASE_URL || "";
-  const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || "";
-
-  const configured = Boolean(
-    supabaseUrl &&
-      supabaseAnonKey &&
-      !supabaseUrl.includes("placeholder") &&
-      supabaseUrl.startsWith("https://")
-  );
+  const { supabaseUrl, supabaseAnonKey, configured } = getSupabasePublicEnv();
 
   return res.status(200).json({
     configured,

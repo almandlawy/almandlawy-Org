@@ -70,8 +70,8 @@ const PORT = 3000;
 app.use(express.json());
 
 // Initialize backend Supabase client safely with full validation and try-catch guard
-const supabaseUrl = process.env.VITE_SUPABASE_URL || "";
-const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || "";
+const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "";
+const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || "";
 
 const isUrlConfigured = Boolean(
   supabaseUrl && 
