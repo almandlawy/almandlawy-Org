@@ -32,53 +32,190 @@
     <!-- Luxury Favicon placeholders -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c5a85c' stroke-width='2'%3E%3Cpath d='M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5'/%3E%3C/svg%3E" />
     <link rel="manifest" href="/manifest.json" />
-
-    <!-- JSON-LD baseline (enriched client-side per route) -->
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": ["LocalBusiness", "JewelryStore"],
-        "@id": "https://www.pgruae.com/#organization",
-        "name": "PGR UAE Precious Metals Trading",
-        "alternateName": "PGR UAE",
-        "url": "https://www.pgruae.com",
-        "image": "https://www.pgruae.com/images/products/01-bullion-collection.webp",
-        "description": "Dubai firm-quote bullion desk. Indicative market reference. Final quote confirmed by PGR UAE desk.",
-        "address": {
-          "@type": "PostalAddress",
-          "streetAddress": "Almas Tower, Dubai Marina",
-          "addressLocality": "Dubai",
-          "addressRegion": "Dubai",
-          "addressCountry": "AE"
-        },
-        "geo": {
-          "@type": "GeoCoordinates",
-          "latitude": "25.0792",
-          "longitude": "55.1415"
-        },
-        "telephone": "+971559688837",
-        "email": "desk@pgruae.com",
-        "openingHoursSpecification": [
-          {
-            "@type": "OpeningHoursSpecification",
-            "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-            "opens": "09:00",
-            "closes": "18:00"
+  
+    <script type="application/ld+json" id="pgr-homepage-schema">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": [
+        "LocalBusiness",
+        "JewelryStore"
+      ],
+      "@id": "https://www.pgruae.com/#organization",
+      "name": "PGR UAE Precious Metals Trading",
+      "alternateName": "PGR UAE",
+      "url": "https://www.pgruae.com",
+      "image": "https://www.pgruae.com/images/products/01-bullion-collection.webp",
+      "logo": "https://www.pgruae.com/images/products/01-bullion-collection.webp",
+      "description": "Dubai firm-quote bullion desk for physical gold and silver. Indicative market reference. Final quote confirmed by PGR UAE desk.",
+      "telephone": "+971559688837",
+      "email": "desk@pgruae.com",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Almas Tower, Dubai Marina",
+        "addressLocality": "Dubai",
+        "addressRegion": "Dubai",
+        "addressCountry": "AE"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 25.0792,
+        "longitude": 55.1415
+      },
+      "openingHoursSpecification": [
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "opens": "09:00",
+          "closes": "18:00"
+        }
+      ],
+      "areaServed": {
+        "@type": "Country",
+        "name": "United Arab Emirates"
+      }
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://www.pgruae.com/#website",
+      "url": "https://www.pgruae.com",
+      "name": "PGR UAE",
+      "publisher": {
+        "@id": "https://www.pgruae.com/#organization"
+      },
+      "inLanguage": [
+        "en",
+        "ar"
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://www.pgruae.com/#faq",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Can I pay before receiving a firm quote?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Customers cannot pay before a firm quote is accepted. The flow is: select product, request firm quote, desk review, quote acceptance, then payment arrangement."
           }
-        ]
+        },
+        {
+          "@type": "Question",
+          "name": "Are prices on the website final?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Displayed prices are indicative market references only, subject to market movement. Final quote confirmed by PGR UAE desk before settlement."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is required before payment?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "KYC/AML review may be required before payment and dispatch. Subject to compliance review."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I request a firm quote?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Use Request Firm Quote on any product, the request-quote page, or WhatsApp Quote Desk."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How many products are in the catalog?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The public catalog shows exactly 10 approved PGR UAE products across gold, silver, mint, and custom inquiry categories."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "VideoObject",
+      "@id": "https://www.pgruae.com/#hero-video",
+      "name": "PGR UAE Bullion Collection",
+      "description": "PGR UAE bullion collection showcase — gold bars, silver bars, mint bars and bullion coins.",
+      "thumbnailUrl": "https://www.pgruae.com/videos/pgr-bullion-collection-poster.webp",
+      "contentUrl": "https://www.pgruae.com/videos/pgr-bullion-collection.mp4",
+      "embedUrl": "https://www.pgruae.com",
+      "uploadDate": "2026-07-04",
+      "duration": "PT10S",
+      "publisher": {
+        "@id": "https://www.pgruae.com/#organization"
       }
-    </script>
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "WebSite",
-        "@id": "https://www.pgruae.com/#website",
-        "url": "https://www.pgruae.com",
-        "name": "PGR UAE",
-        "publisher": { "@id": "https://www.pgruae.com/#organization" },
-        "inLanguage": ["en", "ar"]
-      }
-    </script>
+    },
+    {
+      "@type": "ItemList",
+      "@id": "https://www.pgruae.com/#catalog",
+      "name": "PGR UAE Bullion Product Catalog",
+      "numberOfItems": 10,
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "PGR UAE Bullion Collection"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Gold Bars 1g – 10g"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Gold Bars 20g – 50g"
+        },
+        {
+          "@type": "ListItem",
+          "position": 4,
+          "name": "Gold Bar 100g"
+        },
+        {
+          "@type": "ListItem",
+          "position": 5,
+          "name": "Gold Bar 1kg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 6,
+          "name": "Silver Bars 1oz – 100g"
+        },
+        {
+          "@type": "ListItem",
+          "position": 7,
+          "name": "Silver Bar 500g"
+        },
+        {
+          "@type": "ListItem",
+          "position": 8,
+          "name": "Silver Bar 1kg"
+        },
+        {
+          "@type": "ListItem",
+          "position": 9,
+          "name": "Mint Bars & Bullion Coins"
+        },
+        {
+          "@type": "ListItem",
+          "position": 10,
+          "name": "Custom Bullion Sizing & Bulk Sourcing"
+        }
+      ]
+    }
+  ]
+}
+</script>
   </head>
   <body class="bg-brand-bg text-text-charcoal">
     <noscript>
