@@ -24,7 +24,6 @@ import ClientDashboardModal from "./components/ClientDashboardModal";
 import AdminPortalModal from "./components/AdminPortalModal";
 import AdminPanel from "./components/AdminPanel";
 import LegalOverlayModal from "./components/LegalOverlayModal";
-import IraqTrustBadge from "./components/IraqTrustBadge";
 import Footer from "./components/Footer";
 import { LiveMarketRates, Product } from "./types";
 import { WHY_US_ITEMS } from "./data";
@@ -668,20 +667,6 @@ export default function App() {
       <HomepageFAQ currentLang={currentLang} />
 
       <CrawlableSeoBlock currentLang={currentLang} />
-
-      <section className="py-16 px-4 md:px-8 bg-brand-section border-t border-soft-border" id="positioning">
-        <div className="max-w-4xl mx-auto text-center space-y-6">
-          <h2 className="text-2xl font-serif text-text-charcoal font-medium">
-            {currentLang === "ar" ? "خدمات الإمارات والعراق" : "UAE & Iraq Desk Services"}
-          </h2>
-          <p className="text-sm text-text-secondary leading-relaxed max-w-3xl mx-auto font-sans">
-            {currentLang === "ar"
-              ? "تساعد PGR UAE العملاء على طلب منتجات الذهب والفضة من الإمارات، مع تأكيد السعر والتوفر وترتيب التوصيل أو الاستلام حسب التحقق والمستندات والمتطلبات الجمركية."
-              : "PGR UAE helps customers request gold and silver from the UAE, confirm availability and firm quotes, and arrange delivery or pickup subject to verification and compliance review."}
-          </p>
-          <IraqTrustBadge currentLang={currentLang} />
-        </div>
-      </section>
 
       <section className="py-20 px-4 md:px-8 bg-brand-bg border-t border-soft-border" id="about">
         <div className="max-w-7xl mx-auto space-y-12">
