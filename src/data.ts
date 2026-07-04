@@ -263,6 +263,23 @@ export const DEFAULT_DAILY_PRICING = {
   last_updated_at: ""
 };
 
+/** Default payment gateway settings — no secrets stored client-side */
+export const DEFAULT_PAYMENT_SETTINGS = {
+  payment_gateway_enabled: false,
+  provider: "Manual Bank Transfer" as const,
+  payment_mode: "Bank transfer only" as const,
+  public_payment_note:
+    "Payment is arranged only after your firm quote is accepted. PGR UAE desk will issue a payment link or bank transfer instructions. Subject to compliance review.",
+  internal_payment_note:
+    "Gateway API keys must be set in server environment variables only. Never expose secrets to the client bundle.",
+  payment_link_instructions:
+    "After quote acceptance, the desk will send a secure payment link or UAE bank transfer details. Upload payment proof if paying by bank transfer.",
+  supported_currencies: ["AED", "USD"] as ("AED" | "USD")[],
+  minimum_payment_amount: 1000,
+  max_payment_amount_before_manual_review: 250000,
+  require_kyc_before_payment: true
+};
+
 /** Default shipping settings for admin panel */
 export const DEFAULT_SHIPPING_SETTINGS = {
   shipping_enabled: true,

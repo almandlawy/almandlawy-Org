@@ -1,56 +1,58 @@
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
+ * Premium product showroom — exactly 10 PGR catalog products.
  */
 
 import React from "react";
-import { Search, Filter, ShieldCheck, ChevronRight, Sparkles, AlertCircle, Phone, FileText } from "lucide-react";
+import { Phone, FileText, AlertCircle } from "lucide-react";
 import { Product, LiveMarketRates } from "../types";
 import { PRODUCTS } from "../data";
 import { dbService } from "../lib/supabase";
 import { getProductImage } from "../lib/productImages";
-import { CATALOG_PRODUCT_COUNT, resolvePublicCatalog } from "../lib/productCatalog";
+import { resolvePublicCatalog } from "../lib/productCatalog";
 
 interface CatalogProps {
   currentLang: "en" | "ar";
   rates: LiveMarketRates | null;
   selectedCurrency: string;
   onSelectProduct: (product: Product) => void;
-  selectedCategoryFilter?: string; // To allow scrolling directly into a pre-filtered state from Hero
+  selectedCategoryFilter?: string;
+  onOpenQuote?: () => void;
 }
+
+const CATEGORY_TABS = ["all", "gold_bars", "silver_bars", "mint_bars_coins", "custom_inquiry"] as const;
 
 export default function Catalog({
   currentLang,
   rates,
   selectedCurrency,
   onSelectProduct,
-  selectedCategoryFilter
+  selectedCategoryFilter,
+  onOpenQuote
 }: CatalogProps) {
+  const isAr = currentLang === "ar";
   const [products, setProducts] = React.useState<Product[]>(() => resolvePublicCatalog(PRODUCTS));
-  const [searchQuery, setSearchQuery] = React.useState("");
   const [selectedFilter, setSelectedFilter] = React.useState<string>(selectedCategoryFilter || "all");
-  const [sortBy, setSortBy] = React.useState<"default" | "price_asc" | "price_desc" | "weight_asc" | "weight_desc" | "name_asc">("default");
-  const [isProductsFetchFailed, setIsProductsFetchFailed] = React.useState(false);
-  const [isPriceTimeout, setIsPriceTimeout] = React.useState(false);
-  const [settings, setSettings] = React.useState<any>(null);
+  const [shippingNote, setShippingNote] = React.useState<string>("");
 
   React.useEffect(() => {
-    const fetchSettings = async () => {
+    const load = async () => {
       try {
-        const sObj = await dbService.settings.get();
-        if (sObj) setSettings(sObj);
+        const [ship, sObj] = await Promise.all([
+          fetch("/api/shipping").then((r) => (r.ok ? r.json() : null)).catch(() => null),
+          dbService.settings.get().catch(() => null)
+        ]);
+        if (ship?.shipping_enabled && ship?.public_shipping_note) {
+          setShippingNote(ship.public_shipping_note);
+        } else if (sObj?.shipping_settings?.shipping_enabled && sObj?.shipping_settings?.public_shipping_note) {
+          setShippingNote(sObj.shipping_settings.public_shipping_note);
+        }
       } catch (err) {
-        console.error("Failed to load settings in Catalog:", err);
+        console.error("Catalog shipping load failed:", err);
       }
     };
-    fetchSettings();
-  }, []);
-
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsPriceTimeout(true);
-    }, 3000);
-    return () => clearTimeout(timer);
+    load();
   }, []);
 
   React.useEffect(() => {
@@ -58,428 +60,207 @@ export default function Catalog({
       try {
         const list = await dbService.products.list("public");
         setProducts(list.length > 0 ? list : resolvePublicCatalog(PRODUCTS));
-        setIsProductsFetchFailed(list.length !== CATALOG_PRODUCT_COUNT);
-      } catch (err) {
-        console.error("Failed to load products dynamically:", err);
+      } catch {
         setProducts(resolvePublicCatalog(PRODUCTS));
-        setIsProductsFetchFailed(true);
       }
     };
     fetchProducts();
   }, []);
 
   React.useEffect(() => {
-    if (selectedCategoryFilter) {
-      setSelectedFilter(selectedCategoryFilter);
-    }
+    if (selectedCategoryFilter) setSelectedFilter(selectedCategoryFilter);
   }, [selectedCategoryFilter]);
 
-  // Translate Category filter tags
   const getFilterLabel = (id: string) => {
-    if (currentLang === "ar") {
-      switch (id) {
-        case "all": return "الجميع";
-        case "gold_bars": return "سبائك الذهب";
-        case "silver_bars": return "سبائك الفضة";
-        case "mint_bars_coins": return "السبائك المصكوكة وعملات السبائك";
-        case "custom_inquiry": return "طلبات مخصصة";
-        default: return id;
-      }
-    } else {
-      switch (id) {
-        case "all": return "All Products";
-        case "gold_bars": return "Gold Bars";
-        case "silver_bars": return "Silver Bars";
-        case "mint_bars_coins": return "Mint Bars & Coins";
-        case "custom_inquiry": return "Custom Inquiry";
-        default: return id;
-      }
-    }
+    const labels: Record<string, { en: string; ar: string }> = {
+      all: { en: "All", ar: "الجميع" },
+      gold_bars: { en: "Gold Bars", ar: "سبائك الذهب" },
+      silver_bars: { en: "Silver Bars", ar: "سبائك الفضة" },
+      mint_bars_coins: { en: "Mint Bars & Bullion Coins", ar: "السبائك المصكوكة وعملات السبائك" },
+      custom_inquiry: { en: "Custom Inquiry", ar: "طلبات مخصصة" }
+    };
+    return isAr ? labels[id]?.ar || id : labels[id]?.en || id;
   };
 
-  // Estimate physical product pricing based on current live spot rate
-  const calculateIndicativePrice = (product: Product) => {
-    try {
-      if (!rates || !product) return null;
-      const cur = selectedCurrency as any;
-      const isGold = product?.technical_specs?.metal === "gold" || product?.category?.includes("gold");
-      const baseSpot = isGold ? rates.gold.currencies[cur] : rates.silver.currencies[cur];
+  const getMetalLabel = (product: Product) => {
+    const metal = product?.technical_specs?.metal;
+    if (metal === "gold") return isAr ? "ذهب" : "Gold";
+    if (metal === "silver") return isAr ? "فضة" : "Silver";
+    if (product.category === "custom_inquiry") return isAr ? "مخصص" : "Custom";
+    if (product.category === "mint_bars_coins") return isAr ? "ذهب / فضة" : "Gold / Silver";
+    return isAr ? "معادن ثمينة" : "Precious Metals";
+  };
 
-      if (!baseSpot) return null;
-
-      let totalGrams = 0;
-      if (product?.technical_specs?.weight_grams) {
-        totalGrams = product.technical_specs.weight_grams;
-      } else if (product?.technical_specs?.weight_oz) {
-        totalGrams = product.technical_specs.weight_oz * 31.1034768;
-      }
-
-      if (totalGrams === 0) return null;
-
-      const baseCost = totalGrams * baseSpot.gram;
-      
-      let premiumFactor = 1.0;
-      if (product?.premium_multiplier) {
-        premiumFactor = product.premium_multiplier;
-      } else if (settings && settings.default_product_premium_pct) {
-        premiumFactor = 1 + (settings.default_product_premium_pct / 100);
-      } else {
-        premiumFactor = 1.02; // default 2%
-      }
-      
-      const finalCost = baseCost * premiumFactor;
-
-      return finalCost;
-    } catch (e) {
-      console.error("Error calculating indicative price:", e);
-      return null;
+  const getIndicativeWording = (product: Product) => {
+    const hasLive =
+      rates &&
+      (rates.source_status === "live" || rates.source_status === "cached") &&
+      product.price_mode !== "fixed";
+    if (hasLive) {
+      return isAr ? "مرجع سوقي استرشادي متوفر" : "Indicative market reference available";
     }
+    return isAr ? "اطلب مرجع سوقي من الديوان" : "Request market reference from desk";
   };
 
   const getWhatsAppLink = (product: Product) => {
-    const pName = currentLang === "ar" ? product.name_ar : product.name_en;
-    const baseMsg = currentLang === "ar"
-      ? `مرحباً، أريد طلب عرض سعر رسمي لمنتج: ${pName}`
+    const pName = isAr ? product.name_ar : product.name_en;
+    const msg = isAr
+      ? `مرحباً، أريد طلب عرض سعر معتمد من ديوان PGR UAE لمنتج: ${pName}`
       : `Hello, I would like to request a firm quote from the PGR UAE desk for: ${pName}`;
-    return `https://wa.me/971559688837?text=${encodeURIComponent(baseMsg)}`;
+    return `https://wa.me/971559688837?text=${encodeURIComponent(msg)}`;
   };
 
-  // Filter products based on search query and category pill selection
   const filteredProducts = products.filter((product) => {
-    try {
-      if (!product) return false;
-      const matchesCategory = selectedFilter === "all" || product.category === selectedFilter;
-      
-      const query = searchQuery.toLowerCase();
-      const nameMatch = (product.name_en || "").toLowerCase().includes(query) || (product.name_ar || "").includes(query);
-      const manufacturerMatch = (product.manufacturer || "").toLowerCase().includes(query);
-      const countryMatch = (product.country_en || "").toLowerCase().includes(query);
-      const isPublished = product.published !== false;
-
-      return isPublished && matchesCategory && (nameMatch || manufacturerMatch || countryMatch);
-    } catch (e) {
-      console.error("Error filtering product:", e);
-      return false;
-    }
+    if (!product || product.published === false) return false;
+    const matchesCategory = selectedFilter === "all" || product.category === selectedFilter;
+    return matchesCategory;
   });
 
-  // Sort products dynamically
-  const sortedProducts = React.useMemo(() => {
-    return [...filteredProducts].sort((a, b) => {
-      if (sortBy === "price_asc" || sortBy === "price_desc") {
-        const priceA = calculateIndicativePrice(a) || a.price || 0;
-        const priceB = calculateIndicativePrice(b) || b.price || 0;
-        return sortBy === "price_asc" ? priceA - priceB : priceB - priceA;
-      }
-      if (sortBy === "weight_asc" || sortBy === "weight_desc") {
-        const weightA = a.technical_specs?.weight_grams || (a.technical_specs?.weight_oz ? a.technical_specs.weight_oz * 31.1035 : 0);
-        const weightB = b.technical_specs?.weight_grams || (b.technical_specs?.weight_oz ? b.technical_specs.weight_oz * 31.1035 : 0);
-        return sortBy === "weight_asc" ? weightA - weightB : weightB - weightA;
-      }
-      if (sortBy === "name_asc") {
-        const nameA = currentLang === "ar" ? a.name_ar : a.name_en;
-        const nameB = currentLang === "ar" ? b.name_ar : b.name_en;
-        return nameA.localeCompare(nameB, currentLang === "ar" ? "ar" : "en");
-      }
-      return 0; // Default order
-    });
-  }, [filteredProducts, sortBy, rates, selectedCurrency, currentLang]);
-
   return (
-    <section className="py-24 px-4 md:px-8 bg-brand-section border-t border-soft-border" id="catalog" style={{ direction: currentLang === "ar" ? "rtl" : "ltr" }}>
-      <div className="max-w-7xl mx-auto space-y-12">
-        
-        {/* Section Heading */}
-        <div className="text-center space-y-4 max-w-2xl mx-auto">
-          <span className="text-gold-base font-mono uppercase text-xs tracking-[0.3em] font-bold flex items-center justify-center gap-2">
-            <Sparkles size={11} className="text-olive-accent" />
-            {currentLang === "ar" ? "المجموعة المعتمدة دولياً" : "Accredited Investment Portfolio"}
-          </span>
-          <h2 className="text-3xl sm:text-4xl font-serif tracking-tight text-text-charcoal font-medium">
-            {currentLang === "ar" ? "كتالوج السبائك والمعادن الثمينة" : "Precious Metals Catalog"}
+    <section
+      className="py-20 px-4 md:px-8 bg-brand-bg border-t border-soft-border"
+      id="catalog"
+      style={{ direction: isAr ? "rtl" : "ltr" }}
+    >
+      <div className="max-w-7xl mx-auto space-y-10">
+        <div className="text-center max-w-2xl mx-auto space-y-3">
+          <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-olive-accent font-bold">
+            {isAr ? "معرض المنتجات" : "Product Showroom"}
+          </p>
+          <h2 className="text-3xl sm:text-4xl font-serif text-text-charcoal font-medium">
+            {isAr ? "كتالوج السبائك المعتمد" : "Accredited Bullion Catalog"}
           </h2>
-          <p className="text-sm text-text-secondary">
-            {currentLang === "ar" 
-              ? "استعرض مجموعتنا الشاملة من سبائك ومسكوكات الذهب والفضة عالية النقاوة. جميع المنتجات تأتي من مصافٍ معتمدة عالمياً."
-              : "Explore our collection of high-purity gold and silver bars and investment coins. Sourced exclusively from certified international refineries."}
+          <p className="text-sm text-text-secondary font-sans">
+            {isAr
+              ? `تم العثور على ${filteredProducts.length} منتجاً — عروض الأسعار المعتمدة من ديوان PGR UAE`
+              : `${filteredProducts.length} products — firm quotes confirmed by PGR UAE desk`}
           </p>
         </div>
 
-        {/* Dynamic fetch warning banner */}
-        {isProductsFetchFailed && (
-          <div className="max-w-2xl mx-auto p-4 rounded border border-soft-border bg-soft-danger text-text-charcoal flex items-center gap-3 text-xs font-sans">
-            <AlertCircle size={16} className="shrink-0 text-[#A47C36]" />
-            <span className="font-semibold text-center w-full">
-              {currentLang === "ar"
-                ? "يتم تحديث المنتجات حالياً. يرجى طلب عرض سعر."
-                : "Products are being updated. Please request a quote."}
-            </span>
+        {/* Horizontally scrollable category tabs on mobile */}
+        <div className="overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
+          <div className="flex gap-2 min-w-max md:flex-wrap md:min-w-0 md:justify-center">
+            {CATEGORY_TABS.map((filterId) => (
+              <button
+                key={filterId}
+                type="button"
+                onClick={() => setSelectedFilter(filterId)}
+                className={`shrink-0 px-4 py-2.5 rounded text-xs font-mono font-bold uppercase tracking-wider border transition-colors ${
+                  selectedFilter === filterId
+                    ? "bg-gold-base text-text-charcoal border-gold-base"
+                    : "bg-brand-card text-text-secondary border-soft-border hover:border-gold-base hover:text-text-charcoal"
+                }`}
+              >
+                {getFilterLabel(filterId)}
+              </button>
+            ))}
           </div>
-        )}
+        </div>
 
-        {products.length === 0 ? (
-          <div className="max-w-2xl mx-auto p-12 text-center border border-soft-border bg-soft-danger text-text-charcoal rounded space-y-4">
-            <AlertCircle size={32} className="mx-auto text-gold-base animate-pulse" />
-            <h3 className="text-lg font-serif text-text-charcoal">
-              {currentLang === "ar" ? "تحديث كتالوج المنتجات" : "Catalog Update"}
-            </h3>
-            <p className="text-sm">
-              {currentLang === "ar"
-                ? "يتم تحديث المنتجات حالياً. يرجى طلب عرض سعر."
-                : "Products are being updated. Please request a quote."}
+        {filteredProducts.length === 0 ? (
+          <div className="p-12 text-center border border-soft-border rounded bg-brand-card">
+            <AlertCircle size={28} className="mx-auto text-gold-base mb-3" />
+            <p className="text-sm text-text-secondary">
+              {isAr ? "لا توجد منتجات في هذا القسم." : "No products in this category."}
             </p>
           </div>
         ) : (
-          <>
-            {/* Filters and Search Action Bar */}
-            <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-6 pb-6 border-b border-soft-border">
-              {/* Category Filter Pills */}
-              <div className="flex flex-wrap items-center gap-2.5">
-                {["all", "gold_bars", "silver_bars", "mint_bars_coins", "custom_inquiry"].map((filterId) => (
-                  <button
-                    key={filterId}
-                    onClick={() => {
-                      setSelectedFilter(filterId);
-                      setSortBy("default");
-                    }}
-                    className={`px-4 py-2 rounded text-xs uppercase tracking-wider font-bold transition-all duration-300 cursor-pointer border ${
-                      selectedFilter === filterId
-                        ? "bg-[#C6A15B] text-text-charcoal border-[#C6A15B] shadow-sm"
-                        : "text-text-secondary border-soft-border bg-brand-card hover:text-text-charcoal hover:border-[#C6A15B]"
-                    }`}
-                  >
-                    {getFilterLabel(filterId)}
-                  </button>
-                ))}
-              </div>
-
-              {/* Premium Search Box */}
-              <div className="relative max-w-md w-full">
-                <Search size={16} className={`absolute ${currentLang === "ar" ? "right-3.5" : "left-3.5"} top-1/2 transform -translate-y-1/2 text-text-secondary`} />
-                <input
-                  type="text"
-                  placeholder={currentLang === "ar" ? "ابحث بالوزن، المصفاة أو اسم المنتج..." : "Search by weight, mint, manufacturer..."}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className={`w-full ${currentLang === "ar" ? "pr-10 pl-4" : "pl-10 pr-4"} py-2.5 bg-brand-card rounded border border-soft-border focus:border-gold-base focus:ring-1 focus:ring-gold-base outline-none text-xs text-text-charcoal placeholder-text-secondary transition-all font-sans`}
-                  style={{ direction: currentLang === "ar" ? "rtl" : "ltr", textAlign: currentLang === "ar" ? "right" : "left" }}
-                />
-              </div>
-            </div>
-
-            {/* Catalog Info & Sorting Sub-Bar */}
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 text-xs font-sans py-2">
-              <div className="text-text-secondary flex items-center gap-2 font-mono uppercase tracking-wider text-[11px]">
-                <span className="h-2 w-2 rounded-full bg-olive-accent animate-pulse"></span>
-                {currentLang === "ar" ? (
-                  <span>تم العثور على <strong className="text-text-charcoal font-bold font-mono">{sortedProducts.length}</strong> منتجاً فاخراً</span>
-                ) : (
-                  <span>Found <strong className="text-text-charcoal font-bold font-mono">{sortedProducts.length}</strong> premium bullion products</span>
-                )}
-              </div>
-
-              <div className="flex items-center gap-3">
-                <span className="text-text-secondary text-[11px] font-mono uppercase tracking-wider">
-                  {currentLang === "ar" ? "ترتيب حسب:" : "Sort By:"}
-                </span>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as any)}
-                  className="bg-brand-card border border-soft-border text-text-charcoal rounded px-3 py-1.5 outline-none text-xs focus:border-gold-base cursor-pointer transition-colors font-mono"
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+            {filteredProducts.map((product) => (
+              <article
+                key={product.id}
+                className="flex flex-col rounded border border-soft-border bg-[#FFFDF8] overflow-hidden shadow-sm hover:border-gold-base transition-colors duration-300 min-h-[520px]"
+              >
+                {/* Image area ~65% — portrait 4:5 */}
+                <button
+                  type="button"
+                  onClick={() => onSelectProduct(product)}
+                  className="relative w-full aspect-[4/5] bg-brand-bg flex items-center justify-center p-4 border-b border-soft-border cursor-pointer group"
                 >
-                  <option value="default">{currentLang === "ar" ? "الافتراضي" : "Default"}</option>
-                  <option value="price_asc">{currentLang === "ar" ? "السعر: من الأقل للأعلى" : "Price: Low to High"}</option>
-                  <option value="price_desc">{currentLang === "ar" ? "السعر: من الأعلى للأقل" : "Price: High to Low"}</option>
-                  <option value="weight_asc">{currentLang === "ar" ? "الوزن: من الأقل للأعلى" : "Weight: Low to High"}</option>
-                  <option value="weight_desc">{currentLang === "ar" ? "الوزن: من الأعلى للأقل" : "Weight: High to Low"}</option>
-                  <option value="name_asc">{currentLang === "ar" ? "الاسم" : "Name"}</option>
-                </select>
-              </div>
-            </div>
+                  <img
+                    src={getProductImage(product)}
+                    alt={isAr ? product.name_ar : product.name_en}
+                    loading="lazy"
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = getProductImage(product);
+                    }}
+                    className="w-full h-full object-contain group-hover:scale-[1.02] transition-transform duration-500"
+                  />
+                </button>
 
-            {/* Product Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {sortedProducts.map((product) => {
-                const isGold = product?.technical_specs?.metal === "gold" || product?.category?.includes("gold");
-                const isCoin = product?.category?.includes("coin") || false;
-                const indicativePrice = calculateIndicativePrice(product);
-
-                return (
-                  <div
-                    key={product.id}
+                {/* Text/data area ~35% */}
+                <div className="flex flex-col flex-1 p-5 space-y-3 bg-[#FFFDF8]">
+                  <button
+                    type="button"
                     onClick={() => onSelectProduct(product)}
-                    className="bg-brand-card rounded overflow-hidden flex flex-col justify-between cursor-pointer group transition-all duration-500 hover:scale-[1.01] border border-soft-border hover:border-[#C6A15B] shadow-sm"
+                    className="text-left cursor-pointer"
                   >
-                    {/* Visual Imagery Canvas using actual generated high-res illustrations */}
-                    <div className="relative h-80 w-full bg-brand-bg overflow-hidden flex items-center justify-center border-b border-soft-border">
-                      {/* Backdrop glowing dust */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-brand-card to-transparent opacity-85 z-10" />
-                      
-                      {/* Real generated high-resolution assets linked dynamically based on category */}
-                      <img
-                        src={getProductImage(product)}
-                        alt={`${currentLang === "ar" ? product.name_ar : product.name_en} - ${isGold ? (currentLang === "ar" ? "سبائك ذهب" : "Gold Bar") : (currentLang === "ar" ? "سبائك فضة" : "Silver Bar")} ${product.weight_label} - ${product.purity}`}
-                        referrerPolicy="no-referrer"
-                        loading="lazy"
-                        onError={(e) => {
-                          e.currentTarget.onerror = null;
-                          e.currentTarget.src = getProductImage(product);
-                        }}
-                        className="w-full h-full object-contain opacity-90 group-hover:scale-105 transition-all duration-1000 z-0"
-                      />
+                    <h3 className="text-base font-serif font-medium text-text-charcoal leading-snug line-clamp-2 hover:text-gold-dark transition-colors">
+                      {isAr ? product.name_ar : product.name_en}
+                    </h3>
+                  </button>
 
-                      {/* Shimmer reflection sweep animation */}
-                      <div className={`absolute inset-0 z-20 ${isGold ? "shimmer-mask-gold" : "shimmer-mask"}`} />
-
-                      {/* Brand metadata tag */}
-                      <div className="absolute top-4 left-4 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded bg-brand-card border border-soft-border shadow-sm">
-                        <ShieldCheck size={11} className="text-olive-accent" />
-                        <span className="text-[9px] font-mono text-text-secondary uppercase tracking-wider">{product.manufacturer || "Certified"}</span>
+                  <dl className="space-y-1.5 text-xs font-sans">
+                    {[
+                      [isAr ? "نوع المعدن" : "Metal", getMetalLabel(product)],
+                      [isAr ? "الوزن" : "Weight", product.weight_label],
+                      [isAr ? "النقاوة" : "Purity", product.purity],
+                      [isAr ? "المرجع السوقي" : "Market reference", getIndicativeWording(product)]
+                    ].map(([label, value]) => (
+                      <div key={String(label)} className="flex justify-between gap-2 border-b border-soft-border/60 pb-1">
+                        <dt className="text-text-secondary">{label}</dt>
+                        <dd className="text-text-charcoal font-mono font-bold text-right">{value}</dd>
                       </div>
+                    ))}
+                  </dl>
 
-                      {/* Certified Gold/Silver Stamp Overlay */}
-                      <div className="absolute bottom-4 right-4 z-20 px-2 py-0.5 rounded bg-brand-card text-[#A47C36] border border-[#E8DEC9] text-[9px] font-mono tracking-widest uppercase font-bold shadow-sm">
-                        {(product?.purity || "").split(" ")[0] || "999.9"}
-                      </div>
-                    </div>
+                  {shippingNote && (
+                    <p className="text-[10px] text-olive-accent font-mono leading-relaxed border-l-2 border-olive-accent pl-2">
+                      {shippingNote}
+                    </p>
+                  )}
 
-                    {/* Information content area */}
-                    <div className="p-6 space-y-4 flex-1 flex flex-col justify-between bg-brand-card">
-                      <div className="space-y-3">
-                        {/* Manufacturer Name & Country */}
-                        <span className="text-[10px] font-mono text-[#A47C36] uppercase tracking-[0.2em] block font-bold">
-                          {product.manufacturer || "Refined"} • {currentLang === "ar" ? product.country_ar || "دبي" : product.country_en || "Dubai"}
-                        </span>
-                        
-                        {/* Product Name */}
-                        <h3 className="text-base font-serif text-text-charcoal group-hover:text-[#A47C36] transition-colors line-clamp-2 font-medium">
-                          {currentLang === "ar" ? product.name_ar || "" : product.name_en || ""}
-                        </h3>
+                  <p className="text-[10px] text-text-secondary font-mono leading-relaxed pt-1">
+                    {isAr
+                      ? "يتم تأكيد عرض السعر النهائي من ديوان PGR UAE."
+                      : "Final quote confirmed by PGR UAE desk."}
+                  </p>
 
-                        {/* Metal Type, Weight & Purity specifications details in crawlable HTML */}
-                        <div className="space-y-1.5 text-xs font-sans text-text-secondary pt-1 border-t border-soft-border/50">
-                          <div className="flex justify-between items-center text-[11px]">
-                            <span className="text-stone-500">{currentLang === "ar" ? "نوع المعدن:" : "Metal Type:"}</span>
-                            <span className="font-mono text-text-charcoal font-bold uppercase">
-                              {isGold ? (currentLang === "ar" ? "ذهب" : "Gold") : (currentLang === "ar" ? "فضة" : "Silver")}
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center text-[11px]">
-                            <span className="text-stone-500">{currentLang === "ar" ? "الوزن المقيد:" : "Weight:"}</span>
-                            <span className="font-mono text-text-charcoal font-bold">{product?.weight_label || ""}</span>
-                          </div>
-                          <div className="flex justify-between items-center text-[11px]">
-                            <span className="text-stone-500">{currentLang === "ar" ? "النقاوة المعتمدة:" : "Purity:"}</span>
-                            <span className="font-mono text-text-charcoal font-bold">{product?.purity || "999.9"}</span>
-                          </div>
-                          <div className="flex justify-between items-center text-[11px]">
-                            <span className="text-stone-500">{currentLang === "ar" ? "حالة التسعير:" : "Pricing Status:"}</span>
-                            <span className="font-mono text-olive-accent font-bold text-[10px] uppercase">
-                              {currentLang === "ar" ? "سعر استرشادي متوفر" : "Indicative price available"}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Pricing Display */}
-                      <div className="pt-3 border-t border-soft-border flex flex-col gap-1">
-                        <span className="text-[10px] text-text-secondary font-mono block uppercase font-bold">
-                          {product.price_mode === "fixed"
-                            ? (currentLang === "ar" ? "السعر الثابت المعتمد" : "Confirmed Fixed Price")
-                            : (rates && (rates.source_status === "live" || rates.source_status === "cached"))
-                              ? (currentLang === "ar" ? "السعر الاسترشادي الفوري" : "Live Indicative Price")
-                              : (currentLang === "ar" ? "السعر عند الطلب" : "Price on Request")}
-                        </span>
-                        
-                        {product.price_mode === "fixed" ? (
-                          <span className="text-lg font-mono font-bold text-text-charcoal">
-                            {product.price && product.price > 0 ? (
-                              <>
-                                {product.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}{" "}
-                                <span className="text-[10px] text-[#A47C36] font-bold">{selectedCurrency}</span>
-                              </>
-                            ) : (
-                              <span className="text-xs text-[#A47C36] font-bold">
-                                {currentLang === "ar" ? "طلب تسعير فوري" : "Request Quote"}
-                              </span>
-                            )}
-                          </span>
-                        ) : (rates && (rates.source_status === "live" || rates.source_status === "cached")) && indicativePrice ? (
-                          <span className="text-lg font-mono font-bold text-[#1F1A17]">
-                            {indicativePrice.toLocaleString(undefined, { maximumFractionDigits: 2 })}{" "}
-                            <span className="text-[11px] text-[#A47C36] font-bold">{selectedCurrency}</span>
-                          </span>
-                        ) : (
-                          <span className="text-xs text-[#A47C36] font-bold">
-                            {currentLang === "ar" ? "طلب تسعير فوري" : "Request Quote"}
-                          </span>
-                        )}
-
-                        {/* Compliance Warning Note */}
-                        <div className="bg-[#FAF9F5] p-2 rounded border border-[#E8DEC9]/60 text-[10px] text-stone-500 leading-normal mt-1">
-                          {currentLang === "ar" 
-                            ? "ملاحظة: السعر استرشادي. يتم تأكيد السعر النهائي للتسوية من قبل ديوان تداول PGR UAE."
-                            : "Note: Indicative price. Final quote confirmed by PGR UAE desk before order settlement."}
-                        </div>
-                      </div>
-
-                      {/* Dual Action Buttons directly on the card */}
-                      <div className="pt-3 border-t border-soft-border/50 flex flex-col gap-2">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onSelectProduct(product);
-                          }}
-                          className="w-full py-2.5 bg-[#C6A15B] hover:bg-[#A47C36] text-[#1F1A17] hover:text-white font-mono text-[10px] uppercase font-bold tracking-widest rounded transition-all duration-300 flex items-center justify-center gap-1.5 shadow-sm"
-                        >
-                          <FileText size={12} />
-                          {currentLang === "ar" ? "طلب تسعير مؤكد" : "Request Firm Quote"}
-                        </button>
-
-                        <a
-                          href={getWhatsAppLink(product)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="w-full py-2.5 bg-[#25D366] hover:bg-[#128C7E] text-white font-mono text-[10px] uppercase font-bold tracking-widest rounded transition-all duration-300 flex items-center justify-center gap-1.5 shadow-sm"
-                        >
-                          <Phone size={12} />
-                          {currentLang === "ar" ? "ديوان تسعير واتساب" : "WhatsApp Quote Desk"}
-                        </a>
-                      </div>
-                    </div>
+                  <div className="flex flex-col gap-2 pt-2 mt-auto">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onSelectProduct(product);
+                        onOpenQuote?.();
+                      }}
+                      className="w-full py-3 bg-gold-base hover:bg-gold-dark text-text-charcoal font-mono text-[10px] font-bold uppercase tracking-widest rounded flex items-center justify-center gap-2 transition-colors"
+                    >
+                      <FileText size={12} />
+                      {isAr ? "طلب عرض سعر معتمد" : "Request Firm Quote"}
+                    </button>
+                    <a
+                      href={getWhatsAppLink(product)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-3 bg-[#25D366] hover:bg-[#128C7E] text-white font-mono text-[10px] font-bold uppercase tracking-widest rounded flex items-center justify-center gap-2 transition-colors"
+                    >
+                      <Phone size={12} />
+                      {isAr ? "ديوان واتساب" : "WhatsApp Quote Desk"}
+                    </a>
                   </div>
-                );
-              })}
-            </div>
-
-            {/* Dynamic Fallback if Search is empty */}
-            {filteredProducts.length === 0 && (
-              <div className="p-16 text-center border border-soft-border rounded bg-brand-bg space-y-4 max-w-md mx-auto">
-                <AlertCircle size={32} className="text-gold-base mx-auto animate-pulse" />
-                <h3 className="text-lg font-serif text-text-charcoal">
-                  {currentLang === "ar" ? "لم يتم العثور على منتجات" : "No products found"}
-                </h3>
-                <p className="text-xs text-text-secondary">
-                  {currentLang === "ar"
-                    ? "يرجى تعديل معايير البحث أو تصفح الأقسام الأخرى من الكتالوج."
-                    : "Please adjust your search queries or explore other bullion categories."}
-                </p>
-              </div>
-            )}
-
-            {/* Corporate Sourcing Footer Disclaimer */}
-            <div className="p-4 rounded border border-soft-border bg-[#FFFDF8] flex items-center gap-3 max-w-4xl mx-auto text-xs text-text-secondary font-mono leading-relaxed shadow-sm">
-              <ShieldCheck size={18} className="text-olive-accent shrink-0" />
-              <span>
-                {currentLang === "ar"
-                  ? "بيان توضيحي: جميع منتجات العلامات التجارية (PAMP, Valcambi, Metalor, Royal Mint) متاحة من خلال PGR بصفتنا بيت تداول معتمد وتخضع للفحص. لا تدعي بي جي آر تفرّدها بتصنيع هذه السبائك الحرة."
-                  : "Institutional notice: These globally respected bullion brands are officially sourced and authenticated through PGR UAE's licensed trading conduits. PGR UAE acts as an authorized bullion house and logistics partner, and does not claim manufacturing rights."}
-              </span>
-            </div>
-          </>
+                </div>
+              </article>
+            ))}
+          </div>
         )}
 
+        <p className="text-[10px] text-center text-text-secondary font-mono max-w-3xl mx-auto leading-relaxed">
+          {isAr
+            ? "الأسعار استرشادية وخاضعة لحركة السوق. لا يوجد دفع مباشر — عرض سعر معتمد أولاً."
+            : "Indicative market reference only. Subject to market movement. No direct checkout — firm quote first."}
+        </p>
       </div>
     </section>
   );

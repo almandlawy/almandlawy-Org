@@ -217,3 +217,63 @@ export interface QuoteSignaturePayload {
   createdAt: string;
 }
 
+export type PartnerLogoCategory =
+  | "Bank"
+  | "Payment Gateway"
+  | "Logistics"
+  | "Security Delivery"
+  | "Compliance"
+  | "Market Data"
+  | "Other";
+
+export interface PartnerLogo {
+  id: string;
+  name: string;
+  category: PartnerLogoCategory;
+  logo_url: string;
+  website_url?: string;
+  public_display_enabled: boolean;
+  display_order: number;
+  internal_note?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export type PaymentProvider =
+  | "N-Genius / Network International"
+  | "PayTabs"
+  | "Amazon Payment Services"
+  | "Stripe"
+  | "Manual Bank Transfer"
+  | "Other";
+
+export type PaymentMode =
+  | "Payment Link after firm quote"
+  | "Deposit after firm quote"
+  | "Full payment after firm quote"
+  | "Bank transfer only";
+
+export interface PaymentSettings {
+  payment_gateway_enabled: boolean;
+  provider: PaymentProvider;
+  payment_mode: PaymentMode;
+  public_payment_note: string;
+  internal_payment_note: string;
+  payment_link_instructions: string;
+  supported_currencies: ("AED" | "USD")[];
+  minimum_payment_amount: number;
+  max_payment_amount_before_manual_review: number;
+  require_kyc_before_payment: boolean;
+}
+
+/** Public-safe subset — never expose internal notes or gateway secrets */
+export interface PublicPaymentSettings {
+  payment_gateway_enabled: boolean;
+  provider: PaymentProvider;
+  payment_mode: PaymentMode;
+  public_payment_note: string;
+  payment_link_instructions: string;
+  supported_currencies: ("AED" | "USD")[];
+  require_kyc_before_payment: boolean;
+}
+

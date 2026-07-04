@@ -16,6 +16,8 @@ import { Product, DailyPricingSettings, ShippingSettings } from "../types";
 import { DEFAULT_DAILY_PRICING, DEFAULT_SHIPPING_SETTINGS } from "../data";
 import { resolveProductIdFromLabel } from "../lib/productCatalog";
 import { DebugPanel } from "./DebugPanel";
+import PartnerLogosAdmin from "./admin/PartnerLogosAdmin";
+import PaymentSettingsAdmin from "./admin/PaymentSettingsAdmin";
 
 interface AdminPanelProps {
   currentLang?: "en" | "ar";
@@ -35,6 +37,8 @@ type AdminSection =
   | "market_prices"
   | "daily_pricing"
   | "shipping_settings"
+  | "partner_logos"
+  | "payment_settings"
   | "exchange_rates"
   | "buyback"
   | "certificates"
@@ -1073,6 +1077,8 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
       case "market_prices": return <TrendingUp size={14} />;
       case "daily_pricing": return <Coins size={14} />;
       case "shipping_settings": return <Truck size={14} />;
+      case "partner_logos": return <Layers size={14} />;
+      case "payment_settings": return <Coins size={14} />;
       case "exchange_rates": return <RefreshCw size={14} />;
       case "buyback": return <Undo size={14} />;
       case "certificates": return <Award size={14} />;
@@ -1255,6 +1261,8 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
     { id: "market_prices", label: "Market Markup Pricing", labelAr: "هوامش الأسعار" },
     { id: "daily_pricing", label: "Daily Reference Pricing", labelAr: "التسعير اليومي المرجعي" },
     { id: "shipping_settings", label: "Shipping Settings", labelAr: "إعدادات الشحن" },
+    { id: "partner_logos", label: "Partners & Trust Logos", labelAr: "الشركاء وشعارات الثقة" },
+    { id: "payment_settings", label: "Payment Settings", labelAr: "إعدادات الدفع" },
     { id: "exchange_rates", label: "Exchange Rates & Pegs", labelAr: "أسعار صرف العملات" },
     { id: "buyback", label: "Buyback Desk", labelAr: "ديوان الاسترداد" },
     { id: "certificates", label: "Certificates Mint", labelAr: "إصدار الشهادات" },
@@ -3072,6 +3080,24 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                     </button>
                   </form>
                 </div>
+              )}
+
+              {activeSection === "partner_logos" && (
+                <PartnerLogosAdmin
+                  adminEmail={currentUser?.email || "admin@pgruae.com"}
+                  onAudit={(action, details) =>
+                    dbService.auditLogs.append(action, currentUser?.email || "admin@pgruae.com", details)
+                  }
+                />
+              )}
+
+              {activeSection === "payment_settings" && (
+                <PaymentSettingsAdmin
+                  adminEmail={currentUser?.email || "admin@pgruae.com"}
+                  onAudit={(action, details) =>
+                    dbService.auditLogs.append(action, currentUser?.email || "admin@pgruae.com", details)
+                  }
+                />
               )}
 
               {/* 10. SECTION: EXCHANGE RATES & PEGS */}
