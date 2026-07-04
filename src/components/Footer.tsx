@@ -51,7 +51,7 @@ export default function Footer({
   };
 
   return (
-    <footer className="bg-[#F7F4ED] border-t border-[#E8DEC9] pt-20 pb-8 text-xs font-mono text-[#5E564D]" id="office" style={{ direction: currentLang === "ar" ? "rtl" : "ltr" }}>
+    <footer className="bg-brand-bg border-t border-champagne pt-16 pb-8 text-xs font-mono text-text-secondary" id="site-footer" style={{ direction: currentLang === "ar" ? "rtl" : "ltr" }}>
       <div className="max-w-7xl mx-auto px-4 md:px-8 space-y-16">
         
         {/* Upper Grid - Branding, Navigation, Newsletter */}
@@ -98,17 +98,17 @@ export default function Footer({
             </div>
           </div>
 
-          {/* Sourcing & Products Column */}
+          {/* Quick links — mockup direction */}
           <div className="space-y-4">
-            <h4 className="text-xs uppercase tracking-widest text-[#1F1A17] font-bold">
-              {currentLang === "ar" ? "المنتجات والخدمات" : "Bullion Solutions"}
+            <h4 className="text-xs uppercase tracking-widest text-text-charcoal font-bold">
+              {currentLang === "ar" ? "روابط سريعة" : "Quick Links"}
             </h4>
-            <ul className="space-y-2.5 text-[11px] text-[#5E564D] font-bold">
-              <li><button onClick={() => onNavigate("catalog")} className="hover:text-[#A47C36] transition-colors cursor-pointer text-left">{currentLang === "ar" ? "سبائك الذهب المصكوكة" : "Minted Gold Bars (1g - 1kg)"}</button></li>
-              <li><button onClick={() => onNavigate("catalog")} className="hover:text-[#A47C36] transition-colors cursor-pointer text-left">{currentLang === "ar" ? "مسكوكات الذهب والفضة الاستثمارية" : "Investment Gold Coins"}</button></li>
-              <li><button onClick={() => onNavigate("catalog")} className="hover:text-[#A47C36] transition-colors cursor-pointer text-left">{currentLang === "ar" ? "سبائك الفضة الصب والصبابة" : "Cast Silver Bullion (1kg)"}</button></li>
-              <li><button onClick={onOpenQuote} className="hover:text-[#A47C36] transition-colors cursor-pointer text-left">{currentLang === "ar" ? "تصدير وتجارة الجملة الدولية" : "Wholesale Institutional Contracts"}</button></li>
-              <li><button onClick={onOpenAIChat} className="hover:text-[#A47C36] transition-colors cursor-pointer text-left">{currentLang === "ar" ? "ديوان المستشار المالي الرقمي" : "Bespoke Portfolio Hedging"}</button></li>
+            <ul className="space-y-2.5 text-[11px] text-text-secondary font-bold">
+              <li><button type="button" onClick={() => onNavigate("about")} className="hover:text-gold-dark transition-colors cursor-pointer text-left">{currentLang === "ar" ? "من نحن" : "About Us"}</button></li>
+              <li><button type="button" onClick={() => onOpenLegalDoc("terms")} className="hover:text-gold-dark transition-colors cursor-pointer text-left">{currentLang === "ar" ? "الشروط والأحكام" : "Terms & Conditions"}</button></li>
+              <li><button type="button" onClick={() => onOpenLegalDoc("privacy")} className="hover:text-gold-dark transition-colors cursor-pointer text-left">{currentLang === "ar" ? "سياسة الخصوصية" : "Privacy Policy"}</button></li>
+              <li><button type="button" onClick={() => onNavigate("contact")} className="hover:text-gold-dark transition-colors cursor-pointer text-left">{currentLang === "ar" ? "اتصل بنا" : "Contact Us"}</button></li>
+              <li><button type="button" onClick={() => onNavigate("catalog")} className="hover:text-gold-dark transition-colors cursor-pointer text-left">{currentLang === "ar" ? "الكتالوج" : "Catalog"}</button></li>
             </ul>
           </div>
 

@@ -9,9 +9,10 @@ import { dbService } from "../lib/supabase";
 
 interface OfficeSectionProps {
   currentLang: "en" | "ar";
+  sectionId?: string;
 }
 
-export default function OfficeSection({ currentLang }: OfficeSectionProps) {
+export default function OfficeSection({ currentLang, sectionId = "office" }: OfficeSectionProps) {
   const isAr = currentLang === "ar";
   const [settings, setSettings] = useState<any>(null);
   const [pickupPoints, setPickupPoints] = useState<any[]>([]);
@@ -66,7 +67,7 @@ export default function OfficeSection({ currentLang }: OfficeSectionProps) {
   };
 
   return (
-    <section className="py-24 px-4 md:px-8 bg-[#FAF9F5] border-t border-amber-500/10" id="office">
+    <section className="py-24 px-4 md:px-8 bg-brand-bg border-t border-soft-border" id={sectionId}>
       <div className="max-w-7xl mx-auto space-y-16">
         
         {/* Header Title */}

@@ -8,10 +8,9 @@ import Header from "./components/Header";
 import Hero from "./components/Hero";
 import MarketReferenceStrip from "./components/MarketReferenceStrip";
 import HowFirmQuotesWork from "./components/HowFirmQuotesWork";
-import Catalog from "./components/Catalog";
+import ProductShowroom from "./components/ProductShowroom";
 import TrustedPartnersSection from "./components/TrustedPartnersSection";
 import PaymentSettlementSection from "./components/PaymentSettlementSection";
-import BullionCollectionSection from "./components/BullionCollectionSection";
 import HomepageFAQ from "./components/HomepageFAQ";
 import CrawlableSeoBlock from "./components/CrawlableSeoBlock";
 import ComplianceKYCSection from "./components/ComplianceKYCSection";
@@ -301,9 +300,17 @@ export default function App() {
   };
 
   const handleScrollToSection = (sectionId: string) => {
-    const el = document.getElementById(sectionId);
+    const aliases: Record<string, string> = {
+      home: "hero",
+      about: "about",
+      contact: "contact"
+    };
+    const target = aliases[sectionId] || sectionId;
+    const el = document.getElementById(target);
     if (el) {
       el.scrollIntoView({ behavior: "smooth" });
+    } else if (target === "hero") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
@@ -616,12 +623,6 @@ export default function App() {
         onOpenQuote={() => navigateTo("/request-quote")}
       />
 
-      <BullionCollectionSection
-        currentLang={currentLang}
-        onOpenQuote={() => navigateTo("/request-quote")}
-        onScrollToCatalog={() => handleScrollToSection("catalog")}
-      />
-
       <MarketReferenceStrip
         currentLang={currentLang}
         rates={rates}
@@ -632,9 +633,7 @@ export default function App() {
         onOpenQuote={() => navigateTo("/request-quote")}
       />
 
-      <HowFirmQuotesWork currentLang={currentLang} />
-
-      <Catalog
+      <ProductShowroom
         currentLang={currentLang}
         rates={rates}
         selectedCurrency={selectedCurrency}
@@ -643,12 +642,14 @@ export default function App() {
         onOpenQuote={() => navigateTo("/request-quote")}
       />
 
+      <HowFirmQuotesWork currentLang={currentLang} />
+
+      <TrustedPartnersSection currentLang={currentLang} />
+
       <PaymentSettlementSection
         currentLang={currentLang}
         onOpenQuote={() => navigateTo("/request-quote")}
       />
-
-      <TrustedPartnersSection currentLang={currentLang} />
 
       <ComplianceKYCSection
         currentLang={currentLang}
@@ -682,7 +683,7 @@ export default function App() {
         </div>
       </section>
 
-      <section className="py-20 px-4 md:px-8 bg-brand-bg border-t border-soft-border" id="why-us">
+      <section className="py-20 px-4 md:px-8 bg-brand-bg border-t border-soft-border" id="about">
         <div className="max-w-7xl mx-auto space-y-12">
           <div className="text-center space-y-3 max-w-2xl mx-auto">
             <span className="text-gold-base font-mono uppercase text-xs tracking-[0.3em] font-bold flex items-center justify-center gap-2">
@@ -714,7 +715,7 @@ export default function App() {
         </div>
       </section>
 
-      <OfficeSection currentLang={currentLang} />
+      <OfficeSection currentLang={currentLang} sectionId="contact" />
 
       <BlogSection currentLang={currentLang} />
 
