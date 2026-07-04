@@ -13,7 +13,11 @@
       "destination": "/assets/:path*"
     },
     {
-      "source": "/((?!api/|images/|assets/|static-seo/|robots\\.txt|sitemap\\.xml|manifest\\.json|favicon\\.ico).*)",
+      "source": "/videos/:path*",
+      "destination": "/videos/:path*"
+    },
+    {
+      "source": "/((?!api/|images/|assets/|videos/|static-seo/|robots\\.txt|sitemap\\.xml|manifest\\.json|favicon\\.ico).*)",
       "destination": "/index.html"
     }
   ],
@@ -22,6 +26,12 @@
       "source": "/images/(.*)\\.webp",
       "headers": [
         { "key": "Content-Type", "value": "image/webp" },
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/videos/(.*)\\.(mp4|webm)",
+      "headers": [
         { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
     }

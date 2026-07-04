@@ -616,6 +616,12 @@ export default function App() {
         onOpenQuote={() => navigateTo("/request-quote")}
       />
 
+      <BullionCollectionSection
+        currentLang={currentLang}
+        onOpenQuote={() => navigateTo("/request-quote")}
+        onScrollToCatalog={() => handleScrollToSection("catalog")}
+      />
+
       <MarketReferenceStrip
         currentLang={currentLang}
         rates={rates}
@@ -627,12 +633,6 @@ export default function App() {
       />
 
       <HowFirmQuotesWork currentLang={currentLang} />
-
-      <BullionCollectionSection
-        currentLang={currentLang}
-        onOpenQuote={() => navigateTo("/request-quote")}
-        onScrollToCatalog={() => handleScrollToSection("catalog")}
-      />
 
       <Catalog
         currentLang={currentLang}

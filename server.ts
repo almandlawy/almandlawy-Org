@@ -1399,6 +1399,22 @@ async function bootServer() {
       })
     );
 
+    app.use(
+      "/videos",
+      express.static(path.join(distPath, "videos"), {
+        setHeaders: (res, filePath) => {
+          if (filePath.endsWith(".webm")) {
+            res.setHeader("Content-Type", "video/webm");
+          } else if (filePath.endsWith(".mp4")) {
+            res.setHeader("Content-Type", "video/mp4");
+          } else if (filePath.endsWith(".webp")) {
+            res.setHeader("Content-Type", "image/webp");
+          }
+          res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+        },
+      })
+    );
+
     app.use(express.static(distPath));
 
     app.get("*", (req, res) => {
