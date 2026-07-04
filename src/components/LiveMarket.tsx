@@ -143,8 +143,22 @@ export default function LiveMarket({
 
   const getPriceData = (metal: "gold" | "silver" | "platinum" | "palladium") => {
     if (!rates) return { ounce: 0, gram: 0 };
+    const metalData = rates[metal];
+    // Fallback pricing can leave platinum/palladium as null; guard before dereferencing.
+    if (!metalData || !metalData.currencies) return { ounce: 0, gram: 0 };
     const cur = selectedCurrency as any;
-    return rates[metal].currencies[cur] || { ounce: 0, gram: 0 };
+    return metalData.currencies[cur] || { ounce: 0, gram: 0 };
+  };
+
+  // Safe number formatter: null/undefined/NaN renders as "Unavailable" instead of a broken value.
+  const formatRateValue = (value: number | null | undefined, maximumFractionDigits: number) => {
+    if (value === null || value === undefined || Number.isNaN(value)) {
+      return currentLang === "ar" ? "غير متاح" : "Unavailable";
+    }
+    return value.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits
+    });
   };
 
   const currencies = ["AED", "USD", "EUR", "GBP", "SAR"];
@@ -229,11 +243,19 @@ export default function LiveMarket({
             const isPositive = !changePct.startsWith("-");
             const flash = flashStates[metal];
 
+            // A metal only has usable pricing data when its rate object exists with a valid spot price.
+            // In fallback mode platinum/palladium are null, so this is false for them.
+            const metalData = rates ? rates[metal] : null;
+            const isMetalAvailable = !!(
+              metalData &&
+              typeof metalData.spot_usd_oz === "number" &&
+              metalData.spot_usd_oz > 0
+            );
+
             // Verify if this specific metal has a live spot price available
-            const isMetalLive = !!(rates && 
-              rates[metal] && 
-              rates[metal].spot_usd_oz !== null && 
-              rates[metal].spot_usd_oz > 0 && 
+            const isMetalLive = !!(
+              isMetalAvailable &&
+              rates &&
               rates.source_status === "live"
             );
 
@@ -286,7 +308,7 @@ export default function LiveMarket({
                         <span className={`text-3xl font-serif tracking-tight font-bold transition-colors ${
                           isGold ? "text-[#C6A15B]" : "text-text-charcoal"
                         }`}>
-                          {metalPrice.ounce ? metalPrice.ounce.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "..."}
+                          {formatRateValue(metalPrice.ounce, 2)}
                         </span>
                         <span className="text-xs text-text-secondary font-mono font-bold">{selectedCurrency}</span>
                       </div>
@@ -296,11 +318,11 @@ export default function LiveMarket({
                           {currentLang === "ar" ? "سعر الجرام" : "Rate per Gram (g)"}
                         </span>
                         <span className="text-text-charcoal font-extrabold">
-                          {metalPrice.gram ? metalPrice.gram.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 }) : "..."} {selectedCurrency}
+                          {formatRateValue(metalPrice.gram, 4)} {selectedCurrency}
                         </span>
                       </div>
                     </>
-                  ) : (
+                  ) : isMetalAvailable ? (
                     <div className="space-y-3 pt-1">
                       {(isGold || isSilver) && (
                         <div className="text-xs text-text-charcoal font-mono flex items-center gap-1.5 bg-soft-danger border border-gold-base/20 p-2 rounded">
@@ -314,6 +336,27 @@ export default function LiveMarket({
                         <span className="h-1.5 w-1.5 rounded-full bg-gold-base"></span>
                         <span>
                           {currentLang === "ar" ? "إرشادي — تأكيد من المكتب" : "Indicative — confirm with desk"}
+                        </span>
+                      </div>
+                      <button
+                        onClick={onOpenQuote}
+                        className="w-full text-center py-2.5 bg-gold-base text-text-charcoal hover:bg-gold-dark hover:text-white text-xs font-mono font-bold uppercase rounded transition-all cursor-pointer shadow-sm"
+                      >
+                        {currentLang === "ar" ? "طلب عرض سعر" : "Request Quote"}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3 pt-1">
+                      {/* Metal has no pricing data (e.g. platinum/palladium in fallback mode) */}
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-2xl font-serif tracking-tight font-semibold text-text-secondary">
+                          {formatRateValue(null, 2)}
+                        </span>
+                      </div>
+                      <div className="text-sm font-semibold text-text-charcoal font-mono min-h-[36px] flex items-center gap-1.5 bg-brand-bg border border-soft-border p-2 rounded">
+                        <span className="h-1.5 w-1.5 rounded-full bg-text-secondary"></span>
+                        <span>
+                          {currentLang === "ar" ? "غير متاح حالياً — تأكيد من المكتب" : "Unavailable — confirm with desk"}
                         </span>
                       </div>
                       <button
