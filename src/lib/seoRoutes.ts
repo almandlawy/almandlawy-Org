@@ -4,6 +4,7 @@
  */
 
 export const SITE_ORIGIN = "https://www.pgruae.com";
+export const OG_IMAGE = `${SITE_ORIGIN}/images/products/01-bullion-collection.webp`;
 
 export interface RouteSeo {
   titleEn: string;
@@ -13,6 +14,25 @@ export interface RouteSeo {
   h1En: string;
   h1Ar: string;
 }
+
+export const SEO_LANDING_PATHS = [
+  "/buy-gold-bars-dubai",
+  "/buy-silver-bars-dubai",
+  "/gold-rate-dubai-today",
+  "/silver-rate-dubai-today",
+  "/sell-gold-dubai",
+  "/bullion-desk-dubai",
+  "/allocated-storage-dubai",
+  "/24k-gold-bars-uae"
+] as const;
+
+export const NOINDEX_PATHS = new Set([
+  "/admin",
+  "/login",
+  "/register",
+  "/dashboard",
+  "/calculator"
+]);
 
 export const PUBLIC_ROUTES: Record<string, RouteSeo> = {
   "/": {
@@ -65,6 +85,70 @@ export const PUBLIC_ROUTES: Record<string, RouteSeo> = {
     h1En: "Custom Bullion Inquiry",
     h1Ar: "طلب سبائك مخصص"
   },
+  "/buy-gold-bars-dubai": {
+    titleEn: "Buy Gold Bars in Dubai | PGR UAE Bullion Desk",
+    titleAr: "شراء سبائك الذهب في دبي | PGR UAE",
+    descEn: "Request accredited gold bars in Dubai from PGR UAE. Indicative market reference. Firm quote confirmed by desk.",
+    descAr: "اطلب سبائك ذهب معتمدة في دبي من PGR UAE. مرجع سوقي استرشادي. عرض سعر معتمد من الديوان.",
+    h1En: "Buy Gold Bars in Dubai",
+    h1Ar: "شراء سبائك الذهب في دبي"
+  },
+  "/buy-silver-bars-dubai": {
+    titleEn: "Buy Silver Bars in Dubai | PGR UAE",
+    titleAr: "شراء سبائك الفضة في دبي | PGR UAE",
+    descEn: "Request accredited silver bars in Dubai. Indicative pricing. Firm quote confirmed by PGR UAE desk.",
+    descAr: "اطلب سبائك فضة معتمدة في دبي. تسعير استرشادي. عرض سعر معتمد من الديوان.",
+    h1En: "Buy Silver Bars in Dubai",
+    h1Ar: "شراء سبائك الفضة في دبي"
+  },
+  "/gold-rate-dubai-today": {
+    titleEn: "Gold Rate Dubai Today | Indicative Reference | PGR UAE",
+    titleAr: "سعر الذهب في دبي اليوم | مرجع استرشادي | PGR UAE",
+    descEn: "Indicative gold market reference for Dubai. Subject to market movement. Request a firm quote from PGR UAE.",
+    descAr: "مرجع سوقي استرشادي للذهب في دبي. خاضع لحركة السوق. اطلب عرض سعر معتمد من PGR UAE.",
+    h1En: "Gold Rate Dubai Today",
+    h1Ar: "سعر الذهب في دبي اليوم"
+  },
+  "/silver-rate-dubai-today": {
+    titleEn: "Silver Rate Dubai Today | Indicative Reference | PGR UAE",
+    titleAr: "سعر الفضة في دبي اليوم | مرجع استرشادي | PGR UAE",
+    descEn: "Indicative silver market reference for Dubai. Subject to market movement. Request a firm quote from PGR UAE.",
+    descAr: "مرجع سوقي استرشادي للفضة في دبي. خاضع لحركة السوق. اطلب عرض سعر معتمد من PGR UAE.",
+    h1En: "Silver Rate Dubai Today",
+    h1Ar: "سعر الفضة في دبي اليوم"
+  },
+  "/sell-gold-dubai": {
+    titleEn: "Sell Gold in Dubai | PGR UAE Desk",
+    titleAr: "بيع الذهب في دبي | ديوان PGR UAE",
+    descEn: "Sell-back and desk inquiry for physical gold in Dubai. Subject to compliance review and firm quote.",
+    descAr: "استفسار إعادة شراء وبيع الذهب المادي في دبي. خاضع لمراجعة الامتثال وعرض سعر معتمد.",
+    h1En: "Sell Gold in Dubai",
+    h1Ar: "بيع الذهب في دبي"
+  },
+  "/bullion-desk-dubai": {
+    titleEn: "Bullion Desk Dubai | PGR UAE",
+    titleAr: "ديوان السبائك دبي | PGR UAE",
+    descEn: "Dubai firm-quote bullion desk for physical gold and silver. Indicative market reference only.",
+    descAr: "ديوان سبائك في دبي لعروض الأسعار المعتمدة للذهب والفضة. مرجع سوقي استرشادي فقط.",
+    h1En: "Bullion Desk Dubai",
+    h1Ar: "ديوان السبائك دبي"
+  },
+  "/allocated-storage-dubai": {
+    titleEn: "Allocated Storage Dubai | PGR UAE",
+    titleAr: "التخزين المخصص دبي | PGR UAE",
+    descEn: "Allocated bullion storage inquiry in Dubai. Subject to compliance review.",
+    descAr: "استفسار تخزين سبائك مخصص في دبي. خاضع لمراجعة الامتثال.",
+    h1En: "Allocated Storage Dubai",
+    h1Ar: "التخزين المخصص دبي"
+  },
+  "/24k-gold-bars-uae": {
+    titleEn: "24K Gold Bars UAE | PGR UAE",
+    titleAr: "سبائك ذهب 24 قيراط الإمارات | PGR UAE",
+    descEn: "999.9 fine gold bars in the UAE. Indicative market reference. Firm quote confirmed by PGR UAE desk.",
+    descAr: "سبائك ذهب 999.9 في الإمارات. مرجع سوقي استرشادي. عرض سعر معتمد من الديوان.",
+    h1En: "24K Gold Bars UAE",
+    h1Ar: "سبائك ذهب 24 قيراط الإمارات"
+  },
   "/compliance": {
     titleEn: "Compliance & KYC | PGR UAE",
     titleAr: "الامتثال واعرف عميلك | PGR UAE",
@@ -107,20 +191,8 @@ export const PUBLIC_ROUTES: Record<string, RouteSeo> = {
   }
 };
 
-/** Paths included in sitemap.xml */
-export const SITEMAP_PATHS = [
-  "/",
-  "/request-quote",
-  "/gold-bars",
-  "/silver-bars",
-  "/bullion-coins",
-  "/custom-inquiry",
-  "/compliance",
-  "/terms",
-  "/privacy-policy",
-  "/kyc-aml-policy",
-  "/pricing-disclaimer"
-];
+/** Paths included in sitemap.xml — keep in sync with scripts/seo-data.mjs */
+export const SITEMAP_PATHS = Object.keys(PUBLIC_ROUTES);
 
 export function canonicalUrl(path: string): string {
   if (path === "/") return `${SITE_ORIGIN}/`;
@@ -128,5 +200,14 @@ export function canonicalUrl(path: string): string {
 }
 
 export function getRouteSeo(path: string): RouteSeo {
-  return PUBLIC_ROUTES[path] || PUBLIC_ROUTES["/"];
+  const normalized = path.replace(/\/$/, "") || "/";
+  if (PUBLIC_ROUTES[normalized]) return PUBLIC_ROUTES[normalized];
+  if (normalized.startsWith("/admin")) return PUBLIC_ROUTES["/"];
+  return PUBLIC_ROUTES["/"];
+}
+
+export function shouldNoindex(path: string): boolean {
+  const normalized = path.replace(/\/$/, "") || "/";
+  if (NOINDEX_PATHS.has(normalized)) return true;
+  return normalized.startsWith("/admin");
 }

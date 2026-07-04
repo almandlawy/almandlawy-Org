@@ -10,7 +10,7 @@ interface HomepageFAQProps {
   currentLang: "en" | "ar";
 }
 
-const FAQ_ITEMS = [
+export const FAQ_ITEMS = [
   {
     qEn: "Can I pay before receiving a firm quote?",
     qAr: "هل يمكنني الدفع قبل عرض السعر المعتمد؟",

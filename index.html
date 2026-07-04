@@ -8,7 +8,6 @@
     <!-- Premium SEO Metadata -->
     <title>PGR UAE | Firm Quote Bullion Desk Dubai</title>
     <meta name="description" content="PGR UAE is a Dubai firm-quote bullion desk for accredited gold and silver. Indicative market reference. Final quote confirmed by PGR UAE desk before settlement." />
-    <meta name="keywords" content="PGR UAE, Gold Dubai, Silver Bullion Dubai, Firm Quote, Bullion Desk Dubai, Request Quote" />
     <link rel="canonical" href="https://www.pgruae.com/" />
 
     <!-- Open Graph / Meta Protocol -->
@@ -16,14 +15,14 @@
     <meta property="og:title" content="PGR UAE | Firm Quote Bullion Desk Dubai" />
     <meta property="og:description" content="Indicative market reference. Firm quote confirmed by PGR UAE desk before settlement." />
     <meta property="og:url" content="https://www.pgruae.com/" />
-    <meta property="og:image" content="https://pgruae.com/assets/og-luxury-bullion.jpg" />
+    <meta property="og:image" content="https://www.pgruae.com/images/products/01-bullion-collection.webp" />
     <meta property="og:site_name" content="PGR UAE" />
 
     <!-- Twitter Cards -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="PGR UAE | Firm Quote Bullion Desk" />
     <meta name="twitter:description" content="Indicative market reference. Firm quote confirmed by PGR UAE desk before settlement." />
-    <meta name="twitter:image" content="https://pgruae.com/assets/og-luxury-bullion.jpg" />
+    <meta name="twitter:image" content="https://www.pgruae.com/images/products/01-bullion-collection.webp" />
 
     <!-- Google Optimization & Preconnect Nodes -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -34,22 +33,22 @@
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c5a85c' stroke-width='2'%3E%3Cpath d='M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5'/%3E%3C/svg%3E" />
     <link rel="manifest" href="/manifest.json" />
 
-    <!-- JSON-LD Structured Schema (Local Business, Product & FAQ) -->
+    <!-- JSON-LD baseline (enriched client-side per route) -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@type": "PreciousMetalsDealer",
+        "@type": ["LocalBusiness", "JewelryStore"],
+        "@id": "https://www.pgruae.com/#organization",
         "name": "PGR UAE Precious Metals Trading",
         "alternateName": "PGR UAE",
-        "url": "https://pgruae.com",
-        "logo": "https://pgruae.com/assets/pgr-logo.png",
+        "url": "https://www.pgruae.com",
+        "image": "https://www.pgruae.com/images/products/01-bullion-collection.webp",
         "description": "Dubai firm-quote bullion desk. Indicative market reference. Final quote confirmed by PGR UAE desk.",
         "address": {
           "@type": "PostalAddress",
-          "streetAddress": "Almas Tower, Almas West Precinct, Dubai Marina",
+          "streetAddress": "Almas Tower, Dubai Marina",
           "addressLocality": "Dubai",
-          "addressRegion": "Dubai Marina",
-          "postalCode": "00000",
+          "addressRegion": "Dubai",
           "addressCountry": "AE"
         },
         "geo": {
@@ -62,45 +61,22 @@
         "openingHoursSpecification": [
           {
             "@type": "OpeningHoursSpecification",
-            "dayOfWeek": [
-              "Monday",
-              "Tuesday",
-              "Wednesday",
-              "Thursday",
-              "Friday"
-            ],
+            "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
             "opens": "09:00",
             "closes": "18:00"
           }
-        ],
-        "sameAs": [
-          "https://www.linkedin.com/company/pgr-uae",
-          "https://twitter.com/pgruae"
         ]
       }
     </script>
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@type": "FAQPage",
-        "mainEntity": [
-          {
-            "@type": "Question",
-            "name": "Is there VAT on gold bullion in Dubai, UAE?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "Under UAE Federal Tax Authority rules, high-purity physical gold with a fineness of 99.5% or higher is subject to 0% Value Added Tax (VAT), making Dubai a premier global tax-exempt physical metal hub."
-            }
-          },
-          {
-            "@type": "Question",
-            "name": "Are bullion products available at PGR UAE certified?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "Yes, all gold and silver bullion bars supplied by PGR UAE are sourced directly from premier global refineries like PAMP Suisse and Valcambi, complete with official tamper-evident assay cards and certificates."
-            }
-          }
-        ]
+        "@type": "WebSite",
+        "@id": "https://www.pgruae.com/#website",
+        "url": "https://www.pgruae.com",
+        "name": "PGR UAE",
+        "publisher": { "@id": "https://www.pgruae.com/#organization" },
+        "inLanguage": ["en", "ar"]
       }
     </script>
   </head>

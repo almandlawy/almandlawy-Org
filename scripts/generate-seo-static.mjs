@@ -1,64 +1,50 @@
 #!/usr/bin/env node
-/**
- * Generates static SEO HTML snapshots for public routes (crawler-friendly fallback).
- * Written to public/static-seo/ — served as static files, not SPA routes.
- */
 import fs from "fs";
 import path from "path";
+import { PUBLIC_PAGES, PRODUCTS, SITE_ORIGIN, OG_IMAGE } from "./seo-data.mjs";
 
 const OUT_DIR = path.join(process.cwd(), "public", "static-seo");
-const ORIGIN = "https://www.pgruae.com";
 
-const PRODUCTS = [
-  "PGR UAE Bullion Collection",
-  "Gold Bars 1g – 10g",
-  "Gold Bars 20g – 50g",
-  "Gold Bar 100g",
-  "Gold Bar 1kg",
-  "Silver Bars 1oz – 100g",
-  "Silver Bar 500g",
-  "Silver Bar 1kg",
-  "Mint Bars & Bullion Coins",
-  "Custom Bullion Sizing & Bulk Sourcing"
-];
-
-const PAGES = [
-  { path: "/", title: "PGR UAE | Firm Quote Bullion Desk Dubai", h1: "PGR UAE Firm Quote Bullion Desk" },
-  { path: "/request-quote", title: "Request Firm Quote | PGR UAE", h1: "Request Firm Quote" },
-  { path: "/gold-bars", title: "Gold Bars | PGR UAE", h1: "Gold Bars Catalog" },
-  { path: "/silver-bars", title: "Silver Bars | PGR UAE", h1: "Silver Bars Catalog" },
-  { path: "/bullion-coins", title: "Mint Bars & Bullion Coins | PGR UAE", h1: "Mint Bars & Bullion Coins" },
-  { path: "/custom-inquiry", title: "Custom Bullion Inquiry | PGR UAE", h1: "Custom Bullion Inquiry" }
-];
-
-const DESC =
-  "Indicative market reference only. Firm quote confirmed by PGR UAE desk. Subject to market movement and compliance review.";
-
-function pageHtml({ path: p, title, h1 }) {
-  const url = p === "/" ? ORIGIN + "/" : ORIGIN + p;
+function pageHtml(page) {
+  const url = page.path === "/" ? `${SITE_ORIGIN}/` : `${SITE_ORIGIN}${page.path}`;
   const productList =
-    p === "/"
-      ? `<ul>${PRODUCTS.map((n) => `<li>${n}</li>`).join("")}</ul>`
+    page.path === "/"
+      ? `<h2>Product Catalog</h2><ul>${PRODUCTS.map((n) => `<li>${n}</li>`).join("")}</ul>`
       : "";
+  const links = PUBLIC_PAGES.filter((p) => p.path !== page.path)
+    .slice(0, 8)
+    .map((p) => {
+      const href = p.path === "/" ? `${SITE_ORIGIN}/` : `${SITE_ORIGIN}${p.path}`;
+      return `<li><a href="${href}">${p.h1}</a></li>`;
+    })
+    .join("");
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${title}</title>
-  <meta name="description" content="${DESC}" />
+  <title>${page.title}</title>
+  <meta name="description" content="${page.desc}" />
   <link rel="canonical" href="${url}" />
-  <meta property="og:title" content="${title}" />
-  <meta property="og:description" content="${DESC}" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="${page.title}" />
+  <meta property="og:description" content="${page.desc}" />
   <meta property="og:url" content="${url}" />
+  <meta property="og:image" content="${OG_IMAGE}" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="${page.title}" />
+  <meta name="twitter:description" content="${page.desc}" />
+  <meta name="twitter:image" content="${OG_IMAGE}" />
   <meta name="robots" content="index, follow" />
 </head>
 <body>
   <main>
-    <h1>${h1}</h1>
-    <p>${DESC}</p>
+    <h1>${page.h1}</h1>
+    <p>${page.desc}</p>
     ${productList}
-    <p><a href="${ORIGIN}/">Open PGR UAE application</a></p>
+    <p><a href="${SITE_ORIGIN}/">Open PGR UAE application</a> · <a href="${SITE_ORIGIN}/request-quote">Request firm quote</a></p>
+    <nav aria-label="Related pages"><ul>${links}</ul></nav>
   </main>
 </body>
 </html>`;
@@ -66,11 +52,11 @@ function pageHtml({ path: p, title, h1 }) {
 
 fs.mkdirSync(OUT_DIR, { recursive: true });
 
-for (const page of PAGES) {
-  const fileName = page.path === "/" ? "index.html" : page.path.slice(1) + ".html";
+for (const page of PUBLIC_PAGES) {
+  const fileName = page.path === "/" ? "index.html" : `${page.path.slice(1)}.html`;
   const outPath = path.join(OUT_DIR, fileName);
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
   fs.writeFileSync(outPath, pageHtml(page), "utf-8");
 }
 
-console.log(`Generated ${PAGES.length} static SEO pages in public/static-seo/`);
+console.log(`Generated ${PUBLIC_PAGES.length} static SEO pages in public/static-seo/`);

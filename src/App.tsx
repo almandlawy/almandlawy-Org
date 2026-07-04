@@ -11,10 +11,17 @@ import HowFirmQuotesWork from "./components/HowFirmQuotesWork";
 import ProductShowroom from "./components/ProductShowroom";
 import TrustedPartnersSection from "./components/TrustedPartnersSection";
 import PaymentSettlementSection from "./components/PaymentSettlementSection";
-import HomepageFAQ from "./components/HomepageFAQ";
+import HomepageFAQ, { FAQ_ITEMS } from "./components/HomepageFAQ";
 import CrawlableSeoBlock from "./components/CrawlableSeoBlock";
 import ComplianceKYCSection from "./components/ComplianceKYCSection";
-import { getRouteSeo, canonicalUrl } from "./lib/seoRoutes";
+import { getRouteSeo, SEO_LANDING_PATHS } from "./lib/seoRoutes";
+import {
+  applyPageSeo,
+  injectJsonLd,
+  buildOrganizationSchema,
+  buildWebSiteSchema,
+  buildFaqSchema
+} from "./lib/seoMeta";
 import ProductDetailModal from "./components/ProductDetailModal";
 import QuoteForm from "./components/QuoteForm";
 import AIConcierge from "./components/AIConcierge";
@@ -25,6 +32,7 @@ import AdminPortalModal from "./components/AdminPortalModal";
 import AdminPanel from "./components/AdminPanel";
 import LegalOverlayModal from "./components/LegalOverlayModal";
 import Footer from "./components/Footer";
+import SeoSiteLinks from "./components/SeoSiteLinks";
 import { LiveMarketRates, Product } from "./types";
 import { WHY_US_ITEMS } from "./data";
 import { Shield, Building, Truck, Award, Sparkles } from "lucide-react";
@@ -167,31 +175,17 @@ export default function App() {
     const seo = getRouteSeo(currentPath);
     const title = currentLang === "ar" ? seo.titleAr : seo.titleEn;
     const desc = currentLang === "ar" ? seo.descAr : seo.descEn;
-    const url = canonicalUrl(currentPath);
 
-    document.title = title;
-    document.documentElement.lang = currentLang === "ar" ? "ar" : "en";
+    applyPageSeo({ path: currentPath, title, description: desc, lang: currentLang });
 
-    const setMeta = (selector: string, attr: string, value: string) => {
-      const el = document.querySelector(selector);
-      if (el) el.setAttribute(attr, value);
-    };
+    injectJsonLd("pgr-org-schema", buildOrganizationSchema());
+    injectJsonLd("pgr-website-schema", buildWebSiteSchema());
 
-    setMeta('meta[name="description"]', "content", desc);
-    setMeta('meta[property="og:title"]', "content", title);
-    setMeta('meta[property="og:description"]', "content", desc);
-    setMeta('meta[property="og:url"]', "content", url);
-    setMeta('meta[name="twitter:title"]', "content", title);
-    setMeta('meta[name="twitter:description"]', "content", desc);
-
-    let canonical = document.querySelector('link[rel="canonical"]');
-    if (canonical) {
-      canonical.setAttribute("href", url);
+    if (currentPath === "/" || currentPath === "") {
+      injectJsonLd("pgr-faq-schema", buildFaqSchema(FAQ_ITEMS, currentLang));
     } else {
-      canonical = document.createElement("link");
-      canonical.setAttribute("rel", "canonical");
-      canonical.setAttribute("href", url);
-      document.head.appendChild(canonical);
+      const faqEl = document.getElementById("pgr-faq-schema");
+      if (faqEl) faqEl.remove();
     }
   }, [currentPath, currentLang]);
 
@@ -419,18 +413,7 @@ export default function App() {
     );
   }
 
-  const seoPaths = [
-    "/buy-gold-bars-dubai",
-    "/buy-silver-bars-dubai",
-    "/gold-rate-dubai-today",
-    "/silver-rate-dubai-today",
-    "/sell-gold-dubai",
-    "/bullion-desk-dubai",
-    "/allocated-storage-dubai",
-    "/24k-gold-bars-uae"
-  ];
-
-  if (seoPaths.includes(currentPath)) {
+  if ((SEO_LANDING_PATHS as readonly string[]).includes(currentPath)) {
     return (
       <div className={`min-h-screen text-stone-900 bg-[#FAF9F5] selection:bg-gold-base selection:text-black overflow-hidden relative ${
         currentLang === "ar" ? "font-arabic" : "font-sans"
@@ -703,6 +686,8 @@ export default function App() {
       <OfficeSection currentLang={currentLang} sectionId="contact" />
 
       <BlogSection currentLang={currentLang} />
+
+      <SeoSiteLinks currentLang={currentLang} />
 
       <Footer
         currentLang={currentLang}
