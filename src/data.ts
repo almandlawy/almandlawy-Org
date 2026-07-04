@@ -22,8 +22,8 @@ export const BRANDS = [
 export const PRODUCTS: Product[] = [
   {
     id: "pgr-bullion-collection",
-    name_en: "PGR UAE Accredited Bullion Collection",
-    name_ar: "مجموعة سبائك PGR UAE المعتمدة",
+    name_en: "PGR UAE Bullion Collection",
+    name_ar: "مجموعة سبائك PGR UAE",
     category: "gold_bars",
     weight_label: "Full Portfolio Range",
     purity: "999.9 Fine Gold / 999.0 Fine Silver",
@@ -182,8 +182,8 @@ export const PRODUCTS: Product[] = [
   },
   {
     id: "pgr-mint-bars-coins",
-    name_en: "Mint Bars & Investment Coins",
-    name_ar: "السبائك المصكوكة والعملات الاستثمارية",
+    name_en: "Mint Bars & Bullion Coins",
+    name_ar: "السبائك المصكوكة وعملات السبائك",
     category: "gold_coins",
     weight_label: "1oz Standard / Fractional",
     purity: "999.9 Fine Gold / 999.0 Fine Silver",
@@ -238,8 +238,8 @@ export const WHY_US_ITEMS = [
   {
     title_en: "Secure Global Vaulting",
     title_ar: "تخزين وشحن عالمي آمن",
-    desc_en: "Fully covered door-to-door transit via high-security logistics (Brink's / Transguard) with direct storage options in UAE premium, certified vaults.",
-    desc_ar: "شحن مغطى بالكامل من الباب إلى الباب عبر كبرى شركات الأمن (برينكس / ترانسجارد) مع خيارات تخزين مباشر في أرقى الخزائن المؤمنة والمعتمدة في دبي."
+    desc_en: "Fully covered door-to-door transit via desk-confirmed secure delivery with direct storage options in UAE premium, certified vaults.",
+    desc_ar: "شحن مغطى بالكامل من الباب إلى الباب عبر تسليم آمن يؤكده الديوان مع خيارات تخزين مباشر في أرقى الخزائن المؤمنة والمعتمدة في دبي."
   },
   {
     title_en: "Absolute Pricing Transparency",
@@ -265,13 +265,13 @@ export const DEFAULT_DAILY_PRICING = {
 /** Default shipping settings for admin panel */
 export const DEFAULT_SHIPPING_SETTINGS = {
   shipping_enabled: true,
-  shipping_company_name: "Transguard / Brink's UAE",
-  shipping_method: "Insured Armored Courier",
+  shipping_company_name: "PGR Arranged Delivery",
+  shipping_method: "Desk-confirmed secure delivery",
   shipping_price: 150,
   currency: "AED" as const,
   destination_country: "United Arab Emirates",
   destination_city_region: "Dubai Marina / UAE Wide",
   estimated_delivery_time: "1–3 business days (UAE)",
-  public_shipping_note: "Fully insured door-to-door delivery. Subject to KYC verification and compliance review before dispatch.",
+  public_shipping_note: "Desk-confirmed secure delivery. Subject to KYC verification and compliance review before dispatch.",
   internal_shipping_notes: "Default UAE domestic route. Iraq/Baghdad routes require separate customs clearance dossier."
 };

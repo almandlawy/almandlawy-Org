@@ -4,7 +4,7 @@
  */
 
 import { createClient } from "@supabase/supabase-js";
-import { Product } from "../types";
+import { Product, QuoteSignaturePayload } from "../types";
 import { PRODUCTS, BRANDS, DEFAULT_DAILY_PRICING, DEFAULT_SHIPPING_SETTINGS } from "../data";
 
 // 1. Fetch environment variables safely (client-side only using import.meta.env)
@@ -822,25 +822,46 @@ export const mapFrontendProductToDb = (product: any): any => {
 // =========================================================================
 // CRYPTOGRAPHIC SECURITY SIGNATURE GENERATOR (Tamper Detection & Anti-Replay)
 // =========================================================================
-export const generateQuoteSignature = async (
-  id: string, 
-  price: number, 
-  expiresAt: string,
-  customerId?: string,
-  status?: string,
-  createdAt?: string
-): Promise<string> => {
+function buildLocalFallbackSignature(payload: QuoteSignaturePayload): string {
+  const secret = "PGR_SECURE_OVERRIDE_SALT_2026";
+  const rawMessage = [
+    payload.quoteId,
+    payload.customerId,
+    Number(payload.productFirmPrice).toFixed(2),
+    Number(payload.shippingFee).toFixed(2),
+    Number(payload.totalFirmQuote).toFixed(2),
+    payload.currency,
+    payload.expiresAt,
+    secret
+  ].join("|");
+
+  let hash = 0;
+  for (let i = 0; i < rawMessage.length; i++) {
+    const char = rawMessage.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+
+  const hex = Math.abs(hash).toString(16).padStart(8, "0");
+  return `pgr_secure_sig_${hex}_${payload.expiresAt.substring(11, 19).replace(/:/g, "")}`;
+}
+
+export const generateQuoteSignature = async (payload: QuoteSignaturePayload): Promise<string> => {
   try {
     const res = await fetch("/api/quote/sign", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        quoteId: id,
-        customerId: customerId || "anonymous",
-        quotedPrice: price,
-        expiresAt,
-        status: status || "Quote Sent",
-        createdAt: createdAt || new Date().toISOString()
+        quoteId: payload.quoteId,
+        customerId: payload.customerId || "anonymous",
+        productFirmPrice: payload.productFirmPrice,
+        shippingFee: payload.shippingFee,
+        totalFirmQuote: payload.totalFirmQuote,
+        quotedPrice: payload.totalFirmQuote,
+        currency: payload.currency === "USD" ? "USD" : "AED",
+        expiresAt: payload.expiresAt,
+        status: payload.status || "Quote Sent",
+        createdAt: payload.createdAt || new Date().toISOString()
       })
     });
     const data = await res.json();
@@ -850,21 +871,18 @@ export const generateQuoteSignature = async (
     throw new Error(data.error || "Failed to generate server signature");
   } catch (err) {
     console.warn("Server signature generation failed, using cryptographic fallback simulation:", err);
-    const secret = "PGR_SECURE_OVERRIDE_SALT_2026";
-    const rawMessage = `${id}|${Number(price).toFixed(2)}|${expiresAt}|${secret}`;
-    
-    // High-performance stable synchronous hash to prevent async racing
-    let hash = 0;
-    for (let i = 0; i < rawMessage.length; i++) {
-      const char = rawMessage.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convert to 32bit integer
-    }
-    
-    const hex = Math.abs(hash).toString(16).padStart(8, '0');
-    return `pgr_secure_sig_${hex}_${expiresAt.substring(11, 19).replace(/:/g, '')}`;
+    return buildLocalFallbackSignature(payload);
   }
 };
+
+function getAdminRequestHeaders(): Record<string, string> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  const user = mockDb.auth.getUser();
+  if (user?.email) {
+    headers["X-PGR-Admin-Email"] = user.email;
+  }
+  return headers;
+}
 
 // =========================================================================
 // UNIVERSAL DATA ACCESS LAYER (dbService)
@@ -1044,7 +1062,13 @@ export const dbService = {
       const index = quotes.findIndex((q: any) => q.id === id);
       if (index > -1) {
         // Enforce lock: if a quote is accepted, prevent silent modifications of prices/expiry times
-        if (quotes[index].status === "Customer Accepted" && (updates.quoted_price !== undefined || updates.expires_at !== undefined)) {
+        if (quotes[index].status === "Customer Accepted" && (
+          updates.quoted_price !== undefined ||
+          updates.product_firm_price !== undefined ||
+          updates.shipping_fee !== undefined ||
+          updates.currency !== undefined ||
+          updates.expires_at !== undefined
+        )) {
           throw new Error("Security Violation: Silently modifying a locked/accepted quote is strictly forbidden.");
         }
         quotes[index] = { ...quotes[index], ...updates };
@@ -1053,26 +1077,39 @@ export const dbService = {
       }
       return null;
     },
-    acceptSecure: async (id: string, clientPrice: number, clientExpiresAt: string, clientSignature: string): Promise<any> => {
-      // 1. Fetch the quote
+    acceptSecure: async (quoteId: string, clientSignature: string): Promise<any> => {
       const quotes = mockDb.get("pgr_quote_requests");
-      const quote = quotes.find((q: any) => q.id === id);
-      if (!quote) {
+      const stored = quotes.find((q: any) => q.id === quoteId);
+      if (!stored) {
         throw new Error("Quote Request ticket not found in database.");
       }
 
-      // Try server-side validation first
+      const productFirmPrice = Number(stored.product_firm_price ?? stored.quoted_price ?? 0);
+      const shippingFee = Number(stored.shipping_fee ?? 0);
+      const totalFirmQuote = Number(stored.quoted_price ?? (productFirmPrice + shippingFee));
+      const currency = stored.currency === "USD" ? "USD" : "AED";
+      const expiresAt = stored.expires_at || "";
+      const customerId = stored.email || "anonymous";
+
+      const payload: QuoteSignaturePayload = {
+        quoteId: stored.id,
+        customerId,
+        productFirmPrice,
+        shippingFee,
+        totalFirmQuote,
+        currency,
+        expiresAt,
+        status: "Quote Sent",
+        createdAt: stored.quoted_at || stored.created_at || new Date().toISOString()
+      };
+
       try {
         const res = await fetch("/api/quote/accept", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            quoteId: quote.id,
-            customerId: quote.email || "anonymous",
-            quotedPrice: clientPrice,
-            expiresAt: clientExpiresAt,
-            status: "Quote Sent", // Status at the time of sending signature
-            createdAt: quote.quoted_at || quote.created_at, // Timestamp of quote issue
+            ...payload,
+            quotedPrice: totalFirmQuote,
             signature: clientSignature,
             targetStatus: "Customer Accepted"
           })
@@ -1083,64 +1120,63 @@ export const dbService = {
           throw new Error(serverData.error || "Server validation failed");
         }
 
-        // Server accepted! Synchronize state
-        quote.status = "Customer Accepted";
-        quote.accepted_at = serverData.acceptedAt || new Date().toISOString();
+        stored.status = "Customer Accepted";
+        stored.accepted_at = serverData.acceptedAt || new Date().toISOString();
       } catch (err: any) {
-        // If it's a security/validation error from the server (status 400), propagate it directly!
         if (err.message && (
           err.message.includes("Security Violation") || 
           err.message.includes("expired") || 
-          err.message.includes("Replay Attack")
+          err.message.includes("Replay Attack") ||
+          err.message.includes("tampering")
         )) {
           throw err;
         }
 
         console.warn("Server validation offline, falling back to local cryptographic engine:", err);
         
-        // 2. Prevent replay attacks - cannot accept twice
-        if (quote.status === "Customer Accepted") {
+        if (stored.status === "Customer Accepted") {
           throw new Error("Replay Attack Blocked: This quote has already been accepted and price is locked.");
         }
 
-        // 3. Confirm countdown / check expiry
-        const expiresTime = new Date(quote.expires_at || clientExpiresAt).getTime();
-        const now = Date.now();
-        if (now > expiresTime || quote.status === "Expired Quote") {
-          // Automatically mark as expired in DB
-          quote.status = "Expired Quote";
+        const expiresTime = new Date(stored.expires_at || expiresAt).getTime();
+        if (Date.now() > expiresTime || stored.status === "Expired Quote") {
+          stored.status = "Expired Quote";
           mockDb.set("pgr_quote_requests", quotes);
           throw new Error("This quote has expired due to market volatility countdown and can no longer be accepted.");
         }
 
-        // 4. Verify signature to detect browser/devtool price tampering or expiry manipulation
-        const expectedSignature = await generateQuoteSignature(quote.id, clientPrice, clientExpiresAt);
-        if (expectedSignature !== clientSignature || quote.security_signature !== clientSignature) {
-          throw new Error("Security Violation: Cryptographic signature mismatch. Quote price, ID, or expiry has been tampered with!");
+        const expectedSignature = await generateQuoteSignature(payload);
+        if (expectedSignature !== clientSignature || stored.security_signature !== clientSignature) {
+          throw new Error("Security Violation: Cryptographic signature mismatch. Product price, shipping fee, total, currency, or expiry has been tampered with!");
         }
 
-        // 5. Success: status transition
-        quote.status = "Customer Accepted";
-        quote.accepted_at = new Date().toISOString();
+        if (
+          Math.abs(Number(stored.product_firm_price ?? 0) - productFirmPrice) > 0.01 ||
+          Math.abs(Number(stored.shipping_fee ?? 0) - shippingFee) > 0.01 ||
+          Math.abs(Number(stored.quoted_price ?? 0) - totalFirmQuote) > 0.01
+        ) {
+          throw new Error("Security Violation: Quote amount tampering detected.");
+        }
+
+        stored.status = "Customer Accepted";
+        stored.accepted_at = new Date().toISOString();
       }
       
-      // Save changes
-      const index = quotes.findIndex((q: any) => q.id === id);
+      const index = quotes.findIndex((q: any) => q.id === quoteId);
       if (index > -1) {
-        quotes[index] = quote;
+        quotes[index] = stored;
         mockDb.set("pgr_quote_requests", quotes);
       }
 
-      // Update associated order status
       const ordersList = mockDb.get("pgr_orders");
-      const matchIndex = ordersList.findIndex((o: any) => o.quote_id === id || o.id === `PGR-ORD-${id}`);
+      const matchIndex = ordersList.findIndex((o: any) => o.quote_id === quoteId || o.id === `PGR-ORD-${quoteId}`);
       if (matchIndex > -1) {
         ordersList[matchIndex].status = "Customer Accepted";
         ordersList[matchIndex].payment_status = "Pending";
         mockDb.set("pgr_orders", ordersList);
       }
 
-      return quote;
+      return stored;
     }
   },
 
@@ -1204,7 +1240,9 @@ export const dbService = {
   settings: {
     get: async () => {
       try {
-        const res = await fetch("/api/admin/settings");
+        const res = await fetch("/api/admin/settings", {
+          headers: getAdminRequestHeaders()
+        });
         if (res.ok) {
           const serverData = await res.json();
           const current = mockDb.get("pgr_settings") || {};
@@ -1225,13 +1263,54 @@ export const dbService = {
       try {
         await fetch("/api/admin/settings", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: getAdminRequestHeaders(),
           body: JSON.stringify(updated)
         });
       } catch (err) {
         console.warn("Failed to sync updated settings with server", err);
       }
       return updated;
+    },
+    updateDailyPricing: async (dailyPricing: any, adminEmail: string) => {
+      try {
+        const res = await fetch("/api/admin/daily-pricing", {
+          method: "PATCH",
+          headers: { ...getAdminRequestHeaders(), "X-PGR-Admin-Email": adminEmail },
+          body: JSON.stringify(dailyPricing)
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const current = mockDb.get("pgr_settings") || {};
+          const updated = { ...current, daily_pricing: data.daily_pricing };
+          mockDb.set("pgr_settings", updated);
+          return updated;
+        }
+      } catch (err) {
+        console.warn("Failed to PATCH daily pricing on server", err);
+      }
+      return dbService.settings.update({ daily_pricing: dailyPricing });
+    },
+    updateShippingSettings: async (shippingSettings: any, adminEmail: string) => {
+      try {
+        const res = await fetch("/api/admin/shipping-settings", {
+          method: "PATCH",
+          headers: { ...getAdminRequestHeaders(), "X-PGR-Admin-Email": adminEmail },
+          body: JSON.stringify(shippingSettings)
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const current = mockDb.get("pgr_settings") || {};
+          const updated = {
+            ...current,
+            shipping_settings: { ...shippingSettings, internal_shipping_notes: shippingSettings.internal_shipping_notes }
+          };
+          mockDb.set("pgr_settings", updated);
+          return updated;
+        }
+      } catch (err) {
+        console.warn("Failed to PATCH shipping settings on server", err);
+      }
+      return dbService.settings.update({ shipping_settings: shippingSettings });
     },
     getPublicShipping: async () => {
       try {

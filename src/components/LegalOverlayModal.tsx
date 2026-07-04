@@ -147,7 +147,7 @@ Any cancellation requested by a customer prior to complete settlement, if approv
 Physical delivery or collection of allocated bullion is strictly subject to pre-scheduled appointments at our Almas Tower headquarters in Dubai, UAE. Biometric validation, original Emirates ID or Passport, and verified corporate authorization letters are mandatory for handovers.
 
 2. Armored Security Logistics
-PGR UAE partners with licensed global armored transport underwriters (including Brink's Global Services) to coordinate fully insured physical logistics for authorized institutional consignments. Delivery is subject to local and international customs approvals.`,
+PGR UAE coordinates desk-confirmed secure delivery for authorized institutional consignments. Delivery is subject to local and international customs approvals and compliance review.`,
       content_ar: `سياسة شحن وتسليم واستلام السبائك الفعلية - PGR UAE
 
 ١. بروتوكولات التسليم والاستلام الآمن

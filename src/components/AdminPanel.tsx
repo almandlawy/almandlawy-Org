@@ -685,14 +685,27 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
         originalPrice = Math.round(productPriceNum * 1.035);
       }
 
+      const quoteCurrency = preparingQuote.currency === "USD" ? "USD" : "AED";
+
       // Generate Cryptographic Digital Signature (total firm quote amount)
-      const signatureToken = await generateQuoteSignature(preparingQuote.id, priceNum, expiresAt);
+      const signatureToken = await generateQuoteSignature({
+        quoteId: preparingQuote.id,
+        customerId: preparingQuote.email || preparingQuote.customer_id || "anonymous",
+        productFirmPrice: productPriceNum,
+        shippingFee: shippingFeeNum,
+        totalFirmQuote: priceNum,
+        currency: quoteCurrency,
+        expiresAt,
+        status: "Quote Sent",
+        createdAt: quotedAt
+      });
 
       const updates = {
         quoted_price: priceNum,
         product_firm_price: productPriceNum,
         shipping_fee: shippingFeeNum,
         shipping_company: prepShippingCompany || shippingSettings.shipping_company_name,
+        currency: quoteCurrency,
         quoted_at: quotedAt,
         expires_at: expiresAt,
         expiry_duration_minutes: prepExpiryMinutes,
@@ -710,7 +723,7 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
       await dbService.auditLogs.append(
         isManualOverride ? "manual_override" : "quote_send",
         adminEmail,
-        `Bespoke quote ${preparingQuote.id} issued. Product firm: ${productPriceNum} USD. Shipping (${prepShippingCompany || "N/A"}): ${shippingFeeNum} USD. Total: ${priceNum} USD. Expiry: ${prepExpiryMinutes} min. Reason: ${prepOverrideReason || "N/A"}`
+        `Bespoke quote ${preparingQuote.id} issued. Product firm: ${productPriceNum} ${quoteCurrency}. Shipping (${prepShippingCompany || "N/A"}): ${shippingFeeNum} ${quoteCurrency}. Total: ${priceNum} ${quoteCurrency}. Expiry: ${prepExpiryMinutes} min. Reason: ${prepOverrideReason || "N/A"}`
       );
 
       // Create or update order status as well
@@ -726,7 +739,7 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
           product_firm_price: productPriceNum,
           shipping_fee: shippingFeeNum,
           shipping_company: prepShippingCompany || shippingSettings.shipping_company_name,
-          currency: preparingQuote.currency || "USD",
+          currency: quoteCurrency,
           shipping_method: prepShippingCompany || shippingSettings.shipping_method || "Office Pickup",
           payment_method: "Bank Transfer",
           shipping_address: shippingSettings.destination_city_region || "PGR Vault Gateway Office, Dubai Marina",
@@ -977,6 +990,8 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
     }
     try {
       const adminEmail = currentUser?.email || "admin@pgruae.com";
+      const prevSettings = await dbService.settings.get();
+      const prev = { ...DEFAULT_DAILY_PRICING, ...(prevSettings?.daily_pricing || {}) };
       const now = new Date().toISOString();
       const updated: DailyPricingSettings = {
         ...dailyPricing,
@@ -984,13 +999,13 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
         updated_by_admin: adminEmail,
         last_updated_at: now
       };
-      await dbService.settings.update({ daily_pricing: updated });
+      await dbService.settings.updateDailyPricing(updated, adminEmail);
       setDailyPricing(updated);
       setDailyPricingReason("");
       await dbService.auditLogs.append(
         "daily_pricing_update",
         adminEmail,
-        `Daily pricing updated. Gold ref: ${updated.gold_daily_reference_price} ${updated.currency}/${updated.unit}. Silver ref: ${updated.silver_daily_reference_price} ${updated.currency}/${updated.unit}. Manual: ${updated.manual_pricing_enabled}. Effective: ${updated.effective_date}. Reason: ${dailyPricingReason}`
+        `Daily pricing update at ${now}. Gold: ${prev.gold_daily_reference_price} → ${updated.gold_daily_reference_price} ${updated.currency}/${updated.unit}. Silver: ${prev.silver_daily_reference_price} → ${updated.silver_daily_reference_price} ${updated.currency}/${updated.unit}. Metal unit: ${updated.unit}. Manual enabled: ${updated.manual_pricing_enabled}. Effective: ${updated.effective_date}. Admin: ${adminEmail}. Reason: ${dailyPricingReason}`
       );
       triggerSuccessMessage("Daily reference pricing saved and audit logged.");
       await loadAdminData();
@@ -1004,12 +1019,15 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
     e.preventDefault();
     try {
       const adminEmail = currentUser?.email || "admin@pgruae.com";
-      await dbService.settings.update({ shipping_settings: shippingSettings });
+      const prevSettings = await dbService.settings.get();
+      const prev = { ...DEFAULT_SHIPPING_SETTINGS, ...(prevSettings?.shipping_settings || {}) };
+      const now = new Date().toISOString();
+      await dbService.settings.updateShippingSettings(shippingSettings, adminEmail);
       setPrepShippingCompany(shippingSettings.shipping_company_name);
       await dbService.auditLogs.append(
         "shipping_settings_update",
         adminEmail,
-        `Shipping settings updated. Company: ${shippingSettings.shipping_company_name}. Method: ${shippingSettings.shipping_method}. Price: ${shippingSettings.shipping_price} ${shippingSettings.currency}. Destination: ${shippingSettings.destination_country} / ${shippingSettings.destination_city_region}. Enabled: ${shippingSettings.shipping_enabled}`
+        `Shipping settings update at ${now}. Old: company=${prev.shipping_company_name}, method=${prev.shipping_method}, fee=${prev.shipping_price} ${prev.currency}, enabled=${prev.shipping_enabled}. New: company=${shippingSettings.shipping_company_name}, method=${shippingSettings.shipping_method}, fee=${shippingSettings.shipping_price} ${shippingSettings.currency}, destination=${shippingSettings.destination_country}/${shippingSettings.destination_city_region}, enabled=${shippingSettings.shipping_enabled}. Admin: ${adminEmail}. Public note: ${shippingSettings.public_shipping_note}`
       );
       triggerSuccessMessage("Shipping settings saved and audit logged.");
       await loadAdminData();

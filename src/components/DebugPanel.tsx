@@ -5,6 +5,27 @@
 
 import React, { useState, useEffect } from "react";
 import { configStatus, isLive, dbService, generateQuoteSignature, mockDb, isProduction } from "../lib/supabase";
+import { QuoteSignaturePayload } from "../types";
+
+function testSignPayload(
+  quoteId: string,
+  totalFirmQuote: number,
+  expiresAt: string,
+  productFirmPrice = totalFirmQuote,
+  shippingFee = 0
+): QuoteSignaturePayload {
+  return {
+    quoteId,
+    customerId: "test@pgruae.com",
+    productFirmPrice,
+    shippingFee,
+    totalFirmQuote,
+    currency: "AED",
+    expiresAt,
+    status: "Quote Sent",
+    createdAt: new Date().toISOString()
+  };
+}
 import { 
   Database, ShieldAlert, Wifi, WifiOff, X, Sliders, CheckCircle, RefreshCw,
   ShieldCheck, Terminal, AlertTriangle, Play, HelpCircle, Lock, Hourglass, Check
@@ -107,7 +128,7 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({ currentLang = "en", inli
       const expiresAt = new Date(Date.now() + 5 * 1000).toISOString();
       const price = 7850;
       addLog(`Step 2: Admin signs quote with price $${price} and immediate 5-second expiry`);
-      const signature = await generateQuoteSignature(dummyQuote.id, price, expiresAt);
+      const signature = await generateQuoteSignature(testSignPayload(dummyQuote.id, price, expiresAt));
       addLog(`Generated cryptographic signature: ${signature}`);
       
       await dbService.quoteRequests.update(dummyQuote.id, {
@@ -128,7 +149,7 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({ currentLang = "en", inli
       // Attempt to accept the quote post-expiry
       addLog("Step 3: Simulating customer trying to accept expired quote via API/Dashboard...");
       try {
-        await dbService.quoteRequests.acceptSecure(dummyQuote.id, price, expiresAt, signature);
+        await dbService.quoteRequests.acceptSecure(dummyQuote.id, signature);
         addLog("❌ ERROR: Expired quote acceptance succeeded! Security check failed.");
         setTestStatuses(prev => ({ ...prev, expiry: "fail" }));
       } catch (err: any) {
@@ -178,7 +199,7 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({ currentLang = "en", inli
       
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 minutes
       const price = 7850;
-      const signature = await generateQuoteSignature(dummyQuote.id, price, expiresAt);
+      const signature = await generateQuoteSignature(testSignPayload(dummyQuote.id, price, expiresAt));
       
       addLog(`Step 2: Admin signs quote for $${price} with signature token`);
       await dbService.quoteRequests.update(dummyQuote.id, {
@@ -192,7 +213,7 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({ currentLang = "en", inli
 
       // Customer accepts quote before expiry
       addLog("Step 3: Simulating customer accepting the quote before expiry...");
-      const acceptedQuote = await dbService.quoteRequests.acceptSecure(dummyQuote.id, price, expiresAt, signature);
+      const acceptedQuote = await dbService.quoteRequests.acceptSecure(dummyQuote.id, signature);
       addLog(`Quote status successfully changed to: "${acceptedQuote.status}"`);
       addLog(`Accepted timestamp recorded: "${acceptedQuote.accepted_at}"`);
       
@@ -249,7 +270,7 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({ currentLang = "en", inli
       addLog(`Admin ID: admin@pgruae.com`);
 
       const expiresAt = new Date(Date.now() + duration * 60 * 1000).toISOString();
-      const signature = await generateQuoteSignature(dummyQuote.id, overridePrice, expiresAt);
+      const signature = await generateQuoteSignature(testSignPayload(dummyQuote.id, overridePrice, expiresAt));
 
       addLog("Step 2: Admin prepares quote with manual override reason...");
       await dbService.quoteRequests.update(dummyQuote.id, {
@@ -325,7 +346,7 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({ currentLang = "en", inli
 
       const price = 5000;
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-      const validSignature = await generateQuoteSignature(dummyQuote.id, price, expiresAt);
+      const validSignature = await generateQuoteSignature(testSignPayload(dummyQuote.id, price, expiresAt));
 
       await dbService.quoteRequests.update(dummyQuote.id, {
         quoted_price: price,
@@ -341,7 +362,7 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({ currentLang = "en", inli
       // Hack A: Modifying price in browser/dev tools
       addLog("🕵️ HACK SCENARIO A: Malicious customer modifies price to $1.00 and attempts acceptance...");
       try {
-        await dbService.quoteRequests.acceptSecure(dummyQuote.id, 1.00, expiresAt, validSignature);
+        await dbService.quoteRequests.acceptSecure(dummyQuote.id, validSignature);
         addLog("❌ ERROR: Price manipulation attack succeeded!");
         setTestStatuses(prev => ({ ...prev, signature: "fail" }));
         return;
@@ -353,7 +374,7 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({ currentLang = "en", inli
       addLog("🕵️ HACK SCENARIO B: Customer extends quote expiration date in memory by 10 hours and attempts acceptance...");
       const extendedExpiry = new Date(Date.now() + 10 * 3600 * 1000).toISOString();
       try {
-        await dbService.quoteRequests.acceptSecure(dummyQuote.id, price, extendedExpiry, validSignature);
+        await dbService.quoteRequests.acceptSecure(dummyQuote.id, validSignature);
         addLog("❌ ERROR: Expiry tampering attack succeeded!");
         setTestStatuses(prev => ({ ...prev, signature: "fail" }));
         return;
@@ -364,12 +385,12 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({ currentLang = "en", inli
       // Hack C: Replay Attack Check
       addLog("🕵️ HACK SCENARIO C: Customer accepts the quote successfully, then tries to REPLAY acceptance a second time...");
       addLog("First acceptance attempt (Valid):");
-      await dbService.quoteRequests.acceptSecure(dummyQuote.id, price, expiresAt, validSignature);
+      await dbService.quoteRequests.acceptSecure(dummyQuote.id, validSignature);
       addLog("✅ Success: First accept completed.");
 
       addLog("Second acceptance attempt (Replay Attack):");
       try {
-        await dbService.quoteRequests.acceptSecure(dummyQuote.id, price, expiresAt, validSignature);
+        await dbService.quoteRequests.acceptSecure(dummyQuote.id, validSignature);
         addLog("❌ ERROR: Replay attack succeeded!");
         setTestStatuses(prev => ({ ...prev, signature: "fail" }));
       } catch (err: any) {

@@ -201,3 +201,15 @@ export interface ShippingSettings {
   internal_shipping_notes: string;
 }
 
+export interface QuoteSignaturePayload {
+  quoteId: string;
+  customerId: string;
+  productFirmPrice: number;
+  shippingFee: number;
+  totalFirmQuote: number;
+  currency: string;
+  expiresAt: string;
+  status: string;
+  createdAt: string;
+}
+

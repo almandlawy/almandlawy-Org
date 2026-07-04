@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
@@ -9,12 +10,58 @@ import crypto from "crypto";
 dotenv.config();
 
 const SIGNATURE_SECRET = process.env.PGR_SIGNATURE_SECRET || "pgr-super-secret-signature-key-2026";
+const SETTINGS_FILE = path.join(process.cwd(), "data", "pgr-server-settings.json");
+const ADMIN_API_SECRET = process.env.PGR_ADMIN_API_SECRET || "";
 
-function generateHMACSignature(payload: any, secret: string): string {
+interface QuoteSignPayload {
+  quoteId: string;
+  customerId: string;
+  productFirmPrice: number;
+  shippingFee: number;
+  totalFirmQuote: number;
+  currency: string;
+  expiresAt: string;
+  status: string;
+  createdAt: string;
+}
+
+function buildSignatureMessage(payload: QuoteSignPayload): string {
+  return [
+    payload.quoteId,
+    payload.customerId || "anonymous",
+    Number(payload.productFirmPrice).toFixed(2),
+    Number(payload.shippingFee).toFixed(2),
+    Number(payload.totalFirmQuote).toFixed(2),
+    payload.currency || "AED",
+    payload.expiresAt,
+    payload.status || "Quote Sent",
+    payload.createdAt || new Date().toISOString()
+  ].join("|");
+}
+
+function generateHMACSignature(payload: QuoteSignPayload, secret: string): string {
   const hmac = crypto.createHmac("sha256", secret);
-  const message = `${payload.quoteId}|${payload.customerId}|${Number(payload.quotedPrice).toFixed(2)}|${payload.expiresAt}|${payload.status}|${payload.createdAt}`;
-  hmac.update(message);
+  hmac.update(buildSignatureMessage(payload));
   return hmac.digest("hex");
+}
+
+function normalizeQuotePayload(body: any): QuoteSignPayload {
+  const productFirmPrice = Number(body.productFirmPrice ?? body.product_firm_price ?? 0);
+  const shippingFee = Number(body.shippingFee ?? body.shipping_fee ?? 0);
+  const totalFirmQuote = Number(
+    body.totalFirmQuote ?? body.quotedPrice ?? body.quoted_price ?? (productFirmPrice + shippingFee)
+  );
+  return {
+    quoteId: body.quoteId,
+    customerId: body.customerId || body.customer_id || "anonymous",
+    productFirmPrice,
+    shippingFee,
+    totalFirmQuote,
+    currency: body.currency === "USD" ? "USD" : "AED",
+    expiresAt: body.expiresAt,
+    status: body.status || "Quote Sent",
+    createdAt: body.createdAt || body.created_at || new Date().toISOString()
+  };
 }
 
 const app = express();
@@ -120,26 +167,163 @@ let serverSettings = {
   },
   shipping_settings: {
     shipping_enabled: true,
-    shipping_company_name: "Transguard / Brink's UAE",
-    shipping_method: "Insured Armored Courier",
+    shipping_company_name: "PGR Arranged Delivery",
+    shipping_method: "Desk-confirmed secure delivery",
     shipping_price: 150,
     currency: "AED",
     destination_country: "United Arab Emirates",
     destination_city_region: "Dubai Marina / UAE Wide",
     estimated_delivery_time: "1–3 business days (UAE)",
-    public_shipping_note: "Fully insured door-to-door delivery. Subject to KYC verification and compliance review before dispatch.",
+    public_shipping_note: "Desk-confirmed secure delivery. Subject to KYC verification and compliance review before dispatch.",
     internal_shipping_notes: "Default UAE domestic route. Iraq/Baghdad routes require separate customs clearance dossier."
   }
 };
 
-// Admin settings endpoints
-app.get("/api/admin/settings", (req, res) => {
+function loadPersistedSettings(): Record<string, unknown> {
+  try {
+    if (fs.existsSync(SETTINGS_FILE)) {
+      const raw = fs.readFileSync(SETTINGS_FILE, "utf-8");
+      return JSON.parse(raw);
+    }
+  } catch (err) {
+    console.warn("Could not load persisted server settings:", err);
+  }
+  return {};
+}
+
+function savePersistedSettings(settings: Record<string, unknown>): void {
+  try {
+    fs.mkdirSync(path.dirname(SETTINGS_FILE), { recursive: true });
+    fs.writeFileSync(SETTINGS_FILE, JSON.stringify(settings, null, 2), "utf-8");
+  } catch (err) {
+    console.error("Failed to persist server settings to disk:", err);
+  }
+}
+
+async function loadSettingsFromSupabase(): Promise<Record<string, unknown> | null> {
+  if (!supabase) return null;
+  try {
+    const { data, error } = await supabase
+      .from("platform_settings")
+      .select("value")
+      .eq("key", "pgr_admin_settings")
+      .maybeSingle();
+    if (!error && data?.value && typeof data.value === "object") {
+      return data.value as Record<string, unknown>;
+    }
+  } catch (err) {
+    console.warn("Supabase platform_settings not available, using file persistence:", err);
+  }
+  return null;
+}
+
+async function persistSettingsToSupabase(settings: Record<string, unknown>): Promise<void> {
+  if (!supabase) return;
+  try {
+    await supabase.from("platform_settings").upsert({
+      key: "pgr_admin_settings",
+      value: settings,
+      updated_at: new Date().toISOString()
+    });
+  } catch (err) {
+    console.warn("Could not persist settings to Supabase platform_settings:", err);
+  }
+}
+
+async function hydrateServerSettings(): Promise<void> {
+  const fromFile = loadPersistedSettings();
+  const fromDb = await loadSettingsFromSupabase();
+  serverSettings = {
+    ...serverSettings,
+    ...fromFile,
+    ...(fromDb || {}),
+    daily_pricing: {
+      ...serverSettings.daily_pricing,
+      ...(fromFile.daily_pricing as object || {}),
+      ...((fromDb?.daily_pricing as object) || {})
+    },
+    shipping_settings: {
+      ...serverSettings.shipping_settings,
+      ...(fromFile.shipping_settings as object || {}),
+      ...((fromDb?.shipping_settings as object) || {})
+    }
+  };
+}
+
+async function persistAllSettings(): Promise<void> {
+  savePersistedSettings(serverSettings as unknown as Record<string, unknown>);
+  await persistSettingsToSupabase(serverSettings as unknown as Record<string, unknown>);
+}
+
+async function isAdminRequest(req: express.Request): Promise<boolean> {
+  const authHeader = req.headers.authorization || "";
+  if (ADMIN_API_SECRET && authHeader === `Bearer ${ADMIN_API_SECRET}`) {
+    return true;
+  }
+  const adminEmail = (req.headers["x-pgr-admin-email"] as string || "").trim().toLowerCase();
+  if (!adminEmail) return false;
+  if (!supabase) {
+    const fallbackAdmins = ["almandlawy112@gmail.com", "admin@pgruae.com"];
+    return fallbackAdmins.includes(adminEmail);
+  }
+  try {
+    const { data, error } = await supabase
+      .from("admin_users")
+      .select("email")
+      .eq("email", adminEmail);
+    return !error && Array.isArray(data) && data.length > 0;
+  } catch {
+    return false;
+  }
+}
+
+async function requireAdmin(req: express.Request, res: express.Response, next: express.NextFunction) {
+  if (await isAdminRequest(req)) {
+    return next();
+  }
+  return res.status(403).json({ error: "Admin authorization required." });
+}
+
+function stripInternalShippingFields(settings: Record<string, unknown>) {
+  const s = (settings.shipping_settings || {}) as Record<string, unknown>;
+  const { internal_shipping_notes, ...publicShipping } = s;
+  return publicShipping;
+}
+
+// Hydrate persisted settings before routes bind — called from bootServer()
+
+// Admin settings endpoints (admin-only for mutations)
+app.get("/api/admin/settings", requireAdmin, (req, res) => {
   res.json(serverSettings);
 });
 
-app.post("/api/admin/settings", (req, res) => {
+app.post("/api/admin/settings", requireAdmin, async (req, res) => {
   serverSettings = { ...serverSettings, ...req.body };
+  await persistAllSettings();
   res.json({ success: true, settings: serverSettings });
+});
+
+app.patch("/api/admin/daily-pricing", requireAdmin, async (req, res) => {
+  const daily_pricing = {
+    ...serverSettings.daily_pricing,
+    ...req.body,
+    last_updated_at: new Date().toISOString()
+  };
+  serverSettings = { ...serverSettings, daily_pricing };
+  await persistAllSettings();
+  res.json({ success: true, daily_pricing });
+});
+
+app.patch("/api/admin/shipping-settings", requireAdmin, async (req, res) => {
+  const incoming = { ...req.body };
+  delete incoming.internal_shipping_notes_from_public;
+  const shipping_settings = {
+    ...serverSettings.shipping_settings,
+    ...incoming
+  };
+  serverSettings = { ...serverSettings, shipping_settings };
+  await persistAllSettings();
+  res.json({ success: true, shipping_settings: stripInternalShippingFields(serverSettings as unknown as Record<string, unknown>) });
 });
 
 /** Public shipping info — internal notes are never exposed */
@@ -919,20 +1103,15 @@ app.get("/api/health", async (req, res) => {
 // Server-side quote cryptographic signing endpoint
 app.post("/api/quote/sign", (req, res) => {
   try {
-    const { quoteId, customerId, quotedPrice, expiresAt, status, createdAt } = req.body;
-    if (!quoteId || !quotedPrice || !expiresAt) {
+    const payload = normalizeQuotePayload(req.body);
+    if (!payload.quoteId || !payload.expiresAt) {
       return res.status(400).json({ error: "Required fields missing for signature payload" });
     }
-    const signature = generateHMACSignature({
-      quoteId,
-      customerId: customerId || "anonymous",
-      quotedPrice,
-      expiresAt,
-      status: status || "Pending Confirmation",
-      createdAt: createdAt || new Date().toISOString()
-    }, SIGNATURE_SECRET);
-    
-    res.json({ success: true, signature });
+    if (Math.abs(payload.totalFirmQuote - (payload.productFirmPrice + payload.shippingFee)) > 0.01) {
+      return res.status(400).json({ error: "Total firm quote must equal product firm price plus shipping fee." });
+    }
+    const signature = generateHMACSignature(payload, SIGNATURE_SECRET);
+    res.json({ success: true, signature, payload });
   } catch (err: any) {
     res.status(500).json({ error: "Failed to generate security signature", details: err.message });
   }
@@ -941,34 +1120,32 @@ app.post("/api/quote/sign", (req, res) => {
 // Server-side quote acceptance endpoint
 app.post("/api/quote/accept", async (req, res) => {
   try {
-    const { quoteId, customerId, quotedPrice, expiresAt, status, createdAt, signature } = req.body;
-    
-    // 1. Verify tampered signatures
-    const expectedSig = generateHMACSignature({ quoteId, customerId, quotedPrice, expiresAt, status, createdAt }, SIGNATURE_SECRET);
+    const payload = normalizeQuotePayload(req.body);
+    const { signature } = req.body;
+
+    const expectedSig = generateHMACSignature(payload, SIGNATURE_SECRET);
     if (expectedSig !== signature) {
-      return res.status(400).json({ error: "Security Violation: Cryptographic signature mismatch. Quote price, ID, or expiry has been tampered with!" });
+      return res.status(400).json({
+        error: "Security Violation: Cryptographic signature mismatch. Product price, shipping fee, total, currency, or expiry has been tampered with!"
+      });
     }
 
-    // 2. Check current DB server time against expires_at
-    const expiresTime = new Date(expiresAt).getTime();
-    const serverTime = Date.now();
-    if (serverTime > expiresTime) {
+    const expiresTime = new Date(payload.expiresAt).getTime();
+    if (Date.now() > expiresTime) {
       return res.status(400).json({ error: "This quote has expired due to market volatility countdown and can no longer be accepted." });
     }
 
-    // 3. Reject status changes from browser-side manipulation
     if (req.body.targetStatus && req.body.targetStatus !== "Customer Accepted") {
       return res.status(400).json({ error: "Security Violation: Illegal state transition detected." });
     }
 
-    // 4. Update Supabase if live
     if (supabase) {
       const { data: quote, error: fetchErr } = await supabase
         .from("quote_requests")
         .select("*")
-        .eq("id", quoteId)
+        .eq("id", payload.quoteId)
         .single();
-        
+
       if (fetchErr || !quote) {
         return res.status(404).json({ error: "Quote Request ticket not found in database." });
       }
@@ -977,23 +1154,37 @@ app.post("/api/quote/accept", async (req, res) => {
         return res.status(400).json({ error: "Replay Attack Blocked: This quote has already been accepted and price is locked." });
       }
 
+      const dbProduct = Number(quote.product_firm_price ?? quote.quoted_price ?? 0);
+      const dbShipping = Number(quote.shipping_fee ?? 0);
+      const dbTotal = Number(quote.quoted_price ?? 0);
+      const dbCurrency = quote.currency === "USD" ? "USD" : "AED";
+
+      if (Math.abs(dbProduct - payload.productFirmPrice) > 0.01) {
+        return res.status(400).json({ error: "Security Violation: Product firm price tampering detected." });
+      }
+      if (Math.abs(dbShipping - payload.shippingFee) > 0.01) {
+        return res.status(400).json({ error: "Security Violation: Shipping fee tampering detected." });
+      }
+      if (Math.abs(dbTotal - payload.totalFirmQuote) > 0.01) {
+        return res.status(400).json({ error: "Security Violation: Total firm quote tampering detected." });
+      }
+      if (dbCurrency !== payload.currency) {
+        return res.status(400).json({ error: "Security Violation: Currency tampering detected." });
+      }
+
       const { error: quoteUpdateErr } = await supabase
         .from("quote_requests")
         .update({ status: "Customer Accepted", accepted_at: new Date().toISOString() })
-        .eq("id", quoteId);
-        
+        .eq("id", payload.quoteId);
+
       if (quoteUpdateErr) {
         throw new Error("Failed to update quote request in DB: " + quoteUpdateErr.message);
       }
 
-      const { error: orderUpdateErr } = await supabase
+      await supabase
         .from("orders")
         .update({ status: "Customer Accepted", payment_status: "Pending" })
-        .eq("quote_id", quoteId);
-
-      if (orderUpdateErr) {
-        console.warn("Failed to update associated order in DB (might not exist yet):", orderUpdateErr.message);
-      }
+        .eq("quote_id", payload.quoteId);
     }
 
     res.json({
@@ -1082,6 +1273,8 @@ Keep responses relatively concise (2-3 paragraphs), extremely elegant, well-stru
 
 // Configure full-stack integration (Vite dev server or production static files)
 async function bootServer() {
+  await hydrateServerSettings();
+
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },
