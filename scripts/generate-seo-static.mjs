@@ -19,6 +19,17 @@ function faqJsonLd(faqItems) {
   return `<script type="application/ld+json">${JSON.stringify(schema)}</script>`;
 }
 
+const GTAG_SNIPPET = `  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-3C5TXFNJLQ"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-3C5TXFNJLQ');
+    gtag('config', 'AW-432373961');
+  </script>`;
+
 function pageHtml(page) {
   const url = page.path === "/" ? `${SITE_ORIGIN}/` : `${SITE_ORIGIN}${page.path}`;
   const productList =
@@ -55,6 +66,7 @@ function pageHtml(page) {
   <meta name="twitter:description" content="${page.desc}" />
   <meta name="twitter:image" content="${OG_IMAGE}" />
   <meta name="robots" content="index, follow" />
+  ${GTAG_SNIPPET}
   ${faqJsonLd(page.faq)}
 </head>
 <body>
