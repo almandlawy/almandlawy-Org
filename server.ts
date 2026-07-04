@@ -1285,7 +1285,26 @@ async function bootServer() {
     console.log("Mounted Vite development middleware.");
   } else {
     const distPath = path.join(process.cwd(), "dist");
+
+    // Serve images with explicit content-type before SPA fallback
+    app.use(
+      "/images",
+      express.static(path.join(distPath, "images"), {
+        setHeaders: (res, filePath) => {
+          if (filePath.endsWith(".webp")) {
+            res.setHeader("Content-Type", "image/webp");
+          } else if (filePath.endsWith(".png")) {
+            res.setHeader("Content-Type", "image/png");
+          } else if (filePath.endsWith(".jpg") || filePath.endsWith(".jpeg")) {
+            res.setHeader("Content-Type", "image/jpeg");
+          }
+          res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+        },
+      })
+    );
+
     app.use(express.static(distPath));
+
     app.get("*", (req, res) => {
       res.sendFile(path.join(distPath, "index.html"));
     });
