@@ -12,7 +12,9 @@ import {
   Eye, Trash2, Plus, Edit, ShieldAlert, Mail, Phone, Clock, FileCheck, CheckCircle, LogOut
 } from "lucide-react";
 import { dbService, mockDb, isLive, supabase, getRedirectUrl, generateQuoteSignature } from "../lib/supabase";
-import { Product } from "../types";
+import { Product, DailyPricingSettings, ShippingSettings } from "../types";
+import { DEFAULT_DAILY_PRICING, DEFAULT_SHIPPING_SETTINGS } from "../data";
+import { resolveProductIdFromLabel } from "../lib/productCatalog";
 import { DebugPanel } from "./DebugPanel";
 
 interface AdminPanelProps {
@@ -31,6 +33,8 @@ type AdminSection =
   | "iraq_delivery"
   | "pickup_points"
   | "market_prices"
+  | "daily_pricing"
+  | "shipping_settings"
   | "exchange_rates"
   | "buyback"
   | "certificates"
@@ -111,6 +115,12 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
   const [prepPriceOverride, setPrepPriceOverride] = useState<string>("");
   const [prepExpiryMinutes, setPrepExpiryMinutes] = useState<number>(10);
   const [prepOverrideReason, setPrepOverrideReason] = useState<string>("Client premium negotiation adjustment");
+  const [prepShippingCompany, setPrepShippingCompany] = useState<string>("");
+  const [prepShippingFee, setPrepShippingFee] = useState<string>("0");
+
+  const [dailyPricing, setDailyPricing] = useState<DailyPricingSettings>({ ...DEFAULT_DAILY_PRICING });
+  const [shippingSettings, setShippingSettings] = useState<ShippingSettings>({ ...DEFAULT_SHIPPING_SETTINGS });
+  const [dailyPricingReason, setDailyPricingReason] = useState<string>("");
 
   const handleProductImageUpload = async (file: File, isEdit: boolean) => {
     setUploadingImage(true);
@@ -397,7 +407,7 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
       const [
         pList, qList, oList, kList, dList, ptList, exRates, bbList, hList, sObj, certs, blogList, auditList
       ] = await Promise.all([
-        dbService.products.list(),
+        dbService.products.list("admin"),
         dbService.quoteRequests.list(),
         dbService.orders.list(),
         dbService.kyc.listAll(),
@@ -421,7 +431,12 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
       if (exRates) setExchangeRates(exRates);
       if (bbList) setBuybacks(bbList);
       if (hList) setHoldings(hList);
-      if (sObj) setSettings(sObj);
+      if (sObj) {
+        setSettings(sObj);
+        if (sObj.daily_pricing) setDailyPricing({ ...DEFAULT_DAILY_PRICING, ...sObj.daily_pricing });
+        if (sObj.shipping_settings) setShippingSettings({ ...DEFAULT_SHIPPING_SETTINGS, ...sObj.shipping_settings });
+        setPrepShippingCompany(sObj.shipping_settings?.shipping_company_name || DEFAULT_SHIPPING_SETTINGS.shipping_company_name);
+      }
       if (certs) setCertificates(certs);
       if (blogList) setBlogPosts(blogList);
       if (auditList) setAuditLogs(auditList);
@@ -593,7 +608,7 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
               status: status === "Completed" ? "Completed" : "Quoted",
               items: [
                 { 
-                  product_id: match.productCategory || match.product_category || "gb-100g", 
+                  product_id: resolveProductIdFromLabel(match.productCategory || match.product_category),
                   quantity: 1, 
                   unit_price: price, 
                   product_name: `${metal.toUpperCase()} Bullion: ${match.weight || match.weight_preference || "Custom Lot"}` 
@@ -629,17 +644,25 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
     e.preventDefault();
     if (!preparingQuote) return;
     try {
-      const priceNum = parseFloat(prepPriceOverride);
-      if (isNaN(priceNum) || priceNum <= 0) {
-        triggerErrorMessage("Please enter a valid positive quote price");
+      const productPriceNum = parseFloat(prepPriceOverride);
+      const shippingFeeNum = parseFloat(prepShippingFee) || 0;
+      if (isNaN(productPriceNum) || productPriceNum <= 0) {
+        triggerErrorMessage("Please enter a valid positive product firm price");
         return;
       }
+      if (shippingFeeNum < 0) {
+        triggerErrorMessage("Shipping fee cannot be negative");
+        return;
+      }
+
+      const priceNum = productPriceNum + shippingFeeNum;
+      const adminEmail = currentUser?.email || "admin@pgruae.com";
 
       const quotedAt = new Date().toISOString();
       const expiresAt = new Date(Date.now() + prepExpiryMinutes * 60 * 1000).toISOString();
 
       // Calculate original spot-estimated price for compliance logging
-      let originalPrice = priceNum;
+      let originalPrice = productPriceNum;
       const metal = (preparingQuote.metalInterest || preparingQuote.metal_interest || "gold").toLowerCase();
       const weightStr = (preparingQuote.weight || preparingQuote.weight_preference || "100g").toLowerCase();
       
@@ -659,22 +682,37 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
       const premiumPct = 1.025;
       originalPrice = Math.round(baseSpotPrice * premiumPct);
       
-      if (isNaN(originalPrice) || originalPrice <= 0 || Math.abs(originalPrice - priceNum) > priceNum * 0.5) {
-        originalPrice = Math.round(priceNum * 1.035);
+      if (isNaN(originalPrice) || originalPrice <= 0 || Math.abs(originalPrice - productPriceNum) > productPriceNum * 0.5) {
+        originalPrice = Math.round(productPriceNum * 1.035);
       }
 
-      // Generate Cryptographic Digital Signature
-      const signatureToken = await generateQuoteSignature(preparingQuote.id, priceNum, expiresAt);
+      const quoteCurrency = preparingQuote.currency === "USD" ? "USD" : "AED";
+
+      // Generate Cryptographic Digital Signature (total firm quote amount)
+      const signatureToken = await generateQuoteSignature({
+        quoteId: preparingQuote.id,
+        customerId: preparingQuote.email || preparingQuote.customer_id || "anonymous",
+        productFirmPrice: productPriceNum,
+        shippingFee: shippingFeeNum,
+        totalFirmQuote: priceNum,
+        currency: quoteCurrency,
+        expiresAt,
+        status: "Quote Sent",
+        createdAt: quotedAt
+      });
 
       const updates = {
         quoted_price: priceNum,
+        product_firm_price: productPriceNum,
+        shipping_fee: shippingFeeNum,
+        shipping_company: prepShippingCompany || shippingSettings.shipping_company_name,
+        currency: quoteCurrency,
         quoted_at: quotedAt,
         expires_at: expiresAt,
         expiry_duration_minutes: prepExpiryMinutes,
         status: "Quote Sent",
-        // Enforce audit compliance structure
         original_price: originalPrice,
-        override_admin_id: "admin@pgruae.com",
+        override_admin_id: adminEmail,
         override_timestamp: quotedAt,
         override_reason: prepOverrideReason || "Client relationship premium adjustment",
         security_signature: signatureToken
@@ -682,12 +720,11 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
 
       await dbService.quoteRequests.update(preparingQuote.id, updates);
 
-      // Log audit record for Quote Send and Manual Override
-      const isManualOverride = Math.abs(priceNum - originalPrice) > 1;
+      const isManualOverride = Math.abs(productPriceNum - originalPrice) > 1;
       await dbService.auditLogs.append(
         isManualOverride ? "manual_override" : "quote_send",
-        "admin@pgruae.com",
-        `Bespoke quote ${preparingQuote.id} issued. Original spot: ${originalPrice} USD. Quoted: ${priceNum} USD. Expiry: ${prepExpiryMinutes} min. Override Reason: ${prepOverrideReason || "Client relationship premium adjustment"}`
+        adminEmail,
+        `Bespoke quote ${preparingQuote.id} issued. Product firm: ${productPriceNum} ${quoteCurrency}. Shipping (${prepShippingCompany || "N/A"}): ${shippingFeeNum} ${quoteCurrency}. Total: ${priceNum} ${quoteCurrency}. Expiry: ${prepExpiryMinutes} min. Reason: ${prepOverrideReason || "N/A"}`
       );
 
       // Create or update order status as well
@@ -700,16 +737,21 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
           customer_id: preparingQuote.customer_id || "cust-verified-1",
           quote_id: preparingQuote.id,
           total_amount: priceNum,
-          currency: preparingQuote.currency || "USD",
-          shipping_method: "Office Pickup",
+          product_firm_price: productPriceNum,
+          shipping_fee: shippingFeeNum,
+          shipping_company: prepShippingCompany || shippingSettings.shipping_company_name,
+          currency: quoteCurrency,
+          shipping_method: prepShippingCompany || shippingSettings.shipping_method || "Office Pickup",
           payment_method: "Bank Transfer",
-          shipping_address: "PGR Vault Gateway Office, Dubai Marina",
+          shipping_address: shippingSettings.destination_city_region || "PGR Vault Gateway Office, Dubai Marina",
           status: "Quoted",
           items: [
             {
-              product_id: preparingQuote.productCategory || preparingQuote.product_category || "gb-100g",
+              product_id: resolveProductIdFromLabel(
+                preparingQuote.productCategory || preparingQuote.product_category
+              ),
               quantity: 1,
-              unit_price: priceNum,
+              unit_price: productPriceNum,
               product_name: `${metal.toUpperCase()} Bullion: ${preparingQuote.weight || preparingQuote.weight_preference || "Custom Lot"}`
             }
           ]
@@ -719,13 +761,17 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
         if (existingOrder) {
           await dbService.orders.update(existingOrder.id, {
             total_amount: priceNum,
+            product_firm_price: productPriceNum,
+            shipping_fee: shippingFeeNum,
+            shipping_company: prepShippingCompany || shippingSettings.shipping_company_name,
             status: "Quoted"
           });
         }
       }
 
       setPreparingQuote(null);
-      triggerSuccessMessage(`Bespoke firm quote sent successfully with Cryptographic Token! Reference ID: ${preparingQuote.id}`);
+      setPrepShippingFee("0");
+      triggerSuccessMessage(`Bespoke firm quote sent! Product: $${productPriceNum.toFixed(2)} + Shipping: $${shippingFeeNum.toFixed(2)} = Total: $${priceNum.toFixed(2)}. Ref: ${preparingQuote.id}`);
       await loadAdminData();
     } catch (err) {
       console.error(err);
@@ -939,6 +985,61 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
     }
   };
 
+  const handleSaveDailyPricing = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!dailyPricingReason.trim()) {
+      triggerErrorMessage("Reason for update is required for compliance audit");
+      return;
+    }
+    try {
+      const adminEmail = currentUser?.email || "admin@pgruae.com";
+      const prevSettings = await dbService.settings.get();
+      const prev = { ...DEFAULT_DAILY_PRICING, ...(prevSettings?.daily_pricing || {}) };
+      const now = new Date().toISOString();
+      const updated: DailyPricingSettings = {
+        ...dailyPricing,
+        reason_for_update: dailyPricingReason,
+        updated_by_admin: adminEmail,
+        last_updated_at: now
+      };
+      await dbService.settings.updateDailyPricing(updated, adminEmail);
+      setDailyPricing(updated);
+      setDailyPricingReason("");
+      await dbService.auditLogs.append(
+        "daily_pricing_update",
+        adminEmail,
+        `Daily pricing update at ${now}. Gold: ${prev.gold_daily_reference_price} → ${updated.gold_daily_reference_price} ${updated.currency}/${updated.unit}. Silver: ${prev.silver_daily_reference_price} → ${updated.silver_daily_reference_price} ${updated.currency}/${updated.unit}. Metal unit: ${updated.unit}. Manual enabled: ${updated.manual_pricing_enabled}. Effective: ${updated.effective_date}. Admin: ${adminEmail}. Reason: ${dailyPricingReason}`
+      );
+      triggerSuccessMessage("Daily reference pricing saved and audit logged.");
+      await loadAdminData();
+    } catch (err) {
+      console.error(err);
+      triggerErrorMessage("Failed to save daily pricing");
+    }
+  };
+
+  const handleSaveShippingSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const adminEmail = currentUser?.email || "admin@pgruae.com";
+      const prevSettings = await dbService.settings.get();
+      const prev = { ...DEFAULT_SHIPPING_SETTINGS, ...(prevSettings?.shipping_settings || {}) };
+      const now = new Date().toISOString();
+      await dbService.settings.updateShippingSettings(shippingSettings, adminEmail);
+      setPrepShippingCompany(shippingSettings.shipping_company_name);
+      await dbService.auditLogs.append(
+        "shipping_settings_update",
+        adminEmail,
+        `Shipping settings update at ${now}. Old: company=${prev.shipping_company_name}, method=${prev.shipping_method}, fee=${prev.shipping_price} ${prev.currency}, enabled=${prev.shipping_enabled}. New: company=${shippingSettings.shipping_company_name}, method=${shippingSettings.shipping_method}, fee=${shippingSettings.shipping_price} ${shippingSettings.currency}, destination=${shippingSettings.destination_country}/${shippingSettings.destination_city_region}, enabled=${shippingSettings.shipping_enabled}. Admin: ${adminEmail}. Public note: ${shippingSettings.public_shipping_note}`
+      );
+      triggerSuccessMessage("Shipping settings saved and audit logged.");
+      await loadAdminData();
+    } catch (err) {
+      console.error(err);
+      triggerErrorMessage("Failed to save shipping settings");
+    }
+  };
+
   const handleUpdateBuybackStatus = async (id: string, status: string, estimatedPayout?: number) => {
     try {
       await dbService.buyback.updateStatus(id, status, estimatedPayout);
@@ -970,6 +1071,8 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
       case "iraq_delivery": return <Truck size={14} />;
       case "pickup_points": return <MapPin size={14} />;
       case "market_prices": return <TrendingUp size={14} />;
+      case "daily_pricing": return <Coins size={14} />;
+      case "shipping_settings": return <Truck size={14} />;
       case "exchange_rates": return <RefreshCw size={14} />;
       case "buyback": return <Undo size={14} />;
       case "certificates": return <Award size={14} />;
@@ -1150,6 +1253,8 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
     { id: "iraq_delivery", label: "Iraq Logistics", labelAr: "لوجستيات العراق" },
     { id: "pickup_points", label: "Pickup Terminals", labelAr: "مراكز الاستلام" },
     { id: "market_prices", label: "Market Markup Pricing", labelAr: "هوامش الأسعار" },
+    { id: "daily_pricing", label: "Daily Reference Pricing", labelAr: "التسعير اليومي المرجعي" },
+    { id: "shipping_settings", label: "Shipping Settings", labelAr: "إعدادات الشحن" },
     { id: "exchange_rates", label: "Exchange Rates & Pegs", labelAr: "أسعار صرف العملات" },
     { id: "buyback", label: "Buyback Desk", labelAr: "ديوان الاسترداد" },
     { id: "certificates", label: "Certificates Mint", labelAr: "إصدار الشهادات" },
@@ -1388,8 +1493,8 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                           >
                             <option value="gold_bars">Gold Bars (سبائك الذهب)</option>
                             <option value="silver_bars">Silver Bars (سبائك الفضة)</option>
-                            <option value="gold_coins">Gold Coins (مسكوكات ذهبية)</option>
-                            <option value="silver_coins">Silver Coins (مسكوكات فضية)</option>
+                            <option value="mint_bars_coins">Mint Bars & Coins</option>
+                            <option value="custom_inquiry">Custom Inquiry</option>
                           </select>
                         </div>
                         <div className="space-y-1">
@@ -1637,8 +1742,8 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                           >
                             <option value="gold_bars">Gold Bars (سبائك الذهب)</option>
                             <option value="silver_bars">Silver Bars (سبائك الفضة)</option>
-                            <option value="gold_coins">Gold Coins (مسكوكات ذهبية)</option>
-                            <option value="silver_coins">Silver Coins (مسكوكات فضية)</option>
+                            <option value="mint_bars_coins">Mint Bars & Coins</option>
+                            <option value="custom_inquiry">Custom Inquiry</option>
                           </select>
                         </div>
                         <div className="space-y-1">
@@ -1853,23 +1958,14 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                           type="button"
                           onClick={async () => {
                             const confirmMsg = currentLang === "ar" 
-                              ? "هل أنت متأكد من رغبتك في استيراد/مزامنة جميع الـ 50 منتجاً الافتراضياً إلى قاعدة بيانات Supabase الحية الخاصة بك؟ سيعمل هذا على إنشاء أو تحديث جميع المنتجات."
-                              : "Are you sure you want to seed/sync all 50 default products to your live Supabase database? This will create or update all products.";
+                              ? "هل أنت متأكد من رغبتك في إعادة ضبط كتالوج PGR إلى ١٠ منتجات رسمية وحذف المنتجات القديمة من قاعدة البيانات؟"
+                              : "Are you sure you want to reset the PGR catalog to the official 10 products and remove legacy products from the database?";
                             if (window.confirm(confirmMsg)) {
                               try {
                                 setLoading(true);
-                                const { PRODUCTS } = await import("../data");
-                                let count = 0;
-                                for (const p of PRODUCTS) {
-                                  count++;
-                                  try {
-                                    await dbService.products.save(p);
-                                  } catch (err: any) {
-                                    throw new Error(`Product #${count} (${p.id} - "${p.name_en}") failed. Front-end Availability: "${p.availability}". DB payload mapping details: ${JSON.stringify(err.message || err)}`);
-                                  }
-                                }
+                                await dbService.products.resetToCatalogDefaults();
                                 await loadAdminData();
-                                alert(currentLang === "ar" ? "تمت مزامنة جميع المنتجات بنجاح!" : "Successfully seeded all products!");
+                                alert(currentLang === "ar" ? "تمت مزامنة كتالوج المنتجات العشرة بنجاح!" : "Successfully reset the 10-product catalog!");
                               } catch (e: any) {
                                 console.error(e);
                                 alert((currentLang === "ar" ? "فشلت مزامنة المنتجات: " : "Failed to seed products: ") + (e.message || e));
@@ -1974,7 +2070,7 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div className="space-y-1">
                           <label className="text-gray-400 block uppercase text-[9px] font-bold">
-                            Manual Price Override (USD)
+                            Product Firm Price (USD)
                           </label>
                           <input
                             type="number"
@@ -1986,8 +2082,32 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                             placeholder="e.g. 7850.00"
                           />
                           <p className="text-[10px] text-gray-500 italic">
-                            Admin manual override protects business against immediate market volatility.
+                            Bullion firm price before shipping. Subject to market movement.
                           </p>
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-gray-400 block uppercase text-[9px] font-bold">
+                            Shipping Company
+                          </label>
+                          <input
+                            type="text"
+                            value={prepShippingCompany}
+                            onChange={(e) => setPrepShippingCompany(e.target.value)}
+                            className="w-full bg-black border border-white/10 rounded px-3 py-2 text-white outline-none focus:border-[#c5a85c] text-xs font-mono"
+                            placeholder={shippingSettings.shipping_company_name}
+                          />
+                          <label className="text-gray-400 block uppercase text-[9px] font-bold mt-2">
+                            Shipping Fee (USD)
+                          </label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={prepShippingFee}
+                            onChange={(e) => setPrepShippingFee(e.target.value)}
+                            className="w-full bg-black border border-white/10 rounded px-3 py-2 text-white outline-none focus:border-[#c5a85c] text-sm font-bold font-mono"
+                            placeholder="0.00"
+                          />
                         </div>
                         <div className="space-y-1">
                           <label className="text-gray-400 block uppercase text-[9px] font-bold">
@@ -2002,10 +2122,13 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                             <option value={10}>10 Minutes (Standard Business Buffer)</option>
                             <option value={15}>15 Minutes (Extended Time Buffer)</option>
                           </select>
-                          <p className="text-[10px] text-gray-500 italic">
-                            Countdown timer will start on client dashboard immediately after sending.
+                          <p className="text-[10px] text-gray-500 italic mt-2">
+                            Countdown timer starts on client dashboard after sending.
                           </p>
                         </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-1">
                           <label className="text-gray-400 block uppercase text-[9px] font-bold">
                             Reason for Price Override
@@ -2018,9 +2141,21 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                             className="w-full bg-black border border-white/10 rounded px-3 py-2 text-white outline-none focus:border-[#c5a85c] text-xs font-mono"
                             placeholder="e.g. Client premium negotiation adjustment"
                           />
-                          <p className="text-[10px] text-gray-500 italic">
-                            Compliance audit log records this reason, old/new price, and timestamp.
-                          </p>
+                        </div>
+                        <div className="p-3 bg-black/50 border border-gold-base/20 rounded space-y-1">
+                          <p className="text-[9px] text-gray-500 uppercase font-bold">Final Quote Breakdown</p>
+                          <div className="flex justify-between text-[11px] text-gray-300">
+                            <span>Product Firm Price:</span>
+                            <span className="font-mono font-bold text-white">${(parseFloat(prepPriceOverride) || 0).toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between text-[11px] text-gray-300">
+                            <span>Shipping Fee ({prepShippingCompany || "—"}):</span>
+                            <span className="font-mono font-bold text-white">${(parseFloat(prepShippingFee) || 0).toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between text-[12px] text-gold-base border-t border-white/10 pt-1 mt-1">
+                            <span className="font-bold">Total Firm Quote:</span>
+                            <span className="font-mono font-bold">${((parseFloat(prepPriceOverride) || 0) + (parseFloat(prepShippingFee) || 0)).toFixed(2)}</span>
+                          </div>
                         </div>
                       </div>
 
@@ -2107,6 +2242,8 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                                       const weightVal = parseFloat(q.weight || q.weight_preference || "100") || 100;
                                       const defaultEst = weightVal * (metal === "silver" ? 1.10 : 78.50);
                                       setPrepPriceOverride(defaultEst.toFixed(2));
+                                      setPrepShippingCompany(shippingSettings.shipping_company_name);
+                                      setPrepShippingFee(String(shippingSettings.shipping_price || 0));
                                       setPrepExpiryMinutes(10);
                                       window.scrollTo({ top: 0, behavior: "smooth" });
                                     }}
@@ -2678,6 +2815,260 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                       className="px-5 py-2.5 bg-[#c5a85c] hover:bg-amber-600 text-black font-semibold rounded uppercase tracking-wider font-sans cursor-pointer"
                     >
                       Update Pricing Policies
+                    </button>
+                  </form>
+                </div>
+              )}
+
+              {/* 9b. SECTION: DAILY REFERENCE PRICING */}
+              {activeSection === "daily_pricing" && (
+                <div className="space-y-6">
+                  <div>
+                    <h4 className="text-lg font-serif text-white">Daily Reference Pricing Control</h4>
+                    <p className="text-xs text-gray-500 font-mono uppercase">Admin-only daily gold/silver reference rates — every change is audit logged</p>
+                  </div>
+
+                  <form onSubmit={handleSaveDailyPricing} className="p-5 bg-[#0d0d0e] rounded border border-white/[0.03] space-y-5 font-mono text-xs">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-gray-400 block uppercase text-[9px] font-bold">Gold Daily Reference Price</label>
+                        <input
+                          type="number"
+                          step="0.0001"
+                          required
+                          value={dailyPricing.gold_daily_reference_price}
+                          onChange={(e) => setDailyPricing({ ...dailyPricing, gold_daily_reference_price: Number(e.target.value) })}
+                          className="w-full bg-black border border-white/10 rounded px-3 py-2 text-white outline-none focus:border-[#c5a85c]"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-gray-400 block uppercase text-[9px] font-bold">Silver Daily Reference Price</label>
+                        <input
+                          type="number"
+                          step="0.0001"
+                          required
+                          value={dailyPricing.silver_daily_reference_price}
+                          onChange={(e) => setDailyPricing({ ...dailyPricing, silver_daily_reference_price: Number(e.target.value) })}
+                          className="w-full bg-black border border-white/10 rounded px-3 py-2 text-white outline-none focus:border-[#c5a85c]"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-gray-400 block uppercase text-[9px] font-bold">Currency</label>
+                        <select
+                          value={dailyPricing.currency}
+                          onChange={(e) => setDailyPricing({ ...dailyPricing, currency: e.target.value as "AED" | "USD" })}
+                          className="w-full bg-black border border-white/10 rounded px-3 py-2 text-white outline-none focus:border-[#c5a85c]"
+                        >
+                          <option value="AED">AED</option>
+                          <option value="USD">USD</option>
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-gray-400 block uppercase text-[9px] font-bold">Unit</label>
+                        <select
+                          value={dailyPricing.unit}
+                          onChange={(e) => setDailyPricing({ ...dailyPricing, unit: e.target.value as DailyPricingSettings["unit"] })}
+                          className="w-full bg-black border border-white/10 rounded px-3 py-2 text-white outline-none focus:border-[#c5a85c]"
+                        >
+                          <option value="per_gram">Per Gram</option>
+                          <option value="per_kg">Per Kg</option>
+                          <option value="per_troy_ounce">Per Troy Ounce</option>
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-gray-400 block uppercase text-[9px] font-bold">Effective Date</label>
+                        <input
+                          type="date"
+                          required
+                          value={dailyPricing.effective_date}
+                          onChange={(e) => setDailyPricing({ ...dailyPricing, effective_date: e.target.value })}
+                          className="w-full bg-black border border-white/10 rounded px-3 py-2 text-white outline-none focus:border-[#c5a85c]"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        id="manual_pricing_enabled"
+                        checked={dailyPricing.manual_pricing_enabled}
+                        onChange={(e) => setDailyPricing({ ...dailyPricing, manual_pricing_enabled: e.target.checked })}
+                        className="h-4 w-4 bg-black border border-white/10 rounded accent-gold-base cursor-pointer"
+                      />
+                      <label htmlFor="manual_pricing_enabled" className="text-gray-300 font-serif select-none cursor-pointer">
+                        Manual Pricing Enabled (override live feed with reference prices above)
+                      </label>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-gray-400 block uppercase text-[9px] font-bold">Reason for Update (required)</label>
+                      <input
+                        type="text"
+                        required
+                        value={dailyPricingReason}
+                        onChange={(e) => setDailyPricingReason(e.target.value)}
+                        className="w-full bg-black border border-white/10 rounded px-3 py-2 text-white outline-none focus:border-[#c5a85c]"
+                        placeholder="e.g. Dubai desk morning reference update per LBMA fix"
+                      />
+                    </div>
+
+                    {(dailyPricing.updated_by_admin || dailyPricing.last_updated_at) && (
+                      <div className="p-3 bg-black/40 border border-white/5 rounded text-[10px] text-gray-400 space-y-1">
+                        {dailyPricing.updated_by_admin && (
+                          <p>Updated by admin: <span className="text-gold-base">{dailyPricing.updated_by_admin}</span></p>
+                        )}
+                        {dailyPricing.last_updated_at && (
+                          <p>Last updated: <span className="text-white">{new Date(dailyPricing.last_updated_at).toLocaleString()}</span></p>
+                        )}
+                        {dailyPricing.reason_for_update && (
+                          <p>Last reason: <span className="text-gray-300">{dailyPricing.reason_for_update}</span></p>
+                        )}
+                      </div>
+                    )}
+
+                    <button
+                      type="submit"
+                      className="px-5 py-2.5 bg-[#c5a85c] hover:bg-amber-600 text-black font-semibold rounded uppercase tracking-wider font-sans cursor-pointer"
+                    >
+                      Save Daily Reference Pricing
+                    </button>
+                  </form>
+                </div>
+              )}
+
+              {/* 9c. SECTION: SHIPPING SETTINGS */}
+              {activeSection === "shipping_settings" && (
+                <div className="space-y-6">
+                  <div>
+                    <h4 className="text-lg font-serif text-white">Shipping Settings</h4>
+                    <p className="text-xs text-gray-500 font-mono uppercase">Configure logistics defaults — internal notes are never shown to customers</p>
+                  </div>
+
+                  <form onSubmit={handleSaveShippingSettings} className="p-5 bg-[#0d0d0e] rounded border border-white/[0.03] space-y-5 font-mono text-xs">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        id="shipping_enabled"
+                        checked={shippingSettings.shipping_enabled}
+                        onChange={(e) => setShippingSettings({ ...shippingSettings, shipping_enabled: e.target.checked })}
+                        className="h-4 w-4 bg-black border border-white/10 rounded accent-gold-base cursor-pointer"
+                      />
+                      <label htmlFor="shipping_enabled" className="text-gray-300 font-serif select-none cursor-pointer">
+                        Shipping Enabled
+                      </label>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-gray-400 block uppercase text-[9px] font-bold">Shipping Company Name</label>
+                        <input
+                          type="text"
+                          required
+                          value={shippingSettings.shipping_company_name}
+                          onChange={(e) => setShippingSettings({ ...shippingSettings, shipping_company_name: e.target.value })}
+                          className="w-full bg-black border border-white/10 rounded px-3 py-2 text-white outline-none focus:border-[#c5a85c]"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-gray-400 block uppercase text-[9px] font-bold">Shipping Method</label>
+                        <input
+                          type="text"
+                          required
+                          value={shippingSettings.shipping_method}
+                          onChange={(e) => setShippingSettings({ ...shippingSettings, shipping_method: e.target.value })}
+                          className="w-full bg-black border border-white/10 rounded px-3 py-2 text-white outline-none focus:border-[#c5a85c]"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-gray-400 block uppercase text-[9px] font-bold">Shipping Price</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          required
+                          value={shippingSettings.shipping_price}
+                          onChange={(e) => setShippingSettings({ ...shippingSettings, shipping_price: Number(e.target.value) })}
+                          className="w-full bg-black border border-white/10 rounded px-3 py-2 text-white outline-none focus:border-[#c5a85c]"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-gray-400 block uppercase text-[9px] font-bold">Currency</label>
+                        <select
+                          value={shippingSettings.currency}
+                          onChange={(e) => setShippingSettings({ ...shippingSettings, currency: e.target.value as ShippingSettings["currency"] })}
+                          className="w-full bg-black border border-white/10 rounded px-3 py-2 text-white outline-none focus:border-[#c5a85c]"
+                        >
+                          <option value="AED">AED</option>
+                          <option value="USD">USD</option>
+                          <option value="IQD">IQD</option>
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-gray-400 block uppercase text-[9px] font-bold">Estimated Delivery Time</label>
+                        <input
+                          type="text"
+                          value={shippingSettings.estimated_delivery_time}
+                          onChange={(e) => setShippingSettings({ ...shippingSettings, estimated_delivery_time: e.target.value })}
+                          className="w-full bg-black border border-white/10 rounded px-3 py-2 text-white outline-none focus:border-[#c5a85c]"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-gray-400 block uppercase text-[9px] font-bold">Destination Country</label>
+                        <input
+                          type="text"
+                          value={shippingSettings.destination_country}
+                          onChange={(e) => setShippingSettings({ ...shippingSettings, destination_country: e.target.value })}
+                          className="w-full bg-black border border-white/10 rounded px-3 py-2 text-white outline-none focus:border-[#c5a85c]"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-gray-400 block uppercase text-[9px] font-bold">Destination City / Region</label>
+                        <input
+                          type="text"
+                          value={shippingSettings.destination_city_region}
+                          onChange={(e) => setShippingSettings({ ...shippingSettings, destination_city_region: e.target.value })}
+                          className="w-full bg-black border border-white/10 rounded px-3 py-2 text-white outline-none focus:border-[#c5a85c]"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-gray-400 block uppercase text-[9px] font-bold">Public Shipping Note (visible to customers)</label>
+                      <textarea
+                        rows={2}
+                        value={shippingSettings.public_shipping_note}
+                        onChange={(e) => setShippingSettings({ ...shippingSettings, public_shipping_note: e.target.value })}
+                        className="w-full bg-black border border-white/10 rounded px-3 py-2 text-white outline-none focus:border-[#c5a85c] font-sans"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-gray-400 block uppercase text-[9px] font-bold flex items-center gap-2">
+                        <ShieldAlert size={12} className="text-red-400" />
+                        Internal Shipping Notes (admin only — never shown to customers)
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={shippingSettings.internal_shipping_notes}
+                        onChange={(e) => setShippingSettings({ ...shippingSettings, internal_shipping_notes: e.target.value })}
+                        className="w-full bg-red-950/10 border border-red-900/30 rounded px-3 py-2 text-white outline-none focus:border-red-500/50 font-sans"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="px-5 py-2.5 bg-[#c5a85c] hover:bg-amber-600 text-black font-semibold rounded uppercase tracking-wider font-sans cursor-pointer"
+                    >
+                      Save Shipping Settings
                     </button>
                   </form>
                 </div>

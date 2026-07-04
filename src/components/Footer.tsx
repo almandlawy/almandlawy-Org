@@ -217,7 +217,7 @@ export default function Footer({
           <div className="p-4 bg-white border border-[#E8DEC9] shadow-sm rounded-sm text-[10px] leading-relaxed text-[#5E564D] space-y-3 font-bold">
             <p>
               <strong className="text-[#1F1A17] font-extrabold">English Compliance Wording:</strong><br />
-              PGR UAE provides indicative precious metals pricing and quote request services for physical bullion inquiries. Prices shown are market references only and may change without notice. Final availability, premiums, VAT/tax treatment, payment, delivery, storage, and settlement terms are confirmed by PGR UAE before any transaction. PGR UAE does not provide financial, investment, tax, or legal advice and does not guarantee market performance.
+              PGR UAE provides indicative precious metals pricing and quote request services for physical bullion inquiries. Prices shown are indicative market references only and may change without notice. Final availability, premiums, VAT/tax treatment, payment, delivery, storage, and settlement terms are confirmed by PGR UAE before any transaction. PGR UAE does not provide financial, investment, tax, or legal advice. Firm quote confirmed by PGR UAE desk. Subject to market movement and compliance review.
             </p>
             <p className="text-right font-bold" style={{ direction: "rtl" }}>
               <strong className="text-[#1F1A17] font-extrabold">الامتثال القانوني (العربية):</strong><br />

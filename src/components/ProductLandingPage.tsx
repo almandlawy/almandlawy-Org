@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { PRODUCTS } from "../data";
+import { resolvePublicCatalog } from "../lib/productCatalog";
 import { Product, LiveMarketRates } from "../types";
 import { ArrowLeft, ArrowRight, Shield, Award, HelpCircle, Phone, FileText, CheckCircle } from "lucide-react";
 import { getProductImage } from "../lib/productImages";
@@ -78,19 +79,19 @@ export default function ProductLandingPage({
         };
       case "/bullion-coins":
         return {
-          categoryKey: "gold_coins",
-          title_en: "Sovereign Mints Bullion Coins",
+          categoryKey: "mint_bars_coins",
+          title_en: "Mint Bars & Bullion Coins",
           title_ar: "عملات السبائك والمسكوكات الرسمية",
           subtitle_en: "Certified Pure Gold & Silver Legal Tender Coins",
           subtitle_ar: "عملات ذهبية رسمية مدعومة قانونياً من الحكومات والسكك الملكية",
-          description_en: "Certified gold and silver coins from prestigious sovereign mints. Includes the British Sovereign & Britannia, Canadian Maple Leaf, American Eagle, and South African Krugerrand. Each coin combines collector value with maximum bullion liquidity.",
-          description_ar: "اقتنِ المسكوكات الرسمية والعملات الذهبية التاريخية من مصافي دار السك الرسمية. تشمل عملات السوفرين وبريتانيا الملكية، القيقب الكندي، النسر الأمريكي، والكروغران.",
+          description_en: "Accredited mint bars and sovereign investment coins from world-renowned national mints. PGR UAE desk sources mint bars and bullion coins with indicative market reference pricing and firm quote confirmation.",
+          description_ar: "سبائك مصكوكة وعملات سيادية من دور سك وطنية عالمية. يوفر ديوان PGR UAE منتجات مصكوكة مع تسعير استرشادي وعرض سعر مؤكد.",
           faqs: [
             {
               q_en: "Do these bullion coins carry legal tender face value?",
               q_ar: "هل تحمل هذه العملات الذهبية قيمة نقدية قانونية؟",
-              a_en: "Yes, coins like the Sovereign, Britannia, and Maple Leaf are official legal tender in their countries of origin, backed fully by their respective central banks and governments.",
-              a_ar: "نعم، عملات مثل السوفرين البريطاني وبريتانيا والMaple Leaf الكندي هي عملات قانونية رسمية في بلدان المنشأ، ومدعومة كلياً من الحكومات والخزائن الرسمية."
+              a_en: "Yes, accredited mint bars and bullion coins from partner sovereign mints carry official legal tender backing in their countries of origin.",
+              a_ar: "نعم، السبائك المصكوكة وعملات السبائك المعتمدة من شركائنا تحمل ضماناً قانونياً رسمياً في بلدان المنشأ."
             },
             {
               q_en: "Are the coin capsules sealed?",
@@ -102,7 +103,7 @@ export default function ProductLandingPage({
         };
       default:
         return {
-          categoryKey: "custom",
+          categoryKey: "custom_inquiry",
           title_en: "Bespoke Refining & Bulk Inquiry",
           title_ar: "طلبات الصهر المخصصة والسبائك غير القياسية",
           subtitle_en: "Custom Bullion Sizing & Industrial Grain Desk",
@@ -122,7 +123,7 @@ export default function ProductLandingPage({
   };
 
   const meta = getCategoryMeta();
-  const filteredProducts = PRODUCTS.filter(p => p.category === meta.categoryKey);
+  const filteredProducts = resolvePublicCatalog(PRODUCTS).filter((p) => p.category === meta.categoryKey);
 
   // Calculate live indicative prices
   const calculateIndicativePrice = (prod: Product) => {
@@ -237,9 +238,7 @@ export default function ProductLandingPage({
                           referrerPolicy="no-referrer"
                           onError={(e) => {
                             e.currentTarget.onerror = null;
-                            e.currentTarget.src = prod.technical_specs.metal === "gold"
-                              ? "/images/products/02-gold-bars-1g-5g-10g.webp"
-                              : "/images/products/06-silver-bars-1oz-100g.webp";
+                            e.currentTarget.src = getProductImage(prod);
                           }}
                           className="h-full object-contain transition-transform duration-300 group-hover:scale-105"
                         />

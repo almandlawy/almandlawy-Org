@@ -5,10 +5,11 @@
 
 import React from "react";
 import { Search, Filter, ShieldCheck, ChevronRight, Sparkles, AlertCircle, Phone, FileText } from "lucide-react";
-import { Product, MetalCategory, LiveMarketRates } from "../types";
+import { Product, LiveMarketRates } from "../types";
 import { PRODUCTS } from "../data";
-import { dbService, isProduction } from "../lib/supabase";
+import { dbService } from "../lib/supabase";
 import { getProductImage } from "../lib/productImages";
+import { CATALOG_PRODUCT_COUNT, resolvePublicCatalog } from "../lib/productCatalog";
 
 interface CatalogProps {
   currentLang: "en" | "ar";
@@ -25,7 +26,7 @@ export default function Catalog({
   onSelectProduct,
   selectedCategoryFilter
 }: CatalogProps) {
-  const [products, setProducts] = React.useState<Product[]>([]);
+  const [products, setProducts] = React.useState<Product[]>(() => resolvePublicCatalog(PRODUCTS));
   const [searchQuery, setSearchQuery] = React.useState("");
   const [selectedFilter, setSelectedFilter] = React.useState<string>(selectedCategoryFilter || "all");
   const [sortBy, setSortBy] = React.useState<"default" | "price_asc" | "price_desc" | "weight_asc" | "weight_desc" | "name_asc">("default");
@@ -55,17 +56,12 @@ export default function Catalog({
   React.useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const list = await dbService.products.list();
-        if (list && list.length > 0) {
-          setProducts(list);
-          setIsProductsFetchFailed(false);
-        } else {
-          setProducts(PRODUCTS);
-          setIsProductsFetchFailed(true);
-        }
+        const list = await dbService.products.list("public");
+        setProducts(list.length > 0 ? list : resolvePublicCatalog(PRODUCTS));
+        setIsProductsFetchFailed(list.length !== CATALOG_PRODUCT_COUNT);
       } catch (err) {
         console.error("Failed to load products dynamically:", err);
-        setProducts(PRODUCTS);
+        setProducts(resolvePublicCatalog(PRODUCTS));
         setIsProductsFetchFailed(true);
       }
     };
@@ -85,8 +81,8 @@ export default function Catalog({
         case "all": return "الجميع";
         case "gold_bars": return "سبائك الذهب";
         case "silver_bars": return "سبائك الفضة";
-        case "gold_coins": return "مسكوكات الذهب";
-        case "silver_coins": return "مسكوكات الفضة";
+        case "mint_bars_coins": return "السبائك المصكوكة وعملات السبائك";
+        case "custom_inquiry": return "طلبات مخصصة";
         default: return id;
       }
     } else {
@@ -94,8 +90,8 @@ export default function Catalog({
         case "all": return "All Products";
         case "gold_bars": return "Gold Bars";
         case "silver_bars": return "Silver Bars";
-        case "gold_coins": return "Gold Coins";
-        case "silver_coins": return "Silver Coins";
+        case "mint_bars_coins": return "Mint Bars & Coins";
+        case "custom_inquiry": return "Custom Inquiry";
         default: return id;
       }
     }
@@ -149,7 +145,7 @@ export default function Catalog({
   };
 
   // Filter products based on search query and category pill selection
-  const filteredProducts = (products.length > 0 ? products : PRODUCTS).filter((product) => {
+  const filteredProducts = products.filter((product) => {
     try {
       if (!product) return false;
       const matchesCategory = selectedFilter === "all" || product.category === selectedFilter;
@@ -221,7 +217,7 @@ export default function Catalog({
           </div>
         )}
 
-        {isProduction && products.length === 0 ? (
+        {products.length === 0 ? (
           <div className="max-w-2xl mx-auto p-12 text-center border border-soft-border bg-soft-danger text-text-charcoal rounded space-y-4">
             <AlertCircle size={32} className="mx-auto text-gold-base animate-pulse" />
             <h3 className="text-lg font-serif text-text-charcoal">
@@ -239,7 +235,7 @@ export default function Catalog({
             <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-6 pb-6 border-b border-soft-border">
               {/* Category Filter Pills */}
               <div className="flex flex-wrap items-center gap-2.5">
-                {["all", "gold_bars", "silver_bars", "gold_coins", "silver_coins"].map((filterId) => (
+                {["all", "gold_bars", "silver_bars", "mint_bars_coins", "custom_inquiry"].map((filterId) => (
                   <button
                     key={filterId}
                     onClick={() => {
@@ -327,9 +323,7 @@ export default function Catalog({
                         loading="lazy"
                         onError={(e) => {
                           e.currentTarget.onerror = null;
-                          e.currentTarget.src = isGold
-                            ? "/images/products/02-gold-bars-1g-5g-10g.webp"
-                            : "/images/products/06-silver-bars-1oz-100g.webp";
+                          e.currentTarget.src = getProductImage(product);
                         }}
                         className="w-full h-full object-contain opacity-90 group-hover:scale-105 transition-all duration-1000 z-0"
                       />

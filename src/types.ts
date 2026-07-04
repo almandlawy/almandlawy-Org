@@ -29,7 +29,11 @@ export interface LiveMarketRates {
   cache_timestamp?: string;
 }
 
-export type MetalCategory = "gold_bars" | "silver_bars" | "gold_coins" | "silver_coins";
+export type MetalCategory =
+  | "gold_bars"
+  | "silver_bars"
+  | "mint_bars_coins"
+  | "custom_inquiry";
 
 export interface TechnicalSpecifications {
   weight_grams?: number;
@@ -170,5 +174,46 @@ export interface BuybackRequest {
   estimated_payout_usd?: number;
   exchange_rate_iqd?: number;
   created_at: string;
+}
+
+export type PricingCurrency = "AED" | "USD";
+export type PricingUnit = "per_gram" | "per_kg" | "per_troy_ounce";
+export type ShippingCurrency = "AED" | "USD" | "IQD";
+
+export interface DailyPricingSettings {
+  gold_daily_reference_price: number;
+  silver_daily_reference_price: number;
+  currency: PricingCurrency;
+  unit: PricingUnit;
+  manual_pricing_enabled: boolean;
+  effective_date: string;
+  reason_for_update: string;
+  updated_by_admin: string;
+  last_updated_at: string;
+}
+
+export interface ShippingSettings {
+  shipping_enabled: boolean;
+  shipping_company_name: string;
+  shipping_method: string;
+  shipping_price: number;
+  currency: ShippingCurrency;
+  destination_country: string;
+  destination_city_region: string;
+  estimated_delivery_time: string;
+  public_shipping_note: string;
+  internal_shipping_notes: string;
+}
+
+export interface QuoteSignaturePayload {
+  quoteId: string;
+  customerId: string;
+  productFirmPrice: number;
+  shippingFee: number;
+  totalFirmQuote: number;
+  currency: string;
+  expiresAt: string;
+  status: string;
+  createdAt: string;
 }
 

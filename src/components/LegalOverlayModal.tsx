@@ -107,7 +107,7 @@ All cash-equivalent settlements above AED 55,000 are subject to regulatory check
       label_ar: "إخلاء مسؤولية الأسعار وبيانات السوق",
       content_en: `PGR UAE Pricing & Market Data Disclaimer
 
-PGR UAE provides indicative precious metals pricing and quote request services for physical bullion inquiries. Prices shown are market references only and may change without notice. Final availability, premiums, VAT/tax treatment, payment, delivery, storage, and settlement terms are confirmed by PGR UAE before any transaction. PGR UAE does not provide financial, investment, tax, or legal advice and does not guarantee market performance.
+PGR UAE provides indicative precious metals pricing and quote request services for physical bullion inquiries. Prices shown are indicative market references only and may change without notice. Final availability, premiums, VAT/tax treatment, payment, delivery, storage, and settlement terms are confirmed by PGR UAE before any transaction. PGR UAE does not provide financial, investment, tax, or legal advice. Firm quote confirmed by PGR UAE desk. Subject to market movement and compliance review.
 
 Any historical metal chart patterns or references on this platform are for general illustration purposes and must not be used as investment counsel or speculative forecasting.`,
       content_ar: `إخلاء مسؤولية أسعار السلع ومعلومات السوق - PGR UAE
@@ -147,7 +147,7 @@ Any cancellation requested by a customer prior to complete settlement, if approv
 Physical delivery or collection of allocated bullion is strictly subject to pre-scheduled appointments at our Almas Tower headquarters in Dubai, UAE. Biometric validation, original Emirates ID or Passport, and verified corporate authorization letters are mandatory for handovers.
 
 2. Armored Security Logistics
-PGR UAE partners with licensed global armored transport underwriters (including Brink's Global Services) to coordinate fully insured physical logistics for authorized institutional consignments. Delivery is subject to local and international customs approvals.`,
+PGR UAE coordinates desk-confirmed secure delivery for authorized institutional consignments. Delivery is subject to local and international customs approvals and compliance review.`,
       content_ar: `سياسة شحن وتسليم واستلام السبائك الفعلية - PGR UAE
 
 ١. بروتوكولات التسليم والاستلام الآمن
@@ -207,14 +207,14 @@ Any precious metal bars submitted for a sell-back quote must undergo physical te
 Investing in physical precious metals carries significant price volatility. Bullion markets are highly sensitive to geopolitical, macroeconomic, and global interest rate cycles. Past market performance is not indicative of future price outcomes.
 
 2. Illiquidity Risk & Premium Expenses
-Physical bullion is intended as a long-term capital preservation hedge. Short-term transaction spreads, minting premiums, and vault storage custody overheads can reduce short-term liquid asset values. PGR UAE does not guarantee capital returns or profit margins.`,
+Physical bullion is intended as a long-term capital preservation hedge. Short-term transaction spreads, minting premiums, and vault storage custody overheads can reduce short-term liquid asset values. Indicative market reference only. Firm quote confirmed by PGR UAE desk. Subject to compliance review.`,
       content_ar: `وثيقة الإفصاح عن مخاطر أسواق السلع والمعادن الثمينة - PGR UAE
 
 ١. تذبذب قيمة رأس المال وأسعار السوق
 ينطوي تملك واقتناء المعادن الثمينة الفعلية على مخاطر تذبذب أسعار عالية. تتأثر أسواق السبائك بقوة بالأحداث الجيوسياسية ومؤشرات الاقتصاد الكلي وأسعار الفائدة العالمية. الأداء التاريخي للسوق ليس دليلاً على الإنجازات المستقبلية.
 
 ٢. مخاطر السيولة السريعة ورسوم التوثيق
-يُنظر إلى السبائك الفعلية كمخزن آمن للقيمة وحماية للثروة على المدى الطويل. فروقات أسعار التداول الفورية ورسوم صك المصانع وتكاليف حفظ الخزائن قد تقلل من الأرباح السريعة. لا توفر PGR UAE أي ضمانات لتحقيق أرباح أو عوائد ثابتة.`
+يُنظر إلى السبائك الفعلية كمخزن آمن للقيمة وحماية للثروة على المدى الطويل. فروقات أسعار التداول الفورية ورسوم صك المصانع وتكاليف حفظ الخزائن قد تقلل من الأرباح السريعة. PGR UAE لا تقدم استشارات مالية. الأسعار استرشادية — عرض السعر المؤكد يصدر من الديوان.`
     },
     {
       id: "cookie",
