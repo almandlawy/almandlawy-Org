@@ -11,9 +11,10 @@ interface HeroProps {
   onScrollToCatalog: (category?: string) => void;
   onScrollToMarket: () => void;
   onOpenQuote: () => void;
+  onScrollToIraqOffers?: () => void;
 }
 
-export default function Hero({ currentLang, onScrollToCatalog, onScrollToMarket, onOpenQuote }: HeroProps) {
+export default function Hero({ currentLang, onScrollToCatalog, onScrollToMarket, onOpenQuote, onScrollToIraqOffers }: HeroProps) {
   return (
     <section className="relative min-h-screen w-full flex items-center justify-center pt-32 pb-20 overflow-hidden bg-brand-bg" id="pgr-hero">
       {/* Background Image with Deep Luxury Shadows */}
@@ -64,10 +65,10 @@ export default function Hero({ currentLang, onScrollToCatalog, onScrollToMarket,
           <p className="max-w-3xl mx-auto text-sm sm:text-base md:text-lg text-text-secondary font-sans tracking-wide leading-relaxed animate-fadeIn" style={{ animationDelay: "300ms" }}>
             {currentLang === "ar" ? (
               <span className="font-arabic">
-                الذهب والفضة للإمارات والعراق — شراء، تخزين آمن، تتبع المحفظة، وتوصيل فعلي تحت إشراف معايير الامتثال دبي.
+                سبائك فضة PALM و SAM من دبي للعراق — أسعار واقعية، توصيل آمن لبغداد وأربيل والبصرة.
               </span>
             ) : (
-              "Secure allocated physical gold & silver bullion for family offices and institutional desk clients. Full Dubai custody, security vaulting, and accredited UAE-to-Iraq transit logistcs."
+              "PALM & SAM silver bars from Dubai to Iraq — realistic pricing, secure delivery to Baghdad, Erbil, and Basra."
             )}
           </p>
         </div>
@@ -100,10 +101,10 @@ export default function Hero({ currentLang, onScrollToCatalog, onScrollToMarket,
 
           {/* Buy Silver Link - Secondary Button */}
           <button
-            onClick={() => onScrollToCatalog("silver_bars")}
+            onClick={() => (onScrollToIraqOffers ? onScrollToIraqOffers() : onScrollToCatalog("silver_bars"))}
             className="w-full sm:w-auto px-8 py-3.5 text-[12px] uppercase tracking-[0.2em] font-sans font-bold text-text-charcoal bg-transparent border border-[#C6A15B] hover:bg-gold-base/5 rounded transition-all duration-300 cursor-pointer"
           >
-            {currentLang === "ar" ? "شراء الفضة النقية" : "Buy Silver Bullion"}
+            {currentLang === "ar" ? "عروض فضة العراق" : "Iraq Silver Offers"}
           </button>
 
           {/* Request Bespoke Quote - Primary gold outline style button */}

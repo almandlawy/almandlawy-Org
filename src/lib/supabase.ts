@@ -9,6 +9,7 @@ import { PRODUCTS, BRANDS, DEFAULT_DAILY_PRICING, DEFAULT_SHIPPING_SETTINGS } fr
 import {
   CATALOG_SEED_VERSION,
   catalogNeedsMigration,
+  getCanonicalProduct,
   isLegacyProductId,
   resolveAdminCatalog,
   resolvePublicCatalog,
@@ -376,7 +377,7 @@ const seedLocalStorage = () => {
     office_address_ar: "برج الماس، منطقة التداول الحرة، دبي مارينا، دبي، الإمارات العربية المتحدة",
     dmcc_reg_no: "890317",
     manual_gold_usd_oz: 2365.40,
-    manual_silver_usd_oz: 29.85,
+    manual_silver_usd_oz: 58.00,
     usd_aed_rate: 3.6725,
     default_product_premium_pct: 2.0,
     disable_live_pricing: false,
@@ -676,35 +677,39 @@ export const mapDbProductToFrontend = (dbProd: any): any => {
     frontendCategory = "gold_bars";
   }
 
+  const fallbackCanonical = getCanonicalProduct(dbProd.id);
+
   return {
     id: dbProd.id,
     name_en: dbProd.name || "",
     name_ar: dbProd.arabic_name || dbProd.name || "",
     category: frontendCategory,
-    weight_label: `${dbProd.weight_grams || 100} Grams`,
+    weight_label: fallbackCanonical?.weight_label || `${dbProd.weight_grams || 100} Grams`,
     purity: dbProd.purity || "999.9",
-    manufacturer: dbProd.brand || "PGR UAE",
-    country_en: "United Arab Emirates",
-    country_ar: "الإمارات العربية المتحدة",
+    manufacturer: dbProd.brand || fallbackCanonical?.manufacturer || "PGR UAE",
+    country_en: fallbackCanonical?.country_en || "United Arab Emirates",
+    country_ar: fallbackCanonical?.country_ar || "الإمارات العربية المتحدة",
     availability: dbProd.availability || "In Stock",
-    certificate_en: "Assay Certificate Certified",
-    certificate_ar: "شهادة معتمدة",
-    description_en: dbProd.description || "High-Purity Bullion Bar",
-    description_ar: dbProd.arabic_description || "سبائك عالية النقاء والجودة",
+    certificate_en: fallbackCanonical?.certificate_en || "Assay Certificate Certified",
+    certificate_ar: fallbackCanonical?.certificate_ar || "شهادة معتمدة",
+    description_en: dbProd.description || fallbackCanonical?.description_en || "High-Purity Bullion Bar",
+    description_ar: dbProd.arabic_description || fallbackCanonical?.description_ar || "سبائك عالية النقاء والجودة",
     technical_specs: {
-      weight_grams: Number(dbProd.weight_grams) || 100,
+      weight_grams: Number(dbProd.weight_grams) || fallbackCanonical?.technical_specs?.weight_grams || 100,
       purity: dbProd.purity || "999.9",
       metal: (dbProd.metal_type || (isGold ? "gold" : "silver")) as "gold" | "silver",
     },
     image_placeholder: (isGold ? "gold_bar" : "silver_bar") as any,
-    premium_multiplier: 1.025,
-    brand: dbProd.brand || "PGR UAE",
+    premium_multiplier: fallbackCanonical?.premium_multiplier ?? 1.025,
+    brand: dbProd.brand || fallbackCanonical?.brand || "PGR UAE",
     price: Number(dbProd.price) || 0,
     price_mode: (dbProd.price_mode || "spot") as "spot" | "fixed",
-    image_url: dbProd.image_url || undefined,
+    image_url: dbProd.image_url || fallbackCanonical?.image_url || undefined,
     stock_status: dbProd.stock_status || "In Stock",
     certificate_url: dbProd.certificate_url || undefined,
     published: dbProd.published !== undefined ? dbProd.published : true,
+    iraq_popular: fallbackCanonical?.iraq_popular,
+    iraq_offer_rank: fallbackCanonical?.iraq_offer_rank,
   };
 };
 

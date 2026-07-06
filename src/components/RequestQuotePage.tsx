@@ -354,7 +354,7 @@ export default function RequestQuotePage({ currentLang, onNavigate }: RequestQuo
                     type="text"
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    placeholder="e.g. Prefer PAMP Suisse bars, or SAM mintings"
+                    placeholder={currentLang === "ar" ? "مثال: سبيكة SAM 500 جرام أو PALM 1 كيلو للعراق" : "e.g. SAM 500g or PALM 1kg silver for Iraq delivery"}
                     className="w-full bg-[#070707] border border-white/5 focus:border-[#c5a85c]/60 rounded px-3 py-2 text-white placeholder-gray-700 focus:outline-none transition-colors"
                   />
                 </div>

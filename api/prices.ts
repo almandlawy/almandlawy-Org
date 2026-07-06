@@ -3,7 +3,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 // Removed old hardcoded 2350 values, replaced with realistic 2026 market reference prices
 const METAL_SPOTS = {
   gold: 4120.50,
-  silver: 48.20,
+  silver: 58.00,
   platinum: 1080.00,
   palladium: 1120.00
 };
@@ -13,7 +13,8 @@ const EXCHANGE_RATES = {
   USD: 1.0,
   EUR: 0.9250,
   GBP: 0.7850,
-  SAR: 3.7505
+  SAR: 3.7505,
+  IQD: 1310.0
 };
 
 const OUNCE_TO_GRAM = 31.1034768;

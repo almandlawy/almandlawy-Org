@@ -10,6 +10,11 @@ import { PRODUCTS } from "../data";
 import { dbService } from "../lib/supabase";
 import { getProductImage } from "../lib/productImages";
 import { CATALOG_PRODUCT_COUNT, resolvePublicCatalog } from "../lib/productCatalog";
+import {
+  calculateIndicativePrice,
+  canShowIndicativePrice,
+  getPriceStatusLabel,
+} from "../lib/indicativePricing";
 
 interface CatalogProps {
   currentLang: "en" | "ar";
@@ -98,42 +103,9 @@ export default function Catalog({
   };
 
   // Estimate physical product pricing based on current live spot rate
-  const calculateIndicativePrice = (product: Product) => {
-    try {
-      if (!rates || !product) return null;
-      const cur = selectedCurrency as any;
-      const isGold = product?.technical_specs?.metal === "gold" || product?.category?.includes("gold");
-      const baseSpot = isGold ? rates.gold.currencies[cur] : rates.silver.currencies[cur];
-
-      if (!baseSpot) return null;
-
-      let totalGrams = 0;
-      if (product?.technical_specs?.weight_grams) {
-        totalGrams = product.technical_specs.weight_grams;
-      } else if (product?.technical_specs?.weight_oz) {
-        totalGrams = product.technical_specs.weight_oz * 31.1034768;
-      }
-
-      if (totalGrams === 0) return null;
-
-      const baseCost = totalGrams * baseSpot.gram;
-      
-      let premiumFactor = 1.0;
-      if (product?.premium_multiplier) {
-        premiumFactor = product.premium_multiplier;
-      } else if (settings && settings.default_product_premium_pct) {
-        premiumFactor = 1 + (settings.default_product_premium_pct / 100);
-      } else {
-        premiumFactor = 1.02; // default 2%
-      }
-      
-      const finalCost = baseCost * premiumFactor;
-
-      return finalCost;
-    } catch (e) {
-      console.error("Error calculating indicative price:", e);
-      return null;
-    }
+  const getIndicativePrice = (product: Product) => {
+    const premiumPct = settings?.default_product_premium_pct ?? 2;
+    return calculateIndicativePrice(product, rates, selectedCurrency, premiumPct);
   };
 
   const getWhatsAppLink = (product: Product) => {
@@ -166,9 +138,17 @@ export default function Catalog({
   // Sort products dynamically
   const sortedProducts = React.useMemo(() => {
     return [...filteredProducts].sort((a, b) => {
+      if (sortBy === "default") {
+        const rankA = a.iraq_offer_rank ?? 99;
+        const rankB = b.iraq_offer_rank ?? 99;
+        if (rankA !== rankB) return rankA - rankB;
+        if (a.iraq_popular && !b.iraq_popular) return -1;
+        if (!a.iraq_popular && b.iraq_popular) return 1;
+        return 0;
+      }
       if (sortBy === "price_asc" || sortBy === "price_desc") {
-        const priceA = calculateIndicativePrice(a) || a.price || 0;
-        const priceB = calculateIndicativePrice(b) || b.price || 0;
+        const priceA = getIndicativePrice(a) || a.price || 0;
+        const priceB = getIndicativePrice(b) || b.price || 0;
         return sortBy === "price_asc" ? priceA - priceB : priceB - priceA;
       }
       if (sortBy === "weight_asc" || sortBy === "weight_desc") {
@@ -302,7 +282,8 @@ export default function Catalog({
               {sortedProducts.map((product) => {
                 const isGold = product?.technical_specs?.metal === "gold" || product?.category?.includes("gold");
                 const isCoin = product?.category?.includes("coin") || false;
-                const indicativePrice = calculateIndicativePrice(product);
+                const indicativePrice = getIndicativePrice(product);
+                const showIndicative = canShowIndicativePrice(rates?.source_status) && indicativePrice;
 
                 return (
                   <div
@@ -332,9 +313,16 @@ export default function Catalog({
                       <div className={`absolute inset-0 z-20 ${isGold ? "shimmer-mask-gold" : "shimmer-mask"}`} />
 
                       {/* Brand metadata tag */}
-                      <div className="absolute top-4 left-4 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded bg-brand-card border border-soft-border shadow-sm">
-                        <ShieldCheck size={11} className="text-olive-accent" />
-                        <span className="text-[9px] font-mono text-text-secondary uppercase tracking-wider">{product.manufacturer || "Certified"}</span>
+                      <div className="absolute top-4 left-4 z-20 flex flex-col gap-1.5">
+                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-brand-card border border-soft-border shadow-sm">
+                          <ShieldCheck size={11} className="text-olive-accent" />
+                          <span className="text-[9px] font-mono text-text-secondary uppercase tracking-wider">{product.manufacturer || "Certified"}</span>
+                        </div>
+                        {product.iraq_popular && (
+                          <div className="px-2.5 py-1 rounded bg-[#C6A15B] text-[#1F1A17] text-[9px] font-mono uppercase tracking-wider font-bold shadow-sm">
+                            {currentLang === "ar" ? "الأكثر طلباً — العراق" : "Iraq Bestseller"}
+                          </div>
+                        )}
                       </div>
 
                       {/* Certified Gold/Silver Stamp Overlay */}
@@ -386,9 +374,7 @@ export default function Catalog({
                         <span className="text-[10px] text-text-secondary font-mono block uppercase font-bold">
                           {product.price_mode === "fixed"
                             ? (currentLang === "ar" ? "السعر الثابت المعتمد" : "Confirmed Fixed Price")
-                            : (rates && (rates.source_status === "live" || rates.source_status === "cached"))
-                              ? (currentLang === "ar" ? "السعر الاسترشادي الفوري" : "Live Indicative Price")
-                              : (currentLang === "ar" ? "السعر عند الطلب" : "Price on Request")}
+                            : getPriceStatusLabel(rates?.source_status, currentLang)}
                         </span>
                         
                         {product.price_mode === "fixed" ? (
@@ -404,9 +390,11 @@ export default function Catalog({
                               </span>
                             )}
                           </span>
-                        ) : (rates && (rates.source_status === "live" || rates.source_status === "cached")) && indicativePrice ? (
+                        ) : showIndicative ? (
                           <span className="text-lg font-mono font-bold text-[#1F1A17]">
-                            {indicativePrice.toLocaleString(undefined, { maximumFractionDigits: 2 })}{" "}
+                            {indicativePrice!.toLocaleString(undefined, {
+                              maximumFractionDigits: selectedCurrency === "IQD" ? 0 : 2,
+                            })}{" "}
                             <span className="text-[11px] text-[#A47C36] font-bold">{selectedCurrency}</span>
                           </span>
                         ) : (
@@ -473,8 +461,8 @@ export default function Catalog({
               <ShieldCheck size={18} className="text-olive-accent shrink-0" />
               <span>
                 {currentLang === "ar"
-                  ? "بيان توضيحي: جميع منتجات العلامات التجارية (PAMP, Valcambi, Metalor, Royal Mint) متاحة من خلال PGR بصفتنا بيت تداول معتمد وتخضع للفحص. لا تدعي بي جي آر تفرّدها بتصنيع هذه السبائك الحرة."
-                  : "Institutional notice: These globally respected bullion brands are officially sourced and authenticated through PGR UAE's licensed trading conduits. PGR UAE acts as an authorized bullion house and logistics partner, and does not claim manufacturing rights."}
+                  ? "بيان توضيحي: سبائك PALM وSAM وPAMP وValcambi متاحة عبر PGR بصفتنا بيت تداول معتمد. الأسعار استرشادية ومبنية على سوق دبي الحالي."
+                  : "Institutional notice: PALM, SAM, PAMP, and Valcambi bullion sourced through PGR UAE's licensed trading desk. Indicative prices reflect current Dubai market rates."}
               </span>
             </div>
           </>

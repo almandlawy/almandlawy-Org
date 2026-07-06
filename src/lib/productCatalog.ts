@@ -22,7 +22,7 @@ export const ALLOWED_PRODUCT_IDS = [
 export type AllowedProductId = (typeof ALLOWED_PRODUCT_IDS)[number];
 
 export const CATALOG_PRODUCT_COUNT = ALLOWED_PRODUCT_IDS.length;
-export const CATALOG_SEED_VERSION = "pgr-catalog-v3-10-only";
+export const CATALOG_SEED_VERSION = "pgr-catalog-v4-iraq-palm-sam";
 
 export const ALLOWED_PRODUCT_ID_SET = new Set<string>(ALLOWED_PRODUCT_IDS);
 

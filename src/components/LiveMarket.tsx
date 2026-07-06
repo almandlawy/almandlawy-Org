@@ -29,7 +29,7 @@ export default function LiveMarket({
   // We keep a history of the last 15 prices for each metal to draw stunning dynamic glowing SVG sparklines!
   const [history, setHistory] = React.useState<Record<string, number[]>>({
     gold: [2360, 2362, 2361, 2364, 2363, 2366, 2365, 2364, 2367, 2365, 2366, 2364, 2365, 2366, 2365.4],
-    silver: [29.7, 29.8, 29.75, 29.82, 29.8, 29.85, 29.83, 29.84, 29.89, 29.86, 29.87, 29.82, 29.85, 29.88, 29.85],
+    silver: [55, 56, 57, 57.5, 58, 58.2, 58, 57.8, 58.1, 58, 58.3, 58, 57.9, 58, 58.2, 58],
     platinum: [960, 962, 961, 963, 962, 965, 964, 963, 966, 964, 965, 963, 964, 966, 965.2],
     palladium: [1005, 1008, 1006, 1010, 1009, 1012, 1011, 1010, 1013, 1011, 1012, 1010, 1011, 1013, 1012.1]
   });
@@ -147,7 +147,7 @@ export default function LiveMarket({
     return rates[metal].currencies[cur] || { ounce: 0, gram: 0 };
   };
 
-  const currencies = ["AED", "USD", "EUR", "GBP", "SAR"];
+  const currencies = ["IQD", "AED", "USD", "EUR", "GBP", "SAR"];
 
   return (
     <section className="py-24 px-4 md:px-8 border-t border-soft-border bg-brand-bg relative" id="market" style={{ direction: currentLang === "ar" ? "rtl" : "ltr" }}>

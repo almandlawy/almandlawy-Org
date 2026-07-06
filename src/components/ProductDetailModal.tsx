@@ -8,6 +8,12 @@ import { X, ShieldCheck, Phone, CheckCircle, Mail, AlertTriangle, FileText, Zoom
 import { Product, LiveMarketRates } from "../types";
 import { dbService } from "../lib/supabase";
 import { getProductImage } from "../lib/productImages";
+import { getCanonicalProduct } from "../lib/productCatalog";
+import {
+  calculateIndicativePrice,
+  canShowIndicativePrice,
+  formatIndicativePrice,
+} from "../lib/indicativePricing";
 
 interface ProductDetailModalProps {
   currentLang: "en" | "ar";
@@ -69,29 +75,10 @@ export default function ProductDetailModal({
 
   // Calculate live price estimation on demand
   const getLivePrice = () => {
-    if (!rates) return null;
-    if (rates.source_status !== "live" && rates.source_status !== "cached") {
-      return null;
-    }
-    const cur = selectedCurrency as any;
-    const isGoldMetal = activeProduct.technical_specs.metal === "gold";
-    const baseSpot = isGoldMetal ? rates.gold.currencies[cur] : rates.silver.currencies[cur];
-
-    if (!baseSpot) return null;
-
-    let totalGrams = 0;
-    if (activeProduct.technical_specs.weight_grams) {
-      totalGrams = activeProduct.technical_specs.weight_grams;
-    } else if (activeProduct.technical_specs.weight_oz) {
-      totalGrams = activeProduct.technical_specs.weight_oz * 31.1034768;
-    }
-
-    if (totalGrams === 0) return null;
-
-    const baseCost = totalGrams * baseSpot.gram;
-    const finalCost = baseCost * activeProduct.premium_multiplier;
-
-    return finalCost.toLocaleString(undefined, { maximumFractionDigits: 2 });
+    if (!rates || !canShowIndicativePrice(rates.source_status)) return null;
+    const price = calculateIndicativePrice(activeProduct, rates, selectedCurrency);
+    if (price === null) return null;
+    return formatIndicativePrice(price, selectedCurrency, currentLang);
   };
 
   // Pre-compile the WhatsApp message depending on selected language
