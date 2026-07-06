@@ -16,6 +16,7 @@ export interface MetalPriceData {
     EUR: CurrencyPrice;
     GBP: CurrencyPrice;
     SAR: CurrencyPrice;
+    IQD?: CurrencyPrice;
   };
 }
 
@@ -71,6 +72,10 @@ export interface Product {
   stock_status?: "In Stock" | "Out of Stock" | "Pre-order";
   certificate_url?: string;
   published?: boolean;
+  /** Highlighted for Iraq retail demand (Palm / SAM silver) */
+  iraq_popular?: boolean;
+  /** Lower number = higher priority in Iraq offers section */
+  iraq_offer_rank?: number;
 }
 
 export interface ChatMessage {

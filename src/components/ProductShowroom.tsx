@@ -12,6 +12,11 @@ import { dbService } from "../lib/supabase";
 import { getProductImage } from "../lib/productImages";
 import { resolvePublicCatalog, ALLOWED_PRODUCT_IDS } from "../lib/productCatalog";
 import PricingDisclaimer from "./PricingDisclaimer";
+import {
+  calculateIndicativePrice,
+  canShowIndicativePrice,
+  formatIndicativePrice,
+} from "../lib/indicativePricing";
 
 interface ProductShowroomProps {
   currentLang: "en" | "ar";
@@ -130,13 +135,11 @@ export default function ProductShowroom({
   };
 
   const getMarketRef = (product: Product) => {
-    const hasLive =
-      rates &&
-      (rates.source_status === "live" || rates.source_status === "cached") &&
-      product.price_mode !== "fixed";
-    return hasLive
-      ? isAr ? "مرجع سوقي استرشادي" : "Indicative market reference"
-      : isAr ? "اطلب مرجعاً من الديوان" : "Request reference from desk";
+    const price = calculateIndicativePrice(product, rates, selectedCurrency);
+    if (canShowIndicativePrice(rates?.source_status) && price) {
+      return `${formatIndicativePrice(price, selectedCurrency, currentLang)} ${selectedCurrency}`;
+    }
+    return isAr ? "اطلب مرجعاً من الديوان" : "Request reference from desk";
   };
 
   const getWhatsAppLink = (product: Product) => {

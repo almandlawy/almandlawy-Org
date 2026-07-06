@@ -123,7 +123,7 @@ try {
 // These represent highly accurate reference points for June 2026.
 const METAL_SPOTS = {
   gold: 4120.50,      // USD per Ounce
-  silver: 48.20,      // USD per Ounce
+  silver: 58.00,      // USD per Ounce
   platinum: 1080.00,   // USD per Ounce
   palladium: 1120.00  // USD per Ounce
 };
@@ -134,7 +134,8 @@ const EXCHANGE_RATES = {
   AED: 3.6725, // Fixed UAE Dirham Peg
   EUR: 0.925,
   GBP: 0.785,
-  SAR: 3.7505  // Saudi Riyal
+  SAR: 3.7505,  // Saudi Riyal
+  IQD: 1310.0   // Iraqi Dinar (CBI reference)
 };
 
 // Global server-side admin settings state with robust manual fallback values
@@ -150,7 +151,7 @@ let serverSettings = {
   office_address_ar: "برج الماس، منطقة التداول الحرة، دبي مارينا، دبي، الإمارات العربية المتحدة",
   dmcc_reg_no: "890317",
   manual_gold_usd_oz: 2365.40,
-  manual_silver_usd_oz: 29.85,
+  manual_silver_usd_oz: 58.00,
   usd_aed_rate: 3.6725,
   default_product_premium_pct: 2.0,
   disable_live_pricing: false,

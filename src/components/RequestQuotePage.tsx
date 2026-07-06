@@ -337,8 +337,8 @@ export default function RequestQuotePage({ currentLang, onNavigate }: RequestQuo
               onChange={(e) => setMessage(e.target.value)}
               placeholder={
                 isAr
-                  ? "أي تفاصيل إضافية عن المنتج أو التوصيل"
-                  : "Any extra details about product or delivery"
+                  ? "مثال: سبيكة SAM 500 جرام أو PALM 1 كيلو للعراق"
+                  : "e.g. SAM 500g or PALM 1kg silver for Iraq delivery"
               }
               className={`${inputClass} resize-none`}
             />

@@ -17,6 +17,7 @@ interface HeroProps {
   onScrollToCatalog: (category?: string) => void;
   onScrollToMarket: () => void;
   onOpenQuote: () => void;
+  onScrollToIraqOffers?: () => void;
 }
 
 const TRUST_ITEMS = [
@@ -29,7 +30,8 @@ export default function Hero({
   currentLang,
   onScrollToCatalog,
   onScrollToMarket,
-  onOpenQuote
+  onOpenQuote,
+  onScrollToIraqOffers
 }: HeroProps) {
   const isAr = currentLang === "ar";
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -86,7 +88,6 @@ export default function Hero({
     >
       <div className="max-w-7xl mx-auto px-4 md:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 items-center">
-          {/* Left — headline & CTAs */}
           <div className="space-y-6 order-1">
             <span className="inline-flex items-center px-3 py-1 rounded-full border border-champagne bg-brand-card text-[10px] font-mono uppercase tracking-[0.25em] text-gold-dark font-bold">
               PGR UAE
@@ -111,8 +112,8 @@ export default function Hero({
             <div className="space-y-2">
               <p className="text-base text-text-secondary font-sans leading-relaxed max-w-lg">
                 {isAr
-                  ? "اطلب عروض أسعار مؤكدة لسبائك الذهب والفضة وعملات السبائك المادية. يخدم PGR UAE العملاء العراقيين بتسعير مؤكد من المكتب ومراجعة الامتثال وخيارات الاستلام أو التوصيل المرتبة."
-                  : "Request confirmed quotes for physical gold bars, silver bars and bullion coins. PGR UAE serves Iraqi customers with desk-confirmed pricing, compliance review, and arranged collection or delivery options."}
+                  ? "سبائك فضة PALM و SAM من دبي للعراق — أسعار واقعية، توصيل آمن لبغداد وأربيل والبصرة."
+                  : "PALM & SAM silver bars from Dubai to Iraq — realistic pricing, secure delivery to Baghdad, Erbil, and Basra."}
               </p>
             </div>
 
@@ -148,6 +149,17 @@ export default function Hero({
             <div className="flex flex-wrap gap-4 text-[10px] font-mono uppercase tracking-widest">
               <button
                 type="button"
+                onClick={() =>
+                  onScrollToIraqOffers
+                    ? onScrollToIraqOffers()
+                    : onScrollToCatalog("silver_bars")
+                }
+                className="text-gold-dark hover:text-gold-base transition-colors font-bold"
+              >
+                {isAr ? "عروض فضة العراق ←" : "Iraq Silver Offers →"}
+              </button>
+              <button
+                type="button"
                 onClick={() => onScrollToCatalog()}
                 className="text-gold-dark hover:text-gold-base transition-colors"
               >
@@ -163,7 +175,6 @@ export default function Hero({
             </div>
           </div>
 
-          {/* Right — luxury framed video */}
           <div ref={containerRef} className="order-2 w-full">
             <div className="relative rounded-2xl border-2 border-champagne bg-brand-card shadow-premium overflow-hidden">
               <div className="relative aspect-[4/3] sm:aspect-video bg-panel-charcoal">
@@ -203,8 +214,8 @@ export default function Hero({
                   </p>
                   <p className="text-[10px] sm:text-xs font-mono text-champagne uppercase tracking-wider mt-1">
                     {isAr
-                      ? "سبائك الذهب • سبائك الفضة • مسكوكات وعملات السبائك"
-                      : "Gold Bars • Silver Bars • Mint Bars & Bullion Coins"}
+                      ? "PALM • SAM • سبائك الذهب والفضة"
+                      : "PALM • SAM • Gold & Silver Bars"}
                   </p>
                 </div>
               </div>

@@ -11,6 +11,12 @@ import { PRODUCTS } from "../data";
 import { dbService } from "../lib/supabase";
 import { getProductImage } from "../lib/productImages";
 import { resolvePublicCatalog } from "../lib/productCatalog";
+import {
+  calculateIndicativePrice,
+  canShowIndicativePrice,
+  formatIndicativePrice,
+  getPriceStatusLabel,
+} from "../lib/indicativePricing";
 
 interface ProductDetailModalProps {
   currentLang: "en" | "ar";
@@ -68,8 +74,8 @@ export default function ProductDetailModal({
     activeProduct.category === "mint_bars_coins" ? (isAr ? "ذهب / فضة" : "Gold / Silver") :
     (isAr ? "مخصص" : "Custom");
 
-  const hasLiveRef =
-    rates && (rates.source_status === "live" || rates.source_status === "cached");
+  const indicativePrice = calculateIndicativePrice(activeProduct, rates, selectedCurrency);
+  const showPrice = canShowIndicativePrice(rates?.source_status) && indicativePrice;
 
   const pName = isAr ? activeProduct.name_ar : activeProduct.name_en;
   const waLink = `https://wa.me/971559688837?text=${encodeURIComponent(
@@ -94,9 +100,13 @@ export default function ProductDetailModal({
           </button>
 
           <div className="grid grid-cols-1 lg:grid-cols-2">
-            {/* Left: large portrait image */}
             <div className="p-6 md:p-8 bg-brand-bg border-b lg:border-b-0 lg:border-r border-soft-border">
-              <div className="aspect-[4/5] w-full max-h-[70vh] flex items-center justify-center p-4 rounded border border-soft-border bg-brand-card">
+              <div className="aspect-[4/5] w-full max-h-[70vh] flex items-center justify-center p-4 rounded border border-soft-border bg-brand-card relative">
+                {activeProduct.iraq_popular && (
+                  <span className="absolute top-3 left-3 z-10 px-2 py-1 rounded bg-[#C6A15B] text-[#1F1A17] text-[9px] font-mono uppercase font-bold">
+                    {isAr ? "الأكثر طلباً — العراق" : "Iraq Bestseller"}
+                  </span>
+                )}
                 <img
                   src={getProductImage(activeProduct)}
                   alt={pName}
@@ -110,7 +120,6 @@ export default function ProductDetailModal({
               </div>
             </div>
 
-            {/* Right: product data */}
             <div className="p-6 md:p-8 flex flex-col gap-5">
               <div>
                 <p className="text-[10px] font-mono text-gold-dark uppercase tracking-widest font-bold">
@@ -129,7 +138,7 @@ export default function ProductDetailModal({
                   [isAr ? "المعدن" : "Metal", metalLabel],
                   [isAr ? "الوزن" : "Weight", activeProduct.weight_label],
                   [isAr ? "النقاوة" : "Purity", activeProduct.purity],
-                  [isAr ? "التوفر" : "Availability", isAr ? activeProduct.availability : activeProduct.availability]
+                  [isAr ? "التوفر" : "Availability", activeProduct.availability]
                 ].map(([label, value]) => (
                   <div key={String(label)} className="p-3 rounded border border-soft-border bg-brand-card">
                     <dt className="text-text-secondary text-[10px] font-mono uppercase">{label}</dt>
@@ -140,16 +149,24 @@ export default function ProductDetailModal({
 
               <div className="p-4 rounded border border-soft-border bg-brand-card space-y-2">
                 <p className="text-[10px] font-mono text-olive-accent uppercase font-bold">
-                  {isAr ? "مرجع السوق الاسترشادي" : "Indicative market reference"}
+                  {getPriceStatusLabel(rates?.source_status, currentLang)}
                 </p>
-                <p className="text-sm text-text-charcoal font-sans">
-                  {hasLiveRef
-                    ? isAr
-                      ? "مرجع سوقي استرشادي متوفر — خاضع لحركة السوق"
-                      : "Indicative market reference available — subject to market movement"
-                    : isAr
+                {showPrice ? (
+                  <p className="text-xl font-mono font-bold text-text-charcoal">
+                    {formatIndicativePrice(indicativePrice!, selectedCurrency, currentLang)}{" "}
+                    <span className="text-sm text-gold-dark">{selectedCurrency}</span>
+                  </p>
+                ) : (
+                  <p className="text-sm text-text-charcoal font-sans">
+                    {isAr
                       ? "اطلب مرجع سوقي معتمد من الديوان"
                       : "Request firm market reference from desk"}
+                  </p>
+                )}
+                <p className="text-[10px] text-text-secondary">
+                  {isAr
+                    ? "سعر استرشادي — يؤكده الديوان قبل الطلب"
+                    : "Indicative — desk confirms before order"}
                 </p>
               </div>
 

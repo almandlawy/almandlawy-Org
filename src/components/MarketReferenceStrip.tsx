@@ -115,7 +115,7 @@ export default function MarketReferenceStrip({
               </span>
             )}
             <div className="flex items-center gap-1.5">
-              {["AED", "USD"].map((cur) => (
+              {["IQD", "AED", "USD"].map((cur) => (
                 <button
                   key={cur}
                   type="button"

@@ -25,6 +25,7 @@ import ClientDashboardModal from "./components/ClientDashboardModal";
 import AdminPortalModal from "./components/AdminPortalModal";
 import AdminPanel from "./components/AdminPanel";
 import LegalOverlayModal from "./components/LegalOverlayModal";
+import IraqSilverOffers from "./components/IraqSilverOffers";
 import Footer from "./components/Footer";
 import SeoSiteLinks from "./components/SeoSiteLinks";
 import { LiveMarketRates, Product } from "./types";
@@ -49,16 +50,16 @@ import PricingDisclaimer from "./components/PricingDisclaimer";
 
 export default function App() {
   const [currentLang, setCurrentLang] = useState<"en" | "ar">("ar");
-  const [selectedCurrency, setSelectedCurrency] = useState<string>("AED"); // Default to local UAE Dirham
+  const [selectedCurrency, setSelectedCurrency] = useState<string>("IQD");
   const [currentPath, setCurrentPath] = useState<string>(window.location.pathname);
 
   // Pre-calculated default reference spot rates for flawless client experience
   const getInitialRates = (): LiveMarketRates => {
     const defaultSpots = {
-      gold: 2365.40,
-      silver: 29.85,
-      platinum: 965.20,
-      palladium: 1012.10
+      gold: 4120.50,
+      silver: 58.00,
+      platinum: 1080.00,
+      palladium: 1120.00
     };
     
     const exchangeRates = {
@@ -66,7 +67,8 @@ export default function App() {
       AED: 3.6725,
       EUR: 0.925,
       GBP: 0.785,
-      SAR: 3.7505
+      SAR: 3.7505,
+      IQD: 1310.0
     };
     
     const OUNCE_TO_GRAM = 31.1034768;
@@ -665,6 +667,7 @@ export default function App() {
         onScrollToCatalog={handleScrollToCatalogWithFilter}
         onScrollToMarket={() => handleScrollToSection("market")}
         onOpenQuote={() => navigateTo("/request-quote")}
+        onScrollToIraqOffers={() => handleScrollToSection("iraq-silver-offers")}
       />
 
       <MarketReferenceStrip
@@ -674,6 +677,14 @@ export default function App() {
         onChangeCurrency={setSelectedCurrency}
         onRefresh={fetchRates}
         isRefreshing={isRefreshing}
+        onOpenQuote={() => navigateTo("/request-quote")}
+      />
+
+      <IraqSilverOffers
+        currentLang={currentLang}
+        rates={rates}
+        selectedCurrency={selectedCurrency}
+        onSelectProduct={setSelectedProduct}
         onOpenQuote={() => navigateTo("/request-quote")}
       />
 
