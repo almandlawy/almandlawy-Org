@@ -1,18 +1,21 @@
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
+ * Premium product detail — 10-product catalog only.
  */
 
-import React, { useState, useEffect } from "react";
-import { X, ShieldCheck, Phone, CheckCircle, Mail, AlertTriangle, FileText, ZoomIn, Download, Check, ExternalLink, Award } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { X, Phone, FileText, ShieldCheck } from "lucide-react";
 import { Product, LiveMarketRates } from "../types";
+import { PRODUCTS } from "../data";
 import { dbService } from "../lib/supabase";
 import { getProductImage } from "../lib/productImages";
-import { getCanonicalProduct } from "../lib/productCatalog";
+import { resolvePublicCatalog } from "../lib/productCatalog";
 import {
   calculateIndicativePrice,
   canShowIndicativePrice,
   formatIndicativePrice,
+  getPriceStatusLabel,
 } from "../lib/indicativePricing";
 
 interface ProductDetailModalProps {
@@ -32,467 +35,209 @@ export default function ProductDetailModal({
   selectedCurrency,
   onOpenQuote
 }: ProductDetailModalProps) {
-  // Local state for the product currently on display
+  const isAr = currentLang === "ar";
   const [activeProduct, setActiveProduct] = useState<Product | null>(null);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [settings, setSettings] = useState<any>(null);
-  
-  // Gallery view angle selection state
-  const [activeView, setActiveView] = useState<"obverse" | "reverse" | "packaging">("obverse");
-  const [zoomScale, setZoomScale] = useState(1);
-  const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
-  const [activeTab, setActiveTab] = useState<"specs" | "cert" | "downloads" | "related">("specs");
-  const [downloadSuccess, setDownloadSuccess] = useState<string | null>(null);
+  const [shippingNote, setShippingNote] = useState("");
 
-  // Fetch dynamic catalog and settings
   useEffect(() => {
-    const fetchDynamicData = async () => {
-      try {
-        const [pList, sObj] = await Promise.all([
-          dbService.products.list("public"),
-          dbService.settings.get()
-        ]);
-        if (pList.length > 0) setProducts(pList);
-        if (sObj) setSettings(sObj);
-      } catch (err) {
-        console.error("Error loading dynamic data in ProductDetailModal:", err);
-      }
-    };
-    fetchDynamicData();
-  }, []);
-
-  // Sync state if product prop changes
-  useEffect(() => {
-    if (product) {
-      setActiveProduct(product);
-      setActiveTab("specs");
-    }
+    if (product) setActiveProduct(product);
   }, [product]);
+
+  useEffect(() => {
+    fetch("/api/shipping")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((ship) => {
+        if (ship?.shipping_enabled && ship?.public_shipping_note) {
+          setShippingNote(ship.public_shipping_note);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   if (!activeProduct) return null;
 
-  const isGold = activeProduct.technical_specs.metal === "gold";
-
-  // Calculate live price estimation on demand
-  const getLivePrice = () => {
-    if (!rates || !canShowIndicativePrice(rates.source_status)) return null;
-    const price = calculateIndicativePrice(activeProduct, rates, selectedCurrency);
-    if (price === null) return null;
-    return formatIndicativePrice(price, selectedCurrency, currentLang);
-  };
-
-  // Pre-compile the WhatsApp message depending on selected language
-  const getWhatsAppLink = () => {
-    const pName = currentLang === "ar" ? activeProduct.name_ar : activeProduct.name_en;
-    const isGold = activeProduct.technical_specs.metal === "gold";
-    const baseMsg = currentLang === "ar"
-      ? `مرحباً ديوان تسعير PGR UAE، أود طلب عرض سعر رسمي مؤكد لمنتج: ${pName} (وزن: ${activeProduct.weight_label}، نقاوة: ${activeProduct.purity})`
-      : `Hello PGR UAE Quote Desk, I would like to request a firm quote for: ${pName} (${activeProduct.weight_label} - ${activeProduct.purity})`;
-    
-    return `https://wa.me/971559688837?text=${encodeURIComponent(baseMsg)}`;
-  };
-
-  // Interactive Zoom handler
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - left) / width) * 100;
-    const y = ((e.clientY - top) / height) * 100;
-    setZoomPos({ x, y });
-  };
-
-  // Simulated PDF Downloader trigger
-  const triggerDownload = (docName: string, fileName: string) => {
-    setDownloadSuccess(docName);
-    
-    const email = settings?.desk_email || "desk@pgruae.com";
-    const phone = settings?.trade_phone || "+971 4 445 8888";
-
-    // Create and download a simulated text file representing a secure receipt
-    const content = `=====================================================
-PGR UAE PRECIOUS METALS TRADING - DUBAI MARINA
-OFFICIAL PRODUCT & QUOTE DESK SERVICE
-=====================================================
-Document: ${docName}
-Reference SKU: ${activeProduct.id}
-Manufacturer: ${activeProduct.manufacturer}
-Assay Metal: ${activeProduct.technical_specs.metal.toUpperCase()}
-Fineness: ${activeProduct.purity}
-Timestamp: ${new Date().toUTCString()}
-
-Under applicable UAE fiscal regulations, physical investment precious metals
-originating from certified Refiners (International Standard)
-are subject to 0% VAT in the United Arab Emirates.
-
-This document serves as an official technical guide.
-For physical delivery or storage release, contact the desk:
-Email: ${email}
-Phone: ${phone}
-=====================================================`;
-
-    const blob = new Blob([content], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-
-    setTimeout(() => {
-      setDownloadSuccess(null);
-    }, 4000);
-  };
-
-  // Find up to 3 related products of the same metal type
-  const relatedProducts = products
-    .filter((p) => p.id !== activeProduct.id)
+  const catalog = resolvePublicCatalog(PRODUCTS);
+  const relatedProducts = catalog
+    .filter((p) => p.id !== activeProduct.id && p.category === activeProduct.category)
     .slice(0, 3);
+  if (relatedProducts.length < 3) {
+    const extra = catalog
+      .filter((p) => p.id !== activeProduct.id && !relatedProducts.find((r) => r.id === p.id))
+      .slice(0, 3 - relatedProducts.length);
+    relatedProducts.push(...extra);
+  }
+
+  const metal = activeProduct.technical_specs?.metal;
+  const metalLabel =
+    metal === "gold" ? (isAr ? "ذهب" : "Gold") :
+    metal === "silver" ? (isAr ? "فضة" : "Silver") :
+    activeProduct.category === "mint_bars_coins" ? (isAr ? "ذهب / فضة" : "Gold / Silver") :
+    (isAr ? "مخصص" : "Custom");
+
+  const indicativePrice = calculateIndicativePrice(activeProduct, rates, selectedCurrency);
+  const showPrice = canShowIndicativePrice(rates?.source_status) && indicativePrice;
+
+  const pName = isAr ? activeProduct.name_ar : activeProduct.name_en;
+  const waLink = `https://wa.me/971559688837?text=${encodeURIComponent(
+    isAr
+      ? `مرحباً، أريد عرض سعر معتمد لـ: ${pName}`
+      : `Hello, I need a firm quote for: ${pName}`
+  )}`;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto" id="product-detail-portal" style={{ direction: currentLang === "ar" ? "rtl" : "ltr" }}>
-      {/* Background Dimmer */}
-      <div className="fixed inset-0 bg-[#1F1A17]/75 backdrop-blur-md transition-opacity" onClick={onClose} />
+    <div className="fixed inset-0 z-50 overflow-y-auto" style={{ direction: isAr ? "rtl" : "ltr" }}>
+      <div className="fixed inset-0 bg-text-charcoal/70 backdrop-blur-sm" onClick={onClose} aria-hidden />
 
-      {/* Modal Console Container */}
-      <div className="flex min-h-screen items-center justify-center p-4 md:p-8 relative">
-        <div className="relative w-full max-w-5xl bg-brand-card border border-soft-border rounded overflow-hidden shadow-2xl z-10 animate-scaleUp">
-          
-          {/* Top Header Close bar */}
-          <div className="absolute top-4 right-4 z-30">
-            <button
-              onClick={onClose}
-              className="p-2 rounded-full bg-brand-bg text-text-secondary hover:text-text-charcoal hover:bg-brand-section transition-all cursor-pointer border border-soft-border shadow-sm"
-            >
-              <X size={18} />
-            </button>
-          </div>
+      <div className="flex min-h-screen items-center justify-center p-4 md:p-8">
+        <div className="relative w-full max-w-5xl bg-[#FFFDF8] border border-soft-border rounded-lg shadow-2xl overflow-hidden">
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute top-4 right-4 z-10 p-2 rounded-full bg-brand-card border border-soft-border text-text-secondary hover:text-text-charcoal"
+            aria-label="Close"
+          >
+            <X size={18} />
+          </button>
 
           <div className="grid grid-cols-1 lg:grid-cols-2">
-            
-            {/* LEFT COLUMN: Large Zoom Image & Visual Gallery */}
-            <div className="p-6 md:p-8 bg-brand-bg flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-soft-border">
-              <div className="space-y-6">
-                
-                {/* Image Showcase Frame with Luxury Zoom capability */}
-                <div
-                  className="relative h-72 md:h-96 w-full rounded overflow-hidden bg-brand-card border border-soft-border flex items-center justify-center cursor-zoom-in group"
-                  onMouseMove={handleMouseMove}
-                  onMouseEnter={() => setZoomScale(1.8)}
-                  onMouseLeave={() => setZoomScale(1)}
-                >
-                  <img
-                    src={getProductImage(activeProduct)}
-                    alt={activeProduct.name_en}
-                    referrerPolicy="no-referrer"
-                    onError={(e) => {
-                      e.currentTarget.onerror = null;
-                      e.currentTarget.src = getProductImage(activeProduct);
-                    }}
-                    className="w-full h-full object-contain transition-transform duration-200"
-                    style={{
-                      transform: `scale(${zoomScale})`,
-                      transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`
-                    }}
-                  />
-
-                  {/* Shimmer sweep effect */}
-                  <div className={`absolute inset-0 z-20 pointer-events-none ${isGold ? "shimmer-mask-gold" : "shimmer-mask"}`} />
-
-                  {/* Overlay Helper Tag */}
-                  <div className="absolute bottom-4 left-4 bg-brand-card/90 backdrop-blur-sm border border-soft-border px-2.5 py-1 rounded text-[10px] text-text-secondary flex items-center gap-1.5 font-mono pointer-events-none">
-                    <ZoomIn size={11} className="text-gold-base" />
-                    <span>{currentLang === "ar" ? "مرر الماوس للتكبير" : "Hover image to zoom"}</span>
-                  </div>
-                </div>
-
-                {/* Simulated High-End Gallery Selector Thumbnails */}
-                <div className="grid grid-cols-3 gap-3">
-                  {([
-                    { id: "obverse", label_en: "Obverse face", label_ar: "الوجه الأمامي" },
-                    { id: "reverse", label_en: "Reverse face", label_ar: "الوجه الخلفي" },
-                    { id: "packaging", label_en: "Assay pack", label_ar: "الغلاف الأمني" }
-                  ] as const).map((view) => (
-                    <button
-                      key={view.id}
-                      onClick={() => setActiveView(view.id)}
-                      className={`py-2 px-3 text-[10px] font-mono rounded border transition-all cursor-pointer text-center uppercase tracking-wider ${
-                        activeView === view.id
-                          ? "bg-brand-section text-text-charcoal border-[#C6A15B] font-bold"
-                          : "bg-transparent text-text-secondary border-soft-border hover:text-text-charcoal hover:border-[#C6A15B]"
-                      }`}
-                    >
-                      {currentLang === "ar" ? view.label_ar : view.label_en}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Security certification status card */}
-              <div className="mt-8 p-4 rounded bg-brand-section border border-soft-border flex items-start gap-3 shadow-sm">
-                <ShieldCheck size={18} className="text-olive-accent shrink-0 mt-0.5" />
-                <div className="space-y-1">
-                  <span className="text-xs font-mono text-olive-accent font-bold uppercase tracking-wider block">
-                    {currentLang === "ar" ? "أصالة سبيكة معتمدة" : "Secured Assay Certified"}
+            <div className="p-6 md:p-8 bg-brand-bg border-b lg:border-b-0 lg:border-r border-soft-border">
+              <div className="aspect-[4/5] w-full max-h-[70vh] flex items-center justify-center p-4 rounded border border-soft-border bg-brand-card relative">
+                {activeProduct.iraq_popular && (
+                  <span className="absolute top-3 left-3 z-10 px-2 py-1 rounded bg-[#C6A15B] text-[#1F1A17] text-[9px] font-mono uppercase font-bold">
+                    {isAr ? "الأكثر طلباً — العراق" : "Iraq Bestseller"}
                   </span>
-                  <p className="text-[11px] text-text-secondary leading-relaxed font-mono">
-                    {currentLang === "ar"
-                      ? "هذا المنتج مختوم ورقياً ومحمي بالكامل برقم تسلسلي معتمد دولياً."
-                      : "Sourced with tamper-proof assay documentation. Directly verifiable by global refiner assays and physical vault clearings."}
-                  </p>
-                </div>
+                )}
+                <img
+                  src={getProductImage(activeProduct)}
+                  alt={pName}
+                  className="w-full h-full object-contain"
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = getProductImage(activeProduct);
+                  }}
+                />
               </div>
             </div>
 
-            {/* RIGHT COLUMN: Technical Specs & Action Center */}
-            <div className="p-6 md:p-8 space-y-6 flex flex-col justify-between">
-              
-              {/* Product Info Block */}
-              <div className="space-y-4">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-xs font-mono text-[#A47C36] uppercase tracking-widest font-bold">
-                    {activeProduct.manufacturer}
-                  </span>
-                  
-                  {/* Stock Indicator Node */}
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-soft-success border border-soft-border text-text-charcoal text-[10px] font-mono font-bold uppercase">
-                    <span className="h-1.5 w-1.5 rounded-full bg-olive-accent animate-pulse"></span>
-                    {currentLang === "ar" ? "متاح في الخزينة" : "In Vault (Stock Available)"}
-                  </span>
-                </div>
-
-                <h1 className="text-2xl md:text-3xl font-serif text-text-charcoal tracking-wide font-medium">
-                  {currentLang === "ar" ? activeProduct.name_ar : activeProduct.name_en}
+            <div className="p-6 md:p-8 flex flex-col gap-5">
+              <div>
+                <p className="text-[10px] font-mono text-gold-dark uppercase tracking-widest font-bold">
+                  {activeProduct.manufacturer}
+                </p>
+                <h1 className="text-2xl md:text-3xl font-serif text-text-charcoal font-medium mt-2">
+                  {pName}
                 </h1>
-
-                {/* Main Product Description */}
-                <p className="text-xs md:text-sm text-text-secondary leading-relaxed font-sans">
-                  {currentLang === "ar" ? activeProduct.description_ar : activeProduct.description_en}
+                <p className="text-sm text-text-secondary font-sans mt-3 leading-relaxed">
+                  {isAr ? activeProduct.description_ar : activeProduct.description_en}
                 </p>
               </div>
 
-              {/* Dynamic Indicative Market Valuation */}
-              <div className="p-4 rounded bg-brand-section border border-soft-border space-y-2 shadow-sm">
-                <div className="flex justify-between items-center text-xs font-mono text-text-secondary">
-                  <span>{currentLang === "ar" ? "التسعير الاسترشادي المباشر" : "Estimated Retail Valuation"}</span>
-                  <span className="text-[10px] bg-brand-card border border-soft-border px-1.5 py-0.5 rounded text-text-secondary font-bold">SPOT + PREMIUM</span>
-                </div>
+              <dl className="grid grid-cols-2 gap-3 text-xs font-sans">
+                {[
+                  [isAr ? "المعدن" : "Metal", metalLabel],
+                  [isAr ? "الوزن" : "Weight", activeProduct.weight_label],
+                  [isAr ? "النقاوة" : "Purity", activeProduct.purity],
+                  [isAr ? "التوفر" : "Availability", activeProduct.availability]
+                ].map(([label, value]) => (
+                  <div key={String(label)} className="p-3 rounded border border-soft-border bg-brand-card">
+                    <dt className="text-text-secondary text-[10px] font-mono uppercase">{label}</dt>
+                    <dd className="text-text-charcoal font-bold mt-1">{value}</dd>
+                  </div>
+                ))}
+              </dl>
 
-                <div className="flex items-baseline justify-between">
-                  {getLivePrice() ? (
-                    <>
-                      <div className="flex items-baseline gap-1">
-                        <span className={`text-2xl md:text-3xl font-serif font-bold text-[#A47C36]`}>
-                          {getLivePrice()}
-                        </span>
-                        <span className="text-xs text-text-secondary font-mono font-bold">{selectedCurrency}</span>
-                      </div>
-                      <span className="text-[10px] text-olive-accent font-mono font-bold">
-                        {currentLang === "ar" ? "محدث تلقائياً" : "Live synchronized"}
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-xl md:text-2xl font-serif font-bold text-gold-base">
-                          {currentLang === "ar" ? "طلب عرض سعر" : "Request Quote"}
-                        </span>
-                      </div>
-                      <span className="text-[10px] text-[#A47C36] font-mono font-bold flex items-center gap-1">
-                        <span className="h-1.5 w-1.5 rounded-full bg-[#C6A15B] animate-pulse"></span>
-                        {currentLang === "ar" ? "سعر المباشر غير متوفر" : "Live price unavailable"}
-                      </span>
-                    </>
-                  )}
-                </div>
-
-                <div className="text-[10px] font-mono text-text-secondary leading-relaxed pt-2 border-t border-soft-border font-medium">
-                  {currentLang === "ar"
-                    ? "ملاحظة: تختلف الأسعار النهائية للصفقات الكبرى والمستندات الجمركية بالجملة. اطلب عرض السعر لمعرفة الأسعار اللحظية الدقيقة."
-                    : "Indicative spot pricing only. Wholesale procurement, custom imports, and larger bullion allotments are structured individually via customized quotes."}
-                </div>
+              <div className="p-4 rounded border border-soft-border bg-brand-card space-y-2">
+                <p className="text-[10px] font-mono text-olive-accent uppercase font-bold">
+                  {getPriceStatusLabel(rates?.source_status, currentLang)}
+                </p>
+                {showPrice ? (
+                  <p className="text-xl font-mono font-bold text-text-charcoal">
+                    {formatIndicativePrice(indicativePrice!, selectedCurrency, currentLang)}{" "}
+                    <span className="text-sm text-gold-dark">{selectedCurrency}</span>
+                  </p>
+                ) : (
+                  <p className="text-sm text-text-charcoal font-sans">
+                    {isAr
+                      ? "اطلب مرجع سوقي معتمد من الديوان"
+                      : "Request firm market reference from desk"}
+                  </p>
+                )}
+                <p className="text-[10px] text-text-secondary">
+                  {isAr
+                    ? "سعر استرشادي — يؤكده الديوان قبل الطلب"
+                    : "Indicative — desk confirms before order"}
+                </p>
               </div>
 
-              {/* DYNAMIC SPECIFICATION & DOCUMENTATION TABS */}
-              <div className="space-y-4">
-                {/* Tab Switch buttons */}
-                <div className="flex border-b border-soft-border text-xs font-mono overflow-x-auto whitespace-nowrap">
-                  {[
-                    { id: "specs", label_en: "Attributes", label_ar: "المواصفات" },
-                    { id: "cert", label_en: "Assay & Cert", label_ar: "شهادة الأصالة" },
-                    { id: "downloads", label_en: "Downloads", label_ar: "التحميلات" },
-                    { id: "related", label_en: "Related", label_ar: "المنتجات المماثلة" }
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id as any)}
-                      className={`pb-2.5 px-3 border-b-2 transition-all cursor-pointer ${
-                        activeTab === tab.id
-                          ? "text-[#A47C36] border-[#C6A15B] font-bold"
-                          : "text-text-secondary border-transparent hover:text-text-charcoal"
-                      }`}
-                    >
-                      {currentLang === "ar" ? tab.label_ar : tab.label_en}
-                    </button>
-                  ))}
-                </div>
+              {shippingNote && (
+                <p className="text-xs text-olive-accent font-mono border-l-2 border-olive-accent pl-3">
+                  {shippingNote}
+                </p>
+              )}
 
-                {/* Tab 1: Attribute specs table */}
-                {activeTab === "specs" && (
-                  <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-xs font-mono animate-fadeIn">
-                    <div className="flex justify-between py-1 border-b border-soft-border">
-                      <span className="text-text-secondary">{currentLang === "ar" ? "المعدن النقدي" : "Assay Metal"}</span>
-                      <span className="text-text-charcoal font-bold capitalize">{activeProduct.technical_specs.metal}</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-soft-border">
-                      <span className="text-text-secondary">{currentLang === "ar" ? "المصفاة والمصنع" : "Mint Refiner"}</span>
-                      <span className="text-text-charcoal font-bold">{activeProduct.manufacturer}</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-soft-border">
-                      <span className="text-text-secondary">{currentLang === "ar" ? "بلد المنشأ" : "Origin Country"}</span>
-                      <span className="text-text-charcoal font-bold">{currentLang === "ar" ? activeProduct.country_ar : activeProduct.country_en}</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-soft-border">
-                      <span className="text-text-secondary">{currentLang === "ar" ? "النقاوة الرسمية" : "Fineness"}</span>
-                      <span className="text-text-charcoal font-bold">{activeProduct.purity}</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-soft-border">
-                      <span className="text-text-secondary">{currentLang === "ar" ? "شهادة فحص" : "Certification"}</span>
-                      <span className="text-text-charcoal font-bold text-right text-[10px] truncate max-w-[120px]">
-                        {currentLang === "ar" ? "معتمدة بالكامل" : "Verifiable Assay"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-soft-border">
-                      <span className="text-text-secondary">{currentLang === "ar" ? "أبعاد السبيكة" : "Dimensions"}</span>
-                      <span className="text-text-charcoal font-bold">{activeProduct.technical_specs.dimensions || "Standard"}</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Tab 2: Assay standards & custom vault link */}
-                {activeTab === "cert" && (
-                  <div className="p-4 rounded border border-soft-border bg-brand-bg text-xs font-mono space-y-3 animate-fadeIn shadow-sm">
-                    <div className="flex items-center gap-2 text-[#A47C36]">
-                      <Award size={14} className="text-olive-accent" />
-                      <span className="font-bold uppercase tracking-wider">
-                        {currentLang === "ar" ? "معايير الجودة الدولية المعتمدة" : "International Quality Standards"}
-                      </span>
-                    </div>
-                    <p className="text-text-secondary leading-relaxed text-[11px] font-sans">
-                      {currentLang === "ar"
-                        ? "كافة المصافي المعتمدة لدينا مدرجة في القوائم الرسمية المعتمدة للمصافي العالمية. يتم نقش الرقم التسلسلي الفريد بدقة على وجه كل سبيكة للتأكد المطلق من أصالتها."
-                        : "Our represented Swiss and international mints adhere to stringent recognized international purity standards. Every single product has an individualized laser seal engraved into its face."}
-                    </p>
-                    <div className="pt-2 border-t border-soft-border flex justify-between items-center text-[10px] font-bold">
-                      <span className="text-text-secondary">SECURE VAULT SERIAL:</span>
-                      <span className="text-olive-accent tracking-widest">{isGold ? "PAMP-882941" : "VALC-119302"}</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Tab 3: Downloads */}
-                {activeTab === "downloads" && (
-                  <div className="space-y-2 animate-fadeIn text-xs font-mono">
-                    {[
-                      { name: "Official Assay Report (PDF)", file: "PGR_Assay_Report.pdf" },
-                      { name: "PGR Storage Agreement (PDF)", file: "PGR_Vault_Storage_Guide.pdf" },
-                      { name: "Dubai Bullion Advantage (PDF)", file: "Dubai_Gold_Advantage_Guide.pdf" }
-                    ].map((doc, idx) => (
-                      <div key={idx} className="p-2.5 rounded bg-brand-bg border border-soft-border flex items-center justify-between gap-3 shadow-sm">
-                        <div className="flex items-center gap-2">
-                          <FileText size={13} className="text-olive-accent" />
-                          <span className="text-text-charcoal font-bold">{doc.name}</span>
-                        </div>
-                        <button
-                          onClick={() => triggerDownload(doc.name, doc.file)}
-                          className="p-1.5 bg-[#C6A15B]/10 hover:bg-[#C6A15B] text-[#A47C36] hover:text-white rounded transition-colors cursor-pointer"
-                        >
-                          {downloadSuccess === doc.name ? <Check size={12} /> : <Download size={12} />}
-                        </button>
-                      </div>
-                    ))}
-                    {downloadSuccess && (
-                      <div className="text-[10px] text-olive-accent font-mono text-center pt-1.5 font-bold">
-                        {currentLang === "ar" ? "✓ تم بدء تحميل الملف الآمن بنجاح" : "✓ Secure document download dispatched successfully"}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Tab 4: Related Products switch */}
-                {activeTab === "related" && (
-                  <div className="space-y-2.5 animate-fadeIn">
-                    {relatedProducts.map((rel) => (
-                      <div
-                        key={rel.id}
-                        onClick={() => {
-                          setActiveProduct(rel);
-                          setActiveTab("specs");
-                        }}
-                        className="p-3 rounded bg-brand-bg border border-soft-border hover:border-[#C6A15B] transition-all flex items-center justify-between gap-3 cursor-pointer group shadow-sm"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded bg-brand-card border border-soft-border overflow-hidden shrink-0 flex items-center justify-center">
-                            <img
-                              src={getProductImage(rel)}
-                              alt={rel.name_en}
-                              onError={(e) => {
-                                e.currentTarget.onerror = null;
-                                e.currentTarget.src = getProductImage(rel);
-                              }}
-                              className="h-full w-full object-contain"
-                            />
-                          </div>
-                          <div>
-                            <span className="text-[11px] font-serif font-bold text-text-charcoal group-hover:text-[#A47C36] transition-colors block">
-                              {currentLang === "ar" ? rel.name_ar : rel.name_en}
-                            </span>
-                            <span className="text-[9px] font-mono text-text-secondary block font-bold">
-                              {rel.manufacturer} • {rel.purity}
-                            </span>
-                          </div>
-                        </div>
-                        <span className="text-[10px] font-mono text-[#A47C36] font-bold group-hover:translate-x-1 transition-transform">
-                          {currentLang === "ar" ? "عرض ←" : "View →"}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
+              <div className="flex items-start gap-2 p-3 rounded bg-soft-danger border border-soft-border text-xs text-text-secondary">
+                <ShieldCheck size={14} className="text-olive-accent shrink-0 mt-0.5" />
+                <p>
+                  {isAr
+                    ? "تخضع المعاملة لمراجعة AML/KYC. عرض السعر المعتمد يُؤكد من ديوان PGR UAE قبل التسوية."
+                    : "Transaction subject to AML/KYC review. Firm quote confirmed by PGR UAE desk before settlement."}
+                </p>
               </div>
 
-              {/* ACTION CENTER BUTTONS: Quote, WhatsApp */}
-              <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-soft-border">
-                {/* Bespoke Quote Request Form launch */}
+              <div className="flex flex-col gap-2 pt-2">
                 <button
+                  type="button"
                   onClick={() => {
-                    const pName = currentLang === "ar" ? activeProduct.name_ar : activeProduct.name_en;
                     onOpenQuote(pName);
                     onClose();
                   }}
-                  className="flex-1 px-6 py-3.5 bg-[#C6A15B] hover:bg-[#A47C36] text-text-charcoal hover:text-white text-[12px] uppercase tracking-widest font-bold transition-all duration-300 rounded flex items-center justify-center gap-2 cursor-pointer shadow-md"
+                  className="w-full py-3.5 bg-gold-base hover:bg-gold-dark text-text-charcoal font-mono text-xs font-bold uppercase tracking-widest rounded flex items-center justify-center gap-2"
                 >
                   <FileText size={14} />
-                  <span>{currentLang === "ar" ? "طلب عرض سعر رسمي" : "Request Bespoke Quote"}</span>
+                  {isAr ? "طلب عرض سعر معتمد" : "Request Firm Quote"}
                 </button>
-
-                {/* Direct WhatsApp Instant Desk Orders */}
                 <a
-                  href={getWhatsAppLink()}
+                  href={waLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 px-6 py-3.5 bg-transparent hover:bg-gold-base/5 border border-[#C6A15B] text-text-charcoal text-[12px] uppercase tracking-widest font-bold transition-all duration-300 rounded flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full py-3.5 border border-gold-base text-text-charcoal hover:bg-gold-base/10 font-mono text-xs font-bold uppercase tracking-widest rounded flex items-center justify-center gap-2"
                 >
-                  <Phone size={14} className="text-olive-accent" />
-                  <span>{currentLang === "ar" ? "طلب عبر الواتساب" : "Order via WhatsApp"}</span>
+                  <Phone size={14} />
+                  {isAr ? "ديوان واتساب" : "WhatsApp Quote Desk"}
                 </a>
               </div>
 
+              {relatedProducts.length > 0 && (
+                <div className="pt-4 border-t border-soft-border">
+                  <p className="text-[10px] font-mono uppercase text-text-secondary mb-3">
+                    {isAr ? "منتجات ذات صلة" : "Related products"}
+                  </p>
+                  <div className="flex gap-3 overflow-x-auto pb-1">
+                    {relatedProducts.map((rel) => (
+                      <button
+                        key={rel.id}
+                        type="button"
+                        onClick={() => setActiveProduct(rel)}
+                        className="shrink-0 w-24 text-center"
+                      >
+                        <div className="aspect-square rounded border border-soft-border bg-brand-bg p-1 mb-1 overflow-hidden">
+                          <img
+                            src={getProductImage(rel)}
+                            alt={rel.name_en}
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                        <span className="text-[9px] font-mono text-text-charcoal line-clamp-2">
+                          {isAr ? rel.name_ar : rel.name_en}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-
           </div>
-
         </div>
       </div>
     </div>

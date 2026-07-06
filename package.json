@@ -5,16 +5,18 @@
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
-    "build": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
+    "build": "node scripts/generate-seo-static.mjs && node scripts/generate-sitemap.mjs && node scripts/generate-middleware.mjs && node scripts/inject-homepage-schema.mjs && vite build && node scripts/inject-gsc-verification.mjs && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
     "start": "node dist/server.cjs",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "video:process": "bash scripts/process-bullion-video.sh"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
     "@supabase/supabase-js": "^2.108.2",
     "@tailwindcss/vite": "^4.1.14",
+    "@vercel/speed-insights": "^2.0.0",
     "@vitejs/plugin-react": "^5.0.4",
     "dotenv": "^17.2.3",
     "express": "^4.21.2",

@@ -4,6 +4,7 @@ import { resolvePublicCatalog } from "../lib/productCatalog";
 import { Product, LiveMarketRates } from "../types";
 import { ArrowLeft, ArrowRight, Shield, Award, HelpCircle, Phone, FileText, CheckCircle } from "lucide-react";
 import { getProductImage } from "../lib/productImages";
+import PricingDisclaimer from "./PricingDisclaimer";
 
 interface ProductLandingPageProps {
   currentLang: "en" | "ar";
@@ -34,7 +35,7 @@ export default function ProductLandingPage({
           categoryKey: "gold_bars",
           title_en: "LBMA Accredited Gold Bars",
           title_ar: "سبائك الذهب المعتمدة دولياً LBMA",
-          subtitle_en: "999.9 Fine Investment-Grade Gold Bullion",
+          subtitle_en: "999.9 Fine Accredited Gold Bullion",
           subtitle_ar: "سبائك الذهب الخالص بنقاوة ٩٩٩.٩ للتحوط المالي الموثوق",
           description_en: "Direct physical gold bullion ranging from 1 gram up to 1 Kilogram treasury bars. All bars are certified by globally recognized LBMA-accredited refiners and stamped with unique serial numbers.",
           description_ar: "نقدم تشكيلة سبائك الذهب الفاخرة من وزن جرام واحد وحتى سبائك الخزينة فئة كيلو جرام. سبائك سويسرية وإماراتية معتمدة عالمياً ومصحوبة بشهادات الفحص.",
@@ -56,7 +57,7 @@ export default function ProductLandingPage({
       case "/silver-bars":
         return {
           categoryKey: "silver_bars",
-          title_en: "Investment-Grade Fine Silver Bars",
+          title_en: "Accredited Fine Silver Bars",
           title_ar: "سبائك الفضة النقية لتعزيز الادخار",
           subtitle_en: "999.0+ Purity Physical Silver Bullion",
           subtitle_ar: "سبائك الفضة الصافية بنقاوة لا تقل عن ٩٩٩ للتحوط الصناعي والمالي",
@@ -66,7 +67,7 @@ export default function ProductLandingPage({
             {
               q_en: "Is VAT applied on silver bars in the UAE?",
               q_ar: "هل تطبق ضريبة القيمة المضافة على سبائك الفضة في الإمارات؟",
-              a_en: "Investment-grade silver bars with purity of 99% or higher are treated under specialized tax treatments in the UAE. Our desk will confirm the precise VAT treatment based on your compliance status and delivery format.",
+              a_en: "Fine silver bars with purity of 99% or higher may be treated under specialized tax rules in the UAE. Our desk will confirm the precise VAT treatment based on your compliance status and delivery format.",
               a_ar: "تخضع سبائك الفضة الاستثمارية ذات النقاوة ٩٩٪ أو أكثر لمعاملات ضريبية خاصة في دولة الإمارات. سيقوم فريقنا بتأكيد المعالجة الضريبية الدقيقة وفقاً لوضعك القانوني."
             },
             {
@@ -84,7 +85,7 @@ export default function ProductLandingPage({
           title_ar: "عملات السبائك والمسكوكات الرسمية",
           subtitle_en: "Certified Pure Gold & Silver Legal Tender Coins",
           subtitle_ar: "عملات ذهبية رسمية مدعومة قانونياً من الحكومات والسكك الملكية",
-          description_en: "Accredited mint bars and sovereign investment coins from world-renowned national mints. PGR UAE desk sources mint bars and bullion coins with indicative market reference pricing and firm quote confirmation.",
+          description_en: "Accredited mint bars and sovereign bullion coins from world-renowned national mints. PGR UAE desk sources mint bars and bullion coins with indicative market reference pricing and desk-confirmed quote.",
           description_ar: "سبائك مصكوكة وعملات سيادية من دور سك وطنية عالمية. يوفر ديوان PGR UAE منتجات مصكوكة مع تسعير استرشادي وعرض سعر مؤكد.",
           faqs: [
             {
@@ -338,17 +339,7 @@ export default function ProductLandingPage({
           </div>
         )}
 
-        {/* Pricing Policy Disclaimer Banner */}
-        <div className="bg-[#FFFDF8] border border-[#E8DEC9] rounded p-5 space-y-2 shadow-sm">
-          <h4 className="text-[#A47C36] text-[10px] uppercase tracking-widest font-bold font-mono flex items-center gap-2">
-            ⚠️ {isAr ? "تنويه تسعير إرشادي مهم" : "IMPORTANT INDICATIVE PRICING NOTICE"}
-          </h4>
-          <p className="text-[#5E564D] text-[11px] leading-relaxed font-sans">
-            {isAr
-              ? "الأسعار المعروضة على الموقع هي أسعار مرجعية وإرشادية فقط تعكس تقلبات البورصة الفورية وتخلف علاوات التصنيع وتكاليف الشحن. لا يمكن إبرام تسوية أو تثبيت سعر شراء نهائي إلا بصدور عينات عروض الأسعار النهائية المؤكدة من ديوان PGR UAE. قد تكون مراجعة الامتثال مطلوبة قبل تأكيد أي معاملة."
-              : "All values, rates, and catalog prices are indicative only and based on global spot market inputs. Physical metal premiums, logistical handling, and VAT treatments apply. You must contact our desk to lock the spot and receive a Final Desk Confirmation. Regulatory compliance reviews may be required."}
-          </p>
-        </div>
+        <PricingDisclaimer currentLang={currentLang} />
 
         {/* FAQs */}
         <div className="space-y-6">
