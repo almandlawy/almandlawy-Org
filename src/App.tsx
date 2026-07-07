@@ -113,7 +113,7 @@ export default function App() {
   // Programmatic custom router
   const navigateTo = (path: string) => {
     window.history.pushState(null, "", path);
-    setCurrentPath(path);
+    setCurrentPath(path.split("?")[0]);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -666,7 +666,16 @@ export default function App() {
         currentLang={currentLang}
         onScrollToCatalog={handleScrollToCatalogWithFilter}
         onScrollToMarket={() => handleScrollToSection("market")}
-        onOpenQuote={() => navigateTo("/request-quote")}
+        onOpenQuote={() => {
+          const params = new URLSearchParams({
+            product: "pgr-silver-1kg",
+            name:
+              currentLang === "ar"
+                ? "سبيكة فضة PALM ١ كيلو"
+                : "Palm Silver 1kg Bar",
+          });
+          navigateTo(`/request-quote?${params.toString()}`);
+        }}
         onScrollToIraqOffers={() => handleScrollToSection("iraq-silver-offers")}
       />
 

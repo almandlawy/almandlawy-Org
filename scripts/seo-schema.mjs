@@ -107,11 +107,11 @@ export function buildHomepageSchemaGraph() {
       {
         "@type": "VideoObject",
         "@id": `${SITE_ORIGIN}/#hero-video`,
-        name: "PGR UAE Bullion Collection",
+        name: "PALM Silver 1kg Bar — PGR UAE",
         description:
-          "PGR UAE bullion collection showcase — gold bars, silver bars, mint bars and bullion coins.",
-        thumbnailUrl: `${SITE_ORIGIN}/videos/pgr-bullion-collection-poster.webp`,
-        contentUrl: `${SITE_ORIGIN}/videos/pgr-bullion-collection.mp4`,
+          "PALM Silver 1kg bar showcase — 999.9 fine silver bullion from PGR UAE Dubai desk.",
+        thumbnailUrl: `${SITE_ORIGIN}/videos/palm-silver-hero-poster.webp`,
+        contentUrl: `${SITE_ORIGIN}/videos/palm_silver_hero_banner_optimized.mp4`,
         embedUrl: SITE_ORIGIN,
         uploadDate: VIDEO_UPLOAD_DATE,
         duration: "PT10S",
