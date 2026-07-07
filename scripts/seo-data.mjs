@@ -196,6 +196,70 @@ export const PUBLIC_PAGES = [
     h1: "Risk Disclosure",
     priority: "0.4",
     changefreq: "yearly"
+  },
+  {
+    path: "/buy-gold-bars-dubai",
+    title: "Buy Gold Bars in Dubai | PGR UAE Bullion Desk",
+    desc: "Request physical gold bars in Dubai from PGR UAE. Indicative market reference. Desk-confirmed quote.",
+    h1: "Buy Gold Bars in Dubai",
+    priority: "0.8",
+    changefreq: "weekly"
+  },
+  {
+    path: "/buy-silver-bars-dubai",
+    title: "Buy Silver Bars in Dubai | PGR UAE",
+    desc: "Request physical silver bars in Dubai including SAM and PALM. Indicative market reference. Desk-confirmed quote.",
+    h1: "Buy Silver Bars in Dubai",
+    priority: "0.8",
+    changefreq: "weekly"
+  },
+  {
+    path: "/gold-rate-dubai-today",
+    title: "Gold Rate Dubai Today | Indicative Reference | PGR UAE",
+    desc: "Indicative gold market reference for Dubai. Subject to market movement. Request a desk-confirmed quote from PGR UAE.",
+    h1: "Gold Rate Dubai Today",
+    priority: "0.75",
+    changefreq: "daily"
+  },
+  {
+    path: "/silver-rate-dubai-today",
+    title: "Silver Rate Dubai Today | Indicative Reference | PGR UAE",
+    desc: "Indicative silver market reference for Dubai. Subject to market movement. Request a desk-confirmed quote from PGR UAE.",
+    h1: "Silver Rate Dubai Today",
+    priority: "0.75",
+    changefreq: "daily"
+  },
+  {
+    path: "/sell-gold-dubai",
+    title: "Sell Gold in Dubai | PGR UAE Desk",
+    desc: "Sell-back desk inquiry for physical gold in Dubai. Subject to compliance review and desk-confirmed quote.",
+    h1: "Sell Gold in Dubai",
+    priority: "0.7",
+    changefreq: "weekly"
+  },
+  {
+    path: "/bullion-desk-dubai",
+    title: "Bullion Desk Dubai | PGR UAE",
+    desc: "Dubai bullion quote desk for physical gold and silver. Indicative market reference only.",
+    h1: "Bullion Desk Dubai",
+    priority: "0.7",
+    changefreq: "weekly"
+  },
+  {
+    path: "/allocated-storage-dubai",
+    title: "Allocated Storage Dubai | PGR UAE",
+    desc: "Allocated physical bullion storage inquiry in Dubai. Subject to compliance review.",
+    h1: "Allocated Storage Dubai",
+    priority: "0.65",
+    changefreq: "monthly"
+  },
+  {
+    path: "/24k-gold-bars-uae",
+    title: "24K Gold Bars UAE | PGR UAE",
+    desc: "999.9 fine physical gold bars in the UAE. Indicative market reference. Desk-confirmed quote from PGR UAE.",
+    h1: "24K Gold Bars UAE",
+    priority: "0.8",
+    changefreq: "weekly"
   }
 ];
 

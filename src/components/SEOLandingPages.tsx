@@ -9,6 +9,15 @@ import { LiveMarketRates } from "../types";
 import { PRODUCTS } from "../data";
 import { resolvePublicCatalog } from "../lib/productCatalog";
 import MetalCalculator from "./MetalCalculator";
+import {
+  getSpotUsdOz,
+  getFxRate,
+  usdOunceToGramLocal,
+  usdOunceToLocal,
+  OUNCE_TO_GRAM,
+  GRAMS_PER_KG,
+  getPriceStatusLabel,
+} from "../lib/marketReference";
 
 interface SEOLandingPagesProps {
   currentPath: string;
@@ -106,9 +115,9 @@ export default function SEOLandingPages({
         ? "احصل على أفضل عروض أسعار البيع المرتجع لسبائك الذهب والفضة في دبي. سيولة فورية وعلاوات تسييل عادلة ومطابقة للأنظمة والقوانين."
         : "Liquidate your gold bars and silver bullion in Dubai with maximum transparency. Our premier sell-back desk provides immediate, compliant liquidity.";
     } else if (currentPath === "/bullion-desk-dubai") {
-      title = isAr ? "ديوان تداول السبائك في دبي | مكتب تداول المعادن PGR UAE" : "Physical Bullion Desk Dubai | Secure Metal Quote Desk PGR UAE";
-      desc = isAr 
-        ? "تعرف على ديوان PGR UAE في دبي، شريكك الموثوق لتوفير كميات سبائك المعادن الثمينة وتوفير الشحن المؤمن والتخزين الآمن Segregated."
+      title = isAr ? "مكتب السبائك في دبي | PGR UAE" : "Physical Bullion Desk Dubai | Secure Metal Quote Desk PGR UAE";
+      desc = isAr
+        ? "تعرف على مكتب PGR UAE في دبي، شريكك الموثوق لتوفير سبائك المعادن الثمينة والشحن المؤمن والتخزين المخصص."
         : "Discover Dubai's physical gold and silver quote desk. Secure allocations, wholesale bullion inquiries, and allocated custody options.";
     } else if (currentPath === "/allocated-storage-dubai") {
       title = isAr ? "تخزين الذهب المخصص دبي | خزائن ومستودعات مؤمنة PGR UAE" : "Allocated Gold Storage Dubai | Vaulting and Segregated Custody";
@@ -161,30 +170,13 @@ export default function SEOLandingPages({
     return catalog;
   };
 
-  const getSpotRateValue = (metal: "gold" | "silver") => {
-    const defaultSpots = { gold: 2365.40, silver: 29.85 };
-    if (!rates) return defaultSpots[metal];
-    const val = rates[metal]?.spot_usd_oz;
-    return val && val > 0 ? val : defaultSpots[metal];
-  };
+  const spotGoldUsd = getSpotUsdOz("gold", rates);
+  const spotSilverUsd = getSpotUsdOz("silver", rates);
+  const fxMultiplier = getFxRate(selectedCurrency, rates);
 
-  const exchangeRate = () => {
-    const ratesMap: Record<string, number> = {
-      USD: 1.0,
-      AED: 3.6725,
-      EUR: 0.925,
-      GBP: 0.785,
-      SAR: 3.7505
-    };
-    return ratesMap[selectedCurrency] || 1.0;
-  };
-
-  const spotGoldUsd = getSpotRateValue("gold");
-  const spotSilverUsd = getSpotRateValue("silver");
-  const currentExchangeRate = exchangeRate();
-
-  const spotGoldLocal = spotGoldUsd * currentExchangeRate;
-  const spotSilverLocal = spotSilverUsd * currentExchangeRate;
+  const spotGoldLocal = spotGoldUsd * fxMultiplier;
+  const spotSilverLocal = spotSilverUsd * fxMultiplier;
+  const ratesLabel = getPriceStatusLabel(rates?.source_status, currentLang);
 
   // Render specific SEO Page contents
   const renderSeoContent = () => {
@@ -213,7 +205,7 @@ export default function SEOLandingPages({
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {getPageProducts().map((prod) => {
-                  const estValue = spotGoldLocal * (prod.technical_specs.weight_grams / 31.1034768) * (prod.premium_multiplier || 1.02);
+                  const estValue = spotGoldLocal * (prod.technical_specs.weight_grams / OUNCE_TO_GRAM) * (prod.premium_multiplier || 1.02);
                   return (
                     <div key={prod.id} className="bg-white border border-[#E8DEC9] p-5 rounded space-y-4 hover:border-[#C6A15B]/40 transition-all flex flex-col justify-between shadow-sm">
                       <div className="space-y-2">
@@ -291,9 +283,9 @@ export default function SEOLandingPages({
                 {isAr ? "شراء سبائك الفضة المادية في دبي" : "Buy Physical Silver Bars in Dubai"}
               </h1>
               <p className="text-[#5E564D] text-xs md:text-sm leading-relaxed max-w-4xl">
-                {isAr 
-                  ? "استثمر في الفضة المادية عالية النقاوة من عيار ٩٩٩. توفر PGR UAE لعملائها سبائك فضية استثمارية بأوزان مثالية لحفظ القيمة، مع خيارات تسليم معتمدة في دبي أو تخزين SEGREGATED مؤمن بالكامل."
-                  : "Diversify your wealth using physical silver bullion. PGR UAE supplies high-purity (99.9% fine) silver cast bars in premier weights including 100g, 500g, and 1kg sizes, carefully certified by internationally recognized refiners."}
+                {isAr
+                  ? "استثمر في الفضة المادية عالية النقاوة عيار ٩٩٩. توفر PGR UAE سبائك SAM وPALM بأوزان ١٠٠ جرام و٥٠٠ جرام و١ كيلو — الأكثر طلباً لتوصيل العراق."
+                  : "Diversify with physical silver bullion. PGR UAE supplies SAM and PALM cast bars in 100g, 500g, and 1kg — top-requested weights for Iraq delivery."}
               </p>
             </div>
 
@@ -304,7 +296,7 @@ export default function SEOLandingPages({
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {getPageProducts().map((prod) => {
-                  const estValue = spotSilverLocal * (prod.technical_specs.weight_grams / 31.1034768) * (prod.premium_multiplier || 1.05);
+                  const estValue = spotSilverLocal * (prod.technical_specs.weight_grams / OUNCE_TO_GRAM) * (prod.premium_multiplier || 1.05);
                   return (
                     <div key={prod.id} className="bg-white border border-[#E8DEC9] p-5 rounded space-y-4 hover:border-[#C6A15B]/40 transition-all flex flex-col justify-between shadow-sm">
                       <div className="space-y-2">
@@ -355,9 +347,9 @@ export default function SEOLandingPages({
                 {isAr ? "سعر الذهب اليوم في دبي مباشر" : "Gold Rate Dubai Today - Live Spot Feed"}
               </h1>
               <p className="text-[#5E564D] text-xs md:text-sm">
-                {isAr 
-                  ? "أسعار تفاعلية محدثة كل دقيقة بناءً على بورصة لندن للمعادن مع حساب عيارات ٢٤ قيراط، ٢٢ قيراط، ٢١ قيراط."
-                  : "Track official live market prices per ounce and per gram in Dubai's major currency denominations."}
+                {isAr
+                  ? `${ratesLabel} — أسعار استرشادية لعيارات ٢٤ و٢٢ و٢١ قيراط. عرض السعر النهائي يؤكده PGR UAE.`
+                  : `${ratesLabel} — indicative 24K, 22K, and 21K references. Final quote confirmed by PGR UAE.`}
               </p>
             </div>
 
@@ -369,15 +361,21 @@ export default function SEOLandingPages({
               </div>
               <div className="bg-white border border-[#E8DEC9] p-6 rounded space-y-2 text-center shadow-sm">
                 <span className="text-[10px] font-mono text-[#5E564D] uppercase tracking-wider font-bold">{isAr ? "جرام عيار ٢٤ (AED)" : "Gram 24K (AED)"}</span>
-                <div className="text-xl md:text-2xl font-serif text-[#1F1A17] font-bold">{(spotGoldUsd / 31.1034768 * 3.6725).toFixed(2)} AED</div>
+                <div className="text-xl md:text-2xl font-serif text-[#1F1A17] font-bold">
+                  {usdOunceToGramLocal(spotGoldUsd, "AED", rates).toFixed(2)} AED
+                </div>
               </div>
               <div className="bg-white border border-[#E8DEC9] p-6 rounded space-y-2 text-center shadow-sm">
                 <span className="text-[10px] font-mono text-[#5E564D] uppercase tracking-wider font-bold">{isAr ? "جرام عيار ٢٢ (AED)" : "Gram 22K (AED)"}</span>
-                <div className="text-xl md:text-2xl font-serif text-[#5E564D] font-bold">{(spotGoldUsd / 31.1034768 * 3.6725 * 0.9167).toFixed(2)} AED</div>
+                <div className="text-xl md:text-2xl font-serif text-[#5E564D] font-bold">
+                  {usdOunceToGramLocal(spotGoldUsd, "AED", rates, 0.9167).toFixed(2)} AED
+                </div>
               </div>
               <div className="bg-white border border-[#E8DEC9] p-6 rounded space-y-2 text-center shadow-sm">
                 <span className="text-[10px] font-mono text-[#5E564D] uppercase tracking-wider font-bold">{isAr ? "جرام عيار ٢١ (AED)" : "Gram 21K (AED)"}</span>
-                <div className="text-xl md:text-2xl font-serif text-[#5E564D] font-bold">{(spotGoldUsd / 31.1034768 * 3.6725 * 0.875).toFixed(2)} AED</div>
+                <div className="text-xl md:text-2xl font-serif text-[#5E564D] font-bold">
+                  {usdOunceToGramLocal(spotGoldUsd, "AED", rates, 0.875).toFixed(2)} AED
+                </div>
               </div>
             </div>
 
@@ -403,9 +401,9 @@ export default function SEOLandingPages({
                 {isAr ? "سعر الفضة اليوم في دبي" : "Silver Rate Dubai Today - Live Market"}
               </h1>
               <p className="text-[#5E564D] text-xs md:text-sm">
-                {isAr 
-                  ? "تتبع مباشر لأسعار الفضة الفاخرة بالدرهم الإماراتي والدولار الأمريكي لحساب الأصول وحساب الصب والعمولة."
-                  : "Track high-purity physical silver spot prices with instant premium calculations for secure delivery contracts."}
+                {isAr
+                  ? `${ratesLabel} — مرجع الفضة بالدرهم والدولار. SAM وPALM ١ كيلو متوفرة للعراق.`
+                  : `${ratesLabel} — silver reference in AED and USD. SAM & PALM 1kg available for Iraq.`}
               </p>
             </div>
 
@@ -416,11 +414,15 @@ export default function SEOLandingPages({
               </div>
               <div className="bg-white border border-[#E8DEC9] p-6 rounded space-y-2 text-center shadow-sm">
                 <span className="text-[10px] font-mono text-[#5E564D] uppercase tracking-wider font-bold">{isAr ? "كيلوغرام الفضة (AED)" : "Kilogram Silver (AED)"}</span>
-                <div className="text-xl md:text-2xl font-serif text-[#A47C36] font-bold">{(spotSilverUsd * 3.6725 * 32.1507).toFixed(2)} AED</div>
+                <div className="text-xl md:text-2xl font-serif text-[#A47C36] font-bold">
+                  {(usdOunceToLocal(spotSilverUsd, "AED", rates) * (GRAMS_PER_KG / OUNCE_TO_GRAM)).toFixed(2)} AED
+                </div>
               </div>
               <div className="bg-white border border-[#E8DEC9] p-6 rounded space-y-2 text-center shadow-sm">
                 <span className="text-[10px] font-mono text-[#5E564D] uppercase tracking-wider font-bold">{isAr ? "أونصة الفضة (AED)" : "Silver Ounce (AED)"}</span>
-                <div className="text-xl md:text-2xl font-serif text-[#5E564D] font-bold">{(spotSilverUsd * 3.6725).toFixed(2)} AED</div>
+                <div className="text-xl md:text-2xl font-serif text-[#5E564D] font-bold">
+                  {usdOunceToLocal(spotSilverUsd, "AED", rates).toFixed(2)} AED
+                </div>
               </div>
             </div>
           </div>

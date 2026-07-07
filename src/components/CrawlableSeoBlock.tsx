@@ -24,7 +24,7 @@ export default function CrawlableSeoBlock({ currentLang }: CrawlableSeoBlockProp
       <h2>{isAr ? "كتالوج سبائك PGR UAE" : "PGR UAE Bullion Product Catalog"}</h2>
       <p>
         {isAr
-          ? "ديوان PGR UAE لعروض الأسعار المعتمدة من دبي إلى العراق. مرجع سوقي استرشادي. خاضع لحركة السوق ومراجعة الامتثال."
+          ? "PGR UAE لعروض أسعار السبائك المعتمدة من دبي إلى العراق. مرجع سوقي استرشادي. خاضع لحركة السوق ومراجعة الامتثال."
           : "PGR UAE bullion quote desk from Dubai to Iraq. Indicative market reference. Subject to market movement and compliance review."}
       </p>
       <p>
