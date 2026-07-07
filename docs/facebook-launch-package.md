@@ -1,7 +1,7 @@
 # PGR UAE — Facebook Launch Package (AR/EN)
 
 > **Owner action required:** Meta/Facebook cannot be edited by automation. Use this file copy-paste into [Meta Business Suite](https://business.facebook.com).  
-> **Current page:** https://www.facebook.com/profile.php?id=61587414407931 (Mintline → rebrand to PGR UAE)  
+> **Live page:** https://www.facebook.com/PGRUAE  
 > **Website CTA:** https://www.pgruae.com/facebook  
 > **WhatsApp:** +971 55 968 8837
 

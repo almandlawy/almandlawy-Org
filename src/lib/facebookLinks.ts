@@ -2,8 +2,7 @@
  * Facebook launch — UTM links & WhatsApp CTAs (compliance-safe).
  */
 
-export const FACEBOOK_PAGE_URL =
-  "https://www.facebook.com/profile.php?id=61587414407931";
+export const FACEBOOK_PAGE_URL = "https://www.facebook.com/PGRUAE";
 
 const SITE = "https://www.pgruae.com";
 
