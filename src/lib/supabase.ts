@@ -459,24 +459,8 @@ const seedLocalStorage = () => {
     IQD: 1310.0
   });
 
-  // 13. Pickup Points / Offices (Admin-managed)
-  getOrSet("pgr_pickup_points", [
-    {
-      id: "pickup-1",
-      name_en: "Baghdad Partner Distribution Point",
-      name_ar: "نقطة استلام بغداد الشريكة",
-      city_en: "Baghdad",
-      city_ar: "بغداد",
-      address_en: "Al-Mansour District, Near Baghdad Mall",
-      address_ar: "حي المنصور، بالقرب من بغداد مول",
-      phone: "+964 770 123 4567",
-      whatsapp: "+964 770 123 4567",
-      working_hours_en: "Sun - Thu: 10:00 AM - 4:00 PM AST",
-      working_hours_ar: "الأحد - الخميس: ١٠:٠٠ صباحاً - ٤:٠٠ مساءً",
-      maps_link: "https://maps.google.com",
-      status: "Partner Pickup Point"
-    }
-  ]);
+  // 13. Pickup Points / Offices (Admin-managed — no public seed data)
+  getOrSet("pgr_pickup_points", [] as unknown[]);
 
   // 14. KYC profiles and Documents
   if (!isProduction) {

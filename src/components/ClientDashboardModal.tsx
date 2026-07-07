@@ -57,7 +57,6 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
   const [portfolio, setPortfolio] = useState<any[]>([]);
   const [buybackList, setBuybackList] = useState<any[]>([]);
   const [orderList, setOrderList] = useState<any[]>([]);
-  const [pickupPoints, setPickupPoints] = useState<any[]>([]);
   const [kycProfile, setKycProfile] = useState<any>(null);
 
   // New Request states
@@ -106,13 +105,12 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
   const loadUserData = async (currentUser: any) => {
     if (!currentUser) return;
     try {
-      const [exRates, sObj, kProfile, deliveryList, bList, pList, oList, priceRes] = await Promise.all([
+      const [exRates, sObj, kProfile, deliveryList, bList, oList, priceRes] = await Promise.all([
         dbService.exchangeRates.get(),
         dbService.settings.get(),
         dbService.kyc.get(currentUser.id),
         dbService.iraqDelivery.list(currentUser.id),
         dbService.buyback.list(currentUser.id),
-        dbService.pickupPoints.list(),
         dbService.orders.list(),
         fetch("/api/prices").then((r) => (r.ok ? r.json() : null)).catch(() => null),
       ]);
@@ -151,7 +149,6 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
       }
 
       setBuybackList(bList);
-      setPickupPoints(pList);
       
       // Filter orders related to this user
       const userOrders = oList.filter((o: any) => o.customer_id === currentUser.id);
@@ -1848,39 +1845,6 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
                           {isAr ? "إرسال طلب التوصيل الآمن" : "Submit Secure Delivery Dispatch Request"}
                         </button>
                       </form>
-
-                      {/* REAL TIME OFFICES & PICKUP POINTS */}
-                      <div className="space-y-3">
-                        <span className="text-xs font-serif font-semibold text-white uppercase block border-b border-white/[0.04] pb-1">
-                          {isAr ? "نقاط الاستلام الموثقة من المشرف" : "ADMIN-VERIFIED COURIER OFFICE POINTS"}
-                        </span>
-                        
-                        {pickupPoints.filter(p => p.status !== "Coming Soon").length > 0 ? (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {pickupPoints.map((p, idx) => (
-                              <div key={idx} className="p-4 rounded border border-white/[0.04] bg-[#111] space-y-2 text-xs font-mono">
-                                <div className="flex justify-between items-center">
-                                  <span className="text-white font-bold text-sm block">{isAr ? p.name_ar : p.name_en}</span>
-                                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-gold-base/10 text-gold-base border border-gold-base/20 font-bold uppercase">
-                                    {p.status}
-                                  </span>
-                                </div>
-                                <p className="text-gray-400 text-[11px] leading-relaxed">{isAr ? p.address_ar : p.address_en}</p>
-                                <div className="text-[10px] text-gray-500 pt-1">
-                                  <div>{isAr ? "تلفون: " : "Phone: "} {p.phone}</div>
-                                  <div>{isAr ? "ساعات العمل: " : "Hours: "} {isAr ? p.working_hours_ar : p.working_hours_en}</div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="p-4 bg-amber-950/10 border border-amber-900/20 rounded text-xs text-amber-500 leading-normal font-mono">
-                            {isAr 
-                              ? "يتم تجهيز نقاط خدمة بغداد والبصرة. يرجى التواصل عبر واتساب لمعرفة خيارات التوصيل الحالية." 
-                              : "Baghdad and Basra service points are being prepared. Contact our active WhatsApp desk for current secured dispatch solutions."}
-                          </div>
-                        )}
-                      </div>
 
                     </div>
                   )}

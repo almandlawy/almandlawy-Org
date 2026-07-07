@@ -16,26 +16,19 @@ interface OfficeSectionProps {
 export default function OfficeSection({ currentLang, sectionId = "office" }: OfficeSectionProps) {
   const isAr = currentLang === "ar";
   const [settings, setSettings] = useState<any>(null);
-  const [pickupPoints, setPickupPoints] = useState<any[]>([]);
 
   useEffect(() => {
-    const fetchSettingsAndPoints = async () => {
+    const fetchSettings = async () => {
       try {
-        const [sObj, points] = await Promise.all([
-          dbService.settings.get(),
-          dbService.pickupPoints.list()
-        ]);
+        const sObj = await dbService.settings.get();
         if (sObj) {
           setSettings(sObj);
         }
-        if (points) {
-          setPickupPoints(points);
-        }
       } catch (err) {
-        console.error("Failed to load settings/points in OfficeSection:", err);
+        console.error("Failed to load settings in OfficeSection:", err);
       }
     };
-    fetchSettingsAndPoints();
+    fetchSettings();
   }, []);
 
   const address = isAr 
@@ -210,97 +203,6 @@ export default function OfficeSection({ currentLang, sectionId = "office" }: Off
             </p>
           </div>
 
-        </div>
-
-        {/* Regional Service Points Sub-Section */}
-        <div className="border-t border-stone-200 pt-16 space-y-10">
-          <div className="text-center space-y-3">
-            <span className="text-gold-base font-mono uppercase text-xs tracking-[0.3em] font-semibold flex items-center justify-center gap-2 font-bold">
-              <ShieldCheck size={12} />
-              {isAr ? "نقاط التسليم والخدمة الإقليمية" : "Verified Delivery & Pickup Points"}
-            </span>
-            <h3 className="text-xl sm:text-2xl font-serif text-stone-900 tracking-wide font-bold">
-              {isAr ? "نقاط الخدمة في العراق والإمارات" : "Service Points inside Iraq & UAE"}
-            </h3>
-            <p className="text-xs text-stone-600 max-w-xl mx-auto leading-relaxed font-medium">
-              {isAr
-                ? "قائمة بنقاط الخدمة والشركاء المعتمدين لتسليم واستلام المعادن الثمينة بعد إتمام عمليات التحقق والموافقة الجمركية والأمنية."
-                : "Verified locations and authorized partner points for secure logistics, physical pickup, and document submission."}
-            </p>
-          </div>
-
-          {pickupPoints.length === 0 ? (
-            <div className="bg-white p-8 rounded-sm border border-stone-200 shadow-sm text-center max-w-2xl mx-auto space-y-4">
-              <p className="text-sm text-gold-dark font-bold leading-relaxed">
-                {isAr
-                  ? "يتم تجهيز نقاط خدمة بغداد والبصرة. يرجى التواصل عبر واتساب لمعرفة خيارات التوصيل الحالية."
-                  : "Baghdad and Basra service points are being prepared. Contact WhatsApp for current delivery options."}
-              </p>
-              <a
-                href={`https://wa.me/${whatsappCleaned}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-xs font-mono font-bold uppercase rounded transition-colors shadow-sm"
-              >
-                <MessageSquare size={14} />
-                {isAr ? "تواصل عبر واتساب للتوصيل للعراق" : "Coordinate Iraq Delivery on WhatsApp"}
-              </a>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {pickupPoints.map((point) => (
-                <div
-                  key={point.id}
-                  className="bg-white p-6 rounded-sm border border-stone-200 hover:border-[#c5a85c]/30 transition-all duration-300 space-y-4 shadow-sm"
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h4 className="text-base font-serif font-bold text-stone-900">
-                        {isAr ? point.name_ar : point.name_en}
-                      </h4>
-                      <p className="text-xs text-gold-dark font-mono mt-0.5 font-bold">
-                        {isAr ? point.city_ar : point.city_en}
-                      </p>
-                    </div>
-                    <span className="px-2 py-0.5 text-[9px] font-mono rounded bg-gold-base/10 text-gold-dark uppercase tracking-widest font-bold">
-                      {point.status || (isAr ? "نقطة شريكة" : "Partner")}
-                    </span>
-                  </div>
-
-                  <div className="space-y-2 text-xs text-stone-600 font-sans font-medium">
-                    <p className="flex items-start gap-2">
-                      <MapPin size={13} className="text-gold-base shrink-0 mt-0.5" />
-                      <span>{isAr ? point.address_ar : point.address_en}</span>
-                    </p>
-                    <p className="flex items-start gap-2">
-                      <Clock size={13} className="text-gold-base shrink-0 mt-0.5" />
-                      <span>{isAr ? point.working_hours_ar : point.working_hours_en}</span>
-                    </p>
-                    {point.phone && (
-                      <p className="flex items-center gap-2">
-                        <Phone size={13} className="text-gold-base shrink-0" />
-                        <span className="font-mono font-bold">{point.phone}</span>
-                      </p>
-                    )}
-                  </div>
-
-                  {point.whatsapp && (
-                    <div className="pt-2 font-bold">
-                      <a
-                        href={`https://wa.me/${point.whatsapp.replace(/[^0-9]/g, "")}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 text-xs text-emerald-600 font-mono hover:underline"
-                      >
-                        <MessageSquare size={12} />
-                        {isAr ? "الاتصال بالمسؤول المحلي" : "Contact Local Representative"}
-                      </a>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
         </div>
 
       </div>
