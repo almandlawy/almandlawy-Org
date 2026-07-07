@@ -8,6 +8,7 @@ import React, { useState, useEffect } from "react";
 import { Globe, Phone, FileText, Menu, X, ShieldCheck, Terminal } from "lucide-react";
 import { LiveMarketRates } from "../types";
 import { dbService, mockDb } from "../lib/supabase";
+import BrandLogo from "./BrandLogo";
 
 const WHATSAPP_BASE = "https://wa.me/971559688837";
 
@@ -78,18 +79,7 @@ export default function Header({
       style={{ direction: isAr ? "rtl" : "ltr" }}
     >
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-3.5 flex justify-between items-center gap-4">
-        <button
-          type="button"
-          className="flex flex-col text-left shrink-0"
-          onClick={() => handleNav("hero")}
-        >
-          <span className="text-lg md:text-xl font-serif font-semibold tracking-[0.2em] text-text-charcoal leading-none">
-            PGR <span className="text-gold-base">UAE</span>
-          </span>
-          <span className="text-[8px] md:text-[9px] uppercase tracking-[0.4em] text-text-secondary mt-1 font-mono">
-            {isAr ? "خدمات المعادن الثمينة" : "Precious Metals Services"}
-          </span>
-        </button>
+        <BrandLogo variant="header" currentLang={currentLang} onClick={() => handleNav("hero")} />
 
         <nav className="hidden xl:flex items-center gap-6 text-[11px] uppercase tracking-widest text-text-secondary font-semibold">
           {NAV_LINKS.map((link) => (

@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from "react";
 import { Send, MapPin, Phone, Mail, ShieldAlert, Award, Globe, MessageSquare, ShieldCheck, Terminal } from "lucide-react";
 import { dbService } from "../lib/supabase";
+import BrandLogo from "./BrandLogo";
 
 interface FooterProps {
   currentLang: "en" | "ar";
@@ -59,14 +60,7 @@ export default function Footer({
           
           {/* Corporate Profile Column */}
           <div className="space-y-4">
-            <div className="flex flex-col">
-              <span className="text-xl font-serif font-bold tracking-[0.2em] text-[#1F1A17]">
-                PGR <span className="text-[#C6A15B]">UAE</span>
-              </span>
-              <span className="text-[9px] uppercase tracking-[0.4em] text-[#A47C36] mt-1 font-mono font-bold">
-                Precious Metals & Bullion Quote Desk
-              </span>
-            </div>
+            <BrandLogo variant="footer" currentLang={currentLang} />
             <p className="text-[#5E564D] text-[11px] leading-relaxed font-bold">
               {currentLang === "ar"
                 ? "مؤسسة بي جي آر لتجارة المعادن الثمينة ومقرها دبي. نوفر عروض أسعار وحلول تخزين مخصصة للسبائك للمؤسسات وصناديق الاستثمار وكبار الشخصيات بأعلى معايير الأمان السويسري."

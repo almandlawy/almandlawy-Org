@@ -1,6 +1,6 @@
 /** Shared SEO route data for build-time generators (sitemap + static HTML). */
 export const SITE_ORIGIN = "https://www.pgruae.com";
-export const OG_IMAGE = `${SITE_ORIGIN}/images/products/01-bullion-collection.webp`;
+export const OG_IMAGE = `${SITE_ORIGIN}/brand/pgr-uae-logo.png`;
 
 export const PRODUCTS = [
   "PGR UAE Bullion Collection",

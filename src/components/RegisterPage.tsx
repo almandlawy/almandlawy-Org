@@ -93,7 +93,7 @@ export default function RegisterPage({ currentLang, onNavigate, onRegisterSucces
         
         {/* Onboarding Header */}
         <div className="text-center space-y-3">
-          <Logo className="w-12 h-12 mx-auto" showText={false} />
+          <Logo className="w-12 h-12 mx-auto" showText={false} currentLang={currentLang} />
           <h1 className="text-white font-serif text-lg tracking-wider font-bold uppercase">
             {currentLang === "ar" ? "طلب فتح حساب ديوان عملاء" : "PGR PRIVATE CLIENT ONBOARDING"}
           </h1>
