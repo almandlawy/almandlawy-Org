@@ -4,7 +4,7 @@
  */
 
 export const SITE_ORIGIN = "https://www.pgruae.com";
-export const OG_IMAGE = `${SITE_ORIGIN}/brand/pgr-uae-logo.png`;
+export const OG_IMAGE = "https://www.pgruae.com/brand/pgr-uae-logo.png?v=transparent-v1";
 
 export interface RouteSeo {
   titleEn: string;
