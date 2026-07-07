@@ -31,7 +31,8 @@ export const NOINDEX_PATHS = new Set([
   "/login",
   "/register",
   "/dashboard",
-  "/calculator"
+  "/calculator",
+  "/quote-received"
 ]);
 
 export const PUBLIC_ROUTES: Record<string, RouteSeo> = {
@@ -52,6 +53,14 @@ export const PUBLIC_ROUTES: Record<string, RouteSeo> = {
     descAr: "اطلب عرض سعر مؤكد من مكتب PGR UAE. مرجع سوقي إرشادي فقط. عرض السعر النهائي بعد مراجعة الامتثال.",
     h1En: "Request Firm Quote",
     h1Ar: "طلب عرض سعر معتمد"
+  },
+  "/quote-received": {
+    titleEn: "Quote Request Received | PGR UAE",
+    titleAr: "تم استلام طلب عرض السعر | PGR UAE",
+    descEn: "Your bullion quote request was received. PGR UAE will contact you on WhatsApp with a desk-confirmed quote.",
+    descAr: "تم استلام طلب عرض السعر. سيتواصل PGR UAE معك على واتساب بعرض سعر مؤكد من المكتب.",
+    h1En: "Quote Request Received",
+    h1Ar: "تم استلام طلب عرض السعر"
   },
   "/iraq-bullion-quote": {
     titleEn: "Gold & Silver Bullion Quotes for Iraq | PGR UAE Dubai",

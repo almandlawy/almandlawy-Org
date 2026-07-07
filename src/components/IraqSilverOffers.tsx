@@ -15,13 +15,15 @@ import {
   getPriceStatusLabel,
   IRAQ_SILVER_OFFER_IDS,
 } from "../lib/indicativePricing";
+import { buildWhatsAppLink } from "../lib/whatsapp";
+import { trackWhatsAppClick } from "../lib/gtag";
 
 interface IraqSilverOffersProps {
   currentLang: "en" | "ar";
   rates: LiveMarketRates | null;
   selectedCurrency: string;
   onSelectProduct: (product: Product) => void;
-  onOpenQuote: () => void;
+  onOpenQuote: (product?: Product) => void;
 }
 
 const RANK_LABELS: Record<number, { en: string; ar: string }> = {
@@ -48,7 +50,7 @@ export default function IraqSilverOffers({
     const msg = isAr
       ? `مرحباً، أريد عرض سعر لسبيكة فضة ${pName} للتوصيل للعراق`
       : `Hello, I would like a firm quote for ${pName} with Iraq delivery`;
-    return `https://wa.me/971559688837?text=${encodeURIComponent(msg)}`;
+    return buildWhatsAppLink(msg);
   };
 
   return (
@@ -189,7 +191,11 @@ export default function IraqSilverOffers({
 
                 <div className="p-4 pt-0 flex flex-col gap-2">
                   <button
-                    onClick={() => onSelectProduct(product)}
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onOpenQuote(product);
+                    }}
                     className="w-full py-2.5 bg-[#C6A15B] hover:bg-[#A47C36] text-[#1F1A17] hover:text-white font-mono text-[10px] uppercase font-bold tracking-widest rounded transition-all flex items-center justify-center gap-1.5"
                   >
                     <FileText size={12} />
@@ -199,6 +205,7 @@ export default function IraqSilverOffers({
                     href={getWhatsAppLink(product)}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={() => trackWhatsAppClick(`iraq_silver_${product.id}`)}
                     className="w-full py-2.5 bg-[#25D366] hover:bg-[#128C7E] text-white font-mono text-[10px] uppercase font-bold tracking-widest rounded transition-all flex items-center justify-center gap-1.5"
                   >
                     <Phone size={12} />
@@ -212,7 +219,8 @@ export default function IraqSilverOffers({
 
         <div className="text-center pt-4">
           <button
-            onClick={onOpenQuote}
+            type="button"
+            onClick={() => onOpenQuote()}
             className="px-8 py-3 border-2 border-[#C6A15B] text-[#A47C36] hover:bg-[#C6A15B] hover:text-[#1F1A17] font-mono text-[11px] font-bold uppercase tracking-widest rounded transition-all"
           >
             {isAr ? "طلب عرض سعر مخصص للعراق" : "Request Custom Iraq Quote"}
