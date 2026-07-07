@@ -19,6 +19,87 @@ import {
   getPriceStatusLabel,
 } from "../lib/marketReference";
 
+const IRAQ_SEO_PAGES: Record<
+  string,
+  {
+    badgeEn: string;
+    badgeAr: string;
+    titleEn: string;
+    titleAr: string;
+    descEn: string;
+    descAr: string;
+    ctaEn: string;
+    ctaAr: string;
+    productFilter: "silver" | "gold" | "all";
+  }
+> = {
+  "/silver-bars-iraq": {
+    badgeEn: "DUBAI → IRAQ SILVER",
+    badgeAr: "فضة دبي → العراق",
+    titleEn: "Silver Bars for Iraq | SAM & PALM from Dubai",
+    titleAr: "سبائك الفضة للعراق | SAM وPALM من دبي",
+    descEn:
+      "Request desk-confirmed SAM and PALM silver bar quotes for Iraq. 500g and 1kg weights most requested for Baghdad, Basra, and Erbil delivery corridors.",
+    descAr:
+      "اطلب عروض أسعار سبائك فضة SAM وPALM للعراق. أوزان 500 جرام و1 كيلو الأكثر طلباً لمسارات بغداد والبصرة وأربيل.",
+    ctaEn: "Request Iraq Silver Quote",
+    ctaAr: "طلب عرض فضة للعراق",
+    productFilter: "silver",
+  },
+  "/sam-palm-silver-iraq": {
+    badgeEn: "SAM & PALM SILVER IRAQ",
+    badgeAr: "فضة SAM وPALM للعراق",
+    titleEn: "SAM & PALM Silver for Iraqi Customers",
+    titleAr: "فضة SAM وPALM للعملاء العراقيين",
+    descEn:
+      "999.9 fine SAM and PALM cast silver bars sourced in Dubai for Iraqi buyers. Indicative reference only — final quote confirmed by PGR UAE desk.",
+    descAr:
+      "سبائك فضة SAM وPALM 999.9 من دبي للمشترين العراقيين. مرجع استرشادي فقط — عرض السعر النهائي من مكتب PGR UAE.",
+    ctaEn: "Request SAM / PALM Quote",
+    ctaAr: "طلب عرض SAM / PALM",
+    productFilter: "silver",
+  },
+  "/gold-bars-baghdad": {
+    badgeEn: "GOLD FOR BAGHDAD",
+    badgeAr: "ذهب لبغداد",
+    titleEn: "Gold Bars for Baghdad | Dubai Desk to Iraq",
+    titleAr: "سبائك الذهب لبغداد | مكتب دبي إلى العراق",
+    descEn:
+      "Physical 24K gold bar quotes for Baghdad and central Iraq. PGR UAE Dubai desk handles compliance review and desk-confirmed pricing before settlement.",
+    descAr:
+      "عروض أسعار سبائك ذهب 24 قيراط لبغداد ووسط العراق. مكتب PGR UAE دبي يتولى مراجعة الامتثال والتسعير المؤكد قبل التسوية.",
+    ctaEn: "Request Baghdad Gold Quote",
+    ctaAr: "طلب عرض ذهب لبغداد",
+    productFilter: "gold",
+  },
+  "/silver-bars-erbil": {
+    badgeEn: "SILVER FOR ERBIL",
+    badgeAr: "فضة لأربيل",
+    titleEn: "Silver Bars for Erbil & Kurdistan",
+    titleAr: "سبائك الفضة لأربيل وكردستان",
+    descEn:
+      "SAM and PALM silver bar quotes for Erbil and Kurdistan region. Desk-confirmed quote from PGR UAE Dubai with indicative IQD reference pricing.",
+    descAr:
+      "عروض أسعار سبائك فضة SAM وPALM لأربيل وإقليم كردستان. عرض مؤكد من مكتب PGR UAE دبي مع مرجع تسعير بالدينار.",
+    ctaEn: "Request Erbil Silver Quote",
+    ctaAr: "طلب عرض فضة لأربيل",
+    productFilter: "silver",
+  },
+  "/bullion-desk-iraq": {
+    badgeEn: "UAE → IRAQ BULLION DESK",
+    badgeAr: "مكتب السبائك دبي → العراق",
+    titleEn: "Bullion Desk for Iraqi Customers",
+    titleAr: "مكتب السبائك للعملاء العراقيين",
+    descEn:
+      "PGR UAE connects Iraqi investors with accredited Dubai bullion supply. Physical gold and silver only — indicative market reference, desk-confirmed final quote.",
+    descAr:
+      "يربط PGR UAE المستثمرين العراقيين بتوريد السبائك المعتمد في دبي. ذهب وفضة مادي فقط — مرجع استرشادي وعرض نهائي مؤكد من المكتب.",
+    ctaEn: "Contact Iraq Desk",
+    ctaAr: "تواصل مع مكتب العراق",
+    productFilter: "all",
+  },
+};
+
 interface SEOLandingPagesProps {
   currentPath: string;
   currentLang: "en" | "ar";
@@ -129,6 +210,10 @@ export default function SEOLandingPages({
       desc = isAr 
         ? "اطلب سبائك الذهب الخالص عيار ٢٤ قيراط بنقاوة 999.9 في دبي وأبوظبي. نوفر الأوزان من ١ جرام إلى ١ كيلوجرام مع شهادات أصالة دولية."
         : "Order accredited gold bars in the UAE with firm-quote desk transparency. High-liquidity minted gold bars from accredited international refiners.";
+    } else if (IRAQ_SEO_PAGES[currentPath]) {
+      const iraqMeta = IRAQ_SEO_PAGES[currentPath];
+      title = isAr ? iraqMeta.titleAr : iraqMeta.titleEn;
+      desc = isAr ? iraqMeta.descAr : iraqMeta.descEn;
     }
 
     document.title = title;
@@ -166,6 +251,12 @@ export default function SEOLandingPages({
     }
     if (currentPath === "/buy-silver-bars-dubai") {
       return catalog.filter((p) => p.category === "silver_bars");
+    }
+    if (IRAQ_SEO_PAGES[currentPath]?.productFilter === "silver") {
+      return catalog.filter((p) => p.category === "silver_bars");
+    }
+    if (IRAQ_SEO_PAGES[currentPath]?.productFilter === "gold") {
+      return catalog.filter((p) => p.category === "gold_bars");
     }
     return catalog;
   };
@@ -603,12 +694,119 @@ export default function SEOLandingPages({
           </div>
         );
 
-      default:
+      default: {
+        const iraqMeta = IRAQ_SEO_PAGES[currentPath];
+        if (!iraqMeta) {
+          return (
+            <div className="text-center py-12">
+              <h1 className="text-xl font-serif text-[#1F1A17]">SEO Page Not Found</h1>
+            </div>
+          );
+        }
+
+        const iqdGramSilver = usdOunceToGramLocal(spotSilverUsd, "IQD", rates);
+        const iqdGramGold = usdOunceToGramLocal(spotGoldUsd, "IQD", rates);
+
         return (
-          <div className="text-center py-12">
-            <h1 className="text-xl font-serif text-[#1F1A17]">SEO Page Not Found</h1>
+          <div className="space-y-12">
+            <div className="space-y-4">
+              <span className="text-[#A47C36] font-mono uppercase text-xs tracking-widest block font-bold">
+                {isAr ? iraqMeta.badgeAr : iraqMeta.badgeEn}
+              </span>
+              <h1 className="text-3xl md:text-5xl font-serif text-[#1F1A17] tracking-tight font-medium">
+                {isAr ? iraqMeta.titleAr : iraqMeta.titleEn}
+              </h1>
+              <p className="text-[#5E564D] text-xs md:text-sm leading-relaxed max-w-4xl">
+                {isAr ? iraqMeta.descAr : iraqMeta.descEn}
+              </p>
+              <p className="text-[10px] font-mono text-[#5E564D] uppercase tracking-wider">
+                {ratesLabel} — {isAr ? "مرجع الدينار:" : "IQD reference:"}{" "}
+                {iqdGramGold.toLocaleString(undefined, { maximumFractionDigits: 0 })} IQD/g gold ·{" "}
+                {iqdGramSilver.toLocaleString(undefined, { maximumFractionDigits: 0 })} IQD/g silver
+              </p>
+            </div>
+
+            {iraqMeta.productFilter !== "all" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {getPageProducts().map((prod) => {
+                  const isGold = prod.category?.includes("gold");
+                  const spotLocal = isGold ? spotGoldLocal : spotSilverLocal;
+                  const estValue =
+                    spotLocal *
+                    (prod.technical_specs.weight_grams / OUNCE_TO_GRAM) *
+                    (prod.premium_multiplier || (isGold ? 1.02 : 1.05));
+                  return (
+                    <div
+                      key={prod.id}
+                      className="bg-white border border-[#E8DEC9] p-5 rounded space-y-4 hover:border-[#C6A15B]/40 transition-all flex flex-col justify-between shadow-sm"
+                    >
+                      <div className="space-y-2">
+                        <span className="text-[10px] font-mono text-[#5E564D] uppercase tracking-widest font-bold">
+                          {prod.manufacturer}
+                        </span>
+                        <h3 className="text-sm font-serif text-[#1F1A17] font-medium leading-snug">
+                          {isAr ? prod.name_ar : prod.name_en}
+                        </h3>
+                      </div>
+                      <div className="space-y-3 pt-3 border-t border-[#E8DEC9]">
+                        <div className="flex justify-between items-baseline text-xs font-mono">
+                          <span className="text-[#5E564D]">{isAr ? "السعر الاسترشادي:" : "Est. Value:"}</span>
+                          <span className="text-[#1F1A17] font-bold">
+                            {estValue.toLocaleString(undefined, { maximumFractionDigits: selectedCurrency === "IQD" ? 0 : 2 })}{" "}
+                            {selectedCurrency}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => onOpenQuote(isAr ? prod.name_ar : prod.name_en)}
+                          className="w-full py-2.5 bg-[#C6A15B] hover:bg-[#A47C36] text-[#1F1A17] hover:text-white text-[11px] uppercase tracking-wider font-mono font-bold rounded transition-colors shadow-sm cursor-pointer"
+                        >
+                          {isAr ? "طلب تسعير معتمد" : "Request Firm Quote"}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+              <div className="bg-white border border-[#E8DEC9] p-6 rounded shadow-sm">
+                <div className="text-[#A47C36] text-lg font-serif font-medium">Dubai Sourcing</div>
+                <p className="text-xs text-[#5E564D] font-sans mt-2">
+                  {isAr ? "توريد من مصافي معتمدة في دبي." : "Sourced from accredited Dubai refineries."}
+                </p>
+              </div>
+              <div className="bg-white border border-[#E8DEC9] p-6 rounded shadow-sm">
+                <div className="text-[#A47C36] text-lg font-serif font-medium">Iraq Corridor</div>
+                <p className="text-xs text-[#5E564D] font-sans mt-2">
+                  {isAr ? "ترتيبات توصيل بعد مراجعة الامتثال." : "Delivery arranged after compliance review."}
+                </p>
+              </div>
+              <div className="bg-white border border-[#E8DEC9] p-6 rounded shadow-sm">
+                <div className="text-[#A47C36] text-lg font-serif font-medium">Desk-Confirmed</div>
+                <p className="text-xs text-[#5E564D] font-sans mt-2">
+                  {isAr ? "عرض السعر النهائي من المكتب قبل الدفع." : "Final quote from desk before payment."}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button
+                onClick={() => onOpenQuote(isAr ? iraqMeta.titleAr : iraqMeta.titleEn)}
+                className="px-8 py-4 bg-[#C6A15B] hover:bg-[#A47C36] text-[#1F1A17] hover:text-white text-xs font-mono font-bold uppercase tracking-widest rounded transition-all shadow cursor-pointer"
+              >
+                {isAr ? iraqMeta.ctaAr : iraqMeta.ctaEn}
+              </button>
+              <button
+                onClick={() => onNavigate("/request-quote")}
+                className="px-8 py-4 bg-transparent hover:bg-gold-base/5 border border-[#C6A15B] text-[#1F1A17] text-xs font-mono font-bold uppercase tracking-widest rounded transition-all"
+              >
+                {isAr ? "نموذج طلب عرض سعر" : "Quote Request Form"}
+              </button>
+            </div>
           </div>
         );
+      }
     }
   };
 

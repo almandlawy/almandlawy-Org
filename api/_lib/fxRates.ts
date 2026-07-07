@@ -9,7 +9,14 @@ export const DEFAULT_FX_RATES = {
   IQD: 1310.0,
 } as const;
 
-export type FxRates = typeof DEFAULT_FX_RATES;
+export type FxRates = {
+  USD: number;
+  AED: number;
+  EUR: number;
+  GBP: number;
+  SAR: number;
+  IQD: number;
+};
 
 function getServiceClient() {
   const url = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "";

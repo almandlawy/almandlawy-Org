@@ -28,6 +28,10 @@ export interface LiveMarketRates {
   source_status?: "live" | "cached" | "fallback" | "reference";
   updated_at?: string;
   cache_timestamp?: string;
+  /** USD/IQD from admin settings or price API */
+  usd_iqd?: number;
+  /** USD/AED from admin settings or price API */
+  usd_aed?: number;
 }
 
 export type MetalCategory =

@@ -10,6 +10,7 @@ import {
   Upload, UserCheck, MapPin, Lock, PlusCircle, ArrowRight, TrendingUp 
 } from "lucide-react";
 import { dbService, mockDb, isProduction, isLive, supabase } from "../lib/supabase";
+import { getIqdPerUsd, getAedPerUsd } from "../lib/fxRatesClient";
 import IraqTrustBadge from "./IraqTrustBadge";
 import { LiveMarketRates } from "../types";
 
@@ -105,17 +106,32 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
   const loadUserData = async (currentUser: any) => {
     if (!currentUser) return;
     try {
-      const [exRates, sObj, kProfile, deliveryList, bList, pList, oList] = await Promise.all([
+      const [exRates, sObj, kProfile, deliveryList, bList, pList, oList, priceRes] = await Promise.all([
         dbService.exchangeRates.get(),
         dbService.settings.get(),
         dbService.kyc.get(currentUser.id),
         dbService.iraqDelivery.list(currentUser.id),
         dbService.buyback.list(currentUser.id),
         dbService.pickupPoints.list(),
-        dbService.orders.list()
+        dbService.orders.list(),
+        fetch("/api/prices").then((r) => (r.ok ? r.json() : null)).catch(() => null),
       ]);
 
-      if (exRates) setExchangeRates(exRates);
+      let syncedRates = exRates || { USD: 1.0, AED: 3.6725, IQD: 1310.0 };
+      if (priceRes?.usd_iqd || priceRes?.usd_aed) {
+        syncedRates = {
+          ...syncedRates,
+          IQD: Number(priceRes.usd_iqd ?? syncedRates.IQD ?? getIqdPerUsd()),
+          AED: Number(priceRes.usd_aed ?? syncedRates.AED ?? getAedPerUsd()),
+        };
+      } else if (sObj?.usd_iqd_rate || sObj?.exchange_rates?.IQD) {
+        syncedRates = {
+          ...syncedRates,
+          IQD: Number(sObj.usd_iqd_rate ?? sObj.exchange_rates?.IQD ?? syncedRates.IQD),
+          AED: Number(sObj.usd_aed_rate ?? sObj.exchange_rates?.AED ?? syncedRates.AED),
+        };
+      }
+      setExchangeRates(syncedRates);
       if (sObj) setSettings(sObj);
       if (kProfile) {
         setKycProfile(kProfile);

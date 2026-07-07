@@ -260,6 +260,46 @@ export const PUBLIC_PAGES = [
     h1: "24K Gold Bars UAE",
     priority: "0.8",
     changefreq: "weekly"
+  },
+  {
+    path: "/silver-bars-iraq",
+    title: "Silver Bars for Iraq | SAM & PALM from Dubai | PGR UAE",
+    desc: "Request desk-confirmed silver bar quotes for Iraq — SAM and PALM 500g and 1kg from PGR UAE Dubai.",
+    h1: "Silver Bars for Iraq",
+    priority: "0.85",
+    changefreq: "weekly"
+  },
+  {
+    path: "/sam-palm-silver-iraq",
+    title: "SAM & PALM Silver Iraq | PGR UAE Dubai Desk",
+    desc: "SAM and PALM 999.9 silver bars for Iraqi customers. Desk-confirmed quote from Dubai.",
+    h1: "SAM & PALM Silver for Iraq",
+    priority: "0.85",
+    changefreq: "weekly"
+  },
+  {
+    path: "/gold-bars-baghdad",
+    title: "Gold Bars Baghdad | Dubai to Iraq | PGR UAE",
+    desc: "Physical gold bar quotes for Baghdad and Iraq from PGR UAE Dubai desk.",
+    h1: "Gold Bars for Baghdad",
+    priority: "0.8",
+    changefreq: "weekly"
+  },
+  {
+    path: "/silver-bars-erbil",
+    title: "Silver Bars Erbil | SAM & PALM from Dubai | PGR UAE",
+    desc: "Silver bar quotes for Erbil and Kurdistan from PGR UAE Dubai.",
+    h1: "Silver Bars for Erbil",
+    priority: "0.8",
+    changefreq: "weekly"
+  },
+  {
+    path: "/bullion-desk-iraq",
+    title: "Bullion Desk Iraq | Dubai to Iraq Corridor | PGR UAE",
+    desc: "PGR UAE bullion quote desk for Iraqi customers. Physical gold and silver from Dubai.",
+    h1: "Bullion Desk for Iraq",
+    priority: "0.8",
+    changefreq: "weekly"
   }
 ];
 

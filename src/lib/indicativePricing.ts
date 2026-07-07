@@ -4,9 +4,14 @@
  */
 
 import { LiveMarketRates, Product } from "../types";
+import { getIqdPerUsd } from "./fxRatesClient";
 
 export const OUNCE_TO_GRAM = 31.1034768;
-export const IQD_PER_USD = 1310;
+
+/** @deprecated Use getIqdPerUsd(rates) — kept for legacy imports */
+export function getIqdPerUsdLegacy(rates?: LiveMarketRates | null): number {
+  return getIqdPerUsd(rates);
+}
 
 export function canShowIndicativePrice(sourceStatus?: string): boolean {
   return !!sourceStatus && sourceStatus !== "request_quote";

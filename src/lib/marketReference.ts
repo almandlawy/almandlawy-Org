@@ -4,6 +4,11 @@
  */
 
 import { LiveMarketRates } from "../types";
+import {
+  buildDefaultExchangeRates,
+  getAedPerUsd,
+  getIqdPerUsd,
+} from "./fxRatesClient";
 
 export const OUNCE_TO_GRAM = 31.1034768;
 export const GRAMS_PER_KG = 1000;
@@ -15,14 +20,7 @@ export const DEFAULT_SPOT_USD_OZ = {
   palladium: 1120.0,
 } as const;
 
-export const DEFAULT_FX_TO_USD = {
-  USD: 1.0,
-  AED: 3.6725,
-  EUR: 0.925,
-  GBP: 0.785,
-  SAR: 3.7505,
-  IQD: 1310.0,
-} as const;
+export const DEFAULT_FX_TO_USD = buildDefaultExchangeRates();
 
 export type SupportedCurrency = keyof typeof DEFAULT_FX_TO_USD;
 
@@ -44,6 +42,9 @@ export function getFxRate(currency: string, rates: LiveMarketRates | null): numb
   if (fromLive?.ounce && spotGold && spotGold > 0) {
     return fromLive.ounce / spotGold;
   }
+
+  if (currency === "IQD") return getIqdPerUsd(rates);
+  if (currency === "AED") return getAedPerUsd(rates);
 
   return DEFAULT_FX_TO_USD[currency as SupportedCurrency] ?? 1;
 }
