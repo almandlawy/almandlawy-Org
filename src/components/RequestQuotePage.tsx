@@ -3,23 +3,24 @@
  * Iraq-focused quote request page — Google Ads landing form.
  */
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Phone,
-  CheckCircle2,
   ArrowLeft,
   ArrowRight,
   FileText,
   MessageCircle
 } from "lucide-react";
 import PricingDisclaimer from "./PricingDisclaimer";
-import { trackGoogleAdsContactConversion } from "../lib/gtag";
-
-const WHATSAPP = "https://wa.me/971559688837";
+import { trackGoogleAdsContactConversion, trackWhatsAppClick } from "../lib/gtag";
+import { buildWhatsAppLink } from "../lib/whatsapp";
 
 const PRODUCT_OPTIONS = [
+  { value: "pgr-silver-500g", en: "SAM Silver 500g (Iraq bestseller)", ar: "فضة SAM 500 جرام (الأكثر طلباً)" },
+  { value: "pgr-silver-1kg", en: "PALM Silver 1kg", ar: "فضة PALM 1 كيلو" },
+  { value: "pgr-silver-1oz-100g", en: "SAM Silver 100g", ar: "فضة SAM 100 جرام" },
   { value: "gold-bars", en: "Gold bars", ar: "سبائك ذهب" },
-  { value: "silver-bars", en: "Silver bars", ar: "سبائك فضة" },
+  { value: "silver-bars", en: "Silver bars (other)", ar: "سبائك فضة (أخرى)" },
   { value: "bullion-coins", en: "Bullion coins", ar: "عملات سبائك" },
   { value: "custom-inquiry", en: "Custom inquiry", ar: "استفسار مخصص" }
 ] as const;
@@ -39,7 +40,7 @@ function WhatsAppCta({ isAr, variant = "card" }: { isAr: boolean; variant?: "car
   const waText = isAr
     ? "مرحباً، أريد طلب عرض سعر مؤكد لسبائك الذهب أو الفضة من PGR UAE."
     : "Hello, I would like to request a desk-confirmed bullion quote from PGR UAE.";
-  const href = `${WHATSAPP}?text=${encodeURIComponent(waText)}`;
+  const href = buildWhatsAppLink(waText);
 
   if (variant === "inline") {
     return (
@@ -47,6 +48,7 @@ function WhatsAppCta({ isAr, variant = "card" }: { isAr: boolean; variant?: "car
         href={href}
         target="_blank"
         rel="noopener noreferrer"
+        onClick={() => trackWhatsAppClick("request_quote_inline")}
         className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg border border-champagne/40 bg-panel-dark hover:bg-panel-charcoal text-brand-bg font-mono text-xs font-bold uppercase tracking-widest transition-colors w-full sm:w-auto"
       >
         <Phone size={14} />
@@ -74,6 +76,7 @@ function WhatsAppCta({ isAr, variant = "card" }: { isAr: boolean; variant?: "car
         href={href}
         target="_blank"
         rel="noopener noreferrer"
+        onClick={() => trackWhatsAppClick("request_quote_card")}
         className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-panel-dark hover:bg-panel-charcoal text-brand-bg font-mono text-xs font-bold uppercase tracking-widest transition-colors shrink-0"
       >
         <Phone size={14} />
@@ -89,15 +92,30 @@ export default function RequestQuotePage({ currentLang, onNavigate }: RequestQuo
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [countryCity, setCountryCity] = useState("");
-  const [productInterest, setProductInterest] = useState<string>("gold-bars");
+  const [productInterest, setProductInterest] = useState<string>("pgr-silver-500g");
   const [quantityBudget, setQuantityBudget] = useState("");
   const [preferredContact, setPreferredContact] = useState("whatsapp");
   const [message, setMessage] = useState("");
 
-  const [submitted, setSubmitted] = useState(false);
-  const [inquiryId, setInquiryId] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const product = params.get("product");
+    const name = params.get("name");
+
+    if (product && PRODUCT_OPTIONS.some((opt) => opt.value === product)) {
+      setProductInterest(product);
+    }
+
+    if (name) {
+      setMessage(
+        isAr ? `أريد عرض سعر لـ ${name}` : `I would like a quote for ${name}`
+      );
+    }
+  }, [isAr]);
 
   const inputClass =
     "w-full bg-brand-bg border border-soft-border focus:border-gold-base rounded-lg px-3 py-2.5 text-sm text-text-charcoal placeholder:text-text-secondary/60 outline-none transition-colors font-sans";
@@ -141,9 +159,9 @@ export default function RequestQuotePage({ currentLang, onNavigate }: RequestQuo
       const data = await response.json().catch(() => ({}));
 
       if (response.ok && data.success) {
-        setInquiryId(data.inquiryId || "");
-        setSubmitted(true);
         trackGoogleAdsContactConversion();
+        const ref = data.inquiryId || "";
+        onNavigate(`/quote-received${ref ? `?ref=${encodeURIComponent(ref)}` : ""}`);
       } else {
         const technical =
           data.details || data.error || `HTTP ${response.status}`;
@@ -195,173 +213,132 @@ export default function RequestQuotePage({ currentLang, onNavigate }: RequestQuo
 
       <WhatsAppCta isAr={isAr} />
 
-      {submitted ? (
-        <div className="rounded-xl border border-gold-base/30 bg-brand-card p-8 text-center space-y-5">
-          <div className="w-14 h-14 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto">
-            <CheckCircle2 size={32} className="text-emerald-600" />
+      <form
+        onSubmit={handleSubmit}
+        className="rounded-xl border border-soft-border bg-brand-card p-5 sm:p-8 space-y-5 shadow-sm"
+      >
+        {error && (
+          <div className="p-4 rounded-lg border border-red-200 bg-red-50 text-red-800 text-sm space-y-3">
+            <p>{error}</p>
+            <WhatsAppCta isAr={isAr} variant="inline" />
           </div>
-          <div className="space-y-2">
-            <h2 className="text-xl font-serif text-text-charcoal font-medium">
-              {isAr ? "تم استلام طلبك" : "Request received"}
-            </h2>
-            <p className="text-sm text-text-secondary leading-relaxed max-w-md mx-auto">
-              {isAr
-                ? "تم استلام طلبك. سيراجع PGR UAE التوفر ويتواصل معك على واتساب."
-                : "Your request has been received. PGR UAE will review availability and contact you on WhatsApp."}
-            </p>
-            {inquiryId && (
-              <p className="text-[10px] font-mono text-gold-dark font-bold">
-                REF: {inquiryId}
-              </p>
-            )}
-          </div>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
-            <button
-              type="button"
-              onClick={() => onNavigate("/")}
-              className="px-6 py-3 rounded-lg border border-soft-border bg-brand-bg text-text-charcoal text-xs font-mono font-bold uppercase tracking-widest hover:bg-brand-card transition-colors"
-            >
-              {isAr ? "العودة للرئيسية" : "Back to home"}
-            </button>
-            <a
-              href={WHATSAPP}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-6 py-3 rounded-lg bg-panel-dark hover:bg-panel-charcoal text-brand-bg text-xs font-mono font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-colors"
-            >
-              <Phone size={14} />
-              WhatsApp
-            </a>
-          </div>
+        )}
+
+        <div className="space-y-1">
+          <label className={labelClass}>{isAr ? "الاسم الكامل *" : "Full name *"}</label>
+          <input
+            type="text"
+            required
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            placeholder={isAr ? "الاسم كما في الهوية" : "Name as on ID"}
+            className={inputClass}
+          />
         </div>
-      ) : (
-        <form
-          onSubmit={handleSubmit}
-          className="rounded-xl border border-soft-border bg-brand-card p-5 sm:p-8 space-y-5 shadow-sm"
-        >
-          {error && (
-            <div className="p-4 rounded-lg border border-red-200 bg-red-50 text-red-800 text-sm space-y-3">
-              <p>{error}</p>
-              <WhatsAppCta isAr={isAr} variant="inline" />
-            </div>
-          )}
 
-          <div className="space-y-1">
-            <label className={labelClass}>{isAr ? "الاسم الكامل *" : "Full name *"}</label>
-            <input
-              type="text"
-              required
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              placeholder={isAr ? "الاسم كما في الهوية" : "Name as on ID"}
-              className={inputClass}
-            />
-          </div>
+        <div className="space-y-1">
+          <label className={labelClass}>{isAr ? "رقم واتساب *" : "WhatsApp phone *"}</label>
+          <input
+            type="tel"
+            required
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="+964 7xx xxx xxxx"
+            className={inputClass}
+            dir="ltr"
+          />
+        </div>
 
-          <div className="space-y-1">
-            <label className={labelClass}>{isAr ? "رقم واتساب *" : "WhatsApp phone *"}</label>
-            <input
-              type="tel"
-              required
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="+964 7xx xxx xxxx"
-              className={inputClass}
-              dir="ltr"
-            />
-          </div>
+        <div className="space-y-1">
+          <label className={labelClass}>{isAr ? "البلد / المدينة *" : "Country / city *"}</label>
+          <input
+            type="text"
+            required
+            value={countryCity}
+            onChange={(e) => setCountryCity(e.target.value)}
+            placeholder={isAr ? "مثال: بغداد، العراق" : "e.g. Baghdad, Iraq"}
+            className={inputClass}
+          />
+        </div>
 
-          <div className="space-y-1">
-            <label className={labelClass}>{isAr ? "البلد / المدينة *" : "Country / city *"}</label>
-            <input
-              type="text"
-              required
-              value={countryCity}
-              onChange={(e) => setCountryCity(e.target.value)}
-              placeholder={isAr ? "مثال: بغداد، العراق" : "e.g. Baghdad, Iraq"}
-              className={inputClass}
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className={labelClass}>{isAr ? "المنتج المطلوب *" : "Product interest *"}</label>
-            <select
-              value={productInterest}
-              onChange={(e) => setProductInterest(e.target.value)}
-              className={inputClass}
-            >
-              {PRODUCT_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {isAr ? opt.ar : opt.en}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="space-y-1">
-            <label className={labelClass}>
-              {isAr ? "الكمية أو الميزانية *" : "Quantity or budget *"}
-            </label>
-            <input
-              type="text"
-              required
-              value={quantityBudget}
-              onChange={(e) => setQuantityBudget(e.target.value)}
-              placeholder={isAr ? "مثال: 100 غرام، 1 كيلو، 5000 دولار" : "e.g. 100g, 1 kilo, $5,000"}
-              className={inputClass}
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className={labelClass}>
-              {isAr ? "طريقة التواصل المفضلة" : "Preferred contact method"}
-            </label>
-            <select
-              value={preferredContact}
-              onChange={(e) => setPreferredContact(e.target.value)}
-              className={inputClass}
-            >
-              {CONTACT_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {isAr ? opt.ar : opt.en}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="space-y-1">
-            <label className={labelClass}>{isAr ? "رسالة (اختياري)" : "Message (optional)"}</label>
-            <textarea
-              rows={3}
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder={
-                isAr
-                  ? "مثال: سبيكة SAM 500 جرام أو PALM 1 كيلو للعراق"
-                  : "e.g. SAM 500g or PALM 1kg silver for Iraq delivery"
-              }
-              className={`${inputClass} resize-none`}
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3.5 bg-gold-base hover:bg-gold-dark disabled:opacity-60 text-text-charcoal font-mono text-xs font-bold uppercase tracking-widest rounded-lg transition-colors flex items-center justify-center gap-2"
+        <div className="space-y-1">
+          <label className={labelClass}>{isAr ? "المنتج المطلوب *" : "Product interest *"}</label>
+          <select
+            value={productInterest}
+            onChange={(e) => setProductInterest(e.target.value)}
+            className={inputClass}
           >
-            {loading ? (
-              <span className="w-4 h-4 border-2 border-text-charcoal/30 border-t-text-charcoal rounded-full animate-spin" />
-            ) : (
-              <>
-                <FileText size={14} />
-                {isAr ? "إرسال طلب عرض السعر" : "Submit quote request"}
-              </>
-            )}
-          </button>
-        </form>
-      )}
+            {PRODUCT_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {isAr ? opt.ar : opt.en}
+              </option>
+            ))}
+          </select>
+        </div>
 
-      {!submitted && <WhatsAppCta isAr={isAr} />}
+        <div className="space-y-1">
+          <label className={labelClass}>
+            {isAr ? "الكمية أو الميزانية *" : "Quantity or budget *"}
+          </label>
+          <input
+            type="text"
+            required
+            value={quantityBudget}
+            onChange={(e) => setQuantityBudget(e.target.value)}
+            placeholder={isAr ? "مثال: 100 غرام، 1 كيلو، 5000 دولار" : "e.g. 100g, 1 kilo, $5,000"}
+            className={inputClass}
+          />
+        </div>
+
+        <div className="space-y-1">
+          <label className={labelClass}>
+            {isAr ? "طريقة التواصل المفضلة" : "Preferred contact method"}
+          </label>
+          <select
+            value={preferredContact}
+            onChange={(e) => setPreferredContact(e.target.value)}
+            className={inputClass}
+          >
+            {CONTACT_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {isAr ? opt.ar : opt.en}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-1">
+          <label className={labelClass}>{isAr ? "رسالة (اختياري)" : "Message (optional)"}</label>
+          <textarea
+            rows={3}
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder={
+              isAr
+                ? "مثال: سبيكة SAM 500 جرام أو PALM 1 كيلو للعراق"
+                : "e.g. SAM 500g or PALM 1kg silver for Iraq delivery"
+            }
+            className={`${inputClass} resize-none`}
+          />
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full py-3.5 bg-gold-base hover:bg-gold-dark disabled:opacity-60 text-text-charcoal font-mono text-xs font-bold uppercase tracking-widest rounded-lg transition-colors flex items-center justify-center gap-2"
+        >
+          {loading ? (
+            <span className="w-4 h-4 border-2 border-text-charcoal/30 border-t-text-charcoal rounded-full animate-spin" />
+          ) : (
+            <>
+              <FileText size={14} />
+              {isAr ? "إرسال طلب عرض السعر" : "Submit quote request"}
+            </>
+          )}
+        </button>
+      </form>
+
+      <WhatsAppCta isAr={isAr} />
     </div>
   );
 }

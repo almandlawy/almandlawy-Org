@@ -24,7 +24,7 @@ interface ProductDetailModalProps {
   onClose: () => void;
   rates: LiveMarketRates | null;
   selectedCurrency: string;
-  onOpenQuote: (productName?: string) => void;
+  onOpenQuote: (prefill?: Product | string) => void;
 }
 
 export default function ProductDetailModal({
@@ -189,7 +189,7 @@ export default function ProductDetailModal({
                 <button
                   type="button"
                   onClick={() => {
-                    onOpenQuote(pName);
+                    onOpenQuote(activeProduct || product);
                     onClose();
                   }}
                   className="w-full py-3.5 bg-gold-base hover:bg-gold-dark text-text-charcoal font-mono text-xs font-bold uppercase tracking-widest rounded flex items-center justify-center gap-2"
