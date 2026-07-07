@@ -61,7 +61,7 @@ export default function Header({
 
   const isAr = currentLang === "ar";
   const waMsg = isAr
-    ? "مرحباً، أريد التواصل مع ديوان PGR UAE."
+    ? "مرحباً، أريد التواصل مع PGR UAE."
     : "Hello, I would like to contact the PGR UAE desk.";
   const waLink = `${WHATSAPP_BASE}?text=${encodeURIComponent(waMsg)}`;
 
@@ -200,7 +200,7 @@ export default function Header({
               rel="noopener noreferrer"
               className="w-full py-3 bg-panel-dark text-brand-bg font-mono text-xs font-bold uppercase rounded text-center"
             >
-              {isAr ? "ديوان واتساب" : "WhatsApp Desk"}
+              {isAr ? "واتساب" : "WhatsApp"}
             </a>
           </div>
         </div>

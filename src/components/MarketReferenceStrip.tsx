@@ -152,7 +152,7 @@ export default function MarketReferenceStrip({
 
         <p className="mt-3 text-[10px] font-mono text-panel-muted leading-relaxed">
           {isAr
-            ? "استرشادي فقط — يتم تأكيد عرض السعر النهائي من ديوان PGR UAE."
+            ? "استرشادي فقط — يتم تأكيد عرض السعر النهائي من PGR UAE."
             : "Indicative only — final quote confirmed by PGR UAE desk."}
           {!isLive && (
             <span className="text-champagne/80">

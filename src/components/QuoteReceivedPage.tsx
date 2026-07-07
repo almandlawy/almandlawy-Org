@@ -46,7 +46,7 @@ export default function QuoteReceivedPage({ currentLang, onNavigate }: QuoteRece
             {isAr ? "تم استلام الطلب" : "Request received"}
           </p>
           <h1 className="text-2xl sm:text-3xl font-serif text-text-charcoal font-medium">
-            {isAr ? "شكراً — طلبك وصل إلى ديوان PGR UAE" : "Thank you — your request reached PGR UAE desk"}
+            {isAr ? "شكراً — طلبك وصل إلى PGR UAE" : "Thank you — your request reached PGR UAE"}
           </h1>
           <p className="text-sm text-text-secondary leading-relaxed max-w-md mx-auto">
             {isAr
