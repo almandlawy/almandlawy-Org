@@ -4,6 +4,7 @@
  */
 
 import React from "react";
+import { motion } from "motion/react";
 import { Star } from "lucide-react";
 import { LiveMarketRates, Product } from "../types";
 import { PRODUCTS } from "../data";
@@ -33,6 +34,17 @@ const RANK_LABELS: Record<number, { en: string; ar: string }> = {
   3: { en: "Entry Weight", ar: "وزن البداية" },
 };
 
+const headerEase = [0.16, 1, 0.3, 1] as [number, number, number, number];
+
+const headerItem = {
+  hidden: { opacity: 0, y: 20 },
+  show: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.1, duration: 0.5, ease: headerEase },
+  }),
+};
+
 export default function IraqSilverOffers({
   currentLang,
   rates,
@@ -58,27 +70,56 @@ export default function IraqSilverOffers({
 
   return (
     <section
-      className="py-20 px-4 md:px-8 bg-gradient-to-b from-brand-section to-brand-bg border-t border-soft-border/60"
+      className="relative py-20 px-4 md:px-8 bg-gradient-to-b from-brand-section to-brand-bg border-t border-soft-border/60 overflow-hidden"
       id="iraq-silver-offers"
       style={{ direction: isAr ? "rtl" : "ltr" }}
     >
-      <div className="max-w-7xl mx-auto space-y-10">
-        <div className="text-center space-y-4 max-w-3xl mx-auto">
-          <span className="text-gold-dark font-mono uppercase text-xs tracking-[0.3em] font-bold flex items-center justify-center gap-2">
-            <Star size={12} className="text-gold-base" />
+      {/* Ambient gold orbs */}
+      <div
+        className="pointer-events-none absolute -top-20 start-0 w-64 h-64 rounded-full bg-gold-base/10 blur-3xl offer-ambient-orb"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute bottom-0 end-0 w-72 h-72 rounded-full bg-olive-accent/10 blur-3xl offer-ambient-orb"
+        style={{ animationDelay: "2s" }}
+        aria-hidden
+      />
+
+      <div className="max-w-7xl mx-auto space-y-10 relative z-[1]">
+        <motion.div
+          className="text-center space-y-4 max-w-3xl mx-auto"
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: "-60px" }}
+        >
+          <motion.span
+            custom={0}
+            variants={headerItem}
+            className="text-gold-dark font-mono uppercase text-xs tracking-[0.3em] font-bold flex items-center justify-center gap-2"
+          >
+            <motion.span
+              animate={{ rotate: [0, 12, -8, 0], scale: [1, 1.15, 1] }}
+              transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 4 }}
+            >
+              <Star size={12} className="text-gold-base fill-gold-base/30" />
+            </motion.span>
             {isAr ? "عروض الفضة للعراق" : "Iraq Silver Offers"}
-          </span>
-          <h2 className="text-3xl sm:text-4xl font-serif tracking-tight text-text-charcoal font-medium">
+          </motion.span>
+          <motion.h2
+            custom={1}
+            variants={headerItem}
+            className="text-3xl sm:text-4xl font-serif tracking-tight text-text-charcoal font-medium"
+          >
             {isAr
               ? "سبائك PALM و SAM — الأكثر مبيعاً في العراق"
               : "PALM & SAM Silver — Iraq's Bestsellers"}
-          </h2>
-          <p className="text-sm text-text-secondary leading-relaxed">
+          </motion.h2>
+          <motion.p custom={2} variants={headerItem} className="text-sm text-text-secondary leading-relaxed">
             {isAr
               ? "أسعار استرشادية واقعية مبنية على سوق دبي الحالي مع علاوات المصافي الإماراتية. SAM ٥٠٠ جرام وPALM ١ كيلو الأكثر طلباً لتوصيل بغداد وأربيل والبصرة."
               : "Realistic indicative prices based on current Dubai bullion market rates with UAE refinery premiums. SAM 500g and PALM 1kg are the top-requested weights for Baghdad, Erbil, and Basra delivery."}
-          </p>
-        </div>
+          </motion.p>
+        </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {offerProducts.map((product, index) => {
@@ -102,10 +143,16 @@ export default function IraqSilverOffers({
 
             const priceBlock = showPrice ? (
               <div className="space-y-1">
-                <p className="text-2xl font-mono font-bold text-text-charcoal">
+                <motion.p
+                  key={`${product.id}-${indicativePrice}`}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.35 }}
+                  className="text-2xl font-mono font-bold text-text-charcoal"
+                >
                   {formatIndicativePrice(indicativePrice!, selectedCurrency, currentLang)}{" "}
                   <span className="text-sm text-gold-dark">{selectedCurrency}</span>
-                </p>
+                </motion.p>
                 {selectedCurrency === "IQD" && aedPrice && (
                   <p className="text-xs font-mono text-text-secondary">
                     ≈ {formatIndicativePrice(aedPrice, "AED", currentLang)} AED
@@ -148,20 +195,30 @@ export default function IraqSilverOffers({
                 onOpenQuote={() => onOpenQuote(product)}
                 onWhatsAppClick={() => trackWhatsAppClick(`iraq_silver_${product.id}`)}
                 index={index}
+                offerAnimated
+                isTopOffer={rank === 1}
               />
             );
           })}
         </div>
 
-        <div className="text-center pt-4">
-          <button
+        <motion.div
+          className="text-center pt-4"
+          initial={{ opacity: 0, y: 12 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.4, duration: 0.45 }}
+        >
+          <motion.button
             type="button"
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
             onClick={() => onOpenQuote()}
-            className="px-8 py-3 border-2 border-gold-base text-gold-dark hover:bg-gold-base hover:text-text-charcoal font-mono text-[11px] font-bold uppercase tracking-widest rounded transition-all"
+            className="px-8 py-3 border-2 border-gold-base text-gold-dark hover:bg-gold-base hover:text-text-charcoal font-mono text-[11px] font-bold uppercase tracking-widest rounded transition-colors"
           >
             {isAr ? "طلب عرض سعر مخصص للعراق" : "Request Custom Iraq Quote"}
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
       </div>
     </section>
   );

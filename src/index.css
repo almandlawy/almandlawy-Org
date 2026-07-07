@@ -217,3 +217,45 @@ body {
   animation: shimmer 5s infinite linear;
 }
 
+@keyframes offer-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes offer-glow {
+  0%, 100% { opacity: 0.35; transform: scale(1); }
+  50% { opacity: 0.55; transform: scale(1.05); }
+}
+
+.offer-ambient-orb {
+  animation: offer-glow 8s ease-in-out infinite;
+}
+
+.offer-rank-pulse {
+  animation: offer-float 4s ease-in-out infinite;
+}
+
+.offer-card-hover {
+  position: relative;
+  overflow: hidden;
+}
+
+.offer-card-hover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(198, 161, 91, 0.12) 50%,
+    transparent 60%
+  );
+  transform: translateX(-120%);
+  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+.offer-card-hover:hover::after {
+  transform: translateX(120%);
+}
+
