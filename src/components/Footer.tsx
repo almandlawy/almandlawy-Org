@@ -8,6 +8,7 @@ import { Send, MapPin, Phone, Mail, ShieldAlert, Award, Globe, MessageSquare, Sh
 import { dbService } from "../lib/supabase";
 import BrandLogo from "./BrandLogo";
 import { LEGAL_POLICY_LINKS } from "../lib/legalLinks";
+import { FACEBOOK_PAGE_URL } from "../lib/facebookLinks";
 
 interface FooterProps {
   currentLang: "en" | "ar";
@@ -68,6 +69,15 @@ export default function Footer({
                 : "PGR UAE is an internationally accredited physical gold and silver bullion desk headquartered in Dubai, sourcing through accredited international refineries."}
             </p>
             <div className="flex flex-col gap-2 pt-2 text-[11px]">
+              <a
+                href={FACEBOOK_PAGE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-gold-dark text-text-charcoal transition-colors flex items-center gap-1.5 font-mono font-bold"
+              >
+                <Globe size={12} className="text-gold-base" />
+                <span>{currentLang === "ar" ? "صفحة فيسبوك الرسمية" : "Official Facebook Page"}</span>
+              </a>
               <button 
                 onClick={onOpenClientDashboard} 
                 className="hover:text-gold-dark text-text-charcoal transition-colors flex items-center gap-1.5 cursor-pointer text-left font-mono font-bold"
