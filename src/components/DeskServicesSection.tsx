@@ -2,10 +2,10 @@
  * Institutional desk services — wholesale quote desk positioning (not ecommerce).
  */
 
-import React from "react";
-import { motion } from "motion/react";
+import React, { useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Coins, Package, Shield, Undo2 } from "lucide-react";
 import { DESK_SERVICES } from "../lib/deskServices";
+import { useDeskServicesScrollAnimation } from "../hooks/useDeskServicesScrollAnimation";
 
 interface DeskServicesSectionProps {
   currentLang: "en" | "ar";
@@ -24,15 +24,28 @@ export default function DeskServicesSection({
   onNavigate,
 }: DeskServicesSectionProps) {
   const isAr = currentLang === "ar";
+  const sectionRef = useRef<HTMLElement>(null);
+  const [motionEnabled, setMotionEnabled] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const apply = () => setMotionEnabled(!mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
+
+  useDeskServicesScrollAnimation(sectionRef, motionEnabled);
 
   return (
     <section
+      ref={sectionRef}
       id="desk-services"
       className="py-16 md:py-20 px-4 md:px-8 bg-brand-section border-y border-soft-border"
       style={{ direction: isAr ? "rtl" : "ltr" }}
     >
       <div className="max-w-7xl mx-auto space-y-10">
-        <header className="text-center max-w-2xl mx-auto space-y-3">
+        <header className="desk-services-header text-center max-w-2xl mx-auto space-y-3">
           <p className="desk-section-label">
             {isAr ? "خدمات المكتب" : "Desk Services"}
           </p>
@@ -47,16 +60,12 @@ export default function DeskServicesSection({
         </header>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {DESK_SERVICES.map((service, index) => {
+          {DESK_SERVICES.map((service) => {
             const Icon = ICONS[service.icon];
             return (
-              <motion.article
+              <article
                 key={service.key}
-                initial={{ opacity: 0, y: 14 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-30px" }}
-                transition={{ duration: 0.4, delay: index * 0.06 }}
-                className="desk-card p-5 flex flex-col gap-4 h-full"
+                className="desk-service-card desk-card p-5 flex flex-col gap-4 h-full"
               >
                 <div className="h-10 w-10 rounded-lg bg-gold-base/15 border border-gold-base/25 flex items-center justify-center text-gold-dark">
                   <Icon size={18} />
@@ -77,7 +86,7 @@ export default function DeskServicesSection({
                   {isAr ? service.ctaAr : service.ctaEn}
                   {isAr ? <ArrowLeft size={12} /> : <ArrowRight size={12} />}
                 </button>
-              </motion.article>
+              </article>
             );
           })}
         </div>

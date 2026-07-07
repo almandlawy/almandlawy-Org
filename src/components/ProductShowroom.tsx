@@ -4,8 +4,8 @@
  * Luxury bullion desk showroom — 10-product catalog, mockup layout.
  */
 
-import React, { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, FileText, Phone } from "lucide-react";
+import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { Box, ChevronLeft, ChevronRight, FileText, Phone } from "lucide-react";
 import { Product, LiveMarketRates } from "../types";
 import { PRODUCTS } from "../data";
 import { dbService } from "../lib/supabase";
@@ -21,6 +21,9 @@ import {
 import { trackWhatsAppClick } from "../lib/gtag";
 import { buildWhatsAppLink } from "../lib/whatsapp";
 import DeskProductCard from "./DeskProductCard";
+import { useShowroomStore } from "../stores/showroomStore";
+
+const BarShowroom3D = lazy(() => import("./BarShowroom3D"));
 
 interface ProductShowroomProps {
   currentLang: "en" | "ar";
@@ -74,10 +77,28 @@ export default function ProductShowroom({
   onOpenQuote
 }: ProductShowroomProps) {
   const isAr = currentLang === "ar";
+  const selectedId = useShowroomStore((s) => s.selectedProductId);
+  const setSelectedProductId = useShowroomStore((s) => s.setSelectedProductId);
+  const viewMode = useShowroomStore((s) => s.viewMode);
+  const toggleViewMode = useShowroomStore((s) => s.toggleViewMode);
   const [products, setProducts] = useState<Product[]>(() => resolvePublicCatalog(PRODUCTS));
-  const [selectedId, setSelectedId] = useState<string>("pgr-gold-1g-10g");
   const [shippingNote, setShippingNote] = useState("");
   const [mobileGroup, setMobileGroup] = useState("gold_bars");
+  const [canUse3D, setCanUse3D] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const apply = () => {
+      setCanUse3D(!mq.matches && window.innerWidth >= 1024);
+    };
+    apply();
+    mq.addEventListener("change", apply);
+    window.addEventListener("resize", apply);
+    return () => {
+      mq.removeEventListener("change", apply);
+      window.removeEventListener("resize", apply);
+    };
+  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -114,10 +135,10 @@ export default function ProductShowroom({
     if (!selectedCategoryFilter || selectedCategoryFilter === "all") return;
     const group = SHOWROOM_GROUPS.find((g) => g.id === selectedCategoryFilter);
     if (group?.productIds[0]) {
-      setSelectedId(group.productIds[0]);
+      setSelectedProductId(group.productIds[0]);
       setMobileGroup(selectedCategoryFilter);
     }
-  }, [selectedCategoryFilter]);
+  }, [selectedCategoryFilter, setSelectedProductId]);
 
   const catalog = useMemo(() => resolvePublicCatalog(products), [products]);
   const productMap = useMemo(() => new Map(catalog.map((p) => [p.id, p])), [catalog]);
@@ -150,11 +171,11 @@ export default function ProductShowroom({
     const idx = orderedProducts.findIndex((p) => p.id === selectedId);
     if (idx < 0) return;
     const next = (idx + dir + orderedProducts.length) % orderedProducts.length;
-    setSelectedId(orderedProducts[next].id);
+    setSelectedProductId(orderedProducts[next].id);
   };
 
   const selectProduct = (id: string) => {
-    setSelectedId(id);
+    setSelectedProductId(id);
     const group = SHOWROOM_GROUPS.find((g) => g.productIds.includes(id));
     if (group) setMobileGroup(group.id);
   };
@@ -203,6 +224,7 @@ export default function ProductShowroom({
   if (!selectedProduct) return null;
 
   const pName = isAr ? selectedProduct.name_ar : selectedProduct.name_en;
+  const show3D = canUse3D && viewMode === "3d";
 
   return (
     <section
@@ -234,7 +256,7 @@ export default function ProductShowroom({
                 type="button"
                 onClick={() => {
                   setMobileGroup(g.id);
-                  if (g.productIds[0]) setSelectedId(g.productIds[0]);
+                  if (g.productIds[0]) setSelectedProductId(g.productIds[0]);
                 }}
                 className={`shrink-0 px-4 py-2 rounded text-xs font-mono font-bold uppercase tracking-wider border transition-colors ${
                   mobileGroup === g.id
@@ -301,6 +323,17 @@ export default function ProductShowroom({
           {/* Center — large product image */}
           <div className="lg:col-span-5 flex flex-col gap-3">
             <div className="relative flex-1 rounded-xl border-2 border-champagne bg-brand-card shadow-premium overflow-hidden min-h-[320px] sm:min-h-[400px]">
+              {canUse3D && (
+                <button
+                  type="button"
+                  onClick={toggleViewMode}
+                  className="absolute top-3 end-3 z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-brand-card/95 border border-champagne text-[9px] font-mono font-bold uppercase tracking-widest text-gold-dark hover:bg-gold-base/15 transition-colors"
+                  aria-pressed={show3D}
+                >
+                  <Box size={12} />
+                  {show3D ? (isAr ? "عرض 3D" : "3D View") : isAr ? "عرض 2D" : "2D View"}
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => navigateProduct(-1)}
@@ -320,15 +353,30 @@ export default function ProductShowroom({
               <button
                 type="button"
                 onClick={() => onSelectProduct(selectedProduct)}
-                className="w-full h-full flex items-center justify-center p-6 sm:p-10 cursor-pointer group"
+                className="relative w-full h-full flex items-center justify-center p-6 sm:p-10 cursor-pointer group min-h-[320px] sm:min-h-[400px]"
               >
-                <img
-                  src={getProductImage(selectedProduct)}
-                  alt={pName}
-                  className="max-h-full max-w-full object-contain group-hover:scale-[1.02] transition-transform duration-500"
-                  loading="lazy"
-                  referrerPolicy="no-referrer"
-                />
+                {show3D ? (
+                  <Suspense
+                    fallback={
+                      <img
+                        src={getProductImage(selectedProduct)}
+                        alt={pName}
+                        className="max-h-full max-w-full object-contain"
+                        loading="lazy"
+                      />
+                    }
+                  >
+                    <BarShowroom3D product={selectedProduct} />
+                  </Suspense>
+                ) : (
+                  <img
+                    src={getProductImage(selectedProduct)}
+                    alt={pName}
+                    className="max-h-full max-w-full object-contain group-hover:scale-[1.02] transition-transform duration-500 relative z-[1]"
+                    loading="lazy"
+                    referrerPolicy="no-referrer"
+                  />
+                )}
               </button>
             </div>
 

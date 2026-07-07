@@ -9,6 +9,7 @@ import { ArrowRight, ArrowLeft, FileText, Phone, Shield, Truck } from "lucide-re
 import BrandLogo from "./BrandLogo";
 import { buildWhatsAppLink } from "../lib/whatsapp";
 import { trackWhatsAppClick } from "../lib/gtag";
+import { useHeroScrollAnimation } from "../hooks/useHeroScrollAnimation";
 
 const VIDEO_MP4 = "/videos/palm_silver_hero_banner_optimized.mp4";
 const VIDEO_WEBM = "/videos/palm_silver_hero_banner_optimized.webm";
@@ -59,6 +60,8 @@ export default function Hero({
   const [posterOnly, setPosterOnly] = useState(false);
 
   const showPoster = reduceMotion || videoFailed || posterOnly;
+
+  useHeroScrollAnimation(sectionRef, !reduceMotion);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -121,7 +124,7 @@ export default function Hero({
             aria-hidden
           />
 
-          <div className="mb-6">
+          <div className="mb-6 hero-reveal">
             <BrandLogo variant="emblem" className="h-12 w-12 md:h-14 md:w-14 mb-4" />
             <div className="flex flex-wrap items-center gap-2">
               <span className="px-3 py-1 rounded-full bg-brand-card border border-champagne text-[10px] font-mono uppercase tracking-[0.2em] text-gold-dark font-bold">
@@ -133,7 +136,7 @@ export default function Hero({
             </div>
           </div>
 
-          <h1 className="text-[1.65rem] sm:text-3xl lg:text-[2.35rem] xl:text-[2.5rem] font-serif text-text-charcoal leading-[1.15] font-medium max-w-xl">
+          <h1 className="hero-reveal text-[1.65rem] sm:text-3xl lg:text-[2.35rem] xl:text-[2.5rem] font-serif text-text-charcoal leading-[1.15] font-medium max-w-xl">
             {isAr ? (
               <>
                 عروض أسعار سبائك الذهب والفضة
@@ -149,14 +152,14 @@ export default function Hero({
             )}
           </h1>
 
-          <p className="mt-4 text-sm sm:text-[15px] text-text-secondary leading-relaxed max-w-lg font-sans">
+          <p className="hero-reveal mt-4 text-sm sm:text-[15px] text-text-secondary leading-relaxed max-w-lg font-sans">
             {isAr
               ? "مرجع سوقي استرشادي فقط. عرض السعر النهائي يؤكده مكتب PGR UAE بعد مراجعة الامتثال."
               : "Indicative market reference only. Final quote confirmed by PGR UAE desk after compliance review."}
           </p>
 
           {/* Featured product — not the page H1 */}
-          <div className="mt-6 rounded-lg border border-champagne/80 bg-brand-card/60 p-4 max-w-lg">
+          <div className="hero-reveal mt-6 rounded-lg border border-champagne/80 bg-brand-card/60 p-4 max-w-lg">
             <p className="text-[10px] font-mono uppercase tracking-[0.28em] text-olive-accent font-bold mb-1">
               {isAr ? "المنتج المميز" : "Featured Product"}
             </p>
@@ -188,7 +191,7 @@ export default function Hero({
             </div>
           </div>
 
-          <div className="mt-7 flex flex-col sm:flex-row gap-3 max-w-md">
+          <div className="hero-reveal mt-7 flex flex-col sm:flex-row gap-3 max-w-md">
             <button
               type="button"
               onClick={onOpenQuote}
@@ -208,7 +211,7 @@ export default function Hero({
             </a>
           </div>
 
-          <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-3 pt-6 border-t border-soft-border">
+          <div className="hero-reveal mt-8 grid grid-cols-1 sm:grid-cols-3 gap-3 pt-6 border-t border-soft-border">
             {TRUST_ITEMS.map(({ icon: Icon, en, ar }) => (
               <div
                 key={en}
@@ -222,7 +225,7 @@ export default function Hero({
             ))}
           </div>
 
-          <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-[10px] font-mono uppercase tracking-widest">
+          <div className="hero-reveal mt-6 flex flex-wrap gap-x-5 gap-y-2 text-[10px] font-mono uppercase tracking-widest">
             <button
               type="button"
               onClick={() =>
@@ -251,7 +254,7 @@ export default function Hero({
         </div>
 
         {/* Video column */}
-        <div className="relative order-1 lg:order-2 min-h-[40vh] sm:min-h-[46vh] lg:min-h-full bg-[#141816]">
+        <div className="hero-video-col relative order-1 lg:order-2 min-h-[40vh] sm:min-h-[46vh] lg:min-h-full bg-[#141816]">
           {showPoster ? (
             <img
               src={VIDEO_POSTER}

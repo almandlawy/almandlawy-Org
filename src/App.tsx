@@ -34,6 +34,7 @@ import { LiveMarketRates, Product } from "./types";
 import { isLive, supabase, mockDb, ensureSupabaseReady } from "./lib/supabase";
 import { trackPageView, trackQuoteFormStart } from "./lib/gtag";
 import { captureAttributionFromUrl, appendAttributionToPath } from "./lib/attribution";
+import { scrollToSection, scrollToTop } from "./lib/scrollNav";
 import { buildDefaultExchangeRates, setLiveFxFromPriceApi } from "./lib/fxRatesClient";
 import { OUNCE_TO_GRAM } from "./lib/marketReference";
 
@@ -108,7 +109,7 @@ export default function App() {
   const navigateTo = (path: string) => {
     window.history.pushState(null, "", path);
     setCurrentPath(path.split("?")[0]);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    scrollToTop();
   };
 
   const navigateToQuote = (prefill?: Product | string) => {
@@ -317,18 +318,7 @@ export default function App() {
   };
 
   const handleScrollToSection = (sectionId: string) => {
-    const aliases: Record<string, string> = {
-      home: "hero",
-      about: "about",
-      contact: "contact"
-    };
-    const target = aliases[sectionId] || sectionId;
-    const el = document.getElementById(target);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth" });
-    } else if (target === "hero") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
+    scrollToSection(sectionId);
   };
 
   const handleScrollToCatalogWithFilter = (category?: string) => {
