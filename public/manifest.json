@@ -1,25 +1,25 @@
 {
-  "name": "PGR UAE | Firm Quote Bullion Desk",
+  "name": "PGR UAE | Precious Metals Trading",
   "short_name": "PGR UAE",
   "description": "Dubai firm-quote bullion desk for physical gold and silver. Indicative market reference. Final quote confirmed by PGR UAE desk.",
   "start_url": "https://www.pgruae.com/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#F7F4ED",
+  "background_color": "#000000",
   "theme_color": "#C6A15B",
   "orientation": "portrait-primary",
   "lang": "en",
   "icons": [
     {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23C6A15B' stroke-width='2'%3E%3Cpath d='M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5'/%3E%3C/svg%3E",
+      "src": "/brand/pgr-uae-favicon.png",
       "sizes": "192x192",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23C6A15B' stroke-width='2'%3E%3Cpath d='M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5'/%3E%3C/svg%3E",
+      "src": "/brand/pgr-uae-favicon.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "maskable"
     }
   ]

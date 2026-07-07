@@ -16,7 +16,7 @@ const BOT_RE =
 
 export const config = {
   matcher: [
-    "/((?!api/|images/|assets/|videos/|static-seo/|robots\\\\.txt|sitemap\\\\.xml|manifest\\\\.json|favicon\\\\.ico|_next/).*)"
+    "/((?!api/|images/|assets/|videos/|brand/|static-seo/|robots\\\\.txt|sitemap\\\\.xml|manifest\\\\.json|favicon\\\\.ico|_next/).*)"
   ]
 };
 

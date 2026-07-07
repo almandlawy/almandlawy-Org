@@ -1,7 +1,7 @@
 /** Homepage JSON-LD schemas for Google rich results (FAQ + Video + Products). */
 
 export const SITE_ORIGIN = "https://www.pgruae.com";
-export const OG_IMAGE = `${SITE_ORIGIN}/images/products/01-bullion-collection.webp`;
+export const OG_IMAGE = `${SITE_ORIGIN}/brand/pgr-uae-logo.png`;
 export const VIDEO_UPLOAD_DATE = "2026-07-04T21:45:19+04:00";
 
 export const OFFICIAL_SAME_AS = [
