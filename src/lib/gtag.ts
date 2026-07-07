@@ -32,3 +32,18 @@ export function trackWhatsAppClick(source: string): void {
     event_label: source,
   });
 }
+
+/** Track quote form opened (funnel step before conversion). */
+export function trackQuoteFormStart(source: string): void {
+  if (typeof window === "undefined" || typeof window.gtag !== "function") return;
+  window.gtag("event", "quote_form_start", {
+    send_to: GOOGLE_ADS_ID,
+    event_category: "engagement",
+    event_label: source,
+  });
+  window.gtag("event", "begin_checkout", {
+    send_to: GA4_MEASUREMENT_ID,
+    event_category: "quote_funnel",
+    event_label: source,
+  });
+}

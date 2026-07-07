@@ -23,7 +23,12 @@ export const SEO_LANDING_PATHS = [
   "/sell-gold-dubai",
   "/bullion-desk-dubai",
   "/allocated-storage-dubai",
-  "/24k-gold-bars-uae"
+  "/24k-gold-bars-uae",
+  "/silver-bars-iraq",
+  "/sam-palm-silver-iraq",
+  "/gold-bars-baghdad",
+  "/silver-bars-erbil",
+  "/bullion-desk-iraq",
 ] as const;
 
 export const NOINDEX_PATHS = new Set([
@@ -263,6 +268,46 @@ export const PUBLIC_ROUTES: Record<string, RouteSeo> = {
     descAr: "سبائك ذهب مادية 999.9 في الإمارات. مرجع سوقي إرشادي. عرض سعر مؤكد من المكتب.",
     h1En: "24K Gold Bars UAE",
     h1Ar: "سبائك ذهب 24 قيراط الإمارات"
+  },
+  "/silver-bars-iraq": {
+    titleEn: "Silver Bars for Iraq | SAM & PALM from Dubai | PGR UAE",
+    titleAr: "سبائك الفضة للعراق | SAM وPALM من دبي | PGR UAE",
+    descEn: "Request desk-confirmed silver bar quotes for Iraq — SAM and PALM 500g and 1kg from PGR UAE Dubai. Indicative reference only.",
+    descAr: "اطلب عروض أسعار سبائك الفضة للعراق — SAM وPALM 500 جرام و1 كيلو من PGR UAE دبي. مرجع استرشادي فقط.",
+    h1En: "Silver Bars for Iraq",
+    h1Ar: "سبائك الفضة للعراق"
+  },
+  "/sam-palm-silver-iraq": {
+    titleEn: "SAM & PALM Silver Iraq | PGR UAE Dubai Desk",
+    titleAr: "فضة SAM وPALM للعراق | مكتب PGR UAE دبي",
+    descEn: "SAM and PALM 999.9 silver bars for Iraqi customers. Desk-confirmed quote from Dubai. Indicative market reference only.",
+    descAr: "سبائك فضة SAM وPALM 999.9 للعملاء العراقيين. عرض سعر مؤكد من دبي. مرجع سوقي إرشادي فقط.",
+    h1En: "SAM & PALM Silver for Iraq",
+    h1Ar: "فضة SAM وPALM للعراق"
+  },
+  "/gold-bars-baghdad": {
+    titleEn: "Gold Bars Baghdad | Dubai to Iraq Quote Desk | PGR UAE",
+    titleAr: "سبائك الذهب بغداد | مكتب عروض دبي إلى العراق | PGR UAE",
+    descEn: "Physical gold bar quotes for Baghdad and Iraq from PGR UAE Dubai desk. Indicative reference. Final quote after compliance review.",
+    descAr: "عروض أسعار سبائك الذهب لبغداد والعراق من مكتب PGR UAE دبي. مرجع استرشادي. عرض نهائي بعد مراجعة الامتثال.",
+    h1En: "Gold Bars for Baghdad",
+    h1Ar: "سبائك الذهب لبغداد"
+  },
+  "/silver-bars-erbil": {
+    titleEn: "Silver Bars Erbil | SAM & PALM from Dubai | PGR UAE",
+    titleAr: "سبائك الفضة أربيل | SAM وPALM من دبي | PGR UAE",
+    descEn: "Silver bar quotes for Erbil and Kurdistan from PGR UAE Dubai. SAM and PALM 500g and 1kg. Desk-confirmed quote.",
+    descAr: "عروض أسعار سبائك الفضة لأربيل وكردستان من PGR UAE دبي. SAM وPALM 500 جرام و1 كيلو. عرض سعر مؤكد.",
+    h1En: "Silver Bars for Erbil",
+    h1Ar: "سبائك الفضة لأربيل"
+  },
+  "/bullion-desk-iraq": {
+    titleEn: "Bullion Desk Iraq | Dubai to Iraq Corridor | PGR UAE",
+    titleAr: "مكتب السبائك للعراق | ممر دبي إلى العراق | PGR UAE",
+    descEn: "PGR UAE bullion quote desk for Iraqi customers. Physical gold and silver from Dubai. Indicative market reference only.",
+    descAr: "مكتب عروض أسعار السبائك PGR UAE للعملاء العراقيين. ذهب وفضة مادي من دبي. مرجع سوقي إرشادي فقط.",
+    h1En: "Bullion Desk for Iraq",
+    h1Ar: "مكتب السبائك للعراق"
   }
 };
 
@@ -295,6 +340,11 @@ export const SITEMAP_PATHS = [
   "/bullion-desk-dubai",
   "/allocated-storage-dubai",
   "/24k-gold-bars-uae",
+  "/silver-bars-iraq",
+  "/sam-palm-silver-iraq",
+  "/gold-bars-baghdad",
+  "/silver-bars-erbil",
+  "/bullion-desk-iraq",
 ];
 
 export function canonicalUrl(path: string): string {

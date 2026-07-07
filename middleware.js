@@ -26,7 +26,12 @@ const STATIC_ROUTE_MAP = {
   "/sell-gold-dubai": "/static-seo/sell-gold-dubai.html",
   "/bullion-desk-dubai": "/static-seo/bullion-desk-dubai.html",
   "/allocated-storage-dubai": "/static-seo/allocated-storage-dubai.html",
-  "/24k-gold-bars-uae": "/static-seo/24k-gold-bars-uae.html"
+  "/24k-gold-bars-uae": "/static-seo/24k-gold-bars-uae.html",
+  "/silver-bars-iraq": "/static-seo/silver-bars-iraq.html",
+  "/sam-palm-silver-iraq": "/static-seo/sam-palm-silver-iraq.html",
+  "/gold-bars-baghdad": "/static-seo/gold-bars-baghdad.html",
+  "/silver-bars-erbil": "/static-seo/silver-bars-erbil.html",
+  "/bullion-desk-iraq": "/static-seo/bullion-desk-iraq.html"
 };
 
 const BOT_RE =

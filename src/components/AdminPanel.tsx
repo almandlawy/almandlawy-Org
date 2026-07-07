@@ -9,13 +9,15 @@ import {
   X, LayoutDashboard, Coins, Users, ClipboardList, Check, 
   RefreshCw, Layers, ShieldCheck, Truck, MapPin, 
   TrendingUp, Undo, Box, Award, FileText, BookOpen, Settings, 
-  Eye, Trash2, Plus, Edit, ShieldAlert, Mail, Phone, Clock, FileCheck, CheckCircle, LogOut
+  Eye, Trash2, Plus, Edit, ShieldAlert, Mail, Phone, Clock, FileCheck, CheckCircle, LogOut, MessageSquare, Download
 } from "lucide-react";
 import { dbService, mockDb, isLive, supabase, getAuthCallbackUrl, ensureSupabaseReady, configStatus, isBootstrapAdmin, generateQuoteSignature } from "../lib/supabase";
 import { Product, DailyPricingSettings, ShippingSettings } from "../types";
 import { DEFAULT_DAILY_PRICING, DEFAULT_SHIPPING_SETTINGS } from "../data";
 import { resolveProductIdFromLabel } from "../lib/productCatalog";
 import { isIraqLead } from "../lib/iraqLeadFilter";
+import { downloadQuotesCsv } from "../lib/exportQuotesCsv";
+import { buildAdminQuoteFollowUpMessage, buildClientWhatsAppLink } from "../lib/whatsapp";
 import { DebugPanel } from "./DebugPanel";
 import PartnerLogosAdmin from "./admin/PartnerLogosAdmin";
 import PaymentSettingsAdmin from "./admin/PaymentSettingsAdmin";
@@ -1063,6 +1065,19 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
   const filteredQuotes =
     quoteLeadFilter === "iraq" ? quotes.filter((q) => isIraqLead(q)) : quotes;
 
+  const handleExportQuotes = () => {
+    if (filteredQuotes.length === 0) {
+      triggerErrorMessage("No quotes to export for the current filter.");
+      return;
+    }
+    const label = quoteLeadFilter === "iraq" ? "iraq-leads" : "all-leads";
+    downloadQuotesCsv(
+      filteredQuotes,
+      `pgr-${label}-${new Date().toISOString().slice(0, 10)}.csv`
+    );
+    triggerSuccessMessage(`Exported ${filteredQuotes.length} quote row(s) to CSV.`);
+  };
+
   const stats = {
     totalVolumeUSD: orders.reduce((sum, o) => sum + (o.total_amount || 0), 0) + holdings.reduce((sum, h) => sum + (h.current_market_value_usd || 0), 0),
     activeCustomersCount: kycProfiles.filter(k => k.status === "Verified").length + 5,
@@ -2076,6 +2091,14 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                       </div>
                       <button
                         type="button"
+                        onClick={handleExportQuotes}
+                        className="px-3 py-2 text-[10px] font-mono uppercase tracking-wider border border-soft-border rounded-lg hover:bg-brand-bg text-text-secondary inline-flex items-center gap-1.5"
+                      >
+                        <Download size={12} />
+                        Export CSV
+                      </button>
+                      <button
+                        type="button"
                         onClick={() => loadAdminData()}
                         className="px-3 py-2 text-[10px] font-mono uppercase tracking-wider border border-soft-border rounded-lg hover:bg-brand-bg text-text-secondary"
                       >
@@ -2291,7 +2314,22 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                                     {q.status || "New Request"}
                                   </span>
                                 </td>
-                                <td className="p-4 flex items-center justify-center gap-2">
+                                <td className="p-4 flex items-center justify-center gap-2 flex-wrap">
+                                  {q.phone && (
+                                    <a
+                                      href={buildClientWhatsAppLink(
+                                        String(q.phone),
+                                        buildAdminQuoteFollowUpMessage(q, currentLang)
+                                      )}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="px-2 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 rounded text-[10px] uppercase font-bold inline-flex items-center gap-1"
+                                      title="WhatsApp client"
+                                    >
+                                      <MessageSquare size={11} />
+                                      WA
+                                    </a>
+                                  )}
                                   <select
                                     value={q.status || "New Request"}
                                     onChange={(e) => handleUpdateQuoteStatus(q.id, e.target.value)}

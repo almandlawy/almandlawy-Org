@@ -24,7 +24,7 @@ import OfficeSection from "./components/OfficeSection";
 import BlogSection from "./components/BlogSection";
 import ClientDashboardModal from "./components/ClientDashboardModal";
 import AdminPortalModal from "./components/AdminPortalModal";
-import AdminPanel from "./components/AdminPanel";
+const AdminPanel = lazy(() => import("./components/AdminPanel"));
 import LegalOverlayModal from "./components/LegalOverlayModal";
 import IraqSilverOffers from "./components/IraqSilverOffers";
 import Footer from "./components/Footer";
@@ -33,7 +33,9 @@ import { LiveMarketRates, Product } from "./types";
 import { WHY_US_ITEMS } from "./data";
 import { Shield, Building, Truck, Award } from "lucide-react";
 import { isLive, supabase, mockDb, ensureSupabaseReady } from "./lib/supabase";
-import { trackPageView } from "./lib/gtag";
+import { trackPageView, trackQuoteFormStart } from "./lib/gtag";
+import { buildDefaultExchangeRates, setLiveFxFromPriceApi } from "./lib/fxRatesClient";
+import { OUNCE_TO_GRAM } from "./lib/marketReference";
 
 // Imported new high-end compliance and desk components
 import LoginPage from "./components/LoginPage";
@@ -42,9 +44,9 @@ import RequestQuotePage from "./components/RequestQuotePage";
 import ProductLandingPage from "./components/ProductLandingPage";
 import AllocatedStoragePage from "./components/AllocatedStoragePage";
 import SellBackPage from "./components/SellBackPage";
-import ClientDashboard from "./components/ClientDashboard";
+const ClientDashboard = lazy(() => import("./components/ClientDashboard"));
 import MetalCalculator from "./components/MetalCalculator";
-import SEOLandingPages from "./components/SEOLandingPages";
+const SEOLandingPages = lazy(() => import("./components/SEOLandingPages"));
 import IraqBullionQuotePage from "./components/IraqBullionQuotePage";
 import AuthCallbackPage from "./components/AuthCallbackPage";
 import PricingDisclaimer from "./components/PricingDisclaimer";
@@ -62,38 +64,31 @@ export default function App() {
       platinum: 1080.00,
       palladium: 1120.00
     };
-    
-    const exchangeRates = {
-      USD: 1.0,
-      AED: 3.6725,
-      EUR: 0.925,
-      GBP: 0.785,
-      SAR: 3.7505,
-      IQD: 1310.0
-    };
-    
-    const OUNCE_TO_GRAM = 31.1034768;
+
+    const exchangeRates = buildDefaultExchangeRates();
     const ratesObj: any = {
-      source_status: "reference"
+      source_status: "reference",
+      usd_iqd: exchangeRates.IQD,
+      usd_aed: exchangeRates.AED,
     };
-    
+
     Object.entries(defaultSpots).forEach(([metal, spotUsd]) => {
       ratesObj[metal] = {
         spot_usd_oz: spotUsd,
         currencies: {}
       };
-      
+
       Object.entries(exchangeRates).forEach(([currency, rate]) => {
         const ouncePrice = spotUsd * rate;
         const gramPrice = ouncePrice / OUNCE_TO_GRAM;
-        
+
         ratesObj[metal].currencies[currency] = {
           ounce: parseFloat(ouncePrice.toFixed(2)),
           gram: parseFloat(gramPrice.toFixed(4))
         };
       });
     });
-    
+
     return ratesObj as LiveMarketRates;
   };
 
@@ -117,6 +112,7 @@ export default function App() {
   };
 
   const navigateToQuote = (prefill?: Product | string) => {
+    trackQuoteFormStart(typeof prefill === "object" ? prefill.id : String(prefill || "general"));
     if (prefill && typeof prefill === "object") {
       const name = currentLang === "ar" ? prefill.name_ar : prefill.name_en;
       const params = new URLSearchParams({ product: prefill.id, name });
@@ -271,6 +267,7 @@ export default function App() {
       if (response.ok) {
         const data = await response.json();
         if (data.status === "success") {
+          setLiveFxFromPriceApi({ usd_iqd: data.usd_iqd, usd_aed: data.usd_aed });
           if (data.source_status === "request_quote") {
             setRates(null);
           } else if (data.rates) {
@@ -278,7 +275,9 @@ export default function App() {
               ...data.rates,
               source_status: data.source_status,
               updated_at: data.updated_at,
-              cache_timestamp: data.cache_timestamp
+              cache_timestamp: data.cache_timestamp,
+              usd_iqd: data.usd_iqd,
+              usd_aed: data.usd_aed,
             });
           }
         } else {
@@ -338,7 +337,11 @@ export default function App() {
   }
 
   if (currentPath === "/admin" || currentPath.startsWith("/admin/")) {
-    return <AdminPanel currentLang={currentLang} />;
+    return (
+      <Suspense fallback={<div className="min-h-screen bg-brand-bg" aria-busy="true" />}>
+        <AdminPanel currentLang={currentLang} />
+      </Suspense>
+    );
   }
 
   if (currentPath === "/login") {
@@ -449,14 +452,16 @@ export default function App() {
           onOpenAdminPortal={() => navigateTo("/admin")}
         />
         <div className="max-w-7xl mx-auto py-24 px-4 md:px-8">
-          <SEOLandingPages
-            currentPath={currentPath}
-            currentLang={currentLang}
-            rates={rates}
-            selectedCurrency={selectedCurrency}
-            onNavigate={navigateTo}
-            onOpenQuote={(details) => navigateToQuote(details)}
-          />
+          <Suspense fallback={<div className="py-24 text-center text-text-secondary font-mono text-sm" aria-busy="true">Loading…</div>}>
+            <SEOLandingPages
+              currentPath={currentPath}
+              currentLang={currentLang}
+              rates={rates}
+              selectedCurrency={selectedCurrency}
+              onNavigate={navigateTo}
+              onOpenQuote={(details) => navigateToQuote(details)}
+            />
+          </Suspense>
         </div>
         <Footer
           currentLang={currentLang}
@@ -598,15 +603,17 @@ export default function App() {
       );
     }
     return (
-      <ClientDashboard 
-        currentLang={currentLang} 
-        user={currentUser} 
-        onLogout={() => {
-          mockDb.auth.logout();
-          navigateTo("/");
-        }} 
-        onNavigate={navigateTo} 
-      />
+      <Suspense fallback={<div className="min-h-screen bg-brand-bg" aria-busy="true" />}>
+        <ClientDashboard
+          currentLang={currentLang}
+          user={currentUser}
+          onLogout={() => {
+            mockDb.auth.logout();
+            navigateTo("/");
+          }}
+          onNavigate={navigateTo}
+        />
+      </Suspense>
     );
   }
 

@@ -155,23 +155,23 @@ export default function IraqSilverOffers({
                     {showPrice ? (
                       <div className="space-y-1">
                         <p className="text-2xl font-mono font-bold text-[#1F1A17]">
-                          {formatIndicativePrice(indicativePrice!, selectedCurrency)}{" "}
+                          {formatIndicativePrice(indicativePrice!, selectedCurrency, currentLang)}{" "}
                           <span className="text-sm text-[#A47C36]">{selectedCurrency}</span>
                         </p>
                         {selectedCurrency === "IQD" && aedPrice && (
                           <p className="text-xs font-mono text-stone-500">
-                            ≈ {formatIndicativePrice(aedPrice, "AED")} AED
+                            ≈ {formatIndicativePrice(aedPrice, "AED", currentLang)} AED
                           </p>
                         )}
                         {selectedCurrency === "AED" && iqdPrice && (
                           <p className="text-xs font-mono text-stone-500">
-                            ≈ {formatIndicativePrice(iqdPrice, "IQD")} IQD
+                            ≈ {formatIndicativePrice(iqdPrice, "IQD", currentLang)} IQD
                           </p>
                         )}
                         {selectedCurrency === "USD" && (
                           <div className="text-xs font-mono text-stone-500 space-y-0.5">
-                            {aedPrice && <p>≈ {formatIndicativePrice(aedPrice, "AED")} AED</p>}
-                            {iqdPrice && <p>≈ {formatIndicativePrice(iqdPrice, "IQD")} IQD</p>}
+                            {aedPrice && <p>≈ {formatIndicativePrice(aedPrice, "AED", currentLang)} AED</p>}
+                            {iqdPrice && <p>≈ {formatIndicativePrice(iqdPrice, "IQD", currentLang)} IQD</p>}
                           </div>
                         )}
                       </div>

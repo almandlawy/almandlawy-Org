@@ -4,8 +4,9 @@
  * AdminPortalModal.tsx - Delegate wrapper for AdminPanel
  */
 
-import React from "react";
-import AdminPanel from "./AdminPanel";
+import React, { Suspense, lazy } from "react";
+
+const AdminPanel = lazy(() => import("./AdminPanel"));
 
 interface AdminPortalModalProps {
   currentLang: "en" | "ar";
@@ -14,6 +15,8 @@ interface AdminPortalModalProps {
 
 export default function AdminPortalModal({ currentLang, onClose }: AdminPortalModalProps) {
   return (
-    <AdminPanel currentLang={currentLang} onClose={onClose} isModal={true} />
+    <Suspense fallback={null}>
+      <AdminPanel currentLang={currentLang} onClose={onClose} isModal={true} />
+    </Suspense>
   );
 }
