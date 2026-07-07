@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { resolveFxRates } from './_lib/fxRates';
 
 // Removed old hardcoded 2350 values, replaced with realistic 2026 market reference prices
 const METAL_SPOTS = {
@@ -378,7 +379,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    const usdaed = EXCHANGE_RATES.AED;
+    const fxRates = await resolveFxRates();
+    const usdaed = fxRates.AED;
+    const usdiqd = fxRates.IQD;
 
     let finalProvider = providerName;
     let finalProviderEnv = providerEnv || "metalpriceapi";
@@ -409,6 +412,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         platinum_usd_per_oz: null,
         palladium_usd_per_oz: null,
         usd_aed: usdaed,
+        usd_iqd: usdiqd,
         updated_at: new Date().toISOString(),
         has_api_key,
         provider_attempted,
@@ -453,7 +457,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         currencies: {} as Record<string, { ounce: number; gram: number }>
       };
 
-      Object.entries(EXCHANGE_RATES).forEach(([currency, rate]) => {
+      Object.entries(fxRates).forEach(([currency, rate]) => {
         const ouncePrice = spotUsd * rate;
         const gramPrice = ouncePrice / OUNCE_TO_GRAM;
 
@@ -477,6 +481,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       platinum_usd_per_oz: currentSpots.platinum,
       palladium_usd_per_oz: currentSpots.palladium,
       usd_aed: usdaed,
+      usd_iqd: usdiqd,
       updated_at: new Date().toISOString(),
       
       // Safe non-secret debug fields

@@ -441,6 +441,7 @@ const seedLocalStorage = () => {
     manual_gold_usd_oz: 2365.40,
     manual_silver_usd_oz: 58.00,
     usd_aed_rate: 3.6725,
+    usd_iqd_rate: 1310.0,
     default_product_premium_pct: 2.0,
     disable_live_pricing: false,
     daily_pricing: { ...DEFAULT_DAILY_PRICING },

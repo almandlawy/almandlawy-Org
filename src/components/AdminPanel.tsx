@@ -15,6 +15,7 @@ import { dbService, mockDb, isLive, supabase, getAuthCallbackUrl, ensureSupabase
 import { Product, DailyPricingSettings, ShippingSettings } from "../types";
 import { DEFAULT_DAILY_PRICING, DEFAULT_SHIPPING_SETTINGS } from "../data";
 import { resolveProductIdFromLabel } from "../lib/productCatalog";
+import { isIraqLead } from "../lib/iraqLeadFilter";
 import { DebugPanel } from "./DebugPanel";
 import PartnerLogosAdmin from "./admin/PartnerLogosAdmin";
 import PaymentSettingsAdmin from "./admin/PaymentSettingsAdmin";
@@ -86,6 +87,7 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
   const [iraqDeliveries, setIraqDeliveries] = useState<any[]>([]);
   const [pickupPoints, setPickupPoints] = useState<any[]>([]);
   const [exchangeRates, setExchangeRates] = useState<any>({ USD: 1.0, AED: 3.6725, IQD: 1310.0 });
+  const [quoteLeadFilter, setQuoteLeadFilter] = useState<"all" | "iraq">("all");
   const [buybacks, setBuybacks] = useState<any[]>([]);
   const [holdings, setHoldings] = useState<any[]>([]);
   const [certificates, setCertificates] = useState<any[]>([]);
@@ -106,6 +108,7 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
     manual_gold_usd_oz: 2365.40,
     manual_silver_usd_oz: 29.85,
     usd_aed_rate: 3.6725,
+    usd_iqd_rate: 1310.0,
     default_product_premium_pct: 2.0,
     disable_live_pricing: false
   });
@@ -422,6 +425,13 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
       if (hList) setHoldings(hList);
       if (sObj) {
         setSettings(sObj);
+        const syncedRates = {
+          USD: 1.0,
+          AED: Number(sObj.usd_aed_rate ?? sObj.exchange_rates?.AED ?? exchangeRates.AED ?? 3.6725),
+          IQD: Number(sObj.usd_iqd_rate ?? sObj.exchange_rates?.IQD ?? exchangeRates.IQD ?? 1310.0),
+          ...(sObj.exchange_rates || {}),
+        };
+        setExchangeRates(syncedRates);
         if (sObj.daily_pricing) setDailyPricing({ ...DEFAULT_DAILY_PRICING, ...sObj.daily_pricing });
         if (sObj.shipping_settings) setShippingSettings({ ...DEFAULT_SHIPPING_SETTINGS, ...sObj.shipping_settings });
         setPrepShippingCompany(sObj.shipping_settings?.shipping_company_name || DEFAULT_SHIPPING_SETTINGS.shipping_company_name);
@@ -961,12 +971,22 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
         dmcc_reg_no: settings.dmcc_reg_no,
         manual_gold_usd_oz: Number(settings.manual_gold_usd_oz || 2365.40),
         manual_silver_usd_oz: Number(settings.manual_silver_usd_oz || 29.85),
-        usd_aed_rate: Number(settings.usd_aed_rate || 3.6725),
+        usd_aed_rate: Number(settings.usd_aed_rate || exchangeRates.AED || 3.6725),
+        usd_iqd_rate: Number(exchangeRates.IQD || settings.usd_iqd_rate || 1310.0),
+        exchange_rates: {
+          USD: 1.0,
+          AED: Number(exchangeRates.AED || settings.usd_aed_rate || 3.6725),
+          IQD: Number(exchangeRates.IQD || settings.usd_iqd_rate || 1310.0),
+        },
         default_product_premium_pct: Number(settings.default_product_premium_pct || 2.0),
         disable_live_pricing: Boolean(settings.disable_live_pricing)
       });
 
-      await dbService.exchangeRates.update(exchangeRates);
+      await dbService.exchangeRates.update({
+        USD: 1.0,
+        AED: Number(exchangeRates.AED || settings.usd_aed_rate || 3.6725),
+        IQD: Number(exchangeRates.IQD || settings.usd_iqd_rate || 1310.0),
+      });
       triggerSuccessMessage("Global metrics and markup model sync complete!");
       await loadAdminData();
     } catch (err) {
@@ -1040,6 +1060,9 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
   };
 
   // Stats calculators
+  const filteredQuotes =
+    quoteLeadFilter === "iraq" ? quotes.filter((q) => isIraqLead(q)) : quotes;
+
   const stats = {
     totalVolumeUSD: orders.reduce((sum, o) => sum + (o.total_amount || 0), 0) + holdings.reduce((sum, h) => sum + (h.current_market_value_usd || 0), 0),
     activeCustomersCount: kycProfiles.filter(k => k.status === "Verified").length + 5,
@@ -2029,18 +2052,36 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
               {/* 3. SECTION: QUOTES REQUESTS */}
               {activeSection === "quotes" && (
                 <div className="space-y-6">
-                  <div className="flex items-center justify-between gap-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
                       <h4 className="text-lg font-serif text-text-charcoal">Quote Requests</h4>
                       <p className="text-xs text-text-secondary font-mono uppercase">Website form submissions from /request-quote</p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => loadAdminData()}
-                      className="px-3 py-2 text-[10px] font-mono uppercase tracking-wider border border-soft-border rounded-lg hover:bg-brand-bg text-text-secondary"
-                    >
-                      Refresh
-                    </button>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div className="flex rounded-lg border border-soft-border overflow-hidden text-[10px] font-mono uppercase tracking-wider">
+                        <button
+                          type="button"
+                          onClick={() => setQuoteLeadFilter("all")}
+                          className={`px-3 py-2 transition-colors ${quoteLeadFilter === "all" ? "bg-gold-base/15 text-gold-base" : "text-text-secondary hover:bg-brand-bg"}`}
+                        >
+                          All Leads
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setQuoteLeadFilter("iraq")}
+                          className={`px-3 py-2 border-l border-soft-border transition-colors ${quoteLeadFilter === "iraq" ? "bg-emerald-500/15 text-emerald-400" : "text-text-secondary hover:bg-brand-bg"}`}
+                        >
+                          Iraq Leads
+                        </button>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => loadAdminData()}
+                        className="px-3 py-2 text-[10px] font-mono uppercase tracking-wider border border-soft-border rounded-lg hover:bg-brand-bg text-text-secondary"
+                      >
+                        Refresh
+                      </button>
+                    </div>
                   </div>
 
                   {/* CUSTOM PREPARE QUOTE DRAWER FOR ADMIN PRICE OVERRIDES */}
@@ -2202,15 +2243,26 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-white/[0.02]">
-                          {quotes.length === 0 ? (
+                          {filteredQuotes.length === 0 ? (
                             <tr>
-                              <td colSpan={6} className="p-4 text-center text-text-secondary">No pending quote requests.</td>
+                              <td colSpan={6} className="p-4 text-center text-text-secondary">
+                                {quoteLeadFilter === "iraq"
+                                  ? "No Iraq-focused quote requests match this filter."
+                                  : "No pending quote requests."}
+                              </td>
                             </tr>
                           ) : (
-                            quotes.map((q) => (
+                            filteredQuotes.map((q) => (
                               <tr key={q.id}>
                                 <td className="p-4 space-y-1">
-                                  <p className="text-text-charcoal font-serif">{q.name}</p>
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <p className="text-text-charcoal font-serif">{q.name}</p>
+                                    {isIraqLead(q) && (
+                                      <span className="px-1.5 py-0.5 rounded text-[9px] uppercase font-bold tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                        Iraq
+                                      </span>
+                                    )}
+                                  </div>
                                   <p className="text-text-secondary text-[10px]">{q.email} | {q.phone}</p>
                                 </td>
                                 <td className="p-4">
