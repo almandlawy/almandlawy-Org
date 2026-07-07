@@ -12,6 +12,7 @@ import TrustBar from "./components/TrustBar";
 import ProductShowroom from "./components/ProductShowroom";
 import IraqSilverOffers from "./components/IraqSilverOffers";
 import AboutQuoteDeskSection from "./components/AboutQuoteDeskSection";
+import DeskServicesSection from "./components/DeskServicesSection";
 import QuoteDeskProofSection from "./components/QuoteDeskProofSection";
 import HomepageFAQ from "./components/HomepageFAQ";
 import CrawlableSeoBlock from "./components/CrawlableSeoBlock";
@@ -761,6 +762,11 @@ export default function App() {
       <QuoteDeskProofSection currentLang={currentLang} />
 
       <AboutQuoteDeskSection
+        currentLang={currentLang}
+        onNavigate={navigateTo}
+      />
+
+      <DeskServicesSection
         currentLang={currentLang}
         onNavigate={navigateTo}
       />

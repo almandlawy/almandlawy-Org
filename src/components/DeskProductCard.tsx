@@ -20,6 +20,7 @@ interface DeskProductCardProps {
   onOpenQuote: () => void;
   onWhatsAppClick: () => void;
   index?: number;
+  compact?: boolean;
 }
 
 export default function DeskProductCard({
@@ -35,6 +36,7 @@ export default function DeskProductCard({
   onOpenQuote,
   onWhatsAppClick,
   index = 0,
+  compact = false,
 }: DeskProductCardProps) {
   const name = isAr ? product.name_ar : product.name_en;
 
@@ -56,9 +58,9 @@ export default function DeskProductCard({
       <button
         type="button"
         onClick={onSelect}
-        className={`pt-10 pb-4 px-6 flex flex-col flex-1 text-left w-full ${isAr ? "text-right" : "text-left"}`}
+        className={`${compact ? "pt-6 pb-3 px-4" : "pt-10 pb-4 px-6"} flex flex-col flex-1 text-left w-full ${isAr ? "text-right" : "text-left"}`}
       >
-        <div className="h-40 flex items-center justify-center mb-4 bg-brand-section rounded border border-soft-border/40 overflow-hidden group">
+        <div className={`${compact ? "h-28" : "h-40"} flex items-center justify-center mb-3 bg-brand-section rounded border border-soft-border/40 overflow-hidden group`}>
           <img
             src={imageSrc}
             alt={name}
@@ -75,7 +77,7 @@ export default function DeskProductCard({
             </span>
           </div>
 
-          <h3 className="text-lg font-serif text-text-charcoal font-medium leading-snug">{name}</h3>
+          <h3 className={`${compact ? "text-base" : "text-lg"} font-serif text-text-charcoal font-medium leading-snug`}>{name}</h3>
 
           <div className="flex flex-wrap gap-2 text-[10px] font-mono text-text-secondary">
             <span className="px-2 py-0.5 bg-brand-section rounded border border-soft-border/50">

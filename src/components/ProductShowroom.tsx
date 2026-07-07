@@ -19,6 +19,8 @@ import {
   getPriceStatusLabel,
 } from "../lib/indicativePricing";
 import { trackWhatsAppClick } from "../lib/gtag";
+import { buildWhatsAppLink } from "../lib/whatsapp";
+import DeskProductCard from "./DeskProductCard";
 
 interface ProductShowroomProps {
   currentLang: "en" | "ar";
@@ -26,7 +28,7 @@ interface ProductShowroomProps {
   selectedCurrency: string;
   onSelectProduct: (product: Product) => void;
   selectedCategoryFilter?: string;
-  onOpenQuote?: () => void;
+  onOpenQuote?: (product?: Product) => void;
 }
 
 const SHOWROOM_GROUPS: {
@@ -144,14 +146,6 @@ export default function ProductShowroom({
     return isAr ? "اطلب مرجعاً من الديوان" : "Request reference from desk";
   };
 
-  const getWhatsAppLink = (product: Product) => {
-    const pName = isAr ? product.name_ar : product.name_en;
-    const msg = isAr
-      ? `مرحباً، أريد طلب عرض سعر معتمد من ديوان PGR UAE لمنتج: ${pName}`
-      : `Hello, I would like to request a firm quote from the PGR UAE desk for: ${pName}`;
-    return `https://wa.me/971559688837?text=${encodeURIComponent(msg)}`;
-  };
-
   const navigateProduct = (dir: -1 | 1) => {
     const idx = orderedProducts.findIndex((p) => p.id === selectedId);
     if (idx < 0) return;
@@ -163,6 +157,47 @@ export default function ProductShowroom({
     setSelectedId(id);
     const group = SHOWROOM_GROUPS.find((g) => g.productIds.includes(id));
     if (group) setMobileGroup(group.id);
+  };
+
+  const getWhatsAppLink = (product: Product) => {
+    const pName = isAr ? product.name_ar : product.name_en;
+    const msg = isAr
+      ? `مرحباً، أريد طلب عرض سعر معتمد من ديوان PGR UAE لمنتج: ${pName}`
+      : `Hello, I would like to request a firm quote from the PGR UAE desk for: ${pName}`;
+    return buildWhatsAppLink(msg);
+  };
+
+  const mobileGroupProducts = useMemo(() => {
+    const group = SHOWROOM_GROUPS.find((g) => g.id === mobileGroup);
+    if (!group) return orderedProducts;
+    return group.productIds
+      .map((id) => productMap.get(id))
+      .filter(Boolean) as Product[];
+  }, [mobileGroup, orderedProducts, productMap]);
+
+  const priceStatus = getPriceStatusLabel(rates?.source_status, currentLang);
+
+  const renderProductPriceBlock = (product: Product) => {
+    const indicativePrice = calculateIndicativePrice(product, rates, selectedCurrency);
+    const showPrice = canShowIndicativePrice(rates?.source_status) && indicativePrice;
+    if (!showPrice) {
+      return (
+        <p className="text-sm font-bold text-gold-dark">
+          {isAr ? "طلب مرجع من الديوان" : "Request reference from desk"}
+        </p>
+      );
+    }
+    return (
+      <div className="space-y-1">
+        <p className="text-xl font-mono font-bold text-text-charcoal">
+          {formatIndicativePrice(indicativePrice!, selectedCurrency, currentLang)}{" "}
+          <span className="text-sm text-gold-dark">{selectedCurrency}</span>
+        </p>
+        <p className="text-[10px] text-text-secondary/70">
+          {isAr ? "استرشادي — يؤكده المكتب" : "Indicative — desk confirms"}
+        </p>
+      </div>
+    );
   };
 
   if (!selectedProduct) return null;
@@ -379,7 +414,7 @@ export default function ProductShowroom({
                 type="button"
                 onClick={() => {
                   onSelectProduct(selectedProduct);
-                  onOpenQuote?.();
+                  onOpenQuote?.(selectedProduct);
                 }}
                 className="w-full py-3.5 bg-gold-base hover:bg-gold-dark text-text-charcoal font-mono text-[10px] font-bold uppercase tracking-widest rounded flex items-center justify-center gap-2 transition-colors"
               >
@@ -407,32 +442,52 @@ export default function ProductShowroom({
           </div>
         </div>
 
-        {/* Mobile product list for selected group */}
-        <div className="lg:hidden space-y-2">
-          <p className="text-[10px] font-mono uppercase tracking-widest text-text-secondary">
-            {isAr ? "المنتجات" : "Products"}
+        {/* Mobile / tablet — desk product cards */}
+        <div className="lg:hidden space-y-4">
+          <p className="text-[10px] font-mono uppercase tracking-widest text-text-secondary text-center">
+            {isAr ? "تصفح المنتجات — طلب عرض سعر" : "Browse products — request quote"}
           </p>
-          <div className="overflow-x-auto scrollbar-hide -mx-4 px-4">
-            <div className="flex gap-2 min-w-max">
-              {(SHOWROOM_GROUPS.find((g) => g.id === mobileGroup)?.productIds || []).map((id) => {
-                const product = productMap.get(id);
-                if (!product) return null;
-                return (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() => selectProduct(id)}
-                    className={`shrink-0 px-3 py-2 rounded text-xs font-sans border transition-colors max-w-[200px] text-left ${
-                      selectedId === id
-                        ? "bg-gold-base/20 border-gold-base text-text-charcoal"
-                        : "bg-brand-card border-soft-border text-text-secondary"
-                    }`}
-                  >
-                    {isAr ? product.name_ar : product.name_en}
-                  </button>
-                );
-              })}
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {mobileGroupProducts.map((product, index) => (
+              <DeskProductCard
+                key={product.id}
+                product={product}
+                isAr={isAr}
+                imageSrc={getProductImage(product)}
+                priceStatusLabel={priceStatus}
+                priceBlock={renderProductPriceBlock(product)}
+                whatsappHref={getWhatsAppLink(product)}
+                onSelect={() => selectProduct(product.id)}
+                onOpenQuote={() => onOpenQuote?.(product)}
+                onWhatsAppClick={() => trackWhatsAppClick(`showroom_card_${product.id}`)}
+                index={index}
+                compact
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Desktop — quick browse cards */}
+        <div className="hidden lg:block space-y-4 pt-4 border-t border-soft-border">
+          <p className="text-[10px] font-mono uppercase tracking-widest text-text-secondary">
+            {isAr ? "تصفح سريع للكتالوج" : "Quick catalog browse"}
+          </p>
+          <div className="grid grid-cols-2 xl:grid-cols-5 gap-4">
+            {orderedProducts.slice(0, 10).map((product, index) => (
+              <DeskProductCard
+                key={product.id}
+                product={product}
+                isAr={isAr}
+                imageSrc={getProductImage(product)}
+                priceBlock={renderProductPriceBlock(product)}
+                whatsappHref={getWhatsAppLink(product)}
+                onSelect={() => selectProduct(product.id)}
+                onOpenQuote={() => onOpenQuote?.(product)}
+                onWhatsAppClick={() => trackWhatsAppClick(`showroom_desktop_${product.id}`)}
+                index={index}
+                compact
+              />
+            ))}
           </div>
         </div>
 

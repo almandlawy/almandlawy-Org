@@ -31,6 +31,7 @@ const NAV_LINKS = [
   { id: "market", label_en: "Market Watch", label_ar: "مراقبة السوق" },
   { id: "how-quotes-work", label_en: "How It Works", label_ar: "كيف يعمل" },
   { id: "about", label_en: "About Us", label_ar: "من نحن" },
+  { id: "desk-services", label_en: "Services", label_ar: "الخدمات" },
   { id: "contact", label_en: "Contact", label_ar: "اتصل بنا" }
 ];
 

@@ -1967,6 +1967,59 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                         </div>
                       </div>
 
+                      <div className="p-4 rounded border border-soft-border/70 bg-brand-section space-y-3">
+                        <h6 className="text-[10px] font-mono uppercase tracking-wider text-gold-base font-bold">
+                          Desk Inventory (internal)
+                        </h6>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-1">
+                            <label className="text-text-secondary block uppercase text-[9px]">Dubai storage location</label>
+                            <input
+                              type="text"
+                              placeholder="e.g. Vault A / Shelf 12"
+                              value={editingProduct.storage_location || ""}
+                              onChange={(e) => setEditingProduct({ ...editingProduct, storage_location: e.target.value })}
+                              className="w-full bg-brand-bg border border-soft-border focus:border-gold-base rounded-lg px-3 py-2 text-text-charcoal outline-none"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-text-secondary block uppercase text-[9px]">Lot / serial reference</label>
+                            <input
+                              type="text"
+                              placeholder="e.g. LOT-2026-0042"
+                              value={editingProduct.lot_reference || ""}
+                              onChange={(e) => setEditingProduct({ ...editingProduct, lot_reference: e.target.value })}
+                              className="w-full bg-brand-bg border border-soft-border focus:border-gold-base rounded-lg px-3 py-2 text-text-charcoal outline-none"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-text-secondary block uppercase text-[9px]">Qty on hand (units)</label>
+                            <input
+                              type="number"
+                              min={0}
+                              value={editingProduct.qty_on_hand ?? ""}
+                              onChange={(e) =>
+                                setEditingProduct({
+                                  ...editingProduct,
+                                  qty_on_hand: e.target.value === "" ? undefined : Number(e.target.value),
+                                })
+                              }
+                              className="w-full bg-brand-bg border border-soft-border focus:border-gold-base rounded-lg px-3 py-2 text-text-charcoal outline-none"
+                            />
+                          </div>
+                          <div className="space-y-1 sm:col-span-2">
+                            <label className="text-text-secondary block uppercase text-[9px]">Inventory notes</label>
+                            <input
+                              type="text"
+                              placeholder="Allocated / on order / reserved"
+                              value={editingProduct.inventory_notes || ""}
+                              onChange={(e) => setEditingProduct({ ...editingProduct, inventory_notes: e.target.value })}
+                              className="w-full bg-brand-bg border border-soft-border focus:border-gold-base rounded-lg px-3 py-2 text-text-charcoal outline-none"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
                       <div className="flex items-center gap-6">
                         <label className="flex items-center gap-2 text-text-secondary">
                           <input
@@ -2039,6 +2092,12 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                             <p className="text-text-secondary text-[10px] uppercase">
                               ID: {p.id} / TYPE: {p.price_mode === "fixed" ? "FIXED" : "SPOT"} / PURITY: {p.purity} / PREMIUM: {p.premium_multiplier ? ((p.premium_multiplier - 1) * 100).toFixed(2) : "2.5"}%
                             </p>
+                            {(p.storage_location || p.qty_on_hand != null) && (
+                              <p className="text-[10px] text-olive-accent">
+                                {p.storage_location ? `LOC: ${p.storage_location}` : ""}
+                                {p.qty_on_hand != null ? ` · QTY: ${p.qty_on_hand}` : ""}
+                              </p>
+                            )}
                           </div>
                           <div className="flex items-center gap-2">
                             <button

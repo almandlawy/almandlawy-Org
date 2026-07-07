@@ -80,6 +80,11 @@ export interface Product {
   iraq_popular?: boolean;
   /** Lower number = higher priority in Iraq offers section */
   iraq_offer_rank?: number;
+  /** Internal desk inventory (admin only — StakTrakr-inspired) */
+  storage_location?: string;
+  lot_reference?: string;
+  qty_on_hand?: number;
+  inventory_notes?: string;
 }
 
 export interface ChatMessage {
