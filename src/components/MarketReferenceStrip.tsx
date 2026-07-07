@@ -4,10 +4,12 @@
  * Compact live market reference — indicative only, IQD/AED/USD.
  */
 
-import React from "react";
+import React, { useMemo } from "react";
 import { RefreshCw } from "lucide-react";
 import { LiveMarketRates } from "../types";
 import { getPriceStatusLabel } from "../lib/indicativePricing";
+import { getSpotDeltas } from "../lib/marketPriceDelta";
+import MarketPriceCard from "./MarketPriceCard";
 
 const STRIP_CURRENCIES = ["IQD", "AED", "USD"] as const;
 type StripCurrency = (typeof STRIP_CURRENCIES)[number];
@@ -41,9 +43,16 @@ export default function MarketReferenceStrip({
 
   const goldOz = rates?.gold?.currencies?.[cur]?.ounce;
   const silverOz = rates?.silver?.currencies?.[cur]?.ounce;
+  const goldGram = rates?.gold?.currencies?.[cur]?.gram;
+  const silverGram = rates?.silver?.currencies?.[cur]?.gram;
   const sourceStatus = rates?.source_status;
   const isLiveFeed = sourceStatus === "live" || sourceStatus === "cached";
   const priceStatusLabel = getPriceStatusLabel(sourceStatus, isAr ? "ar" : "en");
+
+  const deltas = useMemo(
+    () => getSpotDeltas(rates?.gold?.spot_usd_oz, rates?.silver?.spot_usd_oz),
+    [rates?.gold?.spot_usd_oz, rates?.silver?.spot_usd_oz, rates?.updated_at]
+  );
 
   const formatPrice = (value: number) => {
     const maxFrac = cur === "IQD" ? 0 : 2;
@@ -68,45 +77,39 @@ export default function MarketReferenceStrip({
     >
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-5">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-5">
-          <div>
-            <p className="text-[10px] font-mono uppercase tracking-[0.24em] text-gold-base font-bold mb-4 flex flex-wrap items-center gap-2">
+          <div className="flex-1 space-y-4">
+            <p className="text-[10px] font-mono uppercase tracking-[0.24em] text-gold-base font-bold flex flex-wrap items-center gap-2">
               <span>{isAr ? "مرجع السوق المباشر" : "Live Market Reference"}</span>
               {isLiveFeed && (
-                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 normal-case tracking-normal text-[9px]">
+                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 normal-case tracking-normal text-[9px]">
                   <span className="desk-live-dot" />
                   {isAr ? "مباشر · تجريبي" : "Live · trial"}
                 </span>
               )}
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-10">
-              <div>
-                <p className="text-[9px] font-mono uppercase tracking-wider text-panel-muted">
-                  {isAr ? "مرجع الذهب" : "Gold reference price"}
-                </p>
-                <p className="text-xl font-serif text-brand-bg font-medium mt-1">
-                  {goldOz != null
-                    ? `${formatPrice(goldOz)} ${cur}/oz`
-                    : isAr
-                      ? "اطلب عرض سعر"
-                      : "Request quote"}
-                </p>
-              </div>
-              <div>
-                <p className="text-[9px] font-mono uppercase tracking-wider text-panel-muted">
-                  {isAr ? "مرجع الفضة" : "Silver reference price"}
-                </p>
-                <p className="text-xl font-serif text-brand-bg font-medium mt-1">
-                  {silverOz != null
-                    ? `${formatPrice(silverOz)} ${cur}/oz`
-                    : isAr
-                      ? "اطلب عرض سعر"
-                      : "Request quote"}
-                </p>
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <MarketPriceCard
+                label={isAr ? "مرجع الذهب" : "Gold reference"}
+                ouncePrice={goldOz}
+                gramPrice={goldGram}
+                currency={cur}
+                delta={deltas.gold}
+                isAr={isAr}
+                formatPrice={formatPrice}
+              />
+              <MarketPriceCard
+                label={isAr ? "مرجع الفضة" : "Silver reference"}
+                ouncePrice={silverOz}
+                gramPrice={silverGram}
+                currency={cur}
+                delta={deltas.silver}
+                isAr={isAr}
+                formatPrice={formatPrice}
+              />
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 text-[10px] font-mono">
+          <div className="flex flex-wrap items-center gap-3 text-[10px] font-mono shrink-0">
             {formattedTime && (
               <span className="text-panel-muted">
                 {isAr ? "آخر تحديث:" : "Last updated:"} {formattedTime}
@@ -142,6 +145,11 @@ export default function MarketReferenceStrip({
         <p className="mt-4 text-[11px] font-sans text-champagne/85 leading-relaxed max-w-4xl border-t border-champagne/10 pt-4">
           <span className="block mb-1 text-[10px] font-mono uppercase tracking-wider text-champagne/70">
             {priceStatusLabel}
+            {deltas.gold || deltas.silver
+              ? isAr
+                ? " · التغيّر مقارنة بمرجع الجلسة (24 ساعة)"
+                : " · Change vs session reference (24h)"
+              : ""}
           </span>
           {isAr
             ? "مرجع سوقي استرشادي فقط. السعر النهائي والهامش والتوفر وشروط التسليم يؤكدها مكتب PGR UAE."

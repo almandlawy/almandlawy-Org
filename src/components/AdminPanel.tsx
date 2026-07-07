@@ -18,6 +18,7 @@ import { resolveProductIdFromLabel } from "../lib/productCatalog";
 import { isIraqLead } from "../lib/iraqLeadFilter";
 import { downloadQuotesCsv } from "../lib/exportQuotesCsv";
 import { buildAdminQuoteFollowUpMessage, buildClientWhatsAppLink } from "../lib/whatsapp";
+import { QUOTE_STATUSES, quoteStatusBadgeClass } from "../lib/quoteStatuses";
 import { DebugPanel } from "./DebugPanel";
 import PartnerLogosAdmin from "./admin/PartnerLogosAdmin";
 import PaymentSettingsAdmin from "./admin/PaymentSettingsAdmin";
@@ -2299,18 +2300,7 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                                 </td>
                                 <td className="p-4 text-text-secondary">{new Date(q.created_at || "").toLocaleDateString()}</td>
                                 <td className="p-4">
-                                  <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider ${
-                                    q.status === "New Request" || q.status === "Pending" ? "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20" :
-                                    q.status === "KYC Required" ? "bg-red-500/10 text-red-400 border border-red-500/20 animate-pulse" :
-                                    q.status === "KYC Under Review" ? "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20" :
-                                    q.status === "Quote Sent" || q.status === "Approved" ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20" :
-                                    q.status === "Customer Accepted" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" :
-                                    q.status === "Payment Pending" ? "bg-amber-500/10 text-amber-400 border border-amber-500/20" :
-                                    q.status === "Ready for Collection" ? "bg-teal-500/10 text-teal-400 border border-teal-500/20" :
-                                    q.status === "Completed" ? "bg-green-500/10 text-green-400 border border-green-500/20" :
-                                    q.status === "Cancelled" || q.status === "Rejected" ? "bg-gray-500/10 text-text-secondary border border-gray-500/20 line-through" :
-                                    "bg-zinc-800 text-zinc-500 border border-zinc-700"
-                                  }`}>
+                                  <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider ${quoteStatusBadgeClass(q.status || "New Request")}`}>
                                     {q.status || "New Request"}
                                   </span>
                                 </td>
@@ -2335,16 +2325,11 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                                     onChange={(e) => handleUpdateQuoteStatus(q.id, e.target.value)}
                                     className="bg-brand-bg text-text-charcoal/85 border border-soft-border rounded px-2.5 py-1 text-[11px] focus:outline-none focus:border-gold-base font-sans cursor-pointer"
                                   >
-                                    <option value="New Request">New Request</option>
-                                    <option value="KYC Required">KYC Required</option>
-                                    <option value="KYC Under Review">KYC Under Review</option>
-                                    <option value="Quote Sent">Quote Sent</option>
-                                    <option value="Customer Accepted">Customer Accepted</option>
-                                    <option value="Payment Pending">Payment Pending</option>
-                                    <option value="Ready for Collection">Ready for Collection</option>
-                                    <option value="Completed">Completed</option>
-                                    <option value="Cancelled">Cancelled</option>
-                                    <option value="Expired Quote">Expired Quote</option>
+                                    {QUOTE_STATUSES.map((status) => (
+                                      <option key={status} value={status}>
+                                        {status}
+                                      </option>
+                                    ))}
                                   </select>
 
                                   <button

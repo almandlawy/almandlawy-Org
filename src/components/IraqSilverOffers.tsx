@@ -4,10 +4,9 @@
  */
 
 import React from "react";
-import { ShieldCheck, TrendingUp, Phone, FileText, Star } from "lucide-react";
+import { Star } from "lucide-react";
 import { LiveMarketRates, Product } from "../types";
 import { PRODUCTS } from "../data";
-import { getProductImage } from "../lib/productImages";
 import {
   calculateIndicativePrice,
   canShowIndicativePrice,
@@ -17,6 +16,8 @@ import {
 } from "../lib/indicativePricing";
 import { buildWhatsAppLink } from "../lib/whatsapp";
 import { trackWhatsAppClick } from "../lib/gtag";
+import DeskProductCard from "./DeskProductCard";
+import { getProductImage } from "../lib/productImages";
 
 interface IraqSilverOffersProps {
   currentLang: "en" | "ar";
@@ -53,6 +54,8 @@ export default function IraqSilverOffers({
     return buildWhatsAppLink(msg);
   };
 
+  const priceStatus = getPriceStatusLabel(rates?.source_status, currentLang);
+
   return (
     <section
       className="py-20 px-4 md:px-8 bg-gradient-to-b from-brand-section to-brand-bg border-t border-soft-border/60"
@@ -78,7 +81,7 @@ export default function IraqSilverOffers({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {offerProducts.map((product) => {
+          {offerProducts.map((product, index) => {
             const indicativePrice = calculateIndicativePrice(
               product,
               rates,
@@ -97,122 +100,55 @@ export default function IraqSilverOffers({
                 ? calculateIndicativePrice(product, rates, "IQD")
                 : indicativePrice;
 
-            return (
-              <div
-                key={product.id}
-                className="relative bg-brand-card rounded-lg border-2 border-gold-base/30 shadow-md hover:shadow-xl hover:border-gold-base transition-all duration-300 overflow-hidden flex flex-col"
-              >
-                {rankLabel && (
-                  <div className="absolute top-0 left-0 right-0 bg-gold-base text-text-charcoal text-center py-1.5 text-[10px] font-mono font-bold uppercase tracking-widest z-10">
-                    {isAr ? rankLabel.ar : rankLabel.en}
+            const priceBlock = showPrice ? (
+              <div className="space-y-1">
+                <p className="text-2xl font-mono font-bold text-text-charcoal">
+                  {formatIndicativePrice(indicativePrice!, selectedCurrency, currentLang)}{" "}
+                  <span className="text-sm text-gold-dark">{selectedCurrency}</span>
+                </p>
+                {selectedCurrency === "IQD" && aedPrice && (
+                  <p className="text-xs font-mono text-text-secondary">
+                    ≈ {formatIndicativePrice(aedPrice, "AED", currentLang)} AED
+                  </p>
+                )}
+                {selectedCurrency === "AED" && iqdPrice && (
+                  <p className="text-xs font-mono text-text-secondary">
+                    ≈ {formatIndicativePrice(iqdPrice, "IQD", currentLang)} IQD
+                  </p>
+                )}
+                {selectedCurrency === "USD" && (
+                  <div className="text-xs font-mono text-text-secondary space-y-0.5">
+                    {aedPrice && <p>≈ {formatIndicativePrice(aedPrice, "AED", currentLang)} AED</p>}
+                    {iqdPrice && <p>≈ {formatIndicativePrice(iqdPrice, "IQD", currentLang)} IQD</p>}
                   </div>
                 )}
-
-                <div
-                  className="pt-10 pb-4 px-6 flex flex-col flex-1 cursor-pointer"
-                  onClick={() => onSelectProduct(product)}
-                >
-                  <div className="h-40 flex items-center justify-center mb-4 bg-brand-section rounded border border-soft-border/40">
-                    <img
-                      src={getProductImage(product)}
-                      alt={isAr ? product.name_ar : product.name_en}
-                      className="h-full object-contain"
-                      loading="lazy"
-                    />
-                  </div>
-
-                  <div className="space-y-2 flex-1">
-                    <div className="flex items-center gap-1.5">
-                      <ShieldCheck size={12} className="text-olive-accent shrink-0" />
-                      <span className="text-[10px] font-mono text-gold-dark uppercase tracking-wider font-bold">
-                        {product.brand || product.manufacturer}
-                      </span>
-                    </div>
-
-                    <h3 className="text-lg font-serif text-text-charcoal font-medium leading-snug">
-                      {isAr ? product.name_ar : product.name_en}
-                    </h3>
-
-                    <div className="flex flex-wrap gap-2 text-[10px] font-mono text-text-secondary">
-                      <span className="px-2 py-0.5 bg-brand-section rounded border border-soft-border/50">
-                        {product.weight_label}
-                      </span>
-                      <span className="px-2 py-0.5 bg-brand-section rounded border border-soft-border/50">
-                        {product.purity.split(" ")[0]}
-                      </span>
-                      <span className="px-2 py-0.5 bg-brand-section rounded border border-soft-border/50">
-                        {isAr ? "الإمارات" : "UAE"}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 pt-4 border-t border-soft-border/60 space-y-2">
-                    <div className="flex items-center gap-1.5 text-[10px] text-text-secondary font-mono uppercase">
-                      <TrendingUp size={11} className="text-olive-accent" />
-                      {getPriceStatusLabel(rates?.source_status, currentLang)}
-                    </div>
-
-                    {showPrice ? (
-                      <div className="space-y-1">
-                        <p className="text-2xl font-mono font-bold text-text-charcoal">
-                          {formatIndicativePrice(indicativePrice!, selectedCurrency, currentLang)}{" "}
-                          <span className="text-sm text-gold-dark">{selectedCurrency}</span>
-                        </p>
-                        {selectedCurrency === "IQD" && aedPrice && (
-                          <p className="text-xs font-mono text-text-secondary">
-                            ≈ {formatIndicativePrice(aedPrice, "AED", currentLang)} AED
-                          </p>
-                        )}
-                        {selectedCurrency === "AED" && iqdPrice && (
-                          <p className="text-xs font-mono text-text-secondary">
-                            ≈ {formatIndicativePrice(iqdPrice, "IQD", currentLang)} IQD
-                          </p>
-                        )}
-                        {selectedCurrency === "USD" && (
-                          <div className="text-xs font-mono text-text-secondary space-y-0.5">
-                            {aedPrice && <p>≈ {formatIndicativePrice(aedPrice, "AED", currentLang)} AED</p>}
-                            {iqdPrice && <p>≈ {formatIndicativePrice(iqdPrice, "IQD", currentLang)} IQD</p>}
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <p className="text-sm font-bold text-gold-dark">
-                        {isAr ? "طلب تسعير فوري" : "Request Quote"}
-                      </p>
-                    )}
-
-                    <p className="text-[10px] text-text-secondary/70 leading-normal">
-                      {isAr
-                        ? "سعر استرشادي — يؤكده المكتب قبل الطلب"
-                        : "Indicative — desk confirms before order"}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="p-4 pt-0 flex flex-col gap-2">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onOpenQuote(product);
-                    }}
-                    className="w-full py-2.5 bg-gold-base hover:bg-gold-dark text-text-charcoal font-mono text-[10px] uppercase font-bold tracking-widest rounded transition-all flex items-center justify-center gap-1.5"
-                  >
-                    <FileText size={12} />
-                    {isAr ? "طلب عرض سعر" : "Request Quote"}
-                  </button>
-                  <a
-                    href={getWhatsAppLink(product)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => trackWhatsAppClick(`iraq_silver_${product.id}`)}
-                    className="w-full py-2.5 bg-[#25D366] hover:bg-[#128C7E] text-white font-mono text-[10px] uppercase font-bold tracking-widest rounded transition-all flex items-center justify-center gap-1.5"
-                  >
-                    <Phone size={12} />
-                    {isAr ? "واتساب" : "WhatsApp"}
-                  </a>
-                </div>
+                <p className="text-[10px] text-text-secondary/70 leading-normal">
+                  {isAr
+                    ? "سعر استرشادي — يؤكده المكتب قبل الطلب"
+                    : "Indicative — desk confirms before order"}
+                </p>
               </div>
+            ) : (
+              <p className="text-sm font-bold text-gold-dark">
+                {isAr ? "طلب تسعير فوري" : "Request Quote"}
+              </p>
+            );
+
+            return (
+              <DeskProductCard
+                key={product.id}
+                product={product}
+                isAr={isAr}
+                imageSrc={getProductImage(product)}
+                rankLabel={rankLabel}
+                priceStatusLabel={priceStatus}
+                priceBlock={priceBlock}
+                whatsappHref={getWhatsAppLink(product)}
+                onSelect={() => onSelectProduct(product)}
+                onOpenQuote={() => onOpenQuote(product)}
+                onWhatsAppClick={() => trackWhatsAppClick(`iraq_silver_${product.id}`)}
+                index={index}
+              />
             );
           })}
         </div>

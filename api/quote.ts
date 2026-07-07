@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createClient } from "@supabase/supabase-js";
+import { notifyDeskNewQuote } from "./_lib/quoteNotify";
 
 function getSupabaseUrl() {
   return process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "";
@@ -157,6 +158,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       persistError = "SUPABASE_SERVICE_ROLE_KEY not set in Vercel";
       console.warn("[api/quote] No service role client — quote logged only", { inquiryId, name, phone });
     }
+
+    notifyDeskNewQuote({
+      inquiryId,
+      name,
+      phone,
+      productCategory,
+      countryCity,
+      quantityBudget,
+      source,
+      sourceLanguage,
+      message,
+    }).then((result) => {
+      if (result.sent) {
+        console.log(`[api/quote] Desk email sent for ${inquiryId}`);
+      } else if (result.error) {
+        console.warn(`[api/quote] Desk email skipped: ${result.error}`);
+      }
+    });
 
     return res.status(200).json({
       success: true,
