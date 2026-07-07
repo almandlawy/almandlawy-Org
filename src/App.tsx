@@ -32,6 +32,7 @@ import SeoSiteLinks from "./components/SeoSiteLinks";
 import { LiveMarketRates, Product } from "./types";
 import { isLive, supabase, mockDb, ensureSupabaseReady } from "./lib/supabase";
 import { trackPageView, trackQuoteFormStart } from "./lib/gtag";
+import { captureAttributionFromUrl, appendAttributionToPath } from "./lib/attribution";
 import { buildDefaultExchangeRates, setLiveFxFromPriceApi } from "./lib/fxRatesClient";
 import { OUNCE_TO_GRAM } from "./lib/marketReference";
 
@@ -114,14 +115,18 @@ export default function App() {
     if (prefill && typeof prefill === "object") {
       const name = currentLang === "ar" ? prefill.name_ar : prefill.name_en;
       const params = new URLSearchParams({ product: prefill.id, name });
-      navigateTo(`/request-quote?${params.toString()}`);
+      navigateTo(appendAttributionToPath(`/request-quote?${params.toString()}`));
       return;
     }
     if (typeof prefill === "string" && prefill.trim()) {
-      navigateTo(`/request-quote?${new URLSearchParams({ name: prefill }).toString()}`);
+      navigateTo(
+        appendAttributionToPath(
+          `/request-quote?${new URLSearchParams({ name: prefill }).toString()}`
+        )
+      );
       return;
     }
-    navigateTo("/request-quote");
+    navigateTo(appendAttributionToPath("/request-quote"));
   };
 
   const renderConversionFab = () => (
@@ -137,6 +142,11 @@ export default function App() {
         <AIConcierge currentLang={currentLang} onClose={() => setIsAIChatOpen(false)} />
       </Suspense>
     ) : null;
+
+  // Capture UTM / gclid on first landing for quote attribution
+  useEffect(() => {
+    captureAttributionFromUrl(window.location.search, window.location.pathname);
+  }, []);
 
   // Listen for Supabase Authentication changes
   useEffect(() => {

@@ -9,6 +9,7 @@ import { LiveMarketRates } from "../types";
 import { PRODUCTS } from "../data";
 import { resolvePublicCatalog } from "../lib/productCatalog";
 import MetalCalculator from "./MetalCalculator";
+import { trackWhatsAppClick } from "../lib/gtag";
 import {
   getSpotUsdOz,
   getFxRate,
@@ -493,6 +494,7 @@ export default function SEOLandingPages({
                 href={`https://wa.me/971559688837?text=${encodeURIComponent(isAr ? "مرحباً ديوان PGR دبي، أريد تسييل وبيع سبائك ذهب/فضة والحصول على عرض سعر فوري." : "Hello PGR UAE desk, I want to liquidate my gold/silver bullion and request a repurchase quote.")}`}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => trackWhatsAppClick("seo_liquidation_whatsapp")}
                 className="px-8 py-4 bg-transparent hover:bg-gold-base/5 border border-[#C6A15B] text-[#1F1A17] text-xs font-mono font-bold uppercase tracking-widest rounded transition-all flex items-center justify-center gap-2"
               >
                 <MessageSquare size={14} className="text-[#556B5D]" />
@@ -804,6 +806,7 @@ export default function SEOLandingPages({
             href={`https://wa.me/971559688837?text=${encodeURIComponent(isAr ? "مرحباً، أريد طلب تسعير فوري وحجز سبيكة ذهب/فضة معتمدة من PGR دبي." : "Hello, I am looking to lock in a firm physical gold or silver bullion quote contract with PGR UAE.")}`}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => trackWhatsAppClick("seo_landing_whatsapp")}
             className="px-6 py-3 bg-transparent hover:bg-gold-base/5 border border-[#C6A15B] text-[#1F1A17] text-xs font-bold uppercase tracking-wider rounded transition-colors flex items-center justify-center gap-2"
           >
             <MessageSquare size={14} className="text-[#556B5D]" />

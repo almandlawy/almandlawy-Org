@@ -7,6 +7,7 @@ import React, { useState, useEffect } from "react";
 import { MapPin, Clock, Phone, Mail, MessageSquare, ShieldCheck, ExternalLink } from "lucide-react";
 import { dbService } from "../lib/supabase";
 import { DUBAI_OFFICE_PHOTOS } from "../lib/officeImages";
+import { trackWhatsAppClick } from "../lib/gtag";
 
 interface OfficeSectionProps {
   currentLang: "en" | "ar";
@@ -122,6 +123,7 @@ export default function OfficeSection({ currentLang, sectionId = "office" }: Off
                     href={`https://wa.me/${whatsappCleaned}`} 
                     target="_blank" 
                     rel="noopener noreferrer"
+                    onClick={() => trackWhatsAppClick("office_section_whatsapp")}
                     className="inline-flex items-center gap-1.5 text-xs text-emerald-600 font-mono mt-1 hover:underline font-bold"
                   >
                     <MessageSquare size={12} />

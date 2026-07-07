@@ -17,6 +17,7 @@ import {
   canShowIndicativePrice,
   formatIndicativePrice,
 } from "../lib/indicativePricing";
+import { trackWhatsAppClick } from "../lib/gtag";
 
 interface ProductShowroomProps {
   currentLang: "en" | "ar";
@@ -384,6 +385,7 @@ export default function ProductShowroom({
                 href={getWhatsAppLink(selectedProduct)}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => trackWhatsAppClick(`showroom_${selectedProduct.id}`)}
                 className="w-full py-3.5 bg-panel-dark hover:bg-panel-charcoal text-brand-bg font-mono text-[10px] font-bold uppercase tracking-widest rounded border border-champagne/30 flex items-center justify-center gap-2 transition-colors"
               >
                 <Phone size={12} />

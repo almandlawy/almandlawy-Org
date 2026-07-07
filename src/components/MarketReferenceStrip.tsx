@@ -1,12 +1,22 @@
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
- * Compact live market reference — indicative only, AED/USD.
+ * Compact live market reference — indicative only, IQD/AED/USD.
  */
 
 import React from "react";
 import { RefreshCw } from "lucide-react";
 import { LiveMarketRates } from "../types";
+
+const STRIP_CURRENCIES = ["IQD", "AED", "USD"] as const;
+type StripCurrency = (typeof STRIP_CURRENCIES)[number];
+
+function resolveStripCurrency(selected: string): StripCurrency {
+  if (selected === "USD" || selected === "AED" || selected === "IQD") {
+    return selected;
+  }
+  return "IQD";
+}
 
 interface MarketReferenceStripProps {
   currentLang: "en" | "ar";
@@ -26,10 +36,15 @@ export default function MarketReferenceStrip({
   isRefreshing,
 }: MarketReferenceStripProps) {
   const isAr = currentLang === "ar";
-  const cur = (selectedCurrency === "USD" ? "USD" : "AED") as "USD" | "AED";
+  const cur = resolveStripCurrency(selectedCurrency);
 
   const goldOz = rates?.gold?.currencies?.[cur]?.ounce;
   const silverOz = rates?.silver?.currencies?.[cur]?.ounce;
+
+  const formatPrice = (value: number) => {
+    const maxFrac = cur === "IQD" ? 0 : 2;
+    return value.toLocaleString(undefined, { maximumFractionDigits: maxFrac });
+  };
 
   const lastUpdated = rates?.updated_at || rates?.cache_timestamp;
   const formattedTime = lastUpdated
@@ -60,7 +75,7 @@ export default function MarketReferenceStrip({
                 </p>
                 <p className="text-xl font-serif text-brand-bg font-medium mt-1">
                   {goldOz != null
-                    ? `${goldOz.toLocaleString(undefined, { maximumFractionDigits: 2 })} ${cur}/oz`
+                    ? `${formatPrice(goldOz)} ${cur}/oz`
                     : isAr
                       ? "اطلب عرض سعر"
                       : "Request quote"}
@@ -72,7 +87,7 @@ export default function MarketReferenceStrip({
                 </p>
                 <p className="text-xl font-serif text-brand-bg font-medium mt-1">
                   {silverOz != null
-                    ? `${silverOz.toLocaleString(undefined, { maximumFractionDigits: 2 })} ${cur}/oz`
+                    ? `${formatPrice(silverOz)} ${cur}/oz`
                     : isAr
                       ? "اطلب عرض سعر"
                       : "Request quote"}
@@ -89,7 +104,7 @@ export default function MarketReferenceStrip({
             )}
             <span className="text-panel-muted hidden sm:inline">·</span>
             <span className="text-panel-muted">{isAr ? "العملة:" : "Currency:"}</span>
-            {(["AED", "USD"] as const).map((c) => (
+            {STRIP_CURRENCIES.map((c) => (
               <button
                 key={c}
                 type="button"

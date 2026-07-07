@@ -376,6 +376,7 @@ export default function ProductLandingPage({
                         href={getWhatsAppLink(prod)}
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={() => trackWhatsAppClick(`product_landing_${prod.id}`)}
                         className="flex-1 py-2 px-2.5 bg-white hover:bg-[#FAF9F5] border border-[#E8DEC9] text-[#1F1A17] font-mono text-[10px] font-bold uppercase tracking-wider rounded transition-colors text-center flex items-center justify-center gap-1"
                       >
                         <Phone size={11} className="text-[#556B5D]" />

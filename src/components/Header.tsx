@@ -9,8 +9,8 @@ import { Globe, Phone, FileText, Menu, X, ShieldCheck, Terminal } from "lucide-r
 import { LiveMarketRates } from "../types";
 import { dbService, mockDb } from "../lib/supabase";
 import BrandLogo from "./BrandLogo";
-
-const WHATSAPP_BASE = "https://wa.me/971559688837";
+import { buildWhatsAppLink } from "../lib/whatsapp";
+import { trackWhatsAppClick } from "../lib/gtag";
 
 interface HeaderProps {
   currentLang: "en" | "ar";
@@ -65,7 +65,7 @@ export default function Header({
   const waMsg = isAr
     ? "مرحباً، أريد التواصل مع PGR UAE."
     : "Hello, I would like to contact the PGR UAE desk.";
-  const waLink = `${WHATSAPP_BASE}?text=${encodeURIComponent(waMsg)}`;
+  const waLink = buildWhatsAppLink(waMsg);
 
   const handleNav = (id: string) => {
     onNavigate(id);
@@ -143,6 +143,7 @@ export default function Header({
             href={waLink}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => trackWhatsAppClick("header_whatsapp")}
             className="hidden sm:flex items-center gap-1.5 px-3 py-2 text-[10px] tracking-widest uppercase font-bold text-brand-bg bg-panel-dark hover:bg-panel-charcoal rounded border border-champagne/20 transition-colors"
           >
             <Phone size={12} />
@@ -189,6 +190,7 @@ export default function Header({
               href={waLink}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackWhatsAppClick("header_mobile_whatsapp")}
               className="w-full py-3 bg-panel-dark text-brand-bg font-mono text-xs font-bold uppercase rounded text-center"
             >
               {isAr ? "واتساب" : "WhatsApp"}

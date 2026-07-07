@@ -12,18 +12,11 @@ import {
   MessageCircle
 } from "lucide-react";
 import PricingDisclaimer from "./PricingDisclaimer";
-import { trackGoogleAdsContactConversion, trackWhatsAppClick } from "../lib/gtag";
+import { trackWhatsAppClick } from "../lib/gtag";
 import { buildWhatsAppLink } from "../lib/whatsapp";
+import { QUOTE_PRODUCT_OPTIONS, submitQuoteRequest } from "../lib/quoteSubmit";
 
-const PRODUCT_OPTIONS = [
-  { value: "pgr-silver-500g", en: "SAM Silver 500g (Iraq bestseller)", ar: "فضة SAM 500 جرام (الأكثر طلباً)" },
-  { value: "pgr-silver-1kg", en: "PALM Silver 1kg", ar: "فضة PALM 1 كيلو" },
-  { value: "pgr-silver-1oz-100g", en: "SAM Silver 100g", ar: "فضة SAM 100 جرام" },
-  { value: "gold-bars", en: "Gold bars", ar: "سبائك ذهب" },
-  { value: "silver-bars", en: "Silver bars (other)", ar: "سبائك فضة (أخرى)" },
-  { value: "bullion-coins", en: "Bullion coins", ar: "عملات سبائك" },
-  { value: "custom-inquiry", en: "Custom inquiry", ar: "استفسار مخصص" }
-] as const;
+const PRODUCT_OPTIONS = QUOTE_PRODUCT_OPTIONS;
 
 const CONTACT_OPTIONS = [
   { value: "whatsapp", en: "WhatsApp", ar: "واتساب" },
@@ -137,7 +130,7 @@ export default function RequestQuotePage({ currentLang, onNavigate }: RequestQuo
     setLoading(true);
     setError("");
 
-    const payload = {
+    const result = await submitQuoteRequest({
       fullName: fullName.trim(),
       phone: phone.trim(),
       countryCity: countryCity.trim(),
@@ -146,31 +139,16 @@ export default function RequestQuotePage({ currentLang, onNavigate }: RequestQuo
       preferredContact,
       message: message.trim(),
       source: "website_request_quote_page",
-      sourceLanguage: currentLang
-    };
+      sourceLanguage: currentLang,
+    });
 
     try {
-      const response = await fetch("/api/quote", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-
-      const data = await response.json().catch(() => ({}));
-
-      if (response.ok && data.success) {
-        trackGoogleAdsContactConversion();
-        const ref = data.inquiryId || "";
+      if (result.success) {
+        const ref = result.inquiryId || "";
         onNavigate(`/quote-received${ref ? `?ref=${encodeURIComponent(ref)}` : ""}`);
       } else {
-        const technical =
-          data.details || data.error || `HTTP ${response.status}`;
-        console.error("[RequestQuotePage] Submission failed:", {
-          status: response.status,
-          technical,
-          payload: { ...payload, phone: "[redacted]" }
-        });
-        throw new Error(technical);
+        console.error("[RequestQuotePage] Submission failed:", result.error);
+        throw new Error(result.error);
       }
     } catch (err: unknown) {
       const technical = err instanceof Error ? err.message : "Unknown error";

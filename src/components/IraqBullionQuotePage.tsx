@@ -21,8 +21,9 @@ import {
 } from "../lib/iraqBullionFaq";
 
 import { buildWhatsAppLink } from "../lib/whatsapp";
-import { trackWhatsAppClick } from "../lib/gtag";
+import { trackQuoteFormStart, trackWhatsAppClick } from "../lib/gtag";
 import { IRAQ_EXTRA_SECTIONS } from "../lib/deskPageContent";
+import IraqInlineQuoteForm from "./IraqInlineQuoteForm";
 
 interface IraqBullionQuotePageProps {
   currentLang: "en" | "ar";
@@ -134,7 +135,10 @@ export default function IraqBullionQuotePage({
         <div className="flex flex-col sm:flex-row gap-3 pt-2">
           <button
             type="button"
-            onClick={() => onNavigate("/request-quote")}
+            onClick={() => {
+              trackQuoteFormStart("iraq_bullion_scroll_form");
+              document.getElementById("iraq-quote-form")?.scrollIntoView({ behavior: "smooth" });
+            }}
             className="px-6 py-3.5 bg-gold-base hover:bg-gold-dark text-text-charcoal font-mono text-xs font-bold uppercase tracking-widest rounded transition-colors flex items-center justify-center gap-2"
           >
             <FileText size={14} />
@@ -152,6 +156,14 @@ export default function IraqBullionQuotePage({
           </a>
         </div>
       </header>
+
+      <IraqInlineQuoteForm
+        currentLang={currentLang}
+        onSuccess={(inquiryId) => {
+          const ref = inquiryId ? `?ref=${encodeURIComponent(inquiryId)}` : "";
+          onNavigate(`/quote-received${ref}`);
+        }}
+      />
 
       {(isAr ? IRAQ_EXTRA_SECTIONS.ar : IRAQ_EXTRA_SECTIONS.en).map((block) => (
         <section key={block.h2} className="max-w-3xl space-y-3">
@@ -232,7 +244,10 @@ export default function IraqBullionQuotePage({
         <div className="flex flex-col sm:flex-row gap-3 justify-center pt-1">
           <button
             type="button"
-            onClick={() => onNavigate("/request-quote")}
+            onClick={() => {
+              trackQuoteFormStart("iraq_bullion_bottom_form");
+              document.getElementById("iraq-quote-form")?.scrollIntoView({ behavior: "smooth" });
+            }}
             className="px-6 py-3.5 bg-gold-base hover:bg-gold-dark text-text-charcoal font-mono text-xs font-bold uppercase tracking-widest rounded transition-colors flex items-center justify-center gap-2"
           >
             <FileText size={14} />

@@ -34,6 +34,20 @@ function buildMessage(body: Record<string, unknown>): string {
   if (body.preferredContact) parts.push(`Preferred contact: ${body.preferredContact}`);
   if (body.quantityBudget) parts.push(`Quantity/Budget: ${body.quantityBudget}`);
   if (body.source) parts.push(`Source: ${body.source}`);
+
+  const attrLines: string[] = [];
+  if (body.utm_source) attrLines.push(`utm_source: ${body.utm_source}`);
+  if (body.utm_medium) attrLines.push(`utm_medium: ${body.utm_medium}`);
+  if (body.utm_campaign) attrLines.push(`utm_campaign: ${body.utm_campaign}`);
+  if (body.utm_term) attrLines.push(`utm_term: ${body.utm_term}`);
+  if (body.utm_content) attrLines.push(`utm_content: ${body.utm_content}`);
+  if (body.gclid) attrLines.push(`gclid: ${body.gclid}`);
+  if (body.landing_page) attrLines.push(`landing_page: ${body.landing_page}`);
+  if (attrLines.length) {
+    parts.push("Attribution:");
+    parts.push(...attrLines);
+  }
+
   const userMessage = String(body.message || "").trim();
   if (userMessage) {
     if (parts.length) parts.push("---");
@@ -103,7 +117,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       preferredContact,
       quantityBudget,
       message: body.message,
-      source
+      source,
+      utm_source: body.utm_source,
+      utm_medium: body.utm_medium,
+      utm_campaign: body.utm_campaign,
+      utm_term: body.utm_term,
+      utm_content: body.utm_content,
+      gclid: body.gclid,
+      landing_page: body.landing_page,
     });
 
     const baseRow = {

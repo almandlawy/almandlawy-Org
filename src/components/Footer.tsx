@@ -103,7 +103,7 @@ export default function Footer({
               <li><a href="/terms" className="hover:text-gold-dark transition-colors">{currentLang === "ar" ? "الشروط والأحكام" : "Terms & Conditions"}</a></li>
               <li><a href="/privacy-policy" className="hover:text-gold-dark transition-colors">{currentLang === "ar" ? "سياسة الخصوصية" : "Privacy Policy"}</a></li>
               <li><a href="/#contact" className="hover:text-gold-dark transition-colors">{currentLang === "ar" ? "اتصل بنا" : "Contact Us"}</a></li>
-              <li><a href="/#categories" className="hover:text-gold-dark transition-colors">{currentLang === "ar" ? "فئات السبائك" : "Bullion Categories"}</a></li>
+              <li><a href="/#catalog" className="hover:text-gold-dark transition-colors">{currentLang === "ar" ? "فئات السبائك" : "Bullion Categories"}</a></li>
               <li><a href="/faq" className="hover:text-gold-dark transition-colors">{currentLang === "ar" ? "الأسئلة الشائعة" : "FAQ"}</a></li>
               <li><a href="/pricing-disclaimer" className="hover:text-gold-dark transition-colors">{currentLang === "ar" ? "إخلاء التسعير" : "Pricing Disclaimer"}</a></li>
               <li><a href="/kyc-aml-policy" className="hover:text-gold-dark transition-colors">{currentLang === "ar" ? "اعرف عميلك" : "KYC & AML"}</a></li>
