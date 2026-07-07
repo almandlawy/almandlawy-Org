@@ -48,6 +48,7 @@ import SellBackPage from "./components/SellBackPage";
 const ClientDashboard = lazy(() => import("./components/ClientDashboard"));
 import MetalCalculator from "./components/MetalCalculator";
 const SEOLandingPages = lazy(() => import("./components/SEOLandingPages"));
+import FacebookLandingPage from "./components/FacebookLandingPage";
 import IraqBullionQuotePage from "./components/IraqBullionQuotePage";
 import AuthCallbackPage from "./components/AuthCallbackPage";
 import PricingDisclaimer from "./components/PricingDisclaimer";
@@ -507,6 +508,7 @@ export default function App() {
 
   const standaloneDeskPaths = [
     "/iraq-bullion-quote",
+    "/facebook",
     "/request-quote",
     "/quote-received",
     "/faq",
@@ -536,6 +538,9 @@ export default function App() {
         <div className="max-w-7xl mx-auto py-24 px-4 md:px-8">
           {currentPath === "/iraq-bullion-quote" && (
             <IraqBullionQuotePage currentLang={currentLang} onNavigate={navigateTo} />
+          )}
+          {currentPath === "/facebook" && (
+            <FacebookLandingPage currentLang={currentLang} onNavigate={navigateTo} />
           )}
           {currentPath === "/request-quote" && (
             <RequestQuotePage currentLang={currentLang} onNavigate={navigateTo} />

@@ -59,6 +59,14 @@ export const PUBLIC_ROUTES: Record<string, RouteSeo> = {
     h1En: "Request Firm Quote",
     h1Ar: "طلب عرض سعر معتمد"
   },
+  "/facebook": {
+    titleEn: "PGR UAE from Facebook | Bullion Quote Desk",
+    titleAr: "PGR UAE من فيسبوك | مكتب عروض السبائك",
+    descEn: "Request a firm desk-confirmed quote for physical gold and silver. WhatsApp quote desk Dubai. Indicative reference only.",
+    descAr: "اطلب عرض سعر معتمد للذهب والفضة المادي. واتساب مكتب دبي. مرجع استرشادي فقط.",
+    h1En: "PGR UAE Bullion Quote Desk",
+    h1Ar: "مكتب عروض سبائك PGR UAE"
+  },
   "/quote-received": {
     titleEn: "Quote Request Received | PGR UAE",
     titleAr: "تم استلام طلب عرض السعر | PGR UAE",
