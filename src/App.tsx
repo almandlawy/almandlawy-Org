@@ -9,7 +9,8 @@ import Hero from "./components/Hero";
 import MarketReferenceStrip from "./components/MarketReferenceStrip";
 import HowFirmQuotesWork from "./components/HowFirmQuotesWork";
 import TrustBar from "./components/TrustBar";
-import ProductCategoryCards from "./components/ProductCategoryCards";
+import ProductShowroom from "./components/ProductShowroom";
+import IraqSilverOffers from "./components/IraqSilverOffers";
 import AboutQuoteDeskSection from "./components/AboutQuoteDeskSection";
 import QuoteDeskProofSection from "./components/QuoteDeskProofSection";
 import HomepageFAQ from "./components/HomepageFAQ";
@@ -699,11 +700,22 @@ export default function App() {
         onOpenAdminPortal={() => navigateTo("/admin")}
       />
 
-      {/* Institutional quote desk homepage */}
+      {/* Hero with PALM Silver video + product sections */}
       <Hero
         currentLang={currentLang}
+        onScrollToCatalog={handleScrollToCatalogWithFilter}
         onScrollToMarket={() => handleScrollToSection("market")}
-        onOpenQuote={() => navigateToQuote()}
+        onOpenQuote={() => {
+          const params = new URLSearchParams({
+            product: "pgr-silver-1kg",
+            name:
+              currentLang === "ar"
+                ? "سبيكة فضة PALM ١ كيلو"
+                : "Palm Silver 1kg Bar",
+          });
+          navigateTo(`/request-quote?${params.toString()}`);
+        }}
+        onScrollToIraqOffers={() => handleScrollToSection("iraq-silver-offers")}
       />
 
       <TrustBar currentLang={currentLang} />
@@ -717,9 +729,21 @@ export default function App() {
         isRefreshing={isRefreshing}
       />
 
-      <ProductCategoryCards
+      <IraqSilverOffers
         currentLang={currentLang}
-        onNavigate={navigateTo}
+        rates={rates}
+        selectedCurrency={selectedCurrency}
+        onSelectProduct={setSelectedProduct}
+        onOpenQuote={navigateToQuote}
+      />
+
+      <ProductShowroom
+        currentLang={currentLang}
+        rates={rates}
+        selectedCurrency={selectedCurrency}
+        onSelectProduct={setSelectedProduct}
+        selectedCategoryFilter={catalogCategoryFilter}
+        onOpenQuote={navigateToQuote}
       />
 
       <HowFirmQuotesWork currentLang={currentLang} />
