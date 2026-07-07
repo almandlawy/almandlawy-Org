@@ -18,7 +18,15 @@ const STATIC_ROUTE_MAP = {
   "/pricing-disclaimer": "/static-seo/pricing-disclaimer.html",
   "/refund-cancellation-policy": "/static-seo/refund-cancellation-policy.html",
   "/delivery-collection-policy": "/static-seo/delivery-collection-policy.html",
-  "/risk-disclosure": "/static-seo/risk-disclosure.html"
+  "/risk-disclosure": "/static-seo/risk-disclosure.html",
+  "/buy-gold-bars-dubai": "/static-seo/buy-gold-bars-dubai.html",
+  "/buy-silver-bars-dubai": "/static-seo/buy-silver-bars-dubai.html",
+  "/gold-rate-dubai-today": "/static-seo/gold-rate-dubai-today.html",
+  "/silver-rate-dubai-today": "/static-seo/silver-rate-dubai-today.html",
+  "/sell-gold-dubai": "/static-seo/sell-gold-dubai.html",
+  "/bullion-desk-dubai": "/static-seo/bullion-desk-dubai.html",
+  "/allocated-storage-dubai": "/static-seo/allocated-storage-dubai.html",
+  "/24k-gold-bars-uae": "/static-seo/24k-gold-bars-uae.html"
 };
 
 const BOT_RE =

@@ -26,6 +26,7 @@ interface HeaderProps {
 const NAV_LINKS = [
   { id: "hero", label_en: "Home", label_ar: "الرئيسية" },
   { id: "catalog", label_en: "Catalog", label_ar: "الكتالوج" },
+  { id: "iraq-silver-offers", label_en: "Iraq Silver", label_ar: "فضة العراق" },
   { id: "market", label_en: "Market Watch", label_ar: "مراقبة السوق" },
   { id: "how-quotes-work", label_en: "How It Works", label_ar: "كيف يعمل" },
   { id: "about", label_en: "About Us", label_ar: "من نحن" },

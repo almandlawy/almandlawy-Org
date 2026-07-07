@@ -7,6 +7,7 @@ import React, { useState, useEffect } from "react";
 import { Sparkles, ArrowRight, HelpCircle, Shield, RefreshCw, Calculator, MessageSquare, Info, CheckCircle } from "lucide-react";
 import { LiveMarketRates } from "../types";
 import PricingDisclaimer from "./PricingDisclaimer";
+import { getSpotUsdOz, getFxRate, OUNCE_TO_GRAM } from "../lib/marketReference";
 
 interface MetalCalculatorProps {
   currentLang: "en" | "ar";
@@ -32,24 +33,9 @@ export default function MetalCalculator({
   const [purity, setPurity] = useState<string>("24K"); // Default 24K
   const [customPremium, setCustomPremium] = useState<number>(2.0); // Default premium 2.0%
 
-  // Reference spots for calculation
-  const getMetalSpotUsdOz = () => {
-    const defaultSpots = { gold: 2365.40, silver: 29.85 };
-    if (!rates) return defaultSpots[metalType];
-    const spot = rates[metalType]?.spot_usd_oz;
-    return spot && spot > 0 ? spot : defaultSpots[metalType];
-  };
+  const getMetalSpotUsdOz = () => getSpotUsdOz(metalType, rates);
 
-  const getExchangeRate = () => {
-    const ratesMap: Record<string, number> = {
-      USD: 1.0,
-      AED: 3.6725,
-      EUR: 0.925,
-      GBP: 0.785,
-      SAR: 3.7505
-    };
-    return ratesMap[selectedCurrency] || 1.0;
-  };
+  const getExchangeRate = () => getFxRate(selectedCurrency, rates);
 
   // Metal purities catalog based on requirements: 24K, 22K, 21K, 18K, 999.9, 999, 925
   const goldPurities = [

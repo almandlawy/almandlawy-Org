@@ -38,13 +38,13 @@ export const NOINDEX_PATHS = new Set([
 export const PUBLIC_ROUTES: Record<string, RouteSeo> = {
   "/": {
     titleEn: "PGR UAE | Gold & Silver Bullion Quote Desk Dubai to Iraq",
-    titleAr: "PGR UAE | ديوان سبائك الذهب والفضة من دبي إلى العراق",
+    titleAr: "PGR UAE | سبائك الذهب والفضة من دبي إلى العراق",
     descEn:
       "Request desk-confirmed quotes for physical gold bars, silver bars and bullion coins from Dubai to Iraq. Indicative market reference only. Final quote after compliance review.",
     descAr:
       "اطلب عروض أسعار مؤكدة لسبائك الذهب والفضة من دبي إلى العراق. مرجع سوقي إرشادي فقط. عرض السعر النهائي بعد مراجعة الامتثال.",
     h1En: "Gold & Silver Bullion Quote Desk from Dubai to Iraq",
-    h1Ar: "ديوان عروض أسعار سبائك الذهب والفضة من دبي إلى العراق"
+    h1Ar: "عروض أسعار سبائك الذهب والفضة من دبي إلى العراق"
   },
   "/request-quote": {
     titleEn: "Request Firm Quote | PGR UAE",
@@ -286,7 +286,15 @@ export const SITEMAP_PATHS = [
   "/pricing-disclaimer",
   "/refund-cancellation-policy",
   "/delivery-collection-policy",
-  "/risk-disclosure"
+  "/risk-disclosure",
+  "/buy-gold-bars-dubai",
+  "/buy-silver-bars-dubai",
+  "/gold-rate-dubai-today",
+  "/silver-rate-dubai-today",
+  "/sell-gold-dubai",
+  "/bullion-desk-dubai",
+  "/allocated-storage-dubai",
+  "/24k-gold-bars-uae",
 ];
 
 export function canonicalUrl(path: string): string {
