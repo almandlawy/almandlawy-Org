@@ -4,6 +4,10 @@ import { resolvePublicCatalog } from "../lib/productCatalog";
 import { Product, LiveMarketRates } from "../types";
 import { ArrowLeft, ArrowRight, Shield, Award, HelpCircle, Phone, FileText, CheckCircle } from "lucide-react";
 import { getProductImage } from "../lib/productImages";
+import DeskRichContent from "./DeskRichContent";
+import { GOLD_BARS_CONTENT, SILVER_BARS_CONTENT } from "../lib/deskPageContent";
+import { categoryWhatsAppLink } from "../lib/categoryWhatsApp";
+import { trackWhatsAppClick } from "../lib/gtag";
 import PricingDisclaimer from "./PricingDisclaimer";
 
 interface ProductLandingPageProps {
@@ -158,6 +162,12 @@ export default function ProductLandingPage({
     return `https://wa.me/971559688837?text=${encodeURIComponent(baseMsg)}`;
   };
 
+  const isDeskCategory = categoryPath === "/gold-bars" || categoryPath === "/silver-bars";
+  const categoryWa = categoryWhatsAppLink(
+    categoryPath === "/gold-bars" ? "gold_bars" : "silver_bars",
+    currentLang
+  );
+
   return (
     <div className="bg-[#FAF9F5] py-12" style={{ direction: isAr ? "rtl" : "ltr" }}>
       <div className="space-y-12">
@@ -184,6 +194,28 @@ export default function ProductLandingPage({
             {isAr ? meta.description_ar : meta.description_en}
           </p>
 
+          {(categoryPath === "/gold-bars" || categoryPath === "/silver-bars") && (
+            <div className="pt-6 border-t border-[#E8DEC9]/60 mt-6">
+              <DeskRichContent
+                currentLang={currentLang}
+                category={categoryPath === "/gold-bars" ? "gold_bars" : "silver_bars"}
+                introEn={categoryPath === "/gold-bars" ? GOLD_BARS_CONTENT.introEn : SILVER_BARS_CONTENT.introEn}
+                introAr={categoryPath === "/gold-bars" ? GOLD_BARS_CONTENT.introAr : SILVER_BARS_CONTENT.introAr}
+                weightsEn={categoryPath === "/gold-bars" ? GOLD_BARS_CONTENT.weightsEn : SILVER_BARS_CONTENT.weightsEn}
+                weightsAr={categoryPath === "/gold-bars" ? GOLD_BARS_CONTENT.weightsAr : SILVER_BARS_CONTENT.weightsAr}
+                purityEn={categoryPath === "/gold-bars" ? GOLD_BARS_CONTENT.purityEn : SILVER_BARS_CONTENT.purityEn}
+                purityAr={categoryPath === "/gold-bars" ? GOLD_BARS_CONTENT.purityAr : SILVER_BARS_CONTENT.purityAr}
+                brandsEn={categoryPath === "/gold-bars" ? GOLD_BARS_CONTENT.brandsEn : undefined}
+                brandsAr={categoryPath === "/gold-bars" ? GOLD_BARS_CONTENT.brandsAr : undefined}
+                sections={categoryPath === "/gold-bars" ? GOLD_BARS_CONTENT.sections : SILVER_BARS_CONTENT.sections}
+                faqs={categoryPath === "/gold-bars" ? GOLD_BARS_CONTENT.faqs : SILVER_BARS_CONTENT.faqs}
+                onNavigate={onNavigate}
+                onOpenQuote={() => (onOpenQuote ? onOpenQuote() : onNavigate("/request-quote"))}
+                pagePath={categoryPath}
+              />
+            </div>
+          )}
+
           <div className="pt-4 flex flex-wrap gap-4 text-[10px] uppercase tracking-wider font-mono">
             <span className="flex items-center gap-1.5 text-[#556B5D] font-bold">
               <Shield size={12} />
@@ -197,18 +229,54 @@ export default function ProductLandingPage({
           </div>
         </div>
 
-        {/* Catalog Items Display Grid */}
+        {/* Weight formats — compact desk table for gold/silver */}
         {filteredProducts.length > 0 ? (
           <div className="space-y-6">
             <div className="flex justify-between items-center border-b border-[#E8DEC9] pb-3">
               <h2 className="text-[#1F1A17] uppercase tracking-wider font-serif text-base font-medium">
-                {isAr ? "الأوزان والمواصفات المتاحة" : "Available Weight Formats"}
+                {isAr ? "الأوزان — اطلب عرض سعر من المكتب" : "Weights — Request Desk Quote"}
               </h2>
-              <span className="text-[#5E564D] uppercase tracking-widest text-[10px] font-mono">
-                {filteredProducts.length} {isAr ? "مواصفات مسجلة" : "Specifications Listed"}
-              </span>
             </div>
 
+            {isDeskCategory ? (
+              <div className="overflow-x-auto rounded-lg border border-[#E8DEC9] bg-white">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-[#E8DEC9] bg-[#FAF9F5]">
+                      <th className="px-4 py-3 font-mono uppercase tracking-wider text-[#5E564D]">{isAr ? "الوزن" : "Weight"}</th>
+                      <th className="px-4 py-3 font-mono uppercase tracking-wider text-[#5E564D]">{isAr ? "النقاوة" : "Purity"}</th>
+                      <th className="px-4 py-3 font-mono uppercase tracking-wider text-[#5E564D]">{isAr ? "الإجراء" : "Action"}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredProducts.map((prod) => (
+                      <tr key={prod.id} className="border-b border-[#E8DEC9]/60 last:border-0">
+                        <td className="px-4 py-3 font-medium text-[#1F1A17]">{prod.weight_label}</td>
+                        <td className="px-4 py-3 text-[#5E564D]">{prod.purity}</td>
+                        <td className="px-4 py-3">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              onOpenQuote
+                                ? onOpenQuote(isAr ? prod.name_ar : prod.name_en)
+                                : onNavigate("/request-quote")
+                            }
+                            className="text-[10px] font-mono font-bold uppercase tracking-wider text-gold-dark hover:text-gold-base"
+                          >
+                            {isAr ? "طلب عرض سعر" : "Request Quote"}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <p className="px-4 py-3 text-[10px] font-mono text-[#5E564D] border-t border-[#E8DEC9]">
+                  {isAr
+                    ? "الأسعار استرشادية فقط — عرض السعر النهائي من المكتب."
+                    : "Indicative market reference only — final quote confirmed by desk."}
+                </p>
+              </div>
+            ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredProducts.map((prod) => {
                 const livePrice = calculateIndicativePrice(prod);
@@ -318,6 +386,7 @@ export default function ProductLandingPage({
                 );
               })}
             </div>
+            )}
           </div>
         ) : (
           /* Custom/Bespoke Inquiry View */
@@ -339,9 +408,10 @@ export default function ProductLandingPage({
           </div>
         )}
 
-        <PricingDisclaimer currentLang={currentLang} />
+        {!isDeskCategory && <PricingDisclaimer currentLang={currentLang} />}
 
-        {/* FAQs */}
+        {/* FAQs — skip for gold/silver (handled in DeskRichContent) */}
+        {!isDeskCategory && (
         <div className="space-y-6">
           <div className="border-b border-[#E8DEC9] pb-3">
             <h3 className="text-[#1F1A17] uppercase tracking-wider font-serif text-base font-medium flex items-center gap-2">
@@ -363,6 +433,7 @@ export default function ProductLandingPage({
             ))}
           </div>
         </div>
+        )}
 
         {/* CTA Banner */}
         <div className="bg-[#F7F4ED] border border-[#E8DEC9] p-8 rounded flex flex-col md:flex-row justify-between items-center gap-6 shadow-sm">

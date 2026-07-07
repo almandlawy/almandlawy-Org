@@ -20,7 +20,9 @@ import {
   buildIraqFaqJsonLd
 } from "../lib/iraqBullionFaq";
 
-const WHATSAPP = "https://wa.me/971559688837";
+import { buildWhatsAppLink } from "../lib/whatsapp";
+import { trackWhatsAppClick } from "../lib/gtag";
+import { IRAQ_EXTRA_SECTIONS } from "../lib/deskPageContent";
 
 interface IraqBullionQuotePageProps {
   currentLang: "en" | "ar";
@@ -110,7 +112,7 @@ export default function IraqBullionQuotePage({
   const waText = isAr
     ? "مرحباً، أنا عميل عراقي وأريد طلب عرض سعر مؤكد لسبائك الذهب أو الفضة من PGR UAE."
     : "Hello, I am an Iraqi customer and would like to request a desk-confirmed quote for physical gold or silver bullion from PGR UAE.";
-  const waLink = `${WHATSAPP}?text=${encodeURIComponent(waText)}`;
+  const waLink = buildWhatsAppLink(waText);
 
   return (
     <div className="space-y-16" style={{ direction: isAr ? "rtl" : "ltr" }}>
@@ -142,6 +144,7 @@ export default function IraqBullionQuotePage({
             href={waLink}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => trackWhatsAppClick("iraq_bullion_page_whatsapp")}
             className="px-6 py-3.5 bg-panel-dark hover:bg-panel-charcoal text-brand-bg font-mono text-xs font-bold uppercase tracking-widest rounded border border-champagne/30 transition-colors flex items-center justify-center gap-2"
           >
             <Phone size={14} />
@@ -149,6 +152,13 @@ export default function IraqBullionQuotePage({
           </a>
         </div>
       </header>
+
+      {(isAr ? IRAQ_EXTRA_SECTIONS.ar : IRAQ_EXTRA_SECTIONS.en).map((block) => (
+        <section key={block.h2} className="max-w-3xl space-y-3">
+          <h2 className="text-xl font-serif text-text-charcoal font-medium">{block.h2}</h2>
+          <p className="text-sm text-text-secondary leading-relaxed">{block.body}</p>
+        </section>
+      ))}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {sections.map(({ icon: Icon, title, body }) => (
@@ -232,6 +242,7 @@ export default function IraqBullionQuotePage({
             href={waLink}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => trackWhatsAppClick("iraq_bullion_page_bottom_whatsapp")}
             className="px-6 py-3.5 bg-panel-dark hover:bg-panel-charcoal text-brand-bg font-mono text-xs font-bold uppercase tracking-widest rounded border border-champagne/30 transition-colors flex items-center justify-center gap-2"
           >
             <Phone size={14} />

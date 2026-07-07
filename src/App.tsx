@@ -8,9 +8,10 @@ import Header from "./components/Header";
 import Hero from "./components/Hero";
 import MarketReferenceStrip from "./components/MarketReferenceStrip";
 import HowFirmQuotesWork from "./components/HowFirmQuotesWork";
-import ProductShowroom from "./components/ProductShowroom";
-import TrustedPartnersSection from "./components/TrustedPartnersSection";
-import PaymentSettlementSection from "./components/PaymentSettlementSection";
+import TrustBar from "./components/TrustBar";
+import ProductCategoryCards from "./components/ProductCategoryCards";
+import AboutQuoteDeskSection from "./components/AboutQuoteDeskSection";
+import QuoteDeskProofSection from "./components/QuoteDeskProofSection";
 import HomepageFAQ from "./components/HomepageFAQ";
 import CrawlableSeoBlock from "./components/CrawlableSeoBlock";
 import ComplianceKYCSection from "./components/ComplianceKYCSection";
@@ -21,17 +22,13 @@ const AIConcierge = lazy(() => import("./components/AIConcierge"));
 import FloatingConversionBar from "./components/FloatingConversionBar";
 import QuoteReceivedPage from "./components/QuoteReceivedPage";
 import OfficeSection from "./components/OfficeSection";
-import BlogSection from "./components/BlogSection";
 import ClientDashboardModal from "./components/ClientDashboardModal";
 import AdminPortalModal from "./components/AdminPortalModal";
 const AdminPanel = lazy(() => import("./components/AdminPanel"));
 import LegalOverlayModal from "./components/LegalOverlayModal";
-import IraqSilverOffers from "./components/IraqSilverOffers";
 import Footer from "./components/Footer";
 import SeoSiteLinks from "./components/SeoSiteLinks";
 import { LiveMarketRates, Product } from "./types";
-import { WHY_US_ITEMS } from "./data";
-import { Shield, Building, Truck, Award } from "lucide-react";
 import { isLive, supabase, mockDb, ensureSupabaseReady } from "./lib/supabase";
 import { trackPageView, trackQuoteFormStart } from "./lib/gtag";
 import { buildDefaultExchangeRates, setLiveFxFromPriceApi } from "./lib/fxRatesClient";
@@ -98,7 +95,7 @@ export default function App() {
   // Modal / Drawer / Overlay States
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
-  
+
   // Custom Client & Admin portals & Legal Overlays
   const [isClientDashboardOpen, setIsClientDashboardOpen] = useState(false);
   const [isAdminPortalOpen, setIsAdminPortalOpen] = useState(false);
@@ -129,7 +126,7 @@ export default function App() {
   const renderConversionFab = () => (
     <FloatingConversionBar
       currentLang={currentLang}
-      onOpenAIChat={() => setIsAIChatOpen(true)}
+      onOpenQuote={() => navigateToQuote()}
     />
   );
 
@@ -686,7 +683,7 @@ export default function App() {
 
   // ROOT / HOMEPAGE LAYOUT
   return (
-    <div className={`min-h-screen text-text-charcoal bg-brand-bg selection:bg-gold-base selection:text-black relative ${
+    <div className={`min-h-screen text-text-charcoal bg-brand-bg selection:bg-gold-base selection:text-black relative pb-[4.5rem] md:pb-0 ${
       currentLang === "ar" ? "font-arabic" : "font-sans"
     }`} id="pgr-root-container">
 
@@ -702,23 +699,14 @@ export default function App() {
         onOpenAdminPortal={() => navigateTo("/admin")}
       />
 
-      {/* Hero Epic Visual Landing stage */}
+      {/* Institutional quote desk homepage */}
       <Hero
         currentLang={currentLang}
-        onScrollToCatalog={handleScrollToCatalogWithFilter}
         onScrollToMarket={() => handleScrollToSection("market")}
-        onOpenQuote={() => {
-          const params = new URLSearchParams({
-            product: "pgr-silver-1kg",
-            name:
-              currentLang === "ar"
-                ? "سبيكة فضة PALM ١ كيلو"
-                : "Palm Silver 1kg Bar",
-          });
-          navigateTo(`/request-quote?${params.toString()}`);
-        }}
-        onScrollToIraqOffers={() => handleScrollToSection("iraq-silver-offers")}
+        onOpenQuote={() => navigateToQuote()}
       />
+
+      <TrustBar currentLang={currentLang} />
 
       <MarketReferenceStrip
         currentLang={currentLang}
@@ -727,33 +715,20 @@ export default function App() {
         onChangeCurrency={setSelectedCurrency}
         onRefresh={fetchRates}
         isRefreshing={isRefreshing}
-        onOpenQuote={navigateToQuote}
       />
 
-      <IraqSilverOffers
+      <ProductCategoryCards
         currentLang={currentLang}
-        rates={rates}
-        selectedCurrency={selectedCurrency}
-        onSelectProduct={setSelectedProduct}
-        onOpenQuote={navigateToQuote}
-      />
-
-      <ProductShowroom
-        currentLang={currentLang}
-        rates={rates}
-        selectedCurrency={selectedCurrency}
-        onSelectProduct={setSelectedProduct}
-        selectedCategoryFilter={catalogCategoryFilter}
-        onOpenQuote={navigateToQuote}
+        onNavigate={navigateTo}
       />
 
       <HowFirmQuotesWork currentLang={currentLang} />
 
-      <TrustedPartnersSection currentLang={currentLang} />
+      <QuoteDeskProofSection currentLang={currentLang} />
 
-      <PaymentSettlementSection
+      <AboutQuoteDeskSection
         currentLang={currentLang}
-        onOpenQuote={navigateToQuote}
+        onNavigate={navigateTo}
       />
 
       <ComplianceKYCSection
@@ -774,41 +749,7 @@ export default function App() {
 
       <CrawlableSeoBlock currentLang={currentLang} />
 
-      <section className="py-20 px-4 md:px-8 bg-brand-bg border-t border-soft-border" id="about">
-        <div className="max-w-7xl mx-auto space-y-12">
-          <div className="text-center space-y-3 max-w-2xl mx-auto">
-            <span className="text-gold-base font-mono uppercase text-xs tracking-[0.3em] font-bold flex items-center justify-center gap-2">
-              <Shield size={12} />
-              {currentLang === "ar" ? "لماذا PGR UAE" : "Why PGR UAE"}
-            </span>
-            <h2 className="text-3xl font-serif text-text-charcoal font-medium">
-              {currentLang === "ar" ? "معايير سبائك معتمدة" : "Accredited Bullion Standards"}
-            </h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {WHY_US_ITEMS.map((item, idx) => (
-              <div
-                key={idx}
-                className="p-6 rounded border border-soft-border bg-brand-card space-y-3 hover:border-gold-base transition-colors"
-              >
-                <div className="h-10 w-10 rounded border border-soft-border bg-brand-bg flex items-center justify-center text-olive-accent">
-                  {idx === 0 ? <Shield size={18} /> : idx === 1 ? <Building size={18} /> : idx === 2 ? <Truck size={18} /> : <Award size={18} />}
-                </div>
-                <h3 className="text-base font-serif text-text-charcoal font-medium">
-                  {currentLang === "ar" ? item.title_ar : item.title_en}
-                </h3>
-                <p className="text-xs text-text-secondary leading-relaxed font-sans">
-                  {currentLang === "ar" ? item.desc_ar : item.desc_en}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       <OfficeSection currentLang={currentLang} sectionId="contact" />
-
-      <BlogSection currentLang={currentLang} />
 
       <SeoSiteLinks currentLang={currentLang} />
 
