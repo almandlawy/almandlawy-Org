@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense, lazy } from "react";
 import Header from "./components/Header";
 import Hero from "./components/Hero";
 import MarketReferenceStrip from "./components/MarketReferenceStrip";
@@ -17,7 +17,7 @@ import ComplianceKYCSection from "./components/ComplianceKYCSection";
 import { getRouteSeo, SEO_LANDING_PATHS } from "./lib/seoRoutes";
 import { applyPageSeo } from "./lib/seoMeta";
 import ProductDetailModal from "./components/ProductDetailModal";
-import AIConcierge from "./components/AIConcierge";
+const AIConcierge = lazy(() => import("./components/AIConcierge"));
 import FloatingConversionBar from "./components/FloatingConversionBar";
 import QuoteReceivedPage from "./components/QuoteReceivedPage";
 import OfficeSection from "./components/OfficeSection";
@@ -33,7 +33,6 @@ import { LiveMarketRates, Product } from "./types";
 import { WHY_US_ITEMS } from "./data";
 import { Shield, Building, Truck, Award } from "lucide-react";
 import { isLive, supabase, mockDb, ensureSupabaseReady } from "./lib/supabase";
-import { DebugPanel } from "./components/DebugPanel";
 import { trackPageView } from "./lib/gtag";
 
 // Imported new high-end compliance and desk components
@@ -140,7 +139,9 @@ export default function App() {
 
   const renderAiConcierge = () =>
     isAIChatOpen ? (
-      <AIConcierge currentLang={currentLang} onClose={() => setIsAIChatOpen(false)} />
+      <Suspense fallback={null}>
+        <AIConcierge currentLang={currentLang} onClose={() => setIsAIChatOpen(false)} />
+      </Suspense>
     ) : null;
 
   // Listen for Supabase Authentication changes
@@ -878,9 +879,6 @@ export default function App() {
 
       {/* DRAWER SLIDE: Executive AI Concierge Panel */}
       {renderAiConcierge()}
-
-      {/* Database Telemetry & Security Panel */}
-      <DebugPanel currentLang={currentLang} />
 
     </div>
   );

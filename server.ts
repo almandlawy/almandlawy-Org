@@ -153,6 +153,7 @@ let serverSettings = {
   manual_gold_usd_oz: 2365.40,
   manual_silver_usd_oz: 58.00,
   usd_aed_rate: 3.6725,
+  usd_iqd_rate: 1310.0,
   default_product_premium_pct: 2.0,
   disable_live_pricing: false,
   daily_pricing: {
@@ -480,6 +481,7 @@ app.get("/api/prices", async (req, res) => {
     // If cache is fresh and we have configured API key and we are not forcing, serve cache!
     if (isLiveEnabled && has_api_key && isFresh && !isForce && globalPriceCache) {
       const usdAed = serverSettings.usd_aed_rate || 3.6725;
+      const usdIqd = serverSettings.usd_iqd_rate || EXCHANGE_RATES.IQD;
       const cached = globalPriceCache;
 
       const currentSpots = {
@@ -493,7 +495,8 @@ app.get("/api/prices", async (req, res) => {
       const rates: Record<string, any> = {};
       const exchangeRates = {
         ...EXCHANGE_RATES,
-        AED: usdAed
+        AED: serverSettings.usd_aed_rate || EXCHANGE_RATES.AED,
+        IQD: serverSettings.usd_iqd_rate || EXCHANGE_RATES.IQD,
       };
 
       Object.entries(currentSpots).forEach(([metal, spotUsd]) => {
@@ -530,6 +533,7 @@ app.get("/api/prices", async (req, res) => {
         platinum_usd_per_oz: currentSpots.platinum,
         palladium_usd_per_oz: currentSpots.palladium,
         usd_aed: usdAed,
+        usd_iqd: usdIqd,
         updated_at: new Date(cached.timestamp).toISOString(),
         has_api_key: true,
         provider_attempted: true,
@@ -545,6 +549,7 @@ app.get("/api/prices", async (req, res) => {
     // Handlers for unconfigured (missing api key) or live disabled
     if (!isLiveEnabled || !has_api_key) {
       const usdAed = serverSettings.usd_aed_rate || 3.6725;
+      const usdIqd = serverSettings.usd_iqd_rate || EXCHANGE_RATES.IQD;
       const currentSpots = {
         gold: serverSettings.manual_gold_usd_oz || METAL_SPOTS.gold,
         silver: serverSettings.manual_silver_usd_oz || METAL_SPOTS.silver,
@@ -556,7 +561,8 @@ app.get("/api/prices", async (req, res) => {
       const rates: Record<string, any> = {};
       const exchangeRates = {
         ...EXCHANGE_RATES,
-        AED: usdAed
+        AED: serverSettings.usd_aed_rate || EXCHANGE_RATES.AED,
+        IQD: serverSettings.usd_iqd_rate || EXCHANGE_RATES.IQD,
       };
 
       Object.entries(currentSpots).forEach(([metal, spotUsd]) => {
@@ -594,6 +600,7 @@ app.get("/api/prices", async (req, res) => {
         platinum_usd_per_oz: currentSpots.platinum,
         palladium_usd_per_oz: currentSpots.palladium,
         usd_aed: usdAed,
+        usd_iqd: usdIqd,
         updated_at: new Date().toISOString(),
         has_api_key: false,
         provider_attempted: false,
@@ -969,6 +976,7 @@ app.get("/api/prices", async (req, res) => {
     }
 
     const usdAed = serverSettings.usd_aed_rate || 3.6725;
+    const usdIqd = serverSettings.usd_iqd_rate || EXCHANGE_RATES.IQD;
     let finalProvider = providerName;
     let finalProviderEnv = providerEnv || "commoditypriceapi";
     let finalProviderStatus: string = provider_status;
@@ -1008,6 +1016,7 @@ app.get("/api/prices", async (req, res) => {
         platinum_usd_per_oz: null,
         palladium_usd_per_oz: null,
         usd_aed: usdAed,
+        usd_iqd: usdIqd,
         updated_at: new Date().toISOString(),
         has_api_key,
         provider_attempted,
@@ -1040,7 +1049,8 @@ app.get("/api/prices", async (req, res) => {
 
     const exchangeRates = {
       ...EXCHANGE_RATES,
-      AED: usdAed
+      AED: serverSettings.usd_aed_rate || usdAed,
+      IQD: serverSettings.usd_iqd_rate || EXCHANGE_RATES.IQD,
     };
 
     Object.entries(currentSpots).forEach(([metal, spotUsd]) => {
@@ -1077,6 +1087,7 @@ app.get("/api/prices", async (req, res) => {
       platinum_usd_per_oz: currentSpots.platinum,
       palladium_usd_per_oz: currentSpots.palladium,
       usd_aed: usdAed,
+      usd_iqd: usdIqd,
       updated_at: new Date().toISOString(),
       
       // Safe non-secret debug fields
