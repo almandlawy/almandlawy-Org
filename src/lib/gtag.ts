@@ -15,3 +15,20 @@ export function trackGoogleAdsContactConversion(): void {
   if (typeof window === "undefined" || typeof window.gtag !== "function") return;
   window.gtag("event", "conversion", { send_to: GOOGLE_ADS_CONTACT_CONVERSION });
 }
+
+/** SPA page view for GA4 + Google Ads. */
+export function trackPageView(path: string): void {
+  if (typeof window === "undefined" || typeof window.gtag !== "function") return;
+  window.gtag("config", GA4_MEASUREMENT_ID, { page_path: path });
+  window.gtag("config", GOOGLE_ADS_ID, { page_path: path });
+}
+
+/** Track WhatsApp CTA clicks (micro-conversion for desk engagement). */
+export function trackWhatsAppClick(source: string): void {
+  if (typeof window === "undefined" || typeof window.gtag !== "function") return;
+  window.gtag("event", "whatsapp_click", {
+    send_to: GOOGLE_ADS_ID,
+    event_category: "engagement",
+    event_label: source,
+  });
+}
