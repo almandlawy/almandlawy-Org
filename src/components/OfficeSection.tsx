@@ -163,6 +163,7 @@ export default function OfficeSection({ currentLang, sectionId = "office" }: Off
 
           {/* Right Column: Dubai office photography */}
           <div className="space-y-4">
+            <div className="grid grid-cols-1 gap-4">
             {DUBAI_OFFICE_PHOTOS.map((photo) => (
               <figure
                 key={photo.id}
@@ -187,6 +188,7 @@ export default function OfficeSection({ currentLang, sectionId = "office" }: Off
                 </div>
               </figure>
             ))}
+            </div>
 
             <div className="flex flex-wrap gap-3 justify-center sm:justify-start">
               <a
