@@ -307,7 +307,7 @@ export default function App() {
     fetchRates();
     const interval = setInterval(() => {
       fetchRates();
-    }, 60000);
+    }, 300000);
     return () => clearInterval(interval);
   }, []);
 
@@ -380,7 +380,7 @@ export default function App() {
 
   if (currentPath === "/calculator") {
     return (
-      <div className={`min-h-screen text-stone-900 bg-[#FAF9F5] selection:bg-gold-base selection:text-black overflow-hidden relative ${
+      <div className={`desk-page-shell ${
         currentLang === "ar" ? "font-arabic" : "font-sans"
       }`}>
         <Header
@@ -442,7 +442,7 @@ export default function App() {
 
   if ((SEO_LANDING_PATHS as readonly string[]).includes(currentPath)) {
     return (
-      <div className={`min-h-screen text-stone-900 bg-[#FAF9F5] selection:bg-gold-base selection:text-black overflow-hidden relative ${
+      <div className={`desk-page-shell ${
         currentLang === "ar" ? "font-arabic" : "font-sans"
       }`}>
         <Header
@@ -629,7 +629,7 @@ export default function App() {
   const productCategories = ["/gold-bars", "/silver-bars", "/bullion-coins", "/custom-inquiry"];
   if (productCategories.includes(currentPath)) {
     return (
-      <div className={`min-h-screen text-[#1F1A17] bg-[#FAF9F5] selection:bg-gold-base selection:text-black overflow-hidden relative ${
+      <div className={`desk-page-shell ${
         currentLang === "ar" ? "font-arabic" : "font-sans"
       }`} id="product-landing-page-wrapper">
         <Header

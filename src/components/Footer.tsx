@@ -62,7 +62,7 @@ export default function Footer({
           {/* Corporate Profile Column */}
           <div className="space-y-4">
             <BrandLogo variant="footer" currentLang={currentLang} />
-            <p className="text-[#5E564D] text-[11px] leading-relaxed font-bold">
+            <p className="text-text-secondary text-[11px] leading-relaxed font-bold">
               {currentLang === "ar"
                 ? "مؤسسة بي جي آر لتجارة المعادن الثمينة ومقرها دبي. نوفر عروض أسعار وحلول تخزين مخصصة للسبائك للمؤسسات وصناديق الاستثمار وكبار الشخصيات بأعلى معايير الأمان السويسري."
                 : "PGR UAE is an internationally accredited physical gold and silver bullion desk headquartered in Dubai, sourcing through accredited international refineries."}
@@ -70,24 +70,24 @@ export default function Footer({
             <div className="flex flex-col gap-2 pt-2 text-[11px]">
               <button 
                 onClick={onOpenClientDashboard} 
-                className="hover:text-[#A47C36] text-[#1F1A17] transition-colors flex items-center gap-1.5 cursor-pointer text-left font-mono font-bold"
+                className="hover:text-gold-dark text-text-charcoal transition-colors flex items-center gap-1.5 cursor-pointer text-left font-mono font-bold"
               >
-                <ShieldCheck size={12} className="text-[#C6A15B]" />
+                <ShieldCheck size={12} className="text-gold-base" />
                 <span>{currentLang === "ar" ? "ديوان كبار العملاء الرقمي" : "Secure Client Desk"}</span>
               </button>
               <button 
                 onClick={onOpenAdminPortal} 
-                className="hover:text-[#A47C36] text-[#5E564D] transition-colors flex items-center gap-1.5 cursor-pointer text-left font-mono font-bold"
+                className="hover:text-gold-dark text-text-secondary transition-colors flex items-center gap-1.5 cursor-pointer text-left font-mono font-bold"
               >
-                <Terminal size={12} className="text-[#C6A15B]" />
+                <Terminal size={12} className="text-gold-base" />
                 <span>{currentLang === "ar" ? "ديوان الإدارة والتحكم" : "Admin Portal Desk"}</span>
               </button>
               <button 
                 onClick={onOpenAdminPortal} 
-                className="hover:text-[#A47C36] transition-colors flex items-center gap-1.5 cursor-pointer text-left font-mono font-extrabold text-[#1F1A17] border border-[#E8DEC9] bg-white shadow-sm px-2.5 py-1.5 rounded mt-1 transition-all"
+                className="hover:text-gold-dark transition-colors flex items-center gap-1.5 cursor-pointer text-left font-mono font-extrabold text-text-charcoal border border-soft-border bg-brand-card shadow-sm px-2.5 py-1.5 rounded mt-1 transition-all"
                 id="footer-admin-login-btn"
               >
-                <Terminal size={11} className="text-[#C6A15B]" />
+                <Terminal size={11} className="text-gold-base" />
                 <span>{currentLang === "ar" ? "دخول الإدارة" : "Admin Login"}</span>
               </button>
             </div>
@@ -115,16 +115,16 @@ export default function Footer({
 
           {/* Newsletter Column */}
           <div className="space-y-4">
-            <h4 className="text-xs uppercase tracking-widest text-[#1F1A17] font-bold">
+            <h4 className="text-xs uppercase tracking-widest text-text-charcoal font-bold">
               {currentLang === "ar" ? "النشرة الإخبارية الفاخرة" : "Market Intelligence"}
             </h4>
-            <p className="text-[11px] leading-relaxed text-[#5E564D] font-bold">
+            <p className="text-[11px] leading-relaxed text-text-secondary font-bold">
               {currentLang === "ar"
                 ? "اشترك لتلقي تقارير سوق الذهب الحرة الأسبوعية وتقلبات الأسعار الاسترشادية مباشرة من دبي."
                 : "Subscribe to receive direct weekly gold bullion intelligence briefs and private wholesale pricing allotments."}
             </p>
             {isSubscribed ? (
-              <div className="p-2.5 bg-[#DCE8DF] text-[#556B5D] border border-[#556B5D]/20 rounded-sm text-[11px] font-bold">
+              <div className="p-2.5 bg-soft-success text-olive-accent border border-olive-accent/20 rounded-sm text-[11px] font-bold">
                 {currentLang === "ar" ? "شكراً لاشتراكك في قائمة النخبة." : "Thank you for joining our private circular."}
               </div>
             ) : (
@@ -135,11 +135,11 @@ export default function Footer({
                   placeholder={currentLang === "ar" ? "بريدك الإلكتروني الراقي" : "Enter executive email..."}
                   value={emailInput}
                   onChange={(e) => setEmailInput(e.target.value)}
-                  className="bg-white border border-[#E8DEC9] focus:border-[#C6A15B] rounded-sm px-3 py-2 text-[#1F1A17] outline-none flex-1 text-[11px] shadow-sm font-sans font-medium"
+                  className="bg-brand-card border border-soft-border focus:border-[#C6A15B] rounded-sm px-3 py-2 text-text-charcoal outline-none flex-1 text-[11px] shadow-sm font-sans font-medium"
                 />
                 <button
                   type="submit"
-                  className="p-2 bg-[#C6A15B] hover:bg-[#A47C36] text-[#1F1A17] hover:text-white transition-colors rounded-sm cursor-pointer shadow-sm"
+                  className="p-2 bg-gold-base hover:bg-gold-dark text-text-charcoal hover:text-white transition-colors rounded-sm cursor-pointer shadow-sm"
                 >
                   <Send size={12} />
                 </button>
@@ -150,11 +150,11 @@ export default function Footer({
           {/* Policies section closes upper grid */}
         </div>
 
-        <div className="space-y-4 pt-4 border-t border-[#E8DEC9]/60">
-          <h4 className="text-xs uppercase tracking-widest text-[#1F1A17] font-bold">
+        <div className="space-y-4 pt-4 border-t border-soft-border/60">
+          <h4 className="text-xs uppercase tracking-widest text-text-charcoal font-bold">
             {currentLang === "ar" ? "السياسات والإفصاحات" : "Policies & Disclosures"}
           </h4>
-          <p className="text-[10px] text-[#5E564D] font-bold leading-relaxed max-w-3xl">
+          <p className="text-[10px] text-text-secondary font-bold leading-relaxed max-w-3xl">
             {currentLang === "ar"
               ? "جميع السياسات القانونية والإفصاحات التنظيمية لمعاملات السبائك المادية."
               : "Legal policies and regulatory disclosures for physical bullion desk transactions."}
@@ -164,7 +164,7 @@ export default function Footer({
               <a
                 key={link.href}
                 href={link.href}
-                className="text-[#5E564D] hover:text-[#A47C36] transition-colors py-1 border-b border-[#E8DEC9]/40 hover:border-[#C6A15B]/40"
+                className="text-text-secondary hover:text-gold-dark transition-colors py-1 border-b border-soft-border/40 hover:border-gold-base/40"
               >
                 {currentLang === "ar" ? link.labelAr : link.labelEn}
               </a>
@@ -186,15 +186,15 @@ export default function Footer({
         </div>
 
         {/* Middle Section - Physical Dubai Location coordinates */}
-        <div className="border-t border-b border-[#E8DEC9] py-8 grid grid-cols-1 md:grid-cols-3 gap-6 text-[11px] items-center">
+        <div className="border-t border-b border-soft-border py-8 grid grid-cols-1 md:grid-cols-3 gap-6 text-[11px] items-center">
           {/* Map address */}
           <div className="flex items-center gap-3">
-            <div className="h-8 w-8 bg-white rounded-full border border-[#E8DEC9] shadow-sm flex items-center justify-center text-[#C6A15B]">
+            <div className="h-8 w-8 bg-brand-card rounded-full border border-soft-border shadow-sm flex items-center justify-center text-gold-base">
               <MapPin size={12} />
             </div>
             <div>
-              <span className="text-[#1F1A17] block font-extrabold">{currentLang === "ar" ? "مقر دبي الرئيسي" : "Dubai Head Office"}</span>
-              <span className="text-[#5E564D] font-bold">
+              <span className="text-text-charcoal block font-extrabold">{currentLang === "ar" ? "مقر دبي الرئيسي" : "Dubai Head Office"}</span>
+              <span className="text-text-secondary font-bold">
                 {currentLang === "ar" 
                   ? (settings?.office_address_ar || "برج الماس، منطقة التداول الحرة، دبي مارينا، دبي، الإمارات العربية المتحدة")
                   : (settings?.office_address_en || "Almas Tower, West Trade Zone, Dubai Marina, Dubai, UAE")}
@@ -204,12 +204,12 @@ export default function Footer({
 
           {/* Trade Phone */}
           <div className="flex items-center gap-3">
-            <div className="h-8 w-8 bg-white rounded-full border border-[#E8DEC9] shadow-sm flex items-center justify-center text-[#C6A15B]">
+            <div className="h-8 w-8 bg-brand-card rounded-full border border-soft-border shadow-sm flex items-center justify-center text-gold-base">
               <Phone size={12} />
             </div>
             <div>
-              <span className="text-[#1F1A17] block font-extrabold">{currentLang === "ar" ? "مكتب التداول الهاتفي" : "Desk Direct Hotline"}</span>
-              <span className="text-[#5E564D] font-bold">
+              <span className="text-text-charcoal block font-extrabold">{currentLang === "ar" ? "مكتب التداول الهاتفي" : "Desk Direct Hotline"}</span>
+              <span className="text-text-secondary font-bold">
                 {settings?.trade_phone || "+971 4 445 8888"} • {settings?.whatsapp_hotline || "+971 55 968 8837"}
               </span>
             </div>
@@ -217,12 +217,12 @@ export default function Footer({
 
           {/* Desk Email */}
           <div className="flex items-center gap-3">
-            <div className="h-8 w-8 bg-white rounded-full border border-[#E8DEC9] shadow-sm flex items-center justify-center text-[#C6A15B]">
+            <div className="h-8 w-8 bg-brand-card rounded-full border border-soft-border shadow-sm flex items-center justify-center text-gold-base">
               <Mail size={12} />
             </div>
             <div>
-              <span className="text-[#1F1A17] block font-extrabold">{currentLang === "ar" ? "الاتصال الإلكتروني" : "Electronic Sourcing"}</span>
-              <span className="text-[#5E564D] font-bold">
+              <span className="text-text-charcoal block font-extrabold">{currentLang === "ar" ? "الاتصال الإلكتروني" : "Electronic Sourcing"}</span>
+              <span className="text-text-secondary font-bold">
                 {settings?.desk_email || "desk@pgruae.com"} • trade@pgruae.com
               </span>
             </div>
@@ -230,38 +230,38 @@ export default function Footer({
         </div>
 
         {/* Lower Section - Regulatory Disclaimer & Trademarks */}
-        <div className="space-y-6 pt-6 border-t border-[#E8DEC9]">
-          <div className="p-4 bg-white border border-[#E8DEC9] shadow-sm rounded-sm text-[10px] leading-relaxed text-[#5E564D] space-y-3 font-bold">
+        <div className="space-y-6 pt-6 border-t border-soft-border">
+          <div className="p-4 bg-brand-card border border-soft-border shadow-sm rounded-sm text-[10px] leading-relaxed text-text-secondary space-y-3 font-bold">
             <p>
-              <strong className="text-[#1F1A17] font-extrabold">English Compliance Wording:</strong><br />
+              <strong className="text-text-charcoal font-extrabold">English Compliance Wording:</strong><br />
               PGR UAE provides indicative precious metals pricing and quote request services for physical bullion inquiries. Prices shown are indicative market references only and may change without notice. Final availability, premiums, VAT/tax treatment, payment, delivery, storage, and settlement terms are confirmed by PGR UAE before any transaction. PGR UAE does not provide financial, investment, tax, or legal advice. Firm quote confirmed by PGR UAE desk. Subject to market movement and compliance review.
             </p>
             <p className="text-right font-bold" style={{ direction: "rtl" }}>
-              <strong className="text-[#1F1A17] font-extrabold">الامتثال القانوني (العربية):</strong><br />
+              <strong className="text-text-charcoal font-extrabold">الامتثال القانوني (العربية):</strong><br />
               توفر PGR UAE أسعاراً إرشادية وخدمة طلب عروض أسعار للاستفسارات المتعلقة بالسبائك والمعادن الثمينة الفعلية. الأسعار المعروضة مؤشرات سوقية فقط وقد تتغير دون إشعار. يتم تأكيد التوفر، الهامش، المعاملة الضريبية، الدفع، التسليم، التخزين، وشروط التسوية من قبل PGR UAE قبل أي عملية. لا تقدم PGR UAE نصائح مالية أو استثمارية أو ضريبية أو قانونية ولا تضمن أداء السوق.
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-[10px] text-[#5E564D] font-bold">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-[10px] text-text-secondary font-bold">
             <div>
               © 2026 PGR UAE Precious Metals & Bullion Quote Desk (pgruae.com). Licensed by Jebel Ali and Dubai Commodities Regulatory Division. All rights reserved.
             </div>
             <div className="flex flex-wrap justify-center sm:justify-end gap-x-3 gap-y-1">
               {LEGAL_POLICY_LINKS.filter((l) => l.group === "core").map((link) => (
-                <a key={link.href} href={link.href} className="hover:text-[#A47C36] transition-colors">
+                <a key={link.href} href={link.href} className="hover:text-gold-dark transition-colors">
                   {currentLang === "ar" ? link.labelAr : link.labelEn}
                 </a>
               ))}
               <span className="hidden sm:inline text-champagne">•</span>
-              <a href="/pricing-disclaimer" className="hover:text-[#A47C36] transition-colors">
+              <a href="/pricing-disclaimer" className="hover:text-gold-dark transition-colors">
                 {currentLang === "ar" ? "إخلاء التسعير" : "Pricing"}
               </a>
               <span className="hidden sm:inline text-champagne">•</span>
-              <a href="/risk-disclosure" className="hover:text-[#A47C36] transition-colors">
+              <a href="/risk-disclosure" className="hover:text-gold-dark transition-colors">
                 {currentLang === "ar" ? "المخاطر" : "Risk"}
               </a>
               <span className="hidden sm:inline text-champagne">•</span>
-              <a href="/sitemap.xml" className="hover:text-[#A47C36] transition-colors">
+              <a href="/sitemap.xml" className="hover:text-gold-dark transition-colors">
                 {currentLang === "ar" ? "خريطة الموقع" : "Sitemap"}
               </a>
             </div>

@@ -7,6 +7,7 @@
 import React from "react";
 import { RefreshCw } from "lucide-react";
 import { LiveMarketRates } from "../types";
+import { getPriceStatusLabel } from "../lib/indicativePricing";
 
 const STRIP_CURRENCIES = ["IQD", "AED", "USD"] as const;
 type StripCurrency = (typeof STRIP_CURRENCIES)[number];
@@ -40,6 +41,9 @@ export default function MarketReferenceStrip({
 
   const goldOz = rates?.gold?.currencies?.[cur]?.ounce;
   const silverOz = rates?.silver?.currencies?.[cur]?.ounce;
+  const sourceStatus = rates?.source_status;
+  const isLiveFeed = sourceStatus === "live" || sourceStatus === "cached";
+  const priceStatusLabel = getPriceStatusLabel(sourceStatus, isAr ? "ar" : "en");
 
   const formatPrice = (value: number) => {
     const maxFrac = cur === "IQD" ? 0 : 2;
@@ -65,8 +69,14 @@ export default function MarketReferenceStrip({
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-5">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-5">
           <div>
-            <p className="text-[10px] font-mono uppercase tracking-[0.24em] text-gold-base font-bold mb-4">
-              {isAr ? "مرجع السوق المباشر" : "Live Market Reference"}
+            <p className="text-[10px] font-mono uppercase tracking-[0.24em] text-gold-base font-bold mb-4 flex flex-wrap items-center gap-2">
+              <span>{isAr ? "مرجع السوق المباشر" : "Live Market Reference"}</span>
+              {isLiveFeed && (
+                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 normal-case tracking-normal text-[9px]">
+                  <span className="desk-live-dot" />
+                  {isAr ? "مباشر · تجريبي" : "Live · trial"}
+                </span>
+              )}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-10">
               <div>
@@ -130,6 +140,9 @@ export default function MarketReferenceStrip({
         </div>
 
         <p className="mt-4 text-[11px] font-sans text-champagne/85 leading-relaxed max-w-4xl border-t border-champagne/10 pt-4">
+          <span className="block mb-1 text-[10px] font-mono uppercase tracking-wider text-champagne/70">
+            {priceStatusLabel}
+          </span>
           {isAr
             ? "مرجع سوقي استرشادي فقط. السعر النهائي والهامش والتوفر وشروط التسليم يؤكدها مكتب PGR UAE."
             : "Market reference only. Final price, premium, availability and delivery terms are confirmed by the PGR UAE desk."}

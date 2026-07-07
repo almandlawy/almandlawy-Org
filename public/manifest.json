@@ -5,7 +5,7 @@
   "start_url": "https://www.pgruae.com/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#FAF9F5",
+  "background_color": "#F7F4ED",
   "theme_color": "#C6A15B",
   "orientation": "portrait-primary",
   "lang": "en",

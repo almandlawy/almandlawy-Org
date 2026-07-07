@@ -158,6 +158,32 @@ body {
   border: 1px solid rgba(189, 195, 199, 0.15);
 }
 
+/* PGR desk UI — shared across public pages */
+.desk-page-shell {
+  @apply min-h-screen bg-brand-bg text-text-charcoal selection:bg-gold-base selection:text-text-charcoal overflow-hidden relative;
+}
+
+.desk-card {
+  @apply bg-brand-card border border-soft-border rounded-lg;
+  box-shadow: 0 8px 32px rgba(31, 26, 23, 0.08), 0 2px 8px rgba(198, 161, 91, 0.06);
+}
+
+.btn-desk-primary {
+  @apply inline-flex items-center justify-center gap-2 px-5 py-3 bg-gold-base hover:bg-gold-dark text-text-charcoal font-mono text-xs font-bold uppercase tracking-widest rounded transition-colors;
+}
+
+.btn-desk-secondary {
+  @apply inline-flex items-center justify-center gap-2 px-5 py-3 bg-panel-dark hover:bg-panel-charcoal text-brand-bg font-mono text-xs font-bold uppercase tracking-widest rounded border border-champagne/30 transition-colors;
+}
+
+.desk-section-label {
+  @apply text-[10px] font-mono uppercase tracking-[0.3em] text-gold-dark font-bold;
+}
+
+.desk-live-dot {
+  @apply h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse;
+}
+
 /* Premium Custom Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;

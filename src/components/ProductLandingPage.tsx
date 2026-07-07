@@ -169,33 +169,33 @@ export default function ProductLandingPage({
   );
 
   return (
-    <div className="bg-[#FAF9F5] py-12" style={{ direction: isAr ? "rtl" : "ltr" }}>
+    <div className="py-12" style={{ direction: isAr ? "rtl" : "ltr" }}>
       <div className="space-y-12">
         
         {/* Category Hero Banner */}
-        <div className="bg-white border border-[#E8DEC9] rounded p-8 md:p-12 shadow-sm space-y-4 relative overflow-hidden">
+        <div className="bg-brand-card border border-soft-border rounded p-8 md:p-12 shadow-sm space-y-4 relative overflow-hidden">
           {/* Subtle gold decoration */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-[#C6A15B]/5 rounded-full blur-2xl pointer-events-none" />
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gold-base/5 rounded-full blur-2xl pointer-events-none" />
           
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FAF9F5] border border-[#E8DEC9]">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#C6A15B] animate-pulse"></span>
-            <span className="text-[10px] uppercase tracking-[0.2em] text-[#5E564D] font-mono">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-bg border border-soft-border">
+            <span className="h-1.5 w-1.5 rounded-full bg-gold-base animate-pulse"></span>
+            <span className="text-[10px] uppercase tracking-[0.2em] text-text-secondary font-mono">
               {isAr ? "كتالوج السبائك الفاخرة" : "Premium Bullion Catalog"}
             </span>
           </div>
           
-          <h1 className="text-[#1F1A17] font-serif text-3xl md:text-4xl font-medium tracking-wide">
+          <h1 className="text-text-charcoal font-serif text-3xl md:text-4xl font-medium tracking-wide">
             {isAr ? meta.title_ar : meta.title_en}
           </h1>
-          <p className="text-[#A47C36] text-xs font-mono tracking-widest uppercase font-bold">
+          <p className="text-gold-dark text-xs font-mono tracking-widest uppercase font-bold">
             {isAr ? meta.subtitle_ar : meta.subtitle_en}
           </p>
-          <p className="text-[#5E564D] text-xs md:text-sm leading-relaxed max-w-4xl pt-1">
+          <p className="text-text-secondary text-xs md:text-sm leading-relaxed max-w-4xl pt-1">
             {isAr ? meta.description_ar : meta.description_en}
           </p>
 
           {(categoryPath === "/gold-bars" || categoryPath === "/silver-bars") && (
-            <div className="pt-6 border-t border-[#E8DEC9]/60 mt-6">
+            <div className="pt-6 border-t border-soft-border/60 mt-6">
               <DeskRichContent
                 currentLang={currentLang}
                 category={categoryPath === "/gold-bars" ? "gold_bars" : "silver_bars"}
@@ -217,12 +217,12 @@ export default function ProductLandingPage({
           )}
 
           <div className="pt-4 flex flex-wrap gap-4 text-[10px] uppercase tracking-wider font-mono">
-            <span className="flex items-center gap-1.5 text-[#556B5D] font-bold">
+            <span className="flex items-center gap-1.5 text-olive-accent font-bold">
               <Shield size={12} />
               {isAr ? "سبائك معتمدة ١٠٠٪" : "100% Certified Purity"}
             </span>
-            <span className="text-[#E8DEC9] hidden sm:inline">|</span>
-            <span className="flex items-center gap-1.5 text-[#A47C36] font-bold">
+            <span className="text-champagne hidden sm:inline">|</span>
+            <span className="flex items-center gap-1.5 text-gold-dark font-bold">
               <Award size={12} />
               {isAr ? "أسعار مرتبطة بالبورصة المباشرة" : "Rates Linked to Live Spot"}
             </span>
@@ -232,27 +232,27 @@ export default function ProductLandingPage({
         {/* Weight formats — compact desk table for gold/silver */}
         {filteredProducts.length > 0 ? (
           <div className="space-y-6">
-            <div className="flex justify-between items-center border-b border-[#E8DEC9] pb-3">
-              <h2 className="text-[#1F1A17] uppercase tracking-wider font-serif text-base font-medium">
+            <div className="flex justify-between items-center border-b border-soft-border pb-3">
+              <h2 className="text-text-charcoal uppercase tracking-wider font-serif text-base font-medium">
                 {isAr ? "الأوزان — اطلب عرض سعر من المكتب" : "Weights — Request Desk Quote"}
               </h2>
             </div>
 
             {isDeskCategory ? (
-              <div className="overflow-x-auto rounded-lg border border-[#E8DEC9] bg-white">
+              <div className="overflow-x-auto rounded-lg border border-soft-border bg-brand-card">
                 <table className="w-full text-left text-xs">
                   <thead>
-                    <tr className="border-b border-[#E8DEC9] bg-[#FAF9F5]">
-                      <th className="px-4 py-3 font-mono uppercase tracking-wider text-[#5E564D]">{isAr ? "الوزن" : "Weight"}</th>
-                      <th className="px-4 py-3 font-mono uppercase tracking-wider text-[#5E564D]">{isAr ? "النقاوة" : "Purity"}</th>
-                      <th className="px-4 py-3 font-mono uppercase tracking-wider text-[#5E564D]">{isAr ? "الإجراء" : "Action"}</th>
+                    <tr className="border-b border-soft-border bg-brand-bg">
+                      <th className="px-4 py-3 font-mono uppercase tracking-wider text-text-secondary">{isAr ? "الوزن" : "Weight"}</th>
+                      <th className="px-4 py-3 font-mono uppercase tracking-wider text-text-secondary">{isAr ? "النقاوة" : "Purity"}</th>
+                      <th className="px-4 py-3 font-mono uppercase tracking-wider text-text-secondary">{isAr ? "الإجراء" : "Action"}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredProducts.map((prod) => (
-                      <tr key={prod.id} className="border-b border-[#E8DEC9]/60 last:border-0">
-                        <td className="px-4 py-3 font-medium text-[#1F1A17]">{prod.weight_label}</td>
-                        <td className="px-4 py-3 text-[#5E564D]">{prod.purity}</td>
+                      <tr key={prod.id} className="border-b border-soft-border/60 last:border-0">
+                        <td className="px-4 py-3 font-medium text-text-charcoal">{prod.weight_label}</td>
+                        <td className="px-4 py-3 text-text-secondary">{prod.purity}</td>
                         <td className="px-4 py-3">
                           <button
                             type="button"
@@ -270,7 +270,7 @@ export default function ProductLandingPage({
                     ))}
                   </tbody>
                 </table>
-                <p className="px-4 py-3 text-[10px] font-mono text-[#5E564D] border-t border-[#E8DEC9]">
+                <p className="px-4 py-3 text-[10px] font-mono text-text-secondary border-t border-soft-border">
                   {isAr
                     ? "الأسعار استرشادية فقط — عرض السعر النهائي من المكتب."
                     : "Indicative market reference only — final quote confirmed by desk."}
@@ -283,15 +283,15 @@ export default function ProductLandingPage({
                 return (
                   <div 
                     key={prod.id}
-                    className="bg-white border border-[#E8DEC9] hover:border-[#C6A15B] rounded p-6 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between relative group"
+                    className="bg-brand-card border border-soft-border hover:border-gold-base rounded p-6 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between relative group"
                   >
                     <div className="space-y-4">
                       {/* Metal tag, purity and weight */}
                       <div className="flex justify-between items-start">
-                        <span className="text-[#5E564D] text-[10px] uppercase tracking-widest font-mono font-bold bg-[#FAF9F5] px-2.5 py-1 rounded border border-[#E8DEC9]">
+                        <span className="text-text-secondary text-[10px] uppercase tracking-widest font-mono font-bold bg-brand-bg px-2.5 py-1 rounded border border-soft-border">
                           {prod.weight_label}
                         </span>
-                        <span className="text-[#A47C36] text-[10px] uppercase tracking-wider font-mono font-bold bg-[#FAF9F5] px-2 py-0.5 rounded border border-[#E8DEC9]/50">
+                        <span className="text-gold-dark text-[10px] uppercase tracking-wider font-mono font-bold bg-brand-bg px-2 py-0.5 rounded border border-soft-border/50">
                           {prod.purity}
                         </span>
                       </div>
@@ -299,7 +299,7 @@ export default function ProductLandingPage({
                       {/* Product image (optional, styled beautifully) */}
                       <div 
                         onClick={() => onOpenProductDetail(prod)}
-                        className="h-40 w-full rounded bg-[#FAF9F5] border border-[#E8DEC9]/50 overflow-hidden flex items-center justify-center p-4 cursor-pointer relative"
+                        className="h-40 w-full rounded bg-brand-bg border border-soft-border/50 overflow-hidden flex items-center justify-center p-4 cursor-pointer relative"
                       >
                         <img
                           src={getProductImage(prod)}
@@ -316,37 +316,37 @@ export default function ProductLandingPage({
 
                       {/* Title & Metadata */}
                       <div onClick={() => onOpenProductDetail(prod)} className="space-y-1 cursor-pointer">
-                        <div className="text-[10px] uppercase font-mono text-[#A47C36] font-bold tracking-wider">
+                        <div className="text-[10px] uppercase font-mono text-gold-dark font-bold tracking-wider">
                           {prod.manufacturer} • <span className="capitalize">{prod.technical_specs.metal === "gold" ? (isAr ? "ذهب" : "Gold") : (isAr ? "فضة" : "Silver")}</span>
                         </div>
-                        <h3 className="text-[#1F1A17] text-sm font-serif font-medium leading-snug group-hover:text-[#A47C36] transition-colors">
+                        <h3 className="text-text-charcoal text-sm font-serif font-medium leading-snug group-hover:text-gold-dark transition-colors">
                           {isAr ? prod.name_ar : prod.name_en}
                         </h3>
-                        <p className="text-[#5E564D] text-[11px] leading-relaxed line-clamp-2 font-sans">
+                        <p className="text-text-secondary text-[11px] leading-relaxed line-clamp-2 font-sans">
                           {isAr ? prod.description_ar : prod.description_en}
                         </p>
                       </div>
 
                       {/* Pricing section with required compliance wording */}
-                      <div className="pt-3 border-t border-[#E8DEC9]/60 space-y-1.5">
+                      <div className="pt-3 border-t border-soft-border/60 space-y-1.5">
                         <div className="flex justify-between items-baseline">
-                          <span className="text-[10px] font-mono text-[#5E564D]">
+                          <span className="text-[10px] font-mono text-text-secondary">
                             {isAr ? "السعر الاسترشادي المباشر:" : "Indicative Live Price:"}
                           </span>
                           {livePrice ? (
-                            <span className="text-sm font-mono font-bold text-[#A47C36]">
-                              {livePrice} <span className="text-[10px] text-[#5E564D]">{selectedCurrency}</span>
+                            <span className="text-sm font-mono font-bold text-gold-dark">
+                              {livePrice} <span className="text-[10px] text-text-secondary">{selectedCurrency}</span>
                             </span>
                           ) : (
-                            <span className="text-[10px] font-mono text-[#A47C36] font-bold">
+                            <span className="text-[10px] font-mono text-gold-dark font-bold">
                               {isAr ? "يتطلب تسعير فوري" : "Quote on Request"}
                             </span>
                           )}
                         </div>
                         
                         {/* Final Quote Confirmed wording mandated by compliance QA */}
-                        <div className="bg-[#FAF9F5] border border-[#E8DEC9] px-2 py-1.5 rounded text-[9px] font-mono text-[#556B5D] leading-tight flex items-start gap-1">
-                          <CheckCircle size={10} className="shrink-0 mt-0.5 text-[#556B5D]" />
+                        <div className="bg-brand-bg border border-soft-border px-2 py-1.5 rounded text-[9px] font-mono text-olive-accent leading-tight flex items-start gap-1">
+                          <CheckCircle size={10} className="shrink-0 mt-0.5 text-olive-accent" />
                           <span>
                             {isAr 
                               ? "السعر الاسترشادي خاضع للتأكيد النهائي من مكتب تداول بي جي آر الإمارات."
@@ -357,7 +357,7 @@ export default function ProductLandingPage({
                     </div>
 
                     {/* Request Quote Buttons */}
-                    <div className="pt-4 mt-4 border-t border-[#E8DEC9]/60 flex flex-col sm:flex-row gap-2">
+                    <div className="pt-4 mt-4 border-t border-soft-border/60 flex flex-col sm:flex-row gap-2">
                       <button 
                         onClick={() => {
                           if (onOpenQuote) {
@@ -366,7 +366,7 @@ export default function ProductLandingPage({
                             onNavigate("/request-quote");
                           }
                         }}
-                        className="flex-1 py-2 px-2.5 bg-[#C6A15B] hover:bg-[#A47C36] text-[#1F1A17] hover:text-white font-mono text-[10px] font-bold uppercase tracking-wider rounded transition-colors text-center cursor-pointer flex items-center justify-center gap-1 shadow-sm"
+                        className="flex-1 py-2 px-2.5 bg-gold-base hover:bg-gold-dark text-text-charcoal hover:text-white font-mono text-[10px] font-bold uppercase tracking-wider rounded transition-colors text-center cursor-pointer flex items-center justify-center gap-1 shadow-sm"
                       >
                         <FileText size={11} />
                         <span>{isAr ? "طلب تسعير مؤكد" : "Request Firm Quote"}</span>
@@ -377,9 +377,9 @@ export default function ProductLandingPage({
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={() => trackWhatsAppClick(`product_landing_${prod.id}`)}
-                        className="flex-1 py-2 px-2.5 bg-white hover:bg-[#FAF9F5] border border-[#E8DEC9] text-[#1F1A17] font-mono text-[10px] font-bold uppercase tracking-wider rounded transition-colors text-center flex items-center justify-center gap-1"
+                        className="flex-1 py-2 px-2.5 bg-brand-card hover:bg-brand-bg border border-soft-border text-text-charcoal font-mono text-[10px] font-bold uppercase tracking-wider rounded transition-colors text-center flex items-center justify-center gap-1"
                       >
-                        <Phone size={11} className="text-[#556B5D]" />
+                        <Phone size={11} className="text-olive-accent" />
                         <span>{isAr ? "طلب واتساب" : "WhatsApp Desk"}</span>
                       </a>
                     </div>
@@ -391,18 +391,18 @@ export default function ProductLandingPage({
           </div>
         ) : (
           /* Custom/Bespoke Inquiry View */
-          <div className="bg-white border border-[#E8DEC9] rounded-lg p-8 md:p-12 text-center space-y-6 max-w-xl mx-auto shadow-sm">
-            <h3 className="text-[#1F1A17] text-base font-serif font-medium uppercase tracking-wide">
+          <div className="bg-brand-card border border-soft-border rounded-lg p-8 md:p-12 text-center space-y-6 max-w-xl mx-auto shadow-sm">
+            <h3 className="text-text-charcoal text-base font-serif font-medium uppercase tracking-wide">
               {isAr ? "طلب تخصيص سبائك أو صهر مخصص" : "Bespoke Refining Custom Quote"}
             </h3>
-            <p className="text-[#5E564D] text-xs leading-relaxed font-sans">
+            <p className="text-text-secondary text-xs leading-relaxed font-sans">
               {isAr
                 ? "هل تحتاج لسبائك بأوزان مخصصة أو طلبيات تجارية كبيرة؟ يتخصص مكتبنا في صياغة المعادن وصهرها بالتعاون مع مصافي LBMA لتأمين أوزان الخزانة وحبوب الذهب والفضة الفاخرة."
                 : "Looking for customized weights, large wholesale volumes, or industrial grain format? Submit a custom quote request, and our desk will secure tailored pricing and refiner availability."}
             </p>
             <button
               onClick={() => onNavigate("/request-quote")}
-              className="px-8 py-3.5 bg-[#C6A15B] hover:bg-[#A47C36] text-[#1F1A17] hover:text-white font-mono font-bold uppercase tracking-widest rounded shadow transition-all duration-300 cursor-pointer text-[10px]"
+              className="px-8 py-3.5 bg-gold-base hover:bg-gold-dark text-text-charcoal hover:text-white font-mono font-bold uppercase tracking-widest rounded shadow transition-all duration-300 cursor-pointer text-[10px]"
             >
               {isAr ? "تعبئة نموذج الطلبات المخصصة" : "Open Custom Inquiry Form"}
             </button>
@@ -414,20 +414,20 @@ export default function ProductLandingPage({
         {/* FAQs — skip for gold/silver (handled in DeskRichContent) */}
         {!isDeskCategory && (
         <div className="space-y-6">
-          <div className="border-b border-[#E8DEC9] pb-3">
-            <h3 className="text-[#1F1A17] uppercase tracking-wider font-serif text-base font-medium flex items-center gap-2">
-              <HelpCircle size={16} className="text-[#A47C36]" />
+          <div className="border-b border-soft-border pb-3">
+            <h3 className="text-text-charcoal uppercase tracking-wider font-serif text-base font-medium flex items-center gap-2">
+              <HelpCircle size={16} className="text-gold-dark" />
               {isAr ? "الأسئلة الشائعة حول الكتالوج" : "Category FAQ & Guidelines"}
             </h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {meta.faqs.map((faq, i) => (
-              <div key={i} className="bg-white border border-[#E8DEC9] p-5 rounded space-y-2 shadow-sm">
-                <h4 className="text-[#1F1A17] font-serif font-medium text-xs leading-snug">
+              <div key={i} className="bg-brand-card border border-soft-border p-5 rounded space-y-2 shadow-sm">
+                <h4 className="text-text-charcoal font-serif font-medium text-xs leading-snug">
                   {isAr ? faq.q_ar : faq.q_en}
                 </h4>
-                <p className="text-[#5E564D] font-sans leading-relaxed text-[11px] pt-1">
+                <p className="text-text-secondary font-sans leading-relaxed text-[11px] pt-1">
                   {isAr ? faq.a_ar : faq.a_en}
                 </p>
               </div>
@@ -437,12 +437,12 @@ export default function ProductLandingPage({
         )}
 
         {/* CTA Banner */}
-        <div className="bg-[#F7F4ED] border border-[#E8DEC9] p-8 rounded flex flex-col md:flex-row justify-between items-center gap-6 shadow-sm">
+        <div className="bg-brand-bg border border-soft-border p-8 rounded flex flex-col md:flex-row justify-between items-center gap-6 shadow-sm">
           <div className="space-y-2 text-center md:text-left">
-            <h4 className="text-[#1F1A17] font-serif text-base font-medium uppercase">
+            <h4 className="text-text-charcoal font-serif text-base font-medium uppercase">
               {isAr ? "هل ترغب في الحصول على تسعير نهائي؟" : "Ready to Request a Firm Quote?"}
             </h4>
-            <p className="text-[#5E564D] text-[11px] max-w-2xl font-sans leading-normal">
+            <p className="text-text-secondary text-[11px] max-w-2xl font-sans leading-normal">
               {isAr
                 ? "يستغرق تقديم الطلب أقل من دقيقتين. بعد تقديم النموذج، سيتصل بك فريقنا لتوجيهك بخطوات مراجعة الهوية وتلقي السعر المؤكد."
                 : "Submit your requirements. PGR UAE will review stock levels, spot values, and direct you with our simple digital KYC workflow to issue a firm desk quote."}
@@ -457,7 +457,7 @@ export default function ProductLandingPage({
                 onNavigate("/request-quote");
               }
             }}
-            className="w-full md:w-auto px-8 py-3.5 bg-[#1F1A17] hover:bg-[#A47C36] text-white hover:text-white font-mono font-bold uppercase tracking-widest rounded shadow transition-all duration-300 hover:scale-[1.01] shrink-0 text-[10px] cursor-pointer"
+            className="w-full md:w-auto px-8 py-3.5 bg-panel-dark hover:bg-gold-dark text-white hover:text-white font-mono font-bold uppercase tracking-widest rounded shadow transition-all duration-300 hover:scale-[1.01] shrink-0 text-[10px] cursor-pointer"
           >
             {isAr ? "طلب تسعير مؤكد الآن" : "Request Firm Quote"}
           </button>

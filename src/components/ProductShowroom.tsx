@@ -16,6 +16,7 @@ import {
   calculateIndicativePrice,
   canShowIndicativePrice,
   formatIndicativePrice,
+  getPriceStatusLabel,
 } from "../lib/indicativePricing";
 import { trackWhatsAppClick } from "../lib/gtag";
 
@@ -362,6 +363,10 @@ export default function ProductShowroom({
                   : "Final quote confirmed by PGR UAE desk."}
               </p>
             </div>
+
+            <p className="text-[10px] font-mono uppercase tracking-wider text-text-secondary">
+              {getPriceStatusLabel(rates?.source_status, currentLang)}
+            </p>
 
             <PricingDisclaimer currentLang={currentLang} compact />
 
