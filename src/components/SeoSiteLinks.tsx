@@ -31,10 +31,14 @@ const SITE_LINKS: { href: string; labelEn: string; labelAr: string }[] = [
   { href: "/compliance", labelEn: "Compliance", labelAr: "الامتثال" },
   { href: "/kyc-aml-policy", labelEn: "KYC & AML", labelAr: "اعرف عميلك" },
   { href: "/pricing-disclaimer", labelEn: "Pricing Disclaimer", labelAr: "إخلاء التسعير" },
+  { href: "/refund-cancellation-policy", labelEn: "Refund & Cancellation", labelAr: "الاسترداد والإلغاء" },
   { href: "/terms", labelEn: "Terms", labelAr: "الشروط" },
   { href: "/privacy-policy", labelEn: "Privacy", labelAr: "الخصوصية" },
   { href: "/delivery-collection-policy", labelEn: "Delivery Policy", labelAr: "سياسة التوصيل" },
+  { href: "/allocated-storage-terms", labelEn: "Storage Terms", labelAr: "شروط التخزين" },
+  { href: "/sell-back-policy", labelEn: "Sell-Back Policy", labelAr: "سياسة إعادة الشراء" },
   { href: "/risk-disclosure", labelEn: "Risk Disclosure", labelAr: "إفصاح المخاطر" },
+  { href: "/cookie-policy", labelEn: "Cookie Policy", labelAr: "سياسة ملفات الارتباط" },
 ];
 
 interface SeoSiteLinksProps {

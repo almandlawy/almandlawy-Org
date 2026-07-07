@@ -1,11 +1,12 @@
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
- * Editorial split hero — cream panel + cinematic PALM Silver video.
+ * Editorial split hero — brand logo, desk H1, featured PALM Silver, cinematic video.
  */
 
 import React, { useEffect, useRef, useState } from "react";
 import { ArrowRight, ArrowLeft, FileText, Phone, Shield, Truck } from "lucide-react";
+import BrandLogo from "./BrandLogo";
 import { buildWhatsAppLink } from "../lib/whatsapp";
 import { trackWhatsAppClick } from "../lib/gtag";
 
@@ -120,50 +121,71 @@ export default function Hero({
             aria-hidden
           />
 
-          <div className="flex flex-wrap items-center gap-2 mb-5">
-            <span className="px-3 py-1 rounded-full bg-brand-card border border-champagne text-[10px] font-mono uppercase tracking-[0.2em] text-gold-dark font-bold">
-              PGR UAE
-            </span>
-            <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-secondary">
-              {isAr ? "دبي → العراق" : "Dubai → Iraq"}
-            </span>
+          <div className="mb-6">
+            <BrandLogo variant="emblem" className="h-12 w-12 md:h-14 md:w-14 mb-4" />
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="px-3 py-1 rounded-full bg-brand-card border border-champagne text-[10px] font-mono uppercase tracking-[0.2em] text-gold-dark font-bold">
+                {isAr ? "دبي → العراق" : "Dubai → Iraq"}
+              </span>
+              <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-secondary">
+                {isAr ? "مكتب عروض السبائك" : "Bullion Quote Desk"}
+              </span>
+            </div>
           </div>
 
-          <p className="text-[11px] font-mono uppercase tracking-[0.3em] text-olive-accent font-bold mb-2">
-            PALM SILVER
-          </p>
-
-          <h1 className="text-[1.85rem] sm:text-4xl lg:text-[2.65rem] xl:text-[2.85rem] font-serif text-text-charcoal leading-[1.12] font-medium max-w-lg">
+          <h1 className="text-[1.65rem] sm:text-3xl lg:text-[2.35rem] xl:text-[2.5rem] font-serif text-text-charcoal leading-[1.15] font-medium max-w-xl">
             {isAr ? (
               <>
-                سبيكة فضة <span className="text-gold-dark">PALM</span>
+                عروض أسعار سبائك الذهب والفضة
                 <br />
-                ١ كيلو جرام
+                <span className="text-gold-dark">من دبي إلى العراق</span>
               </>
             ) : (
               <>
-                Palm Silver
+                Gold &amp; Silver Bullion
                 <br />
-                <span className="text-gold-dark">1kg Bar</span>
+                <span className="text-gold-dark">Quote Desk Dubai → Iraq</span>
               </>
             )}
           </h1>
 
-          <p className="mt-4 text-sm sm:text-[15px] text-text-secondary leading-relaxed max-w-md font-sans">
+          <p className="mt-4 text-sm sm:text-[15px] text-text-secondary leading-relaxed max-w-lg font-sans">
             {isAr
-              ? "فضة استثمارية 999.9 من مصفاة الإمارات — معايير سبائك احترافية للمشترين في العراق."
-              : "999.9 investment-grade silver from UAE refinery — professional bullion standards for Iraq buyers."}
+              ? "مرجع سوقي استرشادي فقط. عرض السعر النهائي يؤكده مكتب PGR UAE بعد مراجعة الامتثال."
+              : "Indicative market reference only. Final quote confirmed by PGR UAE desk after compliance review."}
           </p>
 
-          <div className="mt-5 flex flex-wrap gap-2">
-            {SPEC_CHIPS.map((chip) => (
-              <span
-                key={chip.en}
-                className="px-3 py-1.5 rounded-md border border-champagne/80 bg-brand-card/80 text-[10px] font-mono uppercase tracking-wider text-text-secondary"
-              >
-                {isAr ? chip.ar : chip.en}
-              </span>
-            ))}
+          {/* Featured product — not the page H1 */}
+          <div className="mt-6 rounded-lg border border-champagne/80 bg-brand-card/60 p-4 max-w-lg">
+            <p className="text-[10px] font-mono uppercase tracking-[0.28em] text-olive-accent font-bold mb-1">
+              {isAr ? "المنتج المميز" : "Featured Product"}
+            </p>
+            <h2 className="text-lg sm:text-xl font-serif text-text-charcoal font-medium">
+              {isAr ? (
+                <>
+                  سبيكة فضة <span className="text-gold-dark">PALM</span> · ١ كيلو
+                </>
+              ) : (
+                <>
+                  <span className="text-gold-dark">PALM</span> Silver · 1kg Bar
+                </>
+              )}
+            </h2>
+            <p className="mt-1 text-xs text-text-secondary">
+              {isAr
+                ? "فضة استثمارية 999.9 — الأكثر طلباً لتوصيل العراق."
+                : "999.9 investment-grade silver — top-requested weight for Iraq delivery."}
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {SPEC_CHIPS.map((chip) => (
+                <span
+                  key={chip.en}
+                  className="px-2.5 py-1 rounded-md border border-champagne/60 bg-brand-bg text-[9px] font-mono uppercase tracking-wider text-text-secondary"
+                >
+                  {isAr ? chip.ar : chip.en}
+                </span>
+              ))}
+            </div>
           </div>
 
           <div className="mt-7 flex flex-col sm:flex-row gap-3 max-w-md">
@@ -172,7 +194,7 @@ export default function Hero({
               onClick={onOpenQuote}
               className="flex-1 min-h-[48px] px-6 py-3.5 bg-gold-base hover:bg-gold-dark text-text-charcoal font-mono text-[11px] font-bold uppercase tracking-widest rounded-md shadow-premium transition-colors"
             >
-              {isAr ? "طلب التوفر" : "Request Availability"}
+              {isAr ? "طلب عرض سعر معتمد" : "Request Firm Quote"}
             </button>
             <a
               href={waHref}
@@ -204,9 +226,7 @@ export default function Hero({
             <button
               type="button"
               onClick={() =>
-                onScrollToIraqOffers
-                  ? onScrollToIraqOffers()
-                  : onScrollToCatalog("silver_bars")
+                onScrollToIraqOffers ? onScrollToIraqOffers() : onScrollToCatalog("silver_bars")
               }
               className="inline-flex items-center gap-1.5 text-gold-dark hover:text-gold-base transition-colors font-bold"
             >
@@ -272,6 +292,12 @@ export default function Hero({
             aria-hidden
           />
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#141816]/55 via-transparent to-[#141816]/10" aria-hidden />
+
+          <div className={`absolute top-5 sm:top-7 ${isAr ? "right-5 sm:right-7" : "left-5 sm:left-7"}`}>
+            <div className="rounded-md border border-white/10 bg-black/50 backdrop-blur-md p-2 shadow-lg">
+              <BrandLogo variant="emblem" className="h-10 w-10" />
+            </div>
+          </div>
 
           <div className={`absolute bottom-5 sm:bottom-7 ${isAr ? "left-5 sm:left-7" : "right-5 sm:right-7"}`}>
             <div className="rounded-md border border-white/15 bg-black/45 backdrop-blur-md px-4 py-2.5 shadow-lg">

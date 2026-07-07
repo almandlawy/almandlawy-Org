@@ -198,6 +198,30 @@ export const PUBLIC_PAGES = [
     changefreq: "yearly"
   },
   {
+    path: "/cookie-policy",
+    title: "Cookie Policy | PGR UAE",
+    desc: "Cookie and tracking policy for the PGR UAE bullion quote desk website.",
+    h1: "Cookie Policy",
+    priority: "0.4",
+    changefreq: "yearly"
+  },
+  {
+    path: "/allocated-storage-terms",
+    title: "Allocated Storage Terms | PGR UAE",
+    desc: "Terms for allocated physical bullion storage with PGR UAE. Subject to compliance review.",
+    h1: "Allocated Storage Terms",
+    priority: "0.4",
+    changefreq: "yearly"
+  },
+  {
+    path: "/sell-back-policy",
+    title: "Sell-Back Policy | PGR UAE",
+    desc: "Sell-back policy for physical gold and silver desk inquiries. Subject to compliance review.",
+    h1: "Sell-Back Policy",
+    priority: "0.4",
+    changefreq: "yearly"
+  },
+  {
     path: "/buy-gold-bars-dubai",
     title: "Buy Gold Bars in Dubai | PGR UAE Bullion Desk",
     desc: "Request physical gold bars in Dubai from PGR UAE. Indicative market reference. Desk-confirmed quote.",

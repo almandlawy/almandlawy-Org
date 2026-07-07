@@ -205,6 +205,30 @@ export const PUBLIC_ROUTES: Record<string, RouteSeo> = {
     h1En: "Risk Disclosure",
     h1Ar: "الإفصاح عن المخاطر"
   },
+  "/cookie-policy": {
+    titleEn: "Cookie Policy | PGR UAE",
+    titleAr: "سياسة ملفات الارتباط | PGR UAE",
+    descEn: "Cookie and tracking policy for the PGR UAE bullion quote desk website.",
+    descAr: "سياسة ملفات الارتباط والتتبع لموقع مكتب عروض أسعار السبائك PGR UAE.",
+    h1En: "Cookie Policy",
+    h1Ar: "سياسة ملفات الارتباط"
+  },
+  "/allocated-storage-terms": {
+    titleEn: "Allocated Storage Terms | PGR UAE",
+    titleAr: "شروط التخزين المخصص | PGR UAE",
+    descEn: "Terms for allocated physical bullion storage with PGR UAE. Subject to compliance review.",
+    descAr: "شروط التخزين المخصص للسبائك المادية مع PGR UAE. خاضعة لمراجعة الامتثال.",
+    h1En: "Allocated Storage Terms",
+    h1Ar: "شروط التخزين المخصص"
+  },
+  "/sell-back-policy": {
+    titleEn: "Sell-Back Policy | PGR UAE",
+    titleAr: "سياسة إعادة الشراء | PGR UAE",
+    descEn: "Sell-back policy for physical gold and silver desk inquiries. Subject to compliance review.",
+    descAr: "سياسة إعادة الشراء لاستفسارات الذهب والفضة المادي. خاضعة لمراجعة الامتثال.",
+    h1En: "Sell-Back Policy",
+    h1Ar: "سياسة إعادة الشراء"
+  },
   "/buy-gold-bars-dubai": {
     titleEn: "Buy Gold Bars in Dubai | PGR UAE Bullion Desk",
     titleAr: "شراء سبائك الذهب في دبي | PGR UAE",
@@ -332,6 +356,9 @@ export const SITEMAP_PATHS = [
   "/refund-cancellation-policy",
   "/delivery-collection-policy",
   "/risk-disclosure",
+  "/cookie-policy",
+  "/allocated-storage-terms",
+  "/sell-back-policy",
   "/buy-gold-bars-dubai",
   "/buy-silver-bars-dubai",
   "/gold-rate-dubai-today",

@@ -7,6 +7,7 @@ import React, { useState, useEffect } from "react";
 import { Send, MapPin, Phone, Mail, ShieldAlert, Award, Globe, MessageSquare, ShieldCheck, Terminal } from "lucide-react";
 import { dbService } from "../lib/supabase";
 import BrandLogo from "./BrandLogo";
+import { LEGAL_POLICY_LINKS } from "../lib/legalLinks";
 
 interface FooterProps {
   currentLang: "en" | "ar";
@@ -56,7 +57,7 @@ export default function Footer({
       <div className="max-w-7xl mx-auto px-4 md:px-8 space-y-16">
         
         {/* Upper Grid - Branding, Navigation, Newsletter */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
           
           {/* Corporate Profile Column */}
           <div className="space-y-4">
@@ -109,26 +110,6 @@ export default function Footer({
             </ul>
           </div>
 
-          {/* Secure Logistic Terms Column */}
-          <div className="space-y-4">
-            <h4 className="text-xs uppercase tracking-widest text-[#1F1A17] font-bold">
-              {currentLang === "ar" ? "اللوائح والسياسات والامتثال" : "Compliance, Policies & Trust"}
-            </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-x-2 gap-y-1.5 text-[11px] text-[#5E564D] font-bold">
-              <button onClick={() => onOpenLegalDoc("terms")} className="hover:text-[#A47C36] transition-colors cursor-pointer text-left">{currentLang === "ar" ? "شروط الخدمة والأحكام" : "Terms of Service"}</button>
-              <button onClick={() => onOpenLegalDoc("privacy")} className="hover:text-[#A47C36] transition-colors cursor-pointer text-left">{currentLang === "ar" ? "سياسة الخصوصية" : "Privacy Policy"}</button>
-              <button onClick={() => onOpenLegalDoc("aml")} className="hover:text-[#A47C36] transition-colors cursor-pointer text-left">{currentLang === "ar" ? "سياسة الامتثال ومكافحة غسيل الأموال" : "KYC & AML Policy"}</button>
-              <button onClick={() => onOpenLegalDoc("pricing")} className="hover:text-[#A47C36] transition-colors cursor-pointer text-left">{currentLang === "ar" ? "إخلاء مسؤولية الأسعار" : "Pricing Disclaimer"}</button>
-              <button onClick={() => onOpenLegalDoc("refund")} className="hover:text-[#A47C36] transition-colors cursor-pointer text-left">{currentLang === "ar" ? "سياسة الإلغاء والاسترداد" : "Refund & Cancellation"}</button>
-              <button onClick={() => onOpenLegalDoc("delivery")} className="hover:text-[#A47C36] transition-colors cursor-pointer text-left">{currentLang === "ar" ? "سياسة التوصيل والاستلام" : "Delivery & Collection"}</button>
-              <button onClick={() => onOpenLegalDoc("storage")} className="hover:text-[#A47C36] transition-colors cursor-pointer text-left">{currentLang === "ar" ? "شروط التخزين المخصص" : "Allocated Storage Terms"}</button>
-              <button onClick={() => onOpenLegalDoc("sellback")} className="hover:text-[#A47C36] transition-colors cursor-pointer text-left">{currentLang === "ar" ? "سياسة إعادة الشراء" : "Sell-Back Quote Policy"}</button>
-              <button onClick={() => onOpenLegalDoc("risk")} className="hover:text-[#A47C36] transition-colors cursor-pointer text-left">{currentLang === "ar" ? "الإفصاح عن المخاطر" : "Risk Disclosure"}</button>
-              <button onClick={() => onOpenLegalDoc("cookie")} className="hover:text-[#A47C36] transition-colors cursor-pointer text-left">{currentLang === "ar" ? "سياسة ملفات الارتباط" : "Cookie Policy"}</button>
-              <button onClick={() => onOpenLegalDoc("compliance")} className="hover:text-[#A47C36] transition-colors cursor-pointer text-left font-bold text-[#A47C36]">{currentLang === "ar" ? "الامتثال والشفافية" : "Compliance & Trust"}</button>
-            </div>
-          </div>
-
           {/* Newsletter Column */}
           <div className="space-y-4">
             <h4 className="text-xs uppercase tracking-widest text-[#1F1A17] font-bold">
@@ -163,6 +144,42 @@ export default function Footer({
             )}
           </div>
 
+          {/* Policies section closes upper grid */}
+        </div>
+
+        <div className="space-y-4 pt-4 border-t border-[#E8DEC9]/60">
+          <h4 className="text-xs uppercase tracking-widest text-[#1F1A17] font-bold">
+            {currentLang === "ar" ? "السياسات والإفصاحات" : "Policies & Disclosures"}
+          </h4>
+          <p className="text-[10px] text-[#5E564D] font-bold leading-relaxed max-w-3xl">
+            {currentLang === "ar"
+              ? "جميع السياسات القانونية والإفصاحات التنظيمية لمعاملات السبائك المادية."
+              : "Legal policies and regulatory disclosures for physical bullion desk transactions."}
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-2 text-[11px] font-bold">
+            {LEGAL_POLICY_LINKS.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                className="text-[#5E564D] hover:text-[#A47C36] transition-colors py-1 border-b border-[#E8DEC9]/40 hover:border-[#C6A15B]/40"
+              >
+                {currentLang === "ar" ? link.labelAr : link.labelEn}
+              </a>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-3 pt-1 text-[10px] font-mono uppercase tracking-wider">
+            <a href="/faq" className="text-gold-dark hover:text-gold-base font-bold">
+              {currentLang === "ar" ? "الأسئلة الشائعة" : "FAQ"}
+            </a>
+            <span className="text-champagne">|</span>
+            <a href="/request-quote" className="text-text-secondary hover:text-gold-dark">
+              {currentLang === "ar" ? "طلب عرض سعر" : "Request Quote"}
+            </a>
+            <span className="text-champagne">|</span>
+            <a href="/sitemap.xml" className="text-text-secondary hover:text-gold-dark">
+              {currentLang === "ar" ? "خريطة الموقع" : "Sitemap"}
+            </a>
+          </div>
         </div>
 
         {/* Middle Section - Physical Dubai Location coordinates */}
@@ -226,15 +243,24 @@ export default function Footer({
             <div>
               © 2026 PGR UAE Precious Metals & Bullion Quote Desk (pgruae.com). Licensed by Jebel Ali and Dubai Commodities Regulatory Division. All rights reserved.
             </div>
-            <div className="flex gap-4">
-              <button onClick={() => onOpenLegalDoc("terms")} className="hover:text-[#A47C36] transition-colors cursor-pointer">{currentLang === "ar" ? "الشروط والأحكام" : "Terms & Conditions"}</button>
-              <span>•</span>
-              <button onClick={() => onOpenLegalDoc("privacy")} className="hover:text-[#A47C36] transition-colors cursor-pointer">{currentLang === "ar" ? "سياسة الخصوصية" : "Privacy Policy"}</button>
-              <span>•</span>
-              <button onClick={() => onOpenLegalDoc("compliance")} className="hover:text-[#A47C36] transition-colors cursor-pointer">{currentLang === "ar" ? "ديوان الامتثال" : "Compliance Desk"}</button>
-              <a href="/sitemap.xml" className="hover:text-[#A47C36] transition-colors">{currentLang === "ar" ? "خريطة الموقع" : "Sitemap"}</a>
-              <span>•</span>
-              <span>UAE VAT Law No. 8</span>
+            <div className="flex flex-wrap justify-center sm:justify-end gap-x-3 gap-y-1">
+              {LEGAL_POLICY_LINKS.filter((l) => l.group === "core").map((link) => (
+                <a key={link.href} href={link.href} className="hover:text-[#A47C36] transition-colors">
+                  {currentLang === "ar" ? link.labelAr : link.labelEn}
+                </a>
+              ))}
+              <span className="hidden sm:inline text-champagne">•</span>
+              <a href="/pricing-disclaimer" className="hover:text-[#A47C36] transition-colors">
+                {currentLang === "ar" ? "إخلاء التسعير" : "Pricing"}
+              </a>
+              <span className="hidden sm:inline text-champagne">•</span>
+              <a href="/risk-disclosure" className="hover:text-[#A47C36] transition-colors">
+                {currentLang === "ar" ? "المخاطر" : "Risk"}
+              </a>
+              <span className="hidden sm:inline text-champagne">•</span>
+              <a href="/sitemap.xml" className="hover:text-[#A47C36] transition-colors">
+                {currentLang === "ar" ? "خريطة الموقع" : "Sitemap"}
+              </a>
             </div>
           </div>
         </div>

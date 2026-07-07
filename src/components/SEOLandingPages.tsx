@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useEffect, useState } from "react";
-import { Shield, Phone, MessageSquare, ArrowRight, ChevronDown, Award, Landmark, CheckCircle, FileText } from "lucide-react";
+import React, { useEffect } from "react";
+import { Shield, Phone, MessageSquare, ArrowRight, Award, Landmark, CheckCircle, FileText } from "lucide-react";
 import { LiveMarketRates } from "../types";
 import { PRODUCTS } from "../data";
 import { resolvePublicCatalog } from "../lib/productCatalog";
@@ -118,120 +118,49 @@ export default function SEOLandingPages({
   onOpenQuote
 }: SEOLandingPagesProps) {
   const isAr = currentLang === "ar";
-  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
 
-  // Set page-specific titles, descriptions, and JSON-LD schemas
+  // Page-specific FAQ schema only (titles/descriptions from applyPageSeo in App.tsx)
   useEffect(() => {
-    let title = "PGR UAE Precious Metals & Bullion Quote Desk";
-    let desc = "PGR UAE Dubai physical gold and silver bullion purchase inquiry and allocated storage platform.";
-    let faqSchema: any = null;
+    let faqSchema: Record<string, unknown> | null = null;
 
     if (currentPath === "/buy-gold-bars-dubai") {
-      title = isAr ? "شراء سبائك الذهب في دبي | أسعار منافسة ومعتمدة PGR UAE" : "Buy Gold Bars in Dubai | LBMA Accredited Bullion PGR UAE";
-      desc = isAr 
-        ? "احصل على أفضل تسعير لسبائك الذهب النقية عيار ٢٤ قيراط في دبي. نوفر سبائك معتمدة دولياً من كبرى المصافي السويسرية والإماراتية مع تأكيد السعر الفوري."
-        : "Secure premium physical gold bars in Dubai at unmatched spot premiums. Inquire today for certified PAMP Suisse, Valcambi, and Emirates Gold bars.";
-      
       faqSchema = {
         "@context": "https://schema.org",
         "@type": "FAQPage",
-        "mainEntity": [
+        mainEntity: [
           {
             "@type": "Question",
-            "name": isAr ? "هل سبائك الذهب في دبي معفاة من الضرائب؟" : "Are gold bars in Dubai tax-free?",
-            "acceptedAnswer": {
+            name: isAr ? "هل سبائك الذهب في دبي معفاة من الضرائب؟" : "Are gold bars in Dubai tax-free?",
+            acceptedAnswer: {
               "@type": "Answer",
-              "text": isAr 
-                ? "نعم، سبائك الذهب الاستثمارية ذات النقاوة 99.9% فما فوق معفاة تماماً من ضريبة القيمة المضافة (VAT) في دولة الإمارات."
-                : "Yes, fine gold bars with a purity of 99% or higher may be exempt from Value Added Tax (VAT) in the UAE. Confirm with the desk."
-            }
+              text: isAr
+                ? "سبائك الذهب الاستثمارية ذات النقاوة 99.9% فما فوق قد تكون معفاة من ضريبة القيمة المضافة في الإمارات. يؤكد المكتب."
+                : "Fine gold bars with a purity of 99% or higher may be exempt from VAT in the UAE. Confirm with the desk.",
+            },
           },
-          {
-            "@type": "Question",
-            "name": isAr ? "ما هي كبرى مصافي الذهب المعتمدة التي توفرها PGR؟" : "Which accredited refineries does PGR provide?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": isAr 
-                ? "نوفر منتجات معتمدة من PAMP Suisse وValcambi وEmirates Gold وSAM Precious Metals وAl Etihad Gold المصنفة كأعضاء معتمدين."
-                : "We supply certified bullion from PAMP Suisse, Valcambi, Emirates Gold, SAM, and Al Etihad Gold, which are fully recognized globally."
-            }
-          }
-        ]
+        ],
       };
     } else if (currentPath === "/buy-silver-bars-dubai") {
-      title = isAr ? "شراء سبائك الفضة في دبي | فضة نقية PGR UAE" : "Buy Silver Bars in Dubai | Physical Silver Bullion PGR UAE";
-      desc = isAr 
-        ? "تصفح واطلب سبائك الفضة الاستثمارية النقية فئة ١٠٠ جرام و٥٠٠ جرام و١ كيلو في دبي بأسعار تداول حقيقية وعلاوات ممتازة."
-        : "Secure bulk physical silver bars and coins in Dubai with secure collection. Offering 100g, 500g, and 1kg fine silver bullion from top mints.";
-      
       faqSchema = {
         "@context": "https://schema.org",
         "@type": "FAQPage",
-        "mainEntity": [
+        mainEntity: [
           {
             "@type": "Question",
-            "name": isAr ? "ما هي الأوزان المتاحة لسبائك الفضة؟" : "What weights are available for silver bars?",
-            "acceptedAnswer": {
+            name: isAr ? "ما هي الأوزان المتاحة لسبائك الفضة؟" : "What weights are available for silver bars?",
+            acceptedAnswer: {
               "@type": "Answer",
-              "text": isAr 
-                ? "نوفر أوزان تبدأ من أونصة واحدة، ١٠٠ جرام، ٥٠٠ جرام، وسبائك صناعية واستثمارية ثقيلة بوزن ١ كيلوجرام بنقاوة ٩٩.٩٪."
-                : "We supply physical silver starting from 1 oz, 100g, 500g, up to 1kg cast bars with 99.9% fine silver certification."
-            }
-          }
-        ]
+              text: isAr
+                ? "نوفر أوزان 100 جرام و500 جرام و1 كيلو من فضة SAM وPALM."
+                : "We supply SAM and PALM silver in 100g, 500g, and 1kg weights.",
+            },
+          },
+        ],
       };
-    } else if (currentPath === "/gold-rate-dubai-today") {
-      title = isAr ? "سعر الذهب اليوم في دبي مباشر | أسعار السبائك والعيارات PGR UAE" : "Gold Rate Dubai Today | Live Spot Prices & Custom Calculations";
-      desc = isAr 
-        ? "تحديث فوري لأسعار الذهب عيار ٢٤ قيراط، ٢٢ قيراط، ٢١ قيراط في دبي. احسب قيمة سبائكك بناءً على أسعار البورصة العالمية والعمولة."
-        : "Monitor today's official live gold rates in Dubai. Calculate exact melt value for 24K, 22K, 21K, and 18K gold based on live global spot feeds.";
-    } else if (currentPath === "/silver-rate-dubai-today") {
-      title = isAr ? "سعر الفضة اليوم في دبي مباشر | سعر مسبوكات الفضة PGR UAE" : "Silver Rate Dubai Today | Live Silver Bullion Prices Dubai";
-      desc = isAr 
-        ? "تابع أسعار الفضة المباشرة في دبي اليوم لجميع العيارات والنقاوات الفاخرة. استعن بالحاسبة الذكية لتقدير قيم مبيعاتك وشراءك."
-        : "Live physical silver rates in Dubai today. Track spot prices per ounce and per gram in AED, USD, SAR, and EUR with direct desk quote access.";
-    } else if (currentPath === "/sell-gold-dubai") {
-      title = isAr ? "بيع הذهب والسبائك في دبي | برنامج الشراء والاسترداد PGR UAE" : "Sell Gold in Dubai | Bullion Sell-Back & Liquidations Dubai";
-      desc = isAr 
-        ? "احصل على أفضل عروض أسعار البيع المرتجع لسبائك الذهب والفضة في دبي. سيولة فورية وعلاوات تسييل عادلة ومطابقة للأنظمة والقوانين."
-        : "Liquidate your gold bars and silver bullion in Dubai with maximum transparency. Our premier sell-back desk provides immediate, compliant liquidity.";
-    } else if (currentPath === "/bullion-desk-dubai") {
-      title = isAr ? "مكتب السبائك في دبي | PGR UAE" : "Physical Bullion Desk Dubai | Secure Metal Quote Desk PGR UAE";
-      desc = isAr
-        ? "تعرف على مكتب PGR UAE في دبي، شريكك الموثوق لتوفير سبائك المعادن الثمينة والشحن المؤمن والتخزين المخصص."
-        : "Discover Dubai's physical gold and silver quote desk. Secure allocations, wholesale bullion inquiries, and allocated custody options.";
-    } else if (currentPath === "/allocated-storage-dubai") {
-      title = isAr ? "تخزين الذهب المخصص دبي | خزائن ومستودعات مؤمنة PGR UAE" : "Allocated Gold Storage Dubai | Vaulting and Segregated Custody";
-      desc = isAr 
-        ? "خدمات حفظ وتخزين الذهب والفضة المخصصة والمؤمنة بالكامل في خزائن دبي العالمية بالتعاون مع كبرى الشركات الأمنية العالمية."
-        : "Protect your physical gold and silver assets with fully allocated, segregated vaulting in Dubai. Audited storage with global security leaders.";
-    } else if (currentPath === "/24k-gold-bars-uae") {
-      title = isAr ? "سبائك ذهب عيار ٢٤ في الإمارات | أسعار السبائك المعتمدة PGR UAE" : "24K Gold Bars UAE | Accredited Pure Bullion Dubai";
-      desc = isAr 
-        ? "اطلب سبائك الذهب الخالص عيار ٢٤ قيراط بنقاوة 999.9 في دبي وأبوظبي. نوفر الأوزان من ١ جرام إلى ١ كيلوجرام مع شهادات أصالة دولية."
-        : "Order accredited gold bars in the UAE with firm-quote desk transparency. High-liquidity minted gold bars from accredited international refiners.";
-    } else if (IRAQ_SEO_PAGES[currentPath]) {
-      const iraqMeta = IRAQ_SEO_PAGES[currentPath];
-      title = isAr ? iraqMeta.titleAr : iraqMeta.titleEn;
-      desc = isAr ? iraqMeta.descAr : iraqMeta.descEn;
     }
 
-    document.title = title;
-    
-    // Set meta description
-    const metaDesc = document.querySelector('meta[name="description"]');
-    if (metaDesc) {
-      metaDesc.setAttribute("content", desc);
-    } else {
-      const meta = document.createElement("meta");
-      meta.name = "description";
-      meta.content = desc;
-      document.head.appendChild(meta);
-    }
-
-    // Set schema scripts
-    const existingScripts = document.querySelectorAll('.seo-injected-schema');
-    existingScripts.forEach(el => el.remove());
+    const existingScripts = document.querySelectorAll(".seo-injected-schema");
+    existingScripts.forEach((el) => el.remove());
 
     if (faqSchema) {
       const script = document.createElement("script");
@@ -240,8 +169,7 @@ export default function SEOLandingPages({
       script.text = JSON.stringify(faqSchema);
       document.head.appendChild(script);
     }
-
-  }, [currentPath, isAr, currentLang]);
+  }, [currentPath, isAr]);
 
   // Extract relevant products based on path
   const getPageProducts = () => {
@@ -810,31 +738,6 @@ export default function SEOLandingPages({
     }
   };
 
-  // Shared FAQ Section
-  const getPageFaqs = () => {
-    const defaultFaqs = [
-      {
-        q: isAr ? "هل الأسعار المعروضة نهائية؟" : "Are the listed prices final and binding?",
-        a: isAr 
-          ? "لا، جميع الأسعار والتقديرات استرشادية فقط بناءً على أسعار البورصة العالمية المباشرة. الأسعار النهائية وحجز العقود يتم فقط عبر ديوان PGR UAE بعد مراجعة الأوراق، وعلاوة الصب والتخزين المعتمدة."
-          : "No. All pricing estimates shown are indicative based on global spot references. Final desk-confirmed prices are issued on our quote desk subject to KYC, refiner premiums, and availability confirmation."
-      },
-      {
-        q: isAr ? "كيف يمكنني تقديم مستندات KYC؟" : "How do I submit my KYC documents?",
-        a: isAr 
-          ? "يمكنك رفع وثائق التحقق بأمان من خلال بوابة العميل الرقمية لدينا، أو من خلال إرسالها بشكل مباشر وسري إلى فريق الامتثال ومكافحة غسيل الأموال في مكتبنا."
-          : "You can upload government-issued ID or passport and corporate credentials through your PGR Client Dashboard, or coordinate with our compliance officer via WhatsApp."
-      },
-      {
-        q: isAr ? "هل تدعمون الشحن الآمن وال Segregated التخزين؟" : "Do you offer physical delivery and vault storage?",
-        a: isAr 
-          ? "نعم، PGR UAE توفر الشحن المؤمن بالكامل بالتعاون مع كبرى الشركات الأمنية الإقليمية، بجانب خدمات التخزين SEGREGATED المخصص والمؤمن."
-          : "Yes. PGR UAE supports secured, insured logistic transit within authorized free zones and regional corridors, plus segregated, fully-insured vault storage solutions."
-      }
-    ];
-    return defaultFaqs;
-  };
-
   return (
     <div className="space-y-16 py-4" id="seo-landing-pages-container" style={{ direction: isAr ? "rtl" : "ltr" }}>
       {/* Back Button */}
@@ -851,32 +754,29 @@ export default function SEOLandingPages({
         {renderSeoContent()}
       </div>
 
-      {/* Dynamic Accordion FAQs Section */}
-      <div className="space-y-6 pt-12 border-t border-[#E8DEC9]">
+      {/* Compliance links — avoid duplicating homepage FAQ on every SEO page */}
+      <div className="space-y-4 pt-12 border-t border-[#E8DEC9]">
         <h2 className="text-xl md:text-2xl font-serif text-[#1F1A17] tracking-wide font-medium">
-          {isAr ? "الأسئلة الشائعة ومراجعة الامتثال والقوانين" : "Regulatory & Bullion FAQ Desk"}
+          {isAr ? "الامتثال والسياسات" : "Compliance & Policies"}
         </h2>
-        <div className="space-y-3 font-sans">
-          {getPageFaqs().map((faq, idx) => {
-            const isOpen = openFaqIndex === idx;
-            return (
-              <div key={idx} className="border border-[#E8DEC9] rounded bg-white overflow-hidden shadow-sm">
-                <button
-                  onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
-                  className="w-full p-5 text-left flex justify-between items-center hover:bg-[#FAF9F5] transition-colors cursor-pointer"
-                  style={{ direction: isAr ? "rtl" : "ltr" }}
-                >
-                  <span className="text-sm font-serif font-medium text-[#1F1A17]">{faq.q}</span>
-                  <ChevronDown size={16} className={`text-[#A47C36] transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`} />
-                </button>
-                {isOpen && (
-                  <div className="p-5 border-t border-[#E8DEC9] text-xs text-[#5E564D] leading-relaxed bg-[#FFFDF8]">
-                    {faq.a}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+        <p className="text-xs text-[#5E564D] leading-relaxed max-w-2xl">
+          {isAr
+            ? "الأسعار استرشادية فقط. عرض السعر النهائي يؤكده مكتب PGR UAE بعد مراجعة الامتثال."
+            : "Prices are indicative references only. Final quote confirmed by PGR UAE desk after compliance review."}
+        </p>
+        <div className="flex flex-wrap gap-3 text-[11px] font-mono font-bold uppercase tracking-wider">
+          <a href="/faq" className="px-4 py-2 border border-[#E8DEC9] rounded hover:border-[#C6A15B] text-[#1F1A17] transition-colors">
+            {isAr ? "الأسئلة الشائعة" : "Full FAQ"}
+          </a>
+          <a href="/pricing-disclaimer" className="px-4 py-2 border border-[#E8DEC9] rounded hover:border-[#C6A15B] text-[#1F1A17] transition-colors">
+            {isAr ? "إخلاء التسعير" : "Pricing Disclaimer"}
+          </a>
+          <a href="/kyc-aml-policy" className="px-4 py-2 border border-[#E8DEC9] rounded hover:border-[#C6A15B] text-[#1F1A17] transition-colors">
+            {isAr ? "اعرف عميلك" : "KYC & AML"}
+          </a>
+          <a href="/compliance" className="px-4 py-2 border border-[#E8DEC9] rounded hover:border-[#C6A15B] text-[#1F1A17] transition-colors">
+            {isAr ? "الامتثال" : "Compliance"}
+          </a>
         </div>
       </div>
 
