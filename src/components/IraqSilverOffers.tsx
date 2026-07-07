@@ -183,7 +183,7 @@ export default function IraqSilverOffers({
 
                     <p className="text-[10px] text-stone-400 leading-normal">
                       {isAr
-                        ? "سعر استرشادي — يؤكده الديوان قبل الطلب"
+                        ? "سعر استرشادي — يؤكده المكتب قبل الطلب"
                         : "Indicative — desk confirms before order"}
                     </p>
                   </div>

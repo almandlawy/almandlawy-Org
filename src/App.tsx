@@ -774,7 +774,7 @@ export default function App() {
               {currentLang === "ar" ? "لماذا PGR UAE" : "Why PGR UAE"}
             </span>
             <h2 className="text-3xl font-serif text-text-charcoal font-medium">
-              {currentLang === "ar" ? "ديوان تداول سبائك معتمد" : "Accredited Bullion Desk Standards"}
+              {currentLang === "ar" ? "معايير سبائك معتمدة" : "Accredited Bullion Standards"}
             </h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

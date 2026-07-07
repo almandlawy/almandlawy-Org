@@ -14,7 +14,7 @@ interface HowFirmQuotesWorkProps {
 const STEPS = [
   { icon: Search, en: "Select Product", ar: "اختر المنتج" },
   { icon: FileText, en: "Request Firm Quote", ar: "اطلب عرض سعر معتمد" },
-  { icon: ClipboardCheck, en: "Desk Review", ar: "مراجعة الديوان" },
+  { icon: ClipboardCheck, en: "Office Review", ar: "مراجعة المكتب" },
   { icon: Mail, en: "Receive Firm Quote", ar: "استلم العرض المعتمد" },
   { icon: CreditCard, en: "Payment & Delivery", ar: "الدفع والتسليم" }
 ];

@@ -179,11 +179,11 @@ export default function ProductShowroom({
             {isAr ? "معرض المنتجات الرئيسي" : "Main Product Showroom"}
           </p>
           <h2 className="text-3xl sm:text-4xl font-serif text-text-charcoal font-medium">
-            {isAr ? "ديوان عرض السبائك" : "Bullion Desk Showroom"}
+            {isAr ? "معرض السبائك" : "Bullion Showroom"}
           </h2>
           <p className="text-sm text-text-secondary font-sans">
             {isAr
-              ? `${orderedProducts.length} منتجات معتمدة — عروض الأسعار النهائية يؤكدها ديوان PGR UAE`
+              ? `${orderedProducts.length} منتجات معتمدة — عروض الأسعار النهائية يؤكدها PGR UAE`
               : `${orderedProducts.length} approved products — final quote confirmed by PGR UAE desk`}
           </p>
         </div>
@@ -387,7 +387,7 @@ export default function ProductShowroom({
                 className="w-full py-3.5 bg-panel-dark hover:bg-panel-charcoal text-brand-bg font-mono text-[10px] font-bold uppercase tracking-widest rounded border border-champagne/30 flex items-center justify-center gap-2 transition-colors"
               >
                 <Phone size={12} />
-                {isAr ? "ديوان واتساب" : "WhatsApp Quote Desk"}
+                {isAr ? "واتساب" : "WhatsApp"}
               </a>
               <button
                 type="button"

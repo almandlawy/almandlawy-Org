@@ -15,13 +15,13 @@ export const FAQ_ITEMS = [
     qEn: "Can I pay before receiving a firm quote?",
     qAr: "هل يمكنني الدفع قبل عرض السعر المعتمد؟",
     aEn: "No. Customers cannot pay before a firm quote is accepted. The flow is: select product → request firm quote → desk review → quote acceptance → payment arrangement.",
-    aAr: "لا. لا يمكن الدفع قبل قبول عرض السعر المعتمد. المسار: اختيار المنتج → طلب عرض سعر → مراجعة الديوان → قبول العرض → ترتيب الدفع."
+    aAr: "لا. لا يمكن الدفع قبل قبول عرض السعر المعتمد. المسار: اختيار المنتج → طلب عرض سعر → مراجعة المكتب → قبول العرض → ترتيب الدفع."
   },
   {
     qEn: "Are prices on the website final?",
     qAr: "هل الأسعار على الموقع نهائية؟",
     aEn: "No. Displayed prices are indicative market references only, subject to market movement. Final quote confirmed by PGR UAE desk before settlement.",
-    aAr: "لا. الأسعار المعروضة مرجع سوقي استرشادي فقط، خاضع لحركة السوق. عرض السعر النهائي يؤكده ديوان PGR UAE قبل التسوية."
+    aAr: "لا. الأسعار المعروضة مرجع سوقي استرشادي فقط، خاضع لحركة السوق. عرض السعر النهائي يؤكده PGR UAE قبل التسوية."
   },
   {
     qEn: "What is required before payment?",
@@ -33,7 +33,7 @@ export const FAQ_ITEMS = [
     qEn: "How do I request a firm quote?",
     qAr: "كيف أطلب عرض سعر معتمد؟",
     aEn: "Use Request Firm Quote on any product card, the request-quote page, or WhatsApp Quote Desk.",
-    aAr: "استخدم زر طلب عرض سعر معتمد على أي منتج، أو صفحة الطلب، أو ديوان واتساب."
+    aAr: "استخدم زر طلب عرض سعر معتمد على أي منتج، أو صفحة الطلب، أو واتساب PGR UAE."
   },
   {
     qEn: "How many products are in the catalog?",
