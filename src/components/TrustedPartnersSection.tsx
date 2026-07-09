@@ -8,6 +8,7 @@ import React, { useEffect, useState } from "react";
 import { Building2, CreditCard, Truck, Shield } from "lucide-react";
 import { PartnerLogo } from "../types";
 import { dbService } from "../lib/supabase";
+import { PartnerLogoTile } from "./PartnerLogoTile";
 
 interface TrustedPartnersSectionProps {
   currentLang: "en" | "ar";
@@ -17,7 +18,7 @@ const PLACEHOLDER_CHANNELS = [
   { icon: Building2, en: "Banking Channel", ar: "قناة مصرفية" },
   { icon: CreditCard, en: "Payment Channel", ar: "قناة الدفع" },
   { icon: Truck, en: "Logistics Channel", ar: "قناة اللوجستيات" },
-  { icon: Shield, en: "Secure Delivery", ar: "تسليم آمن" }
+  { icon: Shield, en: "Secure Delivery", ar: "تسليم آمن" },
 ];
 
 export default function TrustedPartnersSection({ currentLang }: TrustedPartnersSectionProps) {
@@ -48,35 +49,12 @@ export default function TrustedPartnersSection({ currentLang }: TrustedPartnersS
                 ? "يتم تأكيد قنوات الدفع واللوجستيات والتسوية من قبل ديوان PGR UAE وفق متطلبات المعاملة."
                 : "Payment, logistics and settlement channels are confirmed by PGR UAE desk according to transaction requirements."}
             </p>
-            <p className="text-xs text-text-secondary font-mono">
-              {isAr
-                ? "لا نستخدم مصطلح شريك رسمي إلا عند الموافقة والتكوين من الإدارة."
-                : "Official partner wording is used only when approved and configured in admin."}
-            </p>
           </div>
 
           {partners.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               {partners.map((partner) => (
-                <div
-                  key={partner.id}
-                  className="flex flex-col items-center justify-center p-5 rounded-xl border border-champagne bg-brand-card shadow-premium min-h-[110px] gap-2"
-                >
-                  {partner.logo_url ? (
-                    <img
-                      src={partner.logo_url}
-                      alt={partner.name}
-                      className="max-h-14 sm:max-h-16 max-w-full object-contain"
-                      loading="lazy"
-                      referrerPolicy="no-referrer"
-                    />
-                  ) : (
-                    <span className="text-xs font-serif text-text-charcoal text-center">{partner.name}</span>
-                  )}
-                  <span className="text-[9px] font-mono text-text-secondary uppercase text-center">
-                    {partner.category}
-                  </span>
-                </div>
+                <PartnerLogoTile key={partner.id} partner={partner} isAr={isAr} />
               ))}
             </div>
           ) : (

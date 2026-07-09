@@ -7,6 +7,7 @@ import React, { useEffect, useState } from "react";
 import { Plus, Trash2, Save } from "lucide-react";
 import { PartnerLogo, PartnerLogoCategory } from "../../types";
 import { dbService } from "../../lib/supabase";
+import { PartnerLogoPreview, normalizeLogoUrl } from "../PartnerLogoTile";
 
 const CATEGORIES: PartnerLogoCategory[] = [
   "Bank",
@@ -82,7 +83,7 @@ export default function PartnerLogosAdmin({ adminEmail, onAudit }: PartnerLogosA
       <div>
         <h4 className="text-lg font-serif text-text-charcoal">Partners & Trust Logos</h4>
         <p className="text-xs text-text-secondary font-mono">
-          Only logos with public display enabled appear on the site. Internal notes are never shown to customers.
+          Only logos with public display enabled appear on the site. Use a direct image URL (.png, .jpg, .webp, .svg) or Supabase Storage link — not a webpage URL.
         </p>
       </div>
 
@@ -114,11 +115,14 @@ export default function PartnerLogosAdmin({ adminEmail, onAudit }: PartnerLogosA
               </select>
               <input
                 type="url"
-                placeholder="Logo URL"
+                placeholder="Logo URL (direct image link)"
                 value={partner.logo_url}
-                onChange={(e) => updatePartner(partner.id, { logo_url: e.target.value })}
+                onChange={(e) => updatePartner(partner.id, { logo_url: normalizeLogoUrl(e.target.value) })}
                 className="bg-brand-bg border border-soft-border focus:border-gold-base rounded-lg px-3 py-2 text-text-charcoal outline-none focus:border-gold-base sm:col-span-2"
               />
+              <div className="sm:col-span-2">
+                <PartnerLogoPreview name={partner.name} logoUrl={partner.logo_url} />
+              </div>
               <input
                 type="url"
                 placeholder="Website URL (optional)"
