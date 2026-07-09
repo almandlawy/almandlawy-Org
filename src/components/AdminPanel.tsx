@@ -12,6 +12,15 @@ import {
   Eye, Trash2, Plus, Edit, ShieldAlert, Mail, Phone, Clock, FileCheck, CheckCircle, LogOut
 } from "lucide-react";
 import { dbService, mockDb, isLive, supabase, getRedirectUrl, generateQuoteSignature } from "../lib/supabase";
+import {
+  REFERENCE_GOLD_USD_OZ,
+  REFERENCE_SILVER_USD_OZ,
+  REFERENCE_GOLD_USD_PER_GRAM,
+  REFERENCE_SILVER_USD_PER_GRAM,
+  REFERENCE_GOLD_AED_PER_GRAM,
+  REFERENCE_SILVER_AED_PER_GRAM,
+  OUNCE_TO_GRAM,
+} from "../lib/metalReferenceSpots";
 import { Product, DailyPricingSettings, ShippingSettings } from "../types";
 import { DEFAULT_DAILY_PRICING, DEFAULT_SHIPPING_SETTINGS } from "../data";
 import { resolveProductIdFromLabel } from "../lib/productCatalog";
@@ -99,8 +108,8 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
     office_address_en: "Almas Tower, West Trade Zone, Dubai Marina, Dubai, United Arab Emirates",
     office_address_ar: "برج الماس، منطقة التداول الحرة، دبي مارينا، دبي، الإمارات العربية المتحدة",
     dmcc_reg_no: "890317",
-    manual_gold_usd_oz: 2365.40,
-    manual_silver_usd_oz: 29.85,
+    manual_gold_usd_oz: REFERENCE_GOLD_USD_OZ,
+    manual_silver_usd_oz: REFERENCE_SILVER_USD_OZ,
     usd_aed_rate: 3.6725,
     default_product_premium_pct: 2.0,
     disable_live_pricing: false
@@ -677,7 +686,7 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
         }
       }
       
-      const spotRate = metal === "silver" ? 1.10 : 78.50;
+      const spotRate = metal === "silver" ? REFERENCE_SILVER_USD_PER_GRAM : REFERENCE_GOLD_USD_PER_GRAM;
       const baseSpotPrice = grams * spotRate;
       const premiumPct = 1.025;
       originalPrice = Math.round(baseSpotPrice * premiumPct);
@@ -970,8 +979,8 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
         office_address_en: settings.office_address_en,
         office_address_ar: settings.office_address_ar,
         dmcc_reg_no: settings.dmcc_reg_no,
-        manual_gold_usd_oz: Number(settings.manual_gold_usd_oz || 2365.40),
-        manual_silver_usd_oz: Number(settings.manual_silver_usd_oz || 29.85),
+        manual_gold_usd_oz: Number(settings.manual_gold_usd_oz || REFERENCE_GOLD_USD_OZ),
+        manual_silver_usd_oz: Number(settings.manual_silver_usd_oz || REFERENCE_SILVER_USD_OZ),
         usd_aed_rate: Number(settings.usd_aed_rate || 3.6725),
         default_product_premium_pct: Number(settings.default_product_premium_pct || 2.0),
         disable_live_pricing: Boolean(settings.disable_live_pricing)
@@ -2059,10 +2068,10 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                             Formula: spotPerGram * weight * purity + premium
                           </p>
                           <p className="text-gray-400 text-[10px]">
-                            Current Gold Spot Ref: $78.50 / g (approx. AED 288.30 / g)
+                            Current Gold Spot Ref: ${REFERENCE_GOLD_USD_PER_GRAM} / g (approx. AED {REFERENCE_GOLD_AED_PER_GRAM} / g)
                           </p>
                           <p className="text-gray-400 text-[10px]">
-                            Current Silver Spot Ref: $1.10 / g (approx. AED 4.04 / g)
+                            Current Silver Spot Ref: ${REFERENCE_SILVER_USD_PER_GRAM} / g (approx. AED {REFERENCE_SILVER_AED_PER_GRAM} / g)
                           </p>
                         </div>
                       </div>
@@ -2240,7 +2249,7 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                                       setPreparingQuote(q);
                                       const metal = (q.metalInterest || q.metal_interest || "gold").toLowerCase();
                                       const weightVal = parseFloat(q.weight || q.weight_preference || "100") || 100;
-                                      const defaultEst = weightVal * (metal === "silver" ? 1.10 : 78.50);
+                                      const defaultEst = weightVal * (metal === "silver" ? REFERENCE_SILVER_USD_PER_GRAM : REFERENCE_GOLD_USD_PER_GRAM);
                                       setPrepPriceOverride(defaultEst.toFixed(2));
                                       setPrepShippingCompany(shippingSettings.shipping_company_name);
                                       setPrepShippingFee(String(shippingSettings.shipping_price || 0));
@@ -2740,11 +2749,11 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                       <div className="space-y-2">
                         <div className="flex justify-between">
                           <span className="text-gray-400">Manual Gold Spot (USD/oz)</span>
-                          <span className="text-gold-light font-bold">${settings.manual_gold_usd_oz || 2365.40}</span>
+                          <span className="text-gold-light font-bold">${settings.manual_gold_usd_oz || REFERENCE_GOLD_USD_OZ}</span>
                         </div>
                         <input
                           type="number" step="0.01"
-                          value={settings.manual_gold_usd_oz || 2365.40}
+                          value={settings.manual_gold_usd_oz || REFERENCE_GOLD_USD_OZ}
                           onChange={(e) => setSettings({ ...settings, manual_gold_usd_oz: Number(e.target.value) })}
                           className="w-full bg-black border border-white/10 rounded px-3 py-2 text-white outline-none"
                         />
@@ -2753,11 +2762,11 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                       <div className="space-y-2">
                         <div className="flex justify-between">
                           <span className="text-gray-400">Manual Silver Spot (USD/oz)</span>
-                          <span className="text-gold-light font-bold">${settings.manual_silver_usd_oz || 29.85}</span>
+                          <span className="text-gold-light font-bold">${settings.manual_silver_usd_oz || REFERENCE_SILVER_USD_OZ}</span>
                         </div>
                         <input
                           type="number" step="0.01"
-                          value={settings.manual_silver_usd_oz || 29.85}
+                          value={settings.manual_silver_usd_oz || REFERENCE_SILVER_USD_OZ}
                           onChange={(e) => setSettings({ ...settings, manual_silver_usd_oz: Number(e.target.value) })}
                           className="w-full bg-black border border-white/10 rounded px-3 py-2 text-white outline-none"
                         />

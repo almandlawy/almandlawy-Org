@@ -6,6 +6,14 @@ import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 import { createClient } from "@supabase/supabase-js";
 import crypto from "crypto";
+import {
+  REFERENCE_GOLD_USD_OZ,
+  REFERENCE_SILVER_USD_OZ,
+  REFERENCE_METAL_SPOTS,
+  dailyReferenceAedPerGram,
+} from "./src/lib/metalReferenceSpots.js";
+
+const METAL_SPOTS = { ...REFERENCE_METAL_SPOTS };
 
 dotenv.config();
 
@@ -119,15 +127,6 @@ try {
   console.error("Failed to initialize Gemini API client:", error);
 }
 
-// Base Precious Metals Spot Prices (in USD per Troy Ounce)
-// These represent highly accurate reference points for June 2026.
-const METAL_SPOTS = {
-  gold: 4120.50,      // USD per Ounce
-  silver: 48.20,      // USD per Ounce
-  platinum: 1080.00,   // USD per Ounce
-  palladium: 1120.00  // USD per Ounce
-};
-
 // Currency Exchange Rates (1 USD to target currency)
 const EXCHANGE_RATES = {
   USD: 1.0,
@@ -149,14 +148,14 @@ let serverSettings = {
   office_address_en: "Almas Tower, West Trade Zone, Dubai Marina, Dubai, United Arab Emirates",
   office_address_ar: "برج الماس، منطقة التداول الحرة، دبي مارينا، دبي، الإمارات العربية المتحدة",
   dmcc_reg_no: "890317",
-  manual_gold_usd_oz: 2365.40,
-  manual_silver_usd_oz: 29.85,
+  manual_gold_usd_oz: REFERENCE_GOLD_USD_OZ,
+  manual_silver_usd_oz: REFERENCE_SILVER_USD_OZ,
   usd_aed_rate: 3.6725,
   default_product_premium_pct: 2.0,
   disable_live_pricing: false,
   daily_pricing: {
-    gold_daily_reference_price: 288.30,
-    silver_daily_reference_price: 4.04,
+    gold_daily_reference_price: dailyReferenceAedPerGram(REFERENCE_GOLD_USD_OZ),
+    silver_daily_reference_price: dailyReferenceAedPerGram(REFERENCE_SILVER_USD_OZ),
     currency: "AED",
     unit: "per_gram",
     manual_pricing_enabled: false,

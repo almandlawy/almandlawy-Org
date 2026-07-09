@@ -9,6 +9,10 @@ import { LiveMarketRates } from "../types";
 import { PRODUCTS } from "../data";
 import { resolvePublicCatalog } from "../lib/productCatalog";
 import MetalCalculator from "./MetalCalculator";
+import {
+  REFERENCE_GOLD_USD_OZ,
+  REFERENCE_SILVER_USD_OZ,
+} from "../lib/metalReferenceSpots";
 
 interface SEOLandingPagesProps {
   currentPath: string;
@@ -162,7 +166,7 @@ export default function SEOLandingPages({
   };
 
   const getSpotRateValue = (metal: "gold" | "silver") => {
-    const defaultSpots = { gold: 2365.40, silver: 29.85 };
+    const defaultSpots = { gold: REFERENCE_GOLD_USD_OZ, silver: REFERENCE_SILVER_USD_OZ };
     if (!rates) return defaultSpots[metal];
     const val = rates[metal]?.spot_usd_oz;
     return val && val > 0 ? val : defaultSpots[metal];

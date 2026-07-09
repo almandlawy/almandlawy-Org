@@ -13,6 +13,11 @@ import {
   resolveAdminCatalog,
   resolvePublicCatalog,
 } from "./productCatalog";
+import {
+  REFERENCE_GOLD_USD_OZ,
+  REFERENCE_SILVER_USD_OZ,
+  dailyReferenceAedPerGram,
+} from "./metalReferenceSpots";
 
 // 1. Fetch environment variables safely (client-side only using import.meta.env)
 const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL || "";
@@ -375,8 +380,8 @@ const seedLocalStorage = () => {
     office_address_en: "Almas Tower, West Trade Zone, Dubai Marina, Dubai, United Arab Emirates",
     office_address_ar: "برج الماس، منطقة التداول الحرة، دبي مارينا، دبي، الإمارات العربية المتحدة",
     dmcc_reg_no: "890317",
-    manual_gold_usd_oz: 2365.40,
-    manual_silver_usd_oz: 29.85,
+    manual_gold_usd_oz: REFERENCE_GOLD_USD_OZ,
+    manual_silver_usd_oz: REFERENCE_SILVER_USD_OZ,
     usd_aed_rate: 3.6725,
     default_product_premium_pct: 2.0,
     disable_live_pricing: false,

@@ -4,6 +4,10 @@
  */
 
 import { Product } from "./types";
+import {
+  REFERENCE_GOLD_AED_PER_GRAM,
+  REFERENCE_SILVER_AED_PER_GRAM,
+} from "./lib/metalReferenceSpots";
 
 export const BRANDS = [
   { name: "PAMP Suisse", origin: "Switzerland", description: "World-leading bullion brand renowned for artistic craftsmanship and security certificates." },
@@ -251,8 +255,8 @@ export const WHY_US_ITEMS = [
 
 /** Default daily pricing control values for admin panel */
 export const DEFAULT_DAILY_PRICING = {
-  gold_daily_reference_price: 288.30,
-  silver_daily_reference_price: 4.04,
+  gold_daily_reference_price: REFERENCE_GOLD_AED_PER_GRAM,
+  silver_daily_reference_price: REFERENCE_SILVER_AED_PER_GRAM,
   currency: "AED" as const,
   unit: "per_gram" as const,
   manual_pricing_enabled: false,

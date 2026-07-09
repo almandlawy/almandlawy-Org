@@ -23,6 +23,13 @@ import { LiveMarketRates, Product } from "./types";
 import { WHY_US_ITEMS, BRANDS } from "./data";
 import { Shield, Sparkles, Building, Truck, Landmark, Award } from "lucide-react";
 import { isLive, supabase, mockDb } from "./lib/supabase";
+import {
+  REFERENCE_GOLD_USD_OZ,
+  REFERENCE_SILVER_USD_OZ,
+  REFERENCE_PLATINUM_USD_OZ,
+  REFERENCE_PALLADIUM_USD_OZ,
+  OUNCE_TO_GRAM,
+} from "./lib/metalReferenceSpots";
 import { DebugPanel } from "./components/DebugPanel";
 
 // Imported new high-end compliance and desk components
@@ -44,10 +51,10 @@ export default function App() {
   // Pre-calculated default reference spot rates for flawless client experience
   const getInitialRates = (): LiveMarketRates => {
     const defaultSpots = {
-      gold: 2365.40,
-      silver: 29.85,
-      platinum: 965.20,
-      palladium: 1012.10
+      gold: REFERENCE_GOLD_USD_OZ,
+      silver: REFERENCE_SILVER_USD_OZ,
+      platinum: REFERENCE_PLATINUM_USD_OZ,
+      palladium: REFERENCE_PALLADIUM_USD_OZ,
     };
     
     const exchangeRates = {
@@ -58,7 +65,6 @@ export default function App() {
       SAR: 3.7505
     };
     
-    const OUNCE_TO_GRAM = 31.1034768;
     const ratesObj: any = {
       source_status: "reference"
     };

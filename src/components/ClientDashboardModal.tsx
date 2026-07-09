@@ -10,6 +10,13 @@ import {
   Upload, UserCheck, MapPin, Lock, PlusCircle, ArrowRight, TrendingUp 
 } from "lucide-react";
 import { dbService, mockDb, isProduction, isLive, supabase } from "../lib/supabase";
+import {
+  REFERENCE_GOLD_USD_OZ,
+  REFERENCE_SILVER_USD_OZ,
+  REFERENCE_GOLD_USD_PER_GRAM,
+  REFERENCE_SILVER_USD_PER_GRAM,
+  OUNCE_TO_GRAM,
+} from "../lib/metalReferenceSpots";
 import IraqTrustBadge from "./IraqTrustBadge";
 import { LiveMarketRates } from "../types";
 
@@ -494,8 +501,8 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
     if (!user || !buybackWeight) return;
 
     const spotPrice = buybackMetal === "gold" 
-      ? (rates?.gold?.spot_usd_oz ? rates.gold.spot_usd_oz / 31.1035 : 75.0) 
-      : (rates?.silver?.spot_usd_oz ? rates.silver.spot_usd_oz / 31.1035 : 0.95);
+      ? (rates?.gold?.spot_usd_oz ? rates.gold.spot_usd_oz / OUNCE_TO_GRAM : REFERENCE_GOLD_USD_PER_GRAM) 
+      : (rates?.silver?.spot_usd_oz ? rates.silver.spot_usd_oz / OUNCE_TO_GRAM : REFERENCE_SILVER_USD_PER_GRAM);
 
     const estPayout = Number(buybackWeight) * spotPrice * 0.98; // 2% fee
 
@@ -562,10 +569,10 @@ export default function ClientDashboardModal({ currentLang, onClose, rates }: Cl
       usd = inputAmount / exchangeRates.IQD;
     }
 
-    const spotGoldUsdOz = rates?.gold?.spot_usd_oz || 2350;
-    const spotSilverUsdOz = rates?.silver?.spot_usd_oz || 28.5;
+    const spotGoldUsdOz = rates?.gold?.spot_usd_oz || REFERENCE_GOLD_USD_OZ;
+    const spotSilverUsdOz = rates?.silver?.spot_usd_oz || REFERENCE_SILVER_USD_OZ;
     
-    const spotGramUsd = calcMetal === "gold" ? (spotGoldUsdOz / 31.1035) : (spotSilverUsdOz / 31.1035);
+    const spotGramUsd = calcMetal === "gold" ? (spotGoldUsdOz / OUNCE_TO_GRAM) : (spotSilverUsdOz / OUNCE_TO_GRAM);
     const premiumPercent = calcMetal === "gold" ? 1.04 : 1.12; // 4% gold premium, 12% silver premium
     const totalCostPerGram = spotGramUsd * premiumPercent;
     
