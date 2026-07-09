@@ -385,9 +385,10 @@ export default function App() {
             setTimeout(() => handleScrollToSection(sec), 100);
           }}
           onOpenAIChat={() => setIsAIChatOpen(true)}
-          onOpenQuote={() => navigateTo("/request-quote")}
+          onOpenQuote={() => navigateToQuote()}
           onOpenClientDashboard={() => navigateTo("/dashboard")}
           onOpenAdminPortal={() => navigateTo("/admin")}
+          authUser={authUser}
         />
         <div className="max-w-7xl mx-auto py-32 px-4 md:px-8">
           <MetalCalculator
@@ -404,7 +405,7 @@ export default function App() {
             setTimeout(() => handleScrollToSection(sec), 100);
           }}
           onOpenAIChat={() => setIsAIChatOpen(true)}
-          onOpenQuote={() => navigateTo("/request-quote")}
+          onOpenQuote={() => navigateToQuote()}
           onOpenLegalDoc={(docId) => {
             const rMap: Record<string, string> = {
               "terms": "/terms",
@@ -425,6 +426,7 @@ export default function App() {
           }}
           onOpenClientDashboard={() => navigateTo("/dashboard")}
           onOpenAdminPortal={() => navigateTo("/admin")}
+          authUser={authUser}
         />
         {renderConversionFab()}
         {renderAiConcierge()}
@@ -447,9 +449,10 @@ export default function App() {
             setTimeout(() => handleScrollToSection(sec), 100);
           }}
           onOpenAIChat={() => setIsAIChatOpen(true)}
-          onOpenQuote={() => navigateTo("/request-quote")}
+          onOpenQuote={() => navigateToQuote()}
           onOpenClientDashboard={() => navigateTo("/dashboard")}
           onOpenAdminPortal={() => navigateTo("/admin")}
+          authUser={authUser}
         />
         <div className="max-w-7xl mx-auto py-24 px-4 md:px-8">
           <Suspense fallback={<div className="py-24 text-center text-text-secondary font-mono text-sm" aria-busy="true">Loading…</div>}>
@@ -470,7 +473,7 @@ export default function App() {
             setTimeout(() => handleScrollToSection(sec), 100);
           }}
           onOpenAIChat={() => setIsAIChatOpen(true)}
-          onOpenQuote={() => navigateTo("/request-quote")}
+          onOpenQuote={() => navigateToQuote()}
           onOpenLegalDoc={(docId) => {
             const rMap: Record<string, string> = {
               "terms": "/terms",
@@ -491,6 +494,7 @@ export default function App() {
           }}
           onOpenClientDashboard={() => navigateTo("/dashboard")}
           onOpenAdminPortal={() => navigateTo("/admin")}
+          authUser={authUser}
         />
         {renderConversionFab()}
         {renderAiConcierge()}
@@ -531,9 +535,10 @@ export default function App() {
             setTimeout(() => handleScrollToSection(sec), 100);
           }}
           onOpenAIChat={() => setIsAIChatOpen(true)}
-          onOpenQuote={() => navigateTo("/request-quote")}
+          onOpenQuote={() => navigateToQuote()}
           onOpenClientDashboard={() => navigateTo("/dashboard")}
           onOpenAdminPortal={() => navigateTo("/admin")}
+          authUser={authUser}
         />
         <div className="max-w-7xl mx-auto py-24 px-4 md:px-8">
           {currentPath === "/iraq-bullion-quote" && (
@@ -563,7 +568,7 @@ export default function App() {
             setTimeout(() => handleScrollToSection(sec), 100);
           }}
           onOpenAIChat={() => setIsAIChatOpen(true)}
-          onOpenQuote={() => navigateTo("/request-quote")}
+          onOpenQuote={() => navigateToQuote()}
           onOpenLegalDoc={(docId) => {
             const rMap: Record<string, string> = {
               terms: "/terms",
@@ -584,6 +589,7 @@ export default function App() {
           }}
           onOpenClientDashboard={() => navigateTo("/dashboard")}
           onOpenAdminPortal={() => navigateTo("/admin")}
+          authUser={authUser}
         />
         <SeoSiteLinks currentLang={currentLang} />
         {renderConversionFab()}
@@ -612,6 +618,7 @@ export default function App() {
           onOpenQuote={() => navigateToQuote()}
           onOpenClientDashboard={() => navigateTo("/dashboard")}
           onOpenAdminPortal={() => navigateTo("/admin")}
+          authUser={authUser}
         />
         <div className="max-w-7xl mx-auto py-24 px-4 md:px-8">
           <KYCOnboardingPage currentLang={currentLang} onNavigate={navigateTo} />
@@ -644,6 +651,7 @@ export default function App() {
           }}
           onOpenClientDashboard={() => navigateTo("/dashboard")}
           onOpenAdminPortal={() => navigateTo("/admin")}
+          authUser={authUser}
         />
       </div>
     );
@@ -680,6 +688,7 @@ export default function App() {
             navigateTo("/");
           }}
           onNavigate={navigateTo}
+          onRequestQuote={() => navigateToQuote()}
         />
       </Suspense>
     );
@@ -702,9 +711,10 @@ export default function App() {
             setTimeout(() => handleScrollToSection(sec), 100);
           }}
           onOpenAIChat={() => setIsAIChatOpen(true)}
-          onOpenQuote={() => navigateTo("/request-quote")}
+          onOpenQuote={() => navigateToQuote()}
           onOpenClientDashboard={() => navigateTo("/dashboard")}
           onOpenAdminPortal={() => navigateTo("/admin")}
+          authUser={authUser}
         />
         <div className="max-w-7xl mx-auto py-24 px-4 md:px-8">
           <ProductLandingPage 
@@ -724,7 +734,7 @@ export default function App() {
             setTimeout(() => handleScrollToSection(sec), 100);
           }}
           onOpenAIChat={() => setIsAIChatOpen(true)}
-          onOpenQuote={() => navigateTo("/request-quote")}
+          onOpenQuote={() => navigateToQuote()}
           onOpenLegalDoc={(docId) => {
             const rMap: Record<string, string> = {
               "terms": "/terms",
@@ -745,6 +755,7 @@ export default function App() {
           }}
           onOpenClientDashboard={() => navigateTo("/dashboard")}
           onOpenAdminPortal={() => navigateTo("/admin")}
+          authUser={authUser}
         />
         {renderConversionFab()}
         {renderAiConcierge()}
@@ -765,9 +776,10 @@ export default function App() {
         selectedCurrency={selectedCurrency}
         onNavigate={handleScrollToSection}
         onOpenAIChat={() => setIsAIChatOpen(true)}
-        onOpenQuote={() => navigateTo("/request-quote")}
+        onOpenQuote={() => navigateToQuote()}
         onOpenClientDashboard={() => navigateTo("/dashboard")}
         onOpenAdminPortal={() => navigateTo("/admin")}
+        authUser={authUser}
       />
 
       {/* Hero with PALM Silver video + product sections */}
@@ -856,7 +868,7 @@ export default function App() {
         currentLang={currentLang}
         onNavigate={handleScrollToSection}
         onOpenAIChat={() => setIsAIChatOpen(true)}
-        onOpenQuote={() => navigateTo("/request-quote")}
+        onOpenQuote={() => navigateToQuote()}
         onOpenLegalDoc={(docId) => {
           const rMap: Record<string, string> = {
             "terms": "/terms",
@@ -877,6 +889,7 @@ export default function App() {
         }}
         onOpenClientDashboard={() => navigateTo("/dashboard")}
         onOpenAdminPortal={() => navigateTo("/admin")}
+        authUser={authUser}
       />
 
       {/* Floating conversion actions (WhatsApp + AI) */}

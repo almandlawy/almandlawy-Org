@@ -162,13 +162,13 @@ export default function KYCOnboardingPage({ currentLang, onNavigate }: KYCOnboar
         source_of_funds_declaration: sourceOfFunds.trim(),
         agreement_accepted: agreeTerms,
         privacy_consent: agreePrivacy,
-            status: "Pending",
+            status: "Pending review",
         documents: [
           {
             id: `doc-${Date.now()}`,
             type: kycType === "company" ? "Trade License" : idType,
             number: idNumber.trim(),
-            status: "Pending",
+            status: "Pending review",
             updated_at: new Date().toISOString(),
           },
         ],

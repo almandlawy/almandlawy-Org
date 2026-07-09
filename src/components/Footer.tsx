@@ -9,6 +9,7 @@ import { dbService } from "../lib/supabase";
 import BrandLogo from "./BrandLogo";
 import { LEGAL_POLICY_LINKS } from "../lib/legalLinks";
 import { FACEBOOK_PAGE_URL } from "../lib/facebookLinks";
+import type { AppUser } from "../lib/clientAuth";
 
 interface FooterProps {
   currentLang: "en" | "ar";
@@ -18,6 +19,7 @@ interface FooterProps {
   onOpenLegalDoc: (docId: string) => void;
   onOpenClientDashboard: () => void;
   onOpenAdminPortal: () => void;
+  authUser?: AppUser | null;
 }
 
 export default function Footer({ 
@@ -27,7 +29,8 @@ export default function Footer({
   onOpenQuote,
   onOpenLegalDoc,
   onOpenClientDashboard,
-  onOpenAdminPortal
+  onOpenAdminPortal,
+  authUser,
 }: FooterProps) {
   const [emailInput, setEmailInput] = React.useState("");
   const [isSubscribed, setIsSubscribed] = React.useState(false);
@@ -83,7 +86,15 @@ export default function Footer({
                 className="hover:text-gold-dark text-text-charcoal transition-colors flex items-center gap-1.5 cursor-pointer text-left font-mono font-bold"
               >
                 <ShieldCheck size={12} className="text-gold-base" />
-                <span>{currentLang === "ar" ? "ديوان كبار العملاء الرقمي" : "Secure Client Desk"}</span>
+                <span>
+                  {authUser
+                    ? currentLang === "ar"
+                      ? "حسابي"
+                      : "My account"
+                    : currentLang === "ar"
+                      ? "تسجيل الدخول"
+                      : "Sign in"}
+                </span>
               </button>
               <button 
                 onClick={onOpenAdminPortal} 
