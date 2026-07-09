@@ -125,7 +125,9 @@ CREATE POLICY "client_select_own_website_quotes"
 -- 6. Supabase Auth → URL Configuration
 -- Site URL: https://www.pgruae.com
 -- Redirect URLs:
+-- Redirect URLs (add both www and bare — site redirects bare → www):
 --   https://www.pgruae.com/auth/callback
+--   https://pgruae.com/auth/callback
 --   https://www.pgruae.com/admin
 --   https://www.pgruae.com/dashboard
 --   https://www.pgruae.com/kyc

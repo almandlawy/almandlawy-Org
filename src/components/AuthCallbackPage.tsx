@@ -2,18 +2,35 @@
  * OAuth callback — exchanges PKCE code and redirects to client destination.
  */
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { RefreshCw, ShieldAlert } from "lucide-react";
 import { ensureSupabaseReady, supabase } from "../lib/supabase";
-import { mapSupabaseUser, persistAppUser, resolvePostAuthPath, upsertCustomerProfile, ensureKycStub } from "../lib/clientAuth";
+import {
+  mapSupabaseUser,
+  persistAppUser,
+  resolvePostAuthPath,
+  upsertCustomerProfile,
+  ensureKycStub,
+} from "../lib/clientAuth";
+import { getCanonicalSiteOrigin, isBareProductionDomain } from "../lib/siteOrigin";
 
 export default function AuthCallbackPage() {
   const [error, setError] = useState("");
+  const handledRef = useRef(false);
 
   useEffect(() => {
+    if (handledRef.current) return;
+    handledRef.current = true;
+
     let cancelled = false;
 
     async function completeAuth() {
+      if (isBareProductionDomain()) {
+        const canonical = `${getCanonicalSiteOrigin()}${window.location.pathname}${window.location.search}`;
+        window.location.replace(canonical);
+        return;
+      }
+
       const ready = await ensureSupabaseReady();
       if (!ready || !supabase) {
         if (!cancelled) {
@@ -24,18 +41,22 @@ export default function AuthCallbackPage() {
 
       try {
         const params = new URLSearchParams(window.location.search);
-        const code = params.get("code");
         const next = params.get("next") || "/dashboard";
+        const code = params.get("code");
 
-        if (code) {
+        // detectSessionInUrl may already exchange the code on client init — check first.
+        let {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (!session?.user && code) {
           const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
           if (exchangeError) throw exchangeError;
-        } else {
-          const { error: sessionError } = await supabase.auth.getSession();
-          if (sessionError) throw sessionError;
+          ({
+            data: { session },
+          } = await supabase.auth.getSession());
         }
 
-        const { data: { session } } = await supabase.auth.getSession();
         if (!session?.user) {
           throw new Error("No session after OAuth callback.");
         }

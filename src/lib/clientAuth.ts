@@ -8,12 +8,15 @@ import {
   BOOTSTRAP_ADMIN_EMAILS,
   dbService,
   ensureSupabaseReady,
-  getAuthCallbackUrl,
   isLive,
   isProduction,
   mockDb,
   supabase,
 } from "./supabase";
+import {
+  getCanonicalSiteOrigin,
+  redirectBareDomainToWww,
+} from "./siteOrigin";
 
 export interface AppUser {
   id: string;
@@ -129,10 +132,8 @@ export async function getCurrentUser(): Promise<AppUser | null> {
 }
 
 export function getAuthCallbackUrlWithNext(nextPath = "/dashboard"): string {
-  const origin =
-    typeof window !== "undefined" ? window.location.origin : "https://www.pgruae.com";
   const next = nextPath.startsWith("/") ? nextPath : `/${nextPath}`;
-  return `${origin}/auth/callback?next=${encodeURIComponent(next)}`;
+  return `${getCanonicalSiteOrigin()}/auth/callback?next=${encodeURIComponent(next)}`;
 }
 
 export function getLoginRedirectPath(): string {
@@ -287,6 +288,7 @@ export async function signUpWithEmail(
 }
 
 export async function signInWithGoogle(nextPath?: string): Promise<AppUser | void> {
+  redirectBareDomainToWww();
   await ensureSupabaseReady();
   const redirectTo = getAuthCallbackUrlWithNext(nextPath || getLoginRedirectPath());
 
@@ -344,6 +346,3 @@ export async function resolvePostAuthPath(
   }
   return preferredPath;
 }
-
-/** @deprecated use getAuthCallbackUrlWithNext */
-export { getAuthCallbackUrl };
