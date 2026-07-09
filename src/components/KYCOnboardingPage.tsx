@@ -8,7 +8,6 @@ import {
   ArrowLeft,
   ArrowRight,
   ShieldCheck,
-  Upload,
   CheckCircle,
   AlertCircle,
 } from "lucide-react";
@@ -16,6 +15,7 @@ import ClientAccountStepper from "./ClientAccountStepper";
 import { dbService } from "../lib/supabase";
 import { getCurrentUser, getLoginRedirectPath, type AppUser } from "../lib/clientAuth";
 import { canRequestQuote, kycStatusLabel } from "../lib/kycGate";
+import { friendlyKycDbError } from "../lib/kycDocuments";
 
 interface KYCOnboardingPageProps {
   currentLang: "en" | "ar";
@@ -53,9 +53,6 @@ export default function KYCOnboardingPage({ currentLang, onNavigate }: KYCOnboar
   const [sourceOfFunds, setSourceOfFunds] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [agreePrivacy, setAgreePrivacy] = useState(false);
-  const [uploadedFiles, setUploadedFiles] = useState<
-    Record<string, { name: string; size: number; date: string }>
-  >({});
 
   const nextPath = (() => {
     if (typeof window === "undefined") return "/request-quote";
@@ -91,6 +88,7 @@ export default function KYCOnboardingPage({ currentLang, onNavigate }: KYCOnboar
         setSourceOfFunds(profile.source_of_funds_declaration || "");
         setAgreeTerms(Boolean(profile.agreement_accepted));
         setAgreePrivacy(Boolean(profile.privacy_consent));
+        setKycType(profile.kyc_type === "company" ? "company" : "individual");
         if (canRequestQuote(profile.status)) {
           // Already submitted — allow skip to quote
         }
@@ -112,19 +110,6 @@ export default function KYCOnboardingPage({ currentLang, onNavigate }: KYCOnboar
   const labelClass =
     "text-[10px] font-mono uppercase tracking-wider text-text-secondary font-bold block mb-1";
 
-  const handleFilePick = (key: string, file: File | null) => {
-    if (!file) return;
-    if (file.size > 8 * 1024 * 1024) {
-      setError(isAr ? "الحد الأقصى 8 ميجابايت لكل ملف." : "Maximum 8 MB per file.");
-      return;
-    }
-    setUploadedFiles((prev) => ({
-      ...prev,
-      [key]: { name: file.name, size: file.size, date: new Date().toISOString() },
-    }));
-    setError("");
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
@@ -133,14 +118,6 @@ export default function KYCOnboardingPage({ currentLang, onNavigate }: KYCOnboar
         isAr
           ? "يجب الموافقة على شروط KYC/AML وسياسة الخصوصية."
           : "You must accept KYC/AML terms and the privacy policy."
-      );
-      return;
-    }
-    if (Object.keys(uploadedFiles).length < 1) {
-      setError(
-        isAr
-          ? "يرجى إرفاق صورة الهوية أو جواز السفر على الأقل."
-          : "Please attach at least one ID or passport image."
       );
       return;
     }
@@ -159,26 +136,29 @@ export default function KYCOnboardingPage({ currentLang, onNavigate }: KYCOnboar
         city: city.trim(),
         nationality: nationality.trim(),
         dob,
+        kyc_type: kycType,
         source_of_funds_declaration: sourceOfFunds.trim(),
         agreement_accepted: agreeTerms,
         privacy_consent: agreePrivacy,
-            status: "Pending review",
-        documents: [
-          {
-            id: `doc-${Date.now()}`,
-            type: kycType === "company" ? "Trade License" : idType,
-            number: idNumber.trim(),
-            status: "Pending review",
-            updated_at: new Date().toISOString(),
-          },
-        ],
-        uploaded_files: uploadedFiles,
+        status: "Pending review",
+        documents: idNumber.trim()
+          ? [
+              {
+                id: `doc-${Date.now()}`,
+                type: kycType === "company" ? "Trade License" : idType,
+                number: idNumber.trim(),
+                status: "Pending review",
+                updated_at: new Date().toISOString(),
+              },
+            ]
+          : [],
       });
       setExistingStatus("Pending review");
       setSuccess(true);
       setTimeout(() => onNavigate(nextPath), 1800);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "KYC save failed");
+      const msg = err instanceof Error ? err.message : "KYC save failed";
+      setError(friendlyKycDbError(msg, currentLang));
     } finally {
       setSubmitting(false);
     }
@@ -215,10 +195,10 @@ export default function KYCOnboardingPage({ currentLang, onNavigate }: KYCOnboar
             </button>
             <button
               type="button"
-              onClick={() => onNavigate("/dashboard")}
+              onClick={() => onNavigate("/my-documents")}
               className="px-6 py-3 border border-soft-border rounded-lg text-text-secondary hover:text-text-charcoal text-xs font-mono uppercase tracking-widest"
             >
-              {isAr ? "لوحة حسابي" : "My account"}
+              {isAr ? "مستنداتي" : "My documents"}
             </button>
           </div>
         </div>
@@ -251,8 +231,8 @@ export default function KYCOnboardingPage({ currentLang, onNavigate }: KYCOnboar
         </h1>
         <p className="text-sm text-text-secondary leading-relaxed">
           {isAr
-            ? "وفقاً لقوانين مكافحة غسيل الأموال في الإمارات، يجب إكمال KYC قبل إرسال أي طلب شراء سبائك. يراجع المكتب ملفك خلال ساعات العمل."
-            : "Under UAE AML rules, KYC must be completed before any bullion purchase request. The desk reviews your file during business hours."}
+            ? "أكمل بياناتك الأساسية لطلب عرض سعر. رفع الجواز والمستندات اختياري — يمكنك رفعها لاحقاً من صفحة مستنداتي."
+            : "Complete your basic details to request a quote. Passport and document uploads are optional — you can add them later in My Documents."}
         </p>
       </header>
 
@@ -381,30 +361,20 @@ export default function KYCOnboardingPage({ currentLang, onNavigate }: KYCOnboar
           />
         </div>
 
-        <div className="space-y-3 p-4 rounded-lg border border-soft-border bg-brand-bg">
-          <p className={labelClass}>{isAr ? "المستندات (صور واضحة)" : "Documents (clear images)"} *</p>
-          {[
-            { key: "id_front", en: "ID / passport — front", ar: "الهوية / الجواز — الوجه" },
-            { key: "id_back", en: "ID — back (if applicable)", ar: "الهوية — الخلف (إن وُجد)" },
-            { key: "proof_address", en: "Proof of address", ar: "إثبات العنوان" },
-          ].map((slot) => (
-            <label
-              key={slot.key}
-              className="flex items-center justify-between gap-3 p-3 rounded-lg border border-dashed border-soft-border hover:border-gold-base/50 cursor-pointer"
-            >
-              <span className="text-xs text-text-secondary">
-                {isAr ? slot.ar : slot.en}
-                {uploadedFiles[slot.key] ? ` ✓ ${uploadedFiles[slot.key].name}` : ""}
-              </span>
-              <Upload size={16} className="text-gold-base shrink-0" />
-              <input
-                type="file"
-                accept="image/*,.pdf"
-                className="hidden"
-                onChange={(e) => handleFilePick(slot.key, e.target.files?.[0] || null)}
-              />
-            </label>
-          ))}
+        <div className="rounded-lg border border-soft-border bg-brand-bg p-4 space-y-3">
+          <p className={labelClass}>{isAr ? "المستندات (اختياري)" : "Documents (optional)"}</p>
+          <p className="text-xs text-text-secondary leading-relaxed">
+            {isAr
+              ? "لا يلزم رفع جواز أو هوية الآن. إذا رغبت، ارفع المستندات من صفحة مستنداتي بعد إرسال النموذج."
+              : "You do not need to upload a passport or ID now. Upload anytime from My Documents after submitting this form."}
+          </p>
+          <button
+            type="button"
+            onClick={() => onNavigate("/my-documents")}
+            className="text-[11px] font-mono font-bold text-gold-dark hover:underline uppercase tracking-wider"
+          >
+            {isAr ? "الذهاب إلى مستنداتي ←" : "Go to My Documents →"}
+          </button>
         </div>
 
         <div className="space-y-2 text-xs text-text-secondary">

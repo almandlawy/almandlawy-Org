@@ -1599,9 +1599,24 @@ export const dbService = {
     save: async (customerId: string, profile: any) => {
       if (isLive && supabase) {
         try {
+          const existing = await dbService.kyc.get(customerId);
+          let mergedUploaded = { ...(existing?.uploaded_files || {}) };
+          if (profile.uploaded_files !== undefined) {
+            for (const [key, val] of Object.entries(profile.uploaded_files)) {
+              if (val === null) delete mergedUploaded[key];
+              else mergedUploaded[key] = val;
+            }
+          }
+
+          const { uploaded_files: _uf, ...profileRest } = profile;
           const { data, error } = await supabase
             .from("kyc_profiles")
-            .upsert({ ...profile, id: customerId, updated_at: new Date().toISOString() })
+            .upsert({
+              ...profileRest,
+              id: customerId,
+              uploaded_files: mergedUploaded,
+              updated_at: new Date().toISOString(),
+            })
             .select();
           if (error) {
             console.error("Failed to save KYC profile to Supabase:", error);
@@ -1615,7 +1630,15 @@ export const dbService = {
       }
       const list = mockDb.get("pgr_kyc_profiles") || [];
       const index = list.findIndex((p: any) => p.id === customerId);
-      const updatedProfile = { ...profile, id: customerId };
+      const existingProfile = index > -1 ? list[index] : {};
+      let mergedUploaded = { ...(existingProfile.uploaded_files || {}) };
+      if (profile.uploaded_files !== undefined) {
+        for (const [key, val] of Object.entries(profile.uploaded_files)) {
+          if (val === null) delete mergedUploaded[key];
+          else mergedUploaded[key] = val;
+        }
+      }
+      const updatedProfile = { ...profile, id: customerId, uploaded_files: mergedUploaded };
       if (index > -1) {
         list[index] = { ...list[index], ...updatedProfile };
       } else {
@@ -1930,7 +1953,44 @@ export const dbService = {
         };
         reader.readAsDataURL(file);
       });
-    }
+    },
+
+    uploadKycDocument: async (
+      userId: string,
+      slotKey: string,
+      file: File
+    ): Promise<{ storage_path: string; name: string; size: number; mime_type: string }> => {
+      const fileExt = file.name.split(".").pop() || "bin";
+      const storagePath = `${userId}/${slotKey}_${Date.now()}.${fileExt}`;
+
+      if (isLive && supabase) {
+        const { error: uploadError } = await supabase.storage
+          .from("kyc-documents")
+          .upload(storagePath, file, { upsert: true, contentType: file.type || undefined });
+
+        if (uploadError) {
+          throw new Error(uploadError.message);
+        }
+      }
+
+      return {
+        storage_path: storagePath,
+        name: file.name,
+        size: file.size,
+        mime_type: file.type || "application/octet-stream",
+      };
+    },
+
+    getKycDocumentSignedUrl: async (storagePath: string, expiresIn = 3600): Promise<string | null> => {
+      if (isLive && supabase) {
+        const { data, error } = await supabase.storage
+          .from("kyc-documents")
+          .createSignedUrl(storagePath, expiresIn);
+        if (error || !data?.signedUrl) return null;
+        return data.signedUrl;
+      }
+      return null;
+    },
   },
 
   partnerLogos: {

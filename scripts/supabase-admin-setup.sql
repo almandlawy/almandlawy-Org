@@ -131,3 +131,41 @@ CREATE POLICY "client_select_own_website_quotes"
 --   https://www.pgruae.com/admin
 --   https://www.pgruae.com/dashboard
 --   https://www.pgruae.com/kyc
+--   https://www.pgruae.com/my-documents
+
+-- 7. Private storage bucket for client KYC documents
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('kyc-documents', 'kyc-documents', false)
+ON CONFLICT (id) DO NOTHING;
+
+DROP POLICY IF EXISTS "kyc_docs_insert_own" ON storage.objects;
+CREATE POLICY "kyc_docs_insert_own"
+  ON storage.objects FOR INSERT TO authenticated
+  WITH CHECK (
+    bucket_id = 'kyc-documents'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+DROP POLICY IF EXISTS "kyc_docs_select_own" ON storage.objects;
+CREATE POLICY "kyc_docs_select_own"
+  ON storage.objects FOR SELECT TO authenticated
+  USING (
+    bucket_id = 'kyc-documents'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+DROP POLICY IF EXISTS "kyc_docs_update_own" ON storage.objects;
+CREATE POLICY "kyc_docs_update_own"
+  ON storage.objects FOR UPDATE TO authenticated
+  USING (
+    bucket_id = 'kyc-documents'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+DROP POLICY IF EXISTS "kyc_docs_delete_own" ON storage.objects;
+CREATE POLICY "kyc_docs_delete_own"
+  ON storage.objects FOR DELETE TO authenticated
+  USING (
+    bucket_id = 'kyc-documents'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+  );
