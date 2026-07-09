@@ -53,8 +53,18 @@ export function friendlyKycDbError(message: string, lang: "en" | "ar"): string {
   const lower = message.toLowerCase();
   if (lower.includes("kyc_profiles") && (lower.includes("schema") || lower.includes("not find") || lower.includes("does not exist"))) {
     return lang === "ar"
-      ? "جدول KYC غير مُعدّ في Supabase بعد. يرجى تشغيل scripts/supabase-admin-setup.sql من لوحة SQL ثم إعادة المحاولة."
-      : "The KYC database table is not set up yet. Run scripts/supabase-admin-setup.sql in the Supabase SQL editor, then try again.";
+      ? "جدول KYC غير ظاهر لخادم الموقع بعد. شغّل scripts/kyc-repair-columns.sql ثم NOTIFY pgrst, 'reload schema'; في Supabase."
+      : "KYC table not visible to the server yet. Run scripts/kyc-repair-columns.sql then NOTIFY pgrst, 'reload schema'; in Supabase.";
+  }
+  if (lower.includes("column") && lower.includes("kyc")) {
+    return lang === "ar"
+      ? "جدول kyc_profiles ناقص أعمدة. شغّل scripts/kyc-repair-columns.sql في Supabase SQL Editor."
+      : "kyc_profiles is missing columns. Run scripts/kyc-repair-columns.sql in Supabase SQL Editor.";
+  }
+  if (lower.includes("service_role") || lower.includes("not configured")) {
+    return lang === "ar"
+      ? "مفتاح SUPABASE_SERVICE_ROLE_KEY غير مضاف في Vercel. أضفه من إعدادات المشروع ثم أعد النشر."
+      : "SUPABASE_SERVICE_ROLE_KEY is not set in Vercel. Add it in project settings and redeploy.";
   }
   return message;
 }
