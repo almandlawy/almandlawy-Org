@@ -32,11 +32,13 @@ function normalizeQuote(row: Record<string, unknown>) {
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "GET,PATCH,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
 
   if (req.method === "OPTIONS") return res.status(200).end();
-  if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
+  if (req.method !== "GET" && req.method !== "PATCH") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
 
   const token = req.headers.authorization?.replace(/^Bearer\s+/i, "").trim();
   if (!token) return res.status(401).json({ error: "Missing authorization token" });
@@ -72,6 +74,34 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (!isAdmin) {
       return res.status(403).json({ error: "Admin access required" });
+    }
+
+    if (req.method === "PATCH") {
+      const body = (req.body || {}) as { id?: string; updates?: Record<string, unknown> };
+      const quoteId = String(body.id || "").trim();
+      const updates = body.updates || {};
+
+      if (!quoteId || !Object.keys(updates).length) {
+        return res.status(400).json({ error: "id and updates are required" });
+      }
+
+      const { data, error } = await service
+        .from("website_quote_requests")
+        .update(updates)
+        .eq("id", quoteId)
+        .select()
+        .maybeSingle();
+
+      if (error) {
+        console.error("[api/admin-quotes] patch failed:", error);
+        return res.status(500).json({ error: error.message, code: error.code });
+      }
+
+      console.log(`[api/admin-quotes] updated ${quoteId} by ${email}`);
+      return res.status(200).json({
+        success: true,
+        quote: data ? normalizeQuote(data as Record<string, unknown>) : null,
+      });
     }
 
     const { data, error } = await service

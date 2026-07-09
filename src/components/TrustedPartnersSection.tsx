@@ -66,7 +66,7 @@ export default function TrustedPartnersSection({ currentLang }: TrustedPartnersS
                     <img
                       src={partner.logo_url}
                       alt={partner.name}
-                      className="max-h-10 max-w-full object-contain"
+                      className="max-h-14 sm:max-h-16 max-w-full object-contain"
                       loading="lazy"
                       referrerPolicy="no-referrer"
                     />

@@ -4,6 +4,7 @@
 
 import { attributionPayload } from "./attribution";
 import { trackGoogleAdsContactConversion } from "./gtag";
+import { notifyDesk } from "./deskNotify";
 import { dbService, ensureSupabaseReady } from "./supabase";
 
 export interface QuoteSubmitInput {
@@ -102,6 +103,17 @@ export async function submitQuoteRequest(
     await ensureSupabaseReady();
     const { inquiryId } = await dbService.quoteRequests.createWebsiteQuote(row);
     trackGoogleAdsContactConversion();
+    void notifyDesk("quote", {
+      inquiryId,
+      name: row.name,
+      phone: row.phone,
+      productCategory: row.product_category,
+      countryCity: row.company,
+      quantityBudget: row.weight_preference,
+      source: input.source,
+      sourceLanguage: input.sourceLanguage,
+      message: row.message,
+    });
     return { success: true, inquiryId };
   } catch (directErr: unknown) {
     const directMsg = directErr instanceof Error ? directErr.message : String(directErr);
