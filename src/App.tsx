@@ -63,6 +63,7 @@ import IraqBullionQuotePage from "./components/IraqBullionQuotePage";
 import AuthCallbackPage from "./components/AuthCallbackPage";
 import PricingDisclaimer from "./components/PricingDisclaimer";
 import KYCOnboardingPage from "./components/KYCOnboardingPage";
+import MyDocumentsPage from "./components/MyDocumentsPage";
 import {
   getCurrentUser,
   mapSupabaseUser,
@@ -594,6 +595,65 @@ export default function App() {
         <SeoSiteLinks currentLang={currentLang} />
         {renderConversionFab()}
         {renderAiConcierge()}
+      </div>
+    );
+  }
+
+  if (currentPath === "/my-documents") {
+    return (
+      <div
+        className={`min-h-screen text-text-charcoal bg-brand-bg ${
+          currentLang === "ar" ? "font-arabic" : "font-sans"
+        }`}
+      >
+        <Header
+          currentLang={currentLang}
+          toggleLanguage={toggleLanguage}
+          rates={rates}
+          selectedCurrency={selectedCurrency}
+          onNavigate={(sec) => {
+            navigateTo("/");
+            setTimeout(() => handleScrollToSection(sec), 100);
+          }}
+          onOpenAIChat={() => setIsAIChatOpen(true)}
+          onOpenQuote={() => navigateToQuote()}
+          onOpenClientDashboard={() => navigateTo("/dashboard")}
+          onOpenAdminPortal={() => navigateTo("/admin")}
+          authUser={authUser}
+        />
+        <div className="max-w-7xl mx-auto py-24 px-4 md:px-8">
+          <MyDocumentsPage currentLang={currentLang} onNavigate={navigateTo} />
+        </div>
+        <Footer
+          currentLang={currentLang}
+          onNavigate={(sec) => {
+            navigateTo("/");
+            setTimeout(() => handleScrollToSection(sec), 100);
+          }}
+          onOpenAIChat={() => setIsAIChatOpen(true)}
+          onOpenQuote={() => navigateToQuote()}
+          onOpenLegalDoc={(docId) => {
+            const rMap: Record<string, string> = {
+              terms: "/terms",
+              privacy: "/privacy-policy",
+              aml: "/kyc-aml-policy",
+              pricing: "/pricing-disclaimer",
+              refund: "/refund-cancellation-policy",
+              delivery: "/delivery-collection-policy",
+              storage: "/allocated-storage-terms",
+              sellback: "/sell-back-policy",
+              risk: "/risk-disclosure",
+              cookie: "/cookie-policy",
+              compliance: "/compliance",
+            };
+            const p = rMap[docId] || "/";
+            window.history.pushState(null, "", p);
+            setActiveLegalDoc(docId);
+          }}
+          onOpenClientDashboard={() => navigateTo("/dashboard")}
+          onOpenAdminPortal={() => navigateTo("/admin")}
+          authUser={authUser}
+        />
       </div>
     );
   }

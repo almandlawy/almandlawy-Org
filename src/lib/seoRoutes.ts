@@ -36,6 +36,8 @@ export const NOINDEX_PATHS = new Set([
   "/login",
   "/register",
   "/dashboard",
+  "/my-documents",
+  "/kyc",
   "/calculator",
   "/quote-received"
 ]);

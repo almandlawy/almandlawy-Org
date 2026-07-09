@@ -12,6 +12,7 @@ import {
   RefreshCw,
   FileText,
   Package,
+  FolderOpen,
 } from "lucide-react";
 import { dbService } from "../lib/supabase";
 import { generateQuotePDF } from "../lib/pdfGenerator";
@@ -376,9 +377,17 @@ export default function ClientDashboard({
             <button
               type="button"
               onClick={() => onNavigate("/kyc?next=/dashboard")}
-              className="text-[11px] text-gold-dark font-mono font-bold mt-2 hover:underline"
+              className="text-[11px] text-gold-dark font-mono font-bold mt-2 hover:underline block"
             >
               {isAr ? "عرض / تحديث الملف" : "View / update profile"}
+            </button>
+            <button
+              type="button"
+              onClick={() => onNavigate("/my-documents")}
+              className="text-[11px] text-gold-dark font-mono font-bold mt-1 hover:underline flex items-center gap-1"
+            >
+              <FolderOpen size={12} />
+              {isAr ? "مستنداتي" : "My documents"}
             </button>
           </div>
         </div>
