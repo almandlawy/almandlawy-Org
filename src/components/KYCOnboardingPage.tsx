@@ -80,6 +80,15 @@ export default function KYCOnboardingPage({ currentLang, onNavigate }: KYCOnboar
       setSchemaReady(schema.ready);
       setSchemaReason(schema.reason || "");
 
+      if (!schema.ready) {
+        setFullName(u.name);
+        setEmail(u.email);
+        setPhone(u.phone || "");
+        setWhatsapp(u.phone || "");
+        setLoading(false);
+        return;
+      }
+
       try {
         const profile = await dbService.kyc.get(u.id);
         if (cancelled) return;
@@ -265,8 +274,13 @@ export default function KYCOnboardingPage({ currentLang, onNavigate }: KYCOnboar
               : "The KYC table is missing in Supabase. Open Supabase → SQL Editor and run:"}
           </p>
           <code className="block text-xs bg-white/80 border border-amber-200 rounded px-2 py-1 font-mono">
-            scripts/kyc-minimal-setup.sql
+            scripts/kyc-repair-columns.sql
           </code>
+          <p className="text-[11px]">
+            {isAr
+              ? "بعد التشغيل، نفّذ أيضاً: NOTIFY pgrst, 'reload schema';"
+              : "After running, also execute: NOTIFY pgrst, 'reload schema';"}
+          </p>
           {schemaReason && (
             <p className="text-[11px] text-amber-800 font-mono">{schemaReason}</p>
           )}

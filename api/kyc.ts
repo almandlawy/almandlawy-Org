@@ -21,12 +21,28 @@ function mergeUploadedFiles(existing: Record<string, unknown> | undefined, patch
 
 async function checkSchemaReady(service: ReturnType<typeof getServiceClient>) {
   if (!service) {
-    return { ready: false, reason: "SUPABASE_SERVICE_ROLE_KEY not configured on server" };
+    return {
+      ready: false,
+      reason: "SUPABASE_SERVICE_ROLE_KEY not configured in Vercel — add it in Project Settings → Environment Variables",
+    };
   }
-  const { error } = await service.from(KYC_TABLE).select("id").limit(1);
+  const { error } = await service
+    .from(KYC_TABLE)
+    .select("id, status, documents, uploaded_files, updated_at, country")
+    .limit(1);
   if (!error) return { ready: true };
   if (isKycSchemaMissingError(error.message)) {
-    return { ready: false, reason: "kyc_profiles table missing — run scripts/supabase-admin-setup.sql" };
+    return {
+      ready: false,
+      reason:
+        "kyc_profiles not visible yet — run scripts/kyc-minimal-setup.sql then NOTIFY pgrst, 'reload schema';",
+    };
+  }
+  if (error.message.toLowerCase().includes("column")) {
+    return {
+      ready: false,
+      reason: "kyc_profiles missing columns — run scripts/kyc-repair-columns.sql",
+    };
   }
   return { ready: false, reason: error.message };
 }

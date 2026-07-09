@@ -1575,7 +1575,15 @@ export const dbService = {
         try {
           return await fetchKycProfileViaApi(customerId);
         } catch (err) {
-          console.error("KYC API get failed:", err);
+          console.warn("KYC API get failed, trying direct Supabase:", err);
+          if (isLive && supabase) {
+            const { data, error } = await supabase
+              .from("kyc_profiles")
+              .select("*")
+              .eq("id", customerId)
+              .maybeSingle();
+            if (!error) return data || undefined;
+          }
           throw err;
         }
       }
@@ -1607,7 +1615,12 @@ export const dbService = {
     },
     save: async (customerId: string, profile: any) => {
       if (isProduction) {
-        return saveKycProfileViaApi({ ...profile, id: customerId });
+        try {
+          return await saveKycProfileViaApi({ ...profile, id: customerId });
+        } catch (err) {
+          console.warn("KYC API save failed, trying direct Supabase:", err);
+          // fall through to direct client save below
+        }
       }
       if (isLive && supabase) {
         try {
