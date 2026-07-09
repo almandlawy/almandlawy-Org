@@ -1321,6 +1321,17 @@ app.post("/api/quote/accept", async (req, res) => {
   }
 });
 
+// KYC profile API (service role — same handler as Vercel serverless)
+app.all("/api/kyc", async (req, res) => {
+  try {
+    const { default: kycHandler } = await import("./api/kyc.js");
+    await kycHandler(req as any, res as any);
+  } catch (err: unknown) {
+    const details = err instanceof Error ? err.message : "KYC handler failed";
+    res.status(500).json({ error: details });
+  }
+});
+
 // High-End AI Concierge Chat Route
 app.post("/api/chat", async (req, res) => {
   const { messages, userLanguage = "en" } = req.body;

@@ -5,7 +5,7 @@
 
 import type { KYCProfile } from "../types";
 
-export type KycGateStatus = KYCProfile["status"] | "Not submitted" | undefined;
+export type KycGateStatus = KYCProfile["status"] | "Not submitted" | "Pending" | undefined;
 
 /** Normalize legacy/alternate status strings from DB or older clients. */
 export function normalizeKycStatus(status: KycGateStatus): KYCProfile["status"] | "Not submitted" {
