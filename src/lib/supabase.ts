@@ -1205,12 +1205,9 @@ export const dbService = {
     },
     saveWebsiteQuoteLocal: async (row: Record<string, unknown>) => {
       if (isLive && supabase) {
-        const { data, error } = await supabase
-          .from("website_quote_requests")
-          .upsert(row)
-          .select();
+        const { error } = await supabase.from("website_quote_requests").upsert(row);
         if (error) throw new Error(error.message);
-        return data?.[0] || row;
+        return row;
       }
       const list = mockDb.get("pgr_website_quote_requests") || [];
       list.unshift(row);
@@ -1218,6 +1215,7 @@ export const dbService = {
       return row;
     },
     createWebsiteQuote: async (payload: Record<string, unknown>) => {
+      await ensureSupabaseReady();
       const inquiryId = `PGR-${Math.floor(100000 + Math.random() * 900000)}`;
       const row = {
         id: inquiryId,
@@ -1237,12 +1235,10 @@ export const dbService = {
 
         let lastError: string | undefined;
         for (const attempt of attempts) {
-          const { data, error } = await supabase
-            .from("website_quote_requests")
-            .insert(attempt)
-            .select();
+          // Do not chain .select() — RLS allows INSERT but not SELECT for anon/guest rows.
+          const { error } = await supabase.from("website_quote_requests").insert(attempt);
           if (!error) {
-            return { inquiryId, row: data?.[0] || attempt };
+            return { inquiryId, row: attempt };
           }
           lastError = error.message || "Quote save failed";
           console.warn("[quoteRequests] insert attempt failed:", lastError, attempt);
