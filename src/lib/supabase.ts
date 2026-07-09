@@ -19,6 +19,7 @@ import {
   REFERENCE_SILVER_USD_OZ,
   dailyReferenceAedPerGram,
 } from "./metalReferenceSpots";
+import { getCanonicalSiteOrigin } from "./siteOrigin";
 
 // 1. Fetch environment variables safely (client-side only using import.meta.env)
 const buildTimeSupabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL || "";
@@ -673,30 +674,20 @@ export const mockDb = {
 };
 
 export const getAuthCallbackUrl = () => {
-  if (typeof window !== "undefined") {
-    if (window.location.origin.includes("pgruae.com")) {
-      return "https://www.pgruae.com/auth/callback";
-    }
-    return `${window.location.origin}/auth/callback`;
-  }
-  return "https://www.pgruae.com/auth/callback";
+  return `${getCanonicalSiteOrigin()}/auth/callback`;
 };
 
 export const getRedirectUrl = () => {
   if (typeof window !== "undefined") {
     const pathname = window.location.pathname;
-
-    if (window.location.origin.includes("pgruae.com")) {
-      if (pathname.startsWith("/admin")) {
-        return "https://www.pgruae.com/admin";
-      }
-      return "https://www.pgruae.com";
+    if (window.location.hostname === "pgruae.com" || window.location.hostname === "www.pgruae.com") {
+      return pathname.startsWith("/admin")
+        ? `${getCanonicalSiteOrigin()}/admin`
+        : getCanonicalSiteOrigin();
     }
-
     return window.location.origin + (pathname.startsWith("/admin") ? "/admin" : "");
   }
-
-  return "https://www.pgruae.com";
+  return getCanonicalSiteOrigin();
 };
 
 // Bidirectional mappers for product to resolve table field mismatches in Supabase
