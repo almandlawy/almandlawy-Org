@@ -13,6 +13,7 @@ import ProductShowroom from "./components/ProductShowroom";
 import IraqSilverOffers from "./components/IraqSilverOffers";
 import AboutQuoteDeskSection from "./components/AboutQuoteDeskSection";
 import DeskServicesSection from "./components/DeskServicesSection";
+import TrustedPartnersSection from "./components/TrustedPartnersSection";
 import QuoteDeskProofSection from "./components/QuoteDeskProofSection";
 import HomepageFAQ from "./components/HomepageFAQ";
 import CrawlableSeoBlock from "./components/CrawlableSeoBlock";
@@ -905,6 +906,8 @@ export default function App() {
         currentLang={currentLang}
         onNavigate={navigateTo}
       />
+
+      <TrustedPartnersSection currentLang={currentLang} />
 
       <ComplianceKYCSection
         currentLang={currentLang}

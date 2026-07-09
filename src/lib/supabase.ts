@@ -967,6 +967,17 @@ function getAdminRequestHeaders(): Record<string, string> {
   return headers;
 }
 
+export async function getAdminAuthHeaders(): Promise<Record<string, string>> {
+  const headers = getAdminRequestHeaders();
+  if (isLive && supabase) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      headers.Authorization = `Bearer ${session.access_token}`;
+    }
+  }
+  return headers;
+}
+
 // =========================================================================
 // UNIVERSAL DATA ACCESS LAYER (dbService)
 // Transparently routes queries to Live Supabase (if connected) or Local Storage
@@ -1294,9 +1305,21 @@ export const dbService = {
       return newRequest;
     },
     updateStatus: async (id: string, status: string) => {
-      if (isLive && supabase) {
-        const { data } = await supabase.from("quote_requests").update({ status }).eq("id", id).select();
-        if (data) return data[0];
+      if (isLive) {
+        try {
+          const headers = await getAdminAuthHeaders();
+          const res = await fetch("/api/admin-quotes", {
+            method: "PATCH",
+            headers,
+            body: JSON.stringify({ id, updates: { status } }),
+          });
+          if (res.ok) {
+            const json = await res.json();
+            if (json.quote) return json.quote;
+          }
+        } catch (err) {
+          console.warn("[quoteRequests] admin patch status failed:", err);
+        }
       }
       const quotes = mockDb.get("pgr_quote_requests");
       const index = quotes.findIndex((q: any) => q.id === id);
@@ -1308,10 +1331,25 @@ export const dbService = {
       return null;
     },
     update: async (id: string, updates: any) => {
-      if (isLive && supabase) {
-        const { data, error } = await supabase.from("quote_requests").update(updates).eq("id", id).select();
-        if (error) throw new Error(error.message);
-        if (data) return data[0];
+      if (isLive) {
+        try {
+          const headers = await getAdminAuthHeaders();
+          const res = await fetch("/api/admin-quotes", {
+            method: "PATCH",
+            headers,
+            body: JSON.stringify({ id, updates }),
+          });
+          if (res.ok) {
+            const json = await res.json();
+            if (json.quote) return json.quote;
+          } else {
+            const errText = await res.text().catch(() => "");
+            throw new Error(errText || `Admin quote update failed (${res.status})`);
+          }
+        } catch (err) {
+          console.warn("[quoteRequests] admin patch failed:", err);
+          if (err instanceof Error && err.message.includes("Admin quote update failed")) throw err;
+        }
       }
       const quotes = mockDb.get("pgr_quote_requests");
       const index = quotes.findIndex((q: any) => q.id === id);
@@ -1745,6 +1783,20 @@ export const dbService = {
       return dbService.kyc.save(profile.id, profile);
     },
     listAll: async () => {
+      if (isLive) {
+        try {
+          const headers = await getAdminAuthHeaders();
+          const res = await fetch("/api/admin-kyc", { headers });
+          if (res.ok) {
+            const json = await res.json();
+            if (Array.isArray(json.profiles)) return json.profiles;
+          } else {
+            console.warn("[kyc] admin list failed:", res.status, await res.text().catch(() => ""));
+          }
+        } catch (err) {
+          console.error("Failed to list KYC profiles via admin API:", err);
+        }
+      }
       if (isLive && supabase) {
         try {
           const { data, error } = await supabase.from("kyc_profiles").select("*");
@@ -1754,7 +1806,23 @@ export const dbService = {
         }
       }
       return mockDb.get("pgr_kyc_profiles") || [];
-    }
+    },
+    updateStatusAdmin: async (customerId: string, status: string) => {
+      if (isLive) {
+        const headers = await getAdminAuthHeaders();
+        const res = await fetch("/api/admin-kyc", {
+          method: "PATCH",
+          headers,
+          body: JSON.stringify({ customerId, status }),
+        });
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          throw new Error(json.error || `KYC update failed (${res.status})`);
+        }
+        return json.profile;
+      }
+      return dbService.kyc.update({ id: customerId, status });
+    },
   },
 
   iraqDelivery: {
@@ -2090,7 +2158,8 @@ export const dbService = {
   partnerLogos: {
     list: async (): Promise<PartnerLogo[]> => {
       try {
-        const res = await fetch("/api/admin/partners", { headers: getAdminRequestHeaders() });
+        const headers = await getAdminAuthHeaders();
+        const res = await fetch("/api/admin/partners", { headers });
         if (res.ok) {
           const data = await res.json();
           if (Array.isArray(data.partners)) {
@@ -2122,9 +2191,10 @@ export const dbService = {
     saveAll: async (partners: PartnerLogo[], adminEmail: string): Promise<PartnerLogo[]> => {
       mockDb.set("pgr_partner_logos", partners);
       try {
+        const headers = await getAdminAuthHeaders();
         const res = await fetch("/api/admin/partners", {
           method: "PUT",
-          headers: { ...getAdminRequestHeaders(), "X-PGR-Admin-Email": adminEmail },
+          headers: { ...headers, "X-PGR-Admin-Email": adminEmail },
           body: JSON.stringify({ partners })
         });
         if (res.ok) {

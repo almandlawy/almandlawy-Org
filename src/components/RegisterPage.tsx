@@ -23,9 +23,7 @@ export default function RegisterPage({ currentLang, onNavigate, onRegisterSucces
   const [phone, setPhone] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [password, setPassword] = useState("");
-  const [consentTerms, setConsentTerms] = useState(false);
-  const [consentPrivacy, setConsentPrivacy] = useState(false);
-  const [consentKyc, setConsentKyc] = useState(false);
+  const [consentAll, setConsentAll] = useState(false);
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
   const [loading, setLoading] = useState(false);
@@ -49,11 +47,11 @@ export default function RegisterPage({ currentLang, onNavigate, onRegisterSucces
       setError(isAr ? "كلمة المرور 8 أحرف على الأقل." : "Password must be at least 8 characters.");
       return;
     }
-    if (!consentTerms || !consentPrivacy || !consentKyc) {
+    if (!consentAll) {
       setError(
         isAr
-          ? "يجب الموافقة على الشروط والخصوصية وKYC للمتابعة."
-          : "You must accept Terms, Privacy, and KYC consent to proceed."
+          ? "يرجى الموافقة على الشروط للمتابعة."
+          : "Please accept the terms to continue."
       );
       return;
     }
@@ -91,11 +89,11 @@ export default function RegisterPage({ currentLang, onNavigate, onRegisterSucces
   };
 
   const handleGoogleSignup = async () => {
-    if (!consentTerms || !consentPrivacy || !consentKyc) {
+    if (!consentAll) {
       setError(
         isAr
-          ? "يرجى الموافقة على الإقرارات قبل التسجيل بـ Google."
-          : "Please accept the declarations before Google sign-up."
+          ? "يرجى الموافقة على الشروط قبل التسجيل بـ Google."
+          : "Please accept the terms before Google sign-up."
       );
       return;
     }
@@ -143,7 +141,7 @@ export default function RegisterPage({ currentLang, onNavigate, onRegisterSucces
               {isAr ? "إنشاء حساب" : "Create account"}
             </h1>
             <p className="text-text-secondary text-[10px] font-mono uppercase tracking-widest">
-              {isAr ? "الاسم · البريد · Google — ثم KYC ثم طلب العرض" : "Name · email · Google — then KYC, then quote"}
+              {isAr ? "دقيقة واحدة — Google أو بريد إلكتروني" : "One minute — Google or email"}
             </p>
           </div>
 
@@ -155,6 +153,32 @@ export default function RegisterPage({ currentLang, onNavigate, onRegisterSucces
               {info}
             </div>
           )}
+
+          <label className="flex items-start gap-2.5 p-3 bg-brand-bg border border-soft-border rounded-lg text-text-secondary cursor-pointer">
+            <input
+              type="checkbox"
+              checked={consentAll}
+              onChange={(e) => setConsentAll(e.target.checked)}
+              className="mt-0.5 accent-gold-base shrink-0"
+            />
+            <span className="text-[11px] leading-relaxed">
+              {isAr
+                ? "أوافق على شروط الخدمة والخصوصية وإكمال KYC قبل طلب عرض السعر."
+                : "I accept the terms, privacy policy, and agree to complete KYC before requesting a quote."}
+            </span>
+          </label>
+
+          <GoogleSignInButton
+            label={isAr ? "متابعة بـ Google — الأسرع" : "Continue with Google — fastest"}
+            disabled={loading}
+            onClick={handleGoogleSignup}
+          />
+
+          <div className="relative flex py-1 items-center">
+            <div className="flex-grow border-t border-soft-border" />
+            <span className="flex-shrink mx-4 text-text-secondary uppercase text-[8px] font-mono">{isAr ? "أو بالبريد" : "Or with email"}</span>
+            <div className="flex-grow border-t border-soft-border" />
+          </div>
 
           <div className="grid grid-cols-2 gap-2 bg-brand-bg p-1 rounded-lg border border-soft-border">
             <button
@@ -228,23 +252,6 @@ export default function RegisterPage({ currentLang, onNavigate, onRegisterSucces
               </div>
             )}
 
-            <div className="space-y-3 p-4 bg-brand-bg border border-soft-border rounded-lg">
-              <label className="flex items-start gap-2.5 text-text-secondary cursor-pointer">
-                <input type="checkbox" checked={consentTerms} onChange={(e) => setConsentTerms(e.target.checked)} className="mt-0.5 accent-gold-base" />
-                <span className="text-[11px]">{isAr ? "أوافق على شروط الخدمة." : "I accept the terms of service."}</span>
-              </label>
-              <label className="flex items-start gap-2.5 text-text-secondary cursor-pointer">
-                <input type="checkbox" checked={consentPrivacy} onChange={(e) => setConsentPrivacy(e.target.checked)} className="mt-0.5 accent-gold-base" />
-                <span className="text-[11px]">{isAr ? "أوافق على سياسة الخصوصية." : "I accept the privacy policy."}</span>
-              </label>
-              <label className="flex items-start gap-2.5 text-text-secondary cursor-pointer">
-                <input type="checkbox" checked={consentKyc} onChange={(e) => setConsentKyc(e.target.checked)} className="mt-0.5 accent-gold-base" />
-                <span className="text-[11px]">
-                  {isAr ? "أوافق على إكمال KYC قبل طلب أي عرض سعر." : "I agree to complete KYC before requesting any quote."}
-                </span>
-              </label>
-            </div>
-
             <button
               type="submit"
               disabled={loading}
@@ -253,18 +260,6 @@ export default function RegisterPage({ currentLang, onNavigate, onRegisterSucces
               {loading ? (isAr ? "جاري الإنشاء…" : "Creating…") : isAr ? "إنشاء الحساب" : "Create account"}
             </button>
           </form>
-
-          <div className="relative flex py-1 items-center">
-            <div className="flex-grow border-t border-soft-border" />
-            <span className="flex-shrink mx-4 text-text-secondary uppercase text-[8px] font-mono">{isAr ? "أو" : "OR"}</span>
-            <div className="flex-grow border-t border-soft-border" />
-          </div>
-
-          <GoogleSignInButton
-            label={isAr ? "التسجيل بـ Google" : "Sign up with Google"}
-            disabled={loading}
-            onClick={handleGoogleSignup}
-          />
 
           <div className="text-center">
             <p className="text-text-secondary text-[11px]">

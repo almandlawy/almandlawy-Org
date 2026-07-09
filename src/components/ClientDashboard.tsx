@@ -87,6 +87,24 @@ function QuoteItem({
     q.status === "New Request" ||
     q.status === "Pending" ||
     q.status === "Desk Review";
+
+  const displayStatus = (() => {
+    const s = q.status || "New";
+    if (!isAr) return s;
+    const map: Record<string, string> = {
+      "New Request": "طلب جديد",
+      "Desk Review": "قيد مراجعة المكتب",
+      Pending: "قيد الانتظار",
+      "Quote Sent": "عرض مُرسل",
+      "KYC Required": "KYC مطلوب",
+      "Customer Accepted": "مقبول",
+      Completed: "مكتمل",
+      Cancelled: "ملغي",
+      Rejected: "مرفوض",
+      "Expired Quote": "منتهي",
+    };
+    return map[s] || s;
+  })();
   const isKycReq = q.status === "KYC Required";
   const isQuoteSent = q.status === "Quote Sent" && !isExpired;
   const isAccepted = q.status === "Customer Accepted";
@@ -119,7 +137,7 @@ function QuoteItem({
                       : "bg-brand-section text-text-secondary"
           }`}
         >
-          {isCancelled ? (isAr ? "منتهي" : "Closed") : q.status || "New"}
+          {isCancelled ? (isAr ? "منتهي" : "Closed") : displayStatus}
         </span>
       </div>
 

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import ClientAccountStepper from "./ClientAccountStepper";
 import { dbService } from "../lib/supabase";
+import { notifyDesk } from "../lib/deskNotify";
 import { getCurrentUser, getLoginRedirectPath, type AppUser } from "../lib/clientAuth";
 import { canRequestQuote, kycStatusLabel } from "../lib/kycGate";
 import { friendlyKycDbError } from "../lib/kycDocuments";
@@ -182,6 +183,15 @@ export default function KYCOnboardingPage({ currentLang, onNavigate }: KYCOnboar
       });
       setExistingStatus("Pending review");
       setSuccess(true);
+      void notifyDesk("kyc", {
+        customerId: user.id,
+        fullName: fullName.trim(),
+        email: email.trim().toLowerCase(),
+        phone: phone.trim(),
+        country: country.trim(),
+        city: city.trim(),
+        status: "Pending review",
+      });
       setTimeout(() => onNavigate(nextPath), 1800);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "KYC save failed";

@@ -854,25 +854,12 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
 
   const handleUpdateKycStatus = async (customerId: string, status: string) => {
     try {
-      const profile = await dbService.kyc.get(customerId);
-      if (profile) {
-        profile.status = status;
-        if (status === "Verified") {
-          profile.verified_at = new Date().toISOString();
-          if (profile.documents && profile.documents.length > 0) {
-            profile.documents[0].status = "Verified";
-          }
-        } else if (status === "Rejected") {
-          if (profile.documents && profile.documents.length > 0) {
-            profile.documents[0].status = "Rejected";
-          }
-        }
-        await dbService.kyc.update(profile);
-        triggerSuccessMessage(`Customer KYC verification set to: ${status}`);
-        await loadAdminData();
-      }
+      await dbService.kyc.updateStatusAdmin(customerId, status);
+      triggerSuccessMessage(`Customer KYC verification set to: ${status}`);
+      await loadAdminData();
     } catch (err) {
       console.error(err);
+      triggerErrorMessage(err instanceof Error ? err.message : "KYC update failed");
     }
   };
 
@@ -1091,7 +1078,12 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
   const stats = {
     totalVolumeUSD: orders.reduce((sum, o) => sum + (o.total_amount || 0), 0) + holdings.reduce((sum, h) => sum + (h.current_market_value_usd || 0), 0),
     activeCustomersCount: kycProfiles.filter(k => k.status === "Verified").length + 5,
-    pendingQuotesCount: quotes.filter((q) => q.status === "Pending" || q.status === "New Request").length,
+    pendingQuotesCount: quotes.filter(
+      (q) =>
+        q.status === "Pending" ||
+        q.status === "New Request" ||
+        q.status === "Desk Review"
+    ).length,
     activeDeliveriesIraq: iraqDeliveries.filter(d => d.status !== "Delivered").length,
     pendingKycCount: kycProfiles.filter(k => k.status === "Pending review" || k.status === "Pending").length,
     buybackInquiries: buybacks.filter(b => b.status === "Pending").length
@@ -2337,10 +2329,16 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                         <tbody className="divide-y divide-white/[0.02]">
                           {filteredQuotes.length === 0 ? (
                             <tr>
-                              <td colSpan={6} className="p-4 text-center text-text-secondary">
-                                {quoteLeadFilter === "iraq"
-                                  ? "No Iraq-focused quote requests match this filter."
-                                  : "No pending quote requests."}
+                              <td colSpan={6} className="p-6 text-center text-text-secondary space-y-2">
+                                <p>
+                                  {quoteLeadFilter === "iraq"
+                                    ? "No Iraq-focused quote requests match this filter."
+                                    : "No quote requests loaded."}
+                                </p>
+                                <p className="text-[10px] font-mono">
+                                  Ensure SUPABASE_SERVICE_ROLE_KEY is set in Vercel, then click Refresh.
+                                  Client submissions are stored in website_quote_requests.
+                                </p>
                               </td>
                             </tr>
                           ) : (
@@ -2561,6 +2559,21 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 font-mono text-xs">
                     {/* KYC Profiles Column (2/3 width) */}
                     <div className="lg:col-span-2 space-y-4">
+                      {kycProfiles.length === 0 && (
+                        <div className="p-6 bg-brand-card border border-soft-border rounded text-center space-y-2">
+                          <p className="text-text-secondary text-sm">No KYC profiles loaded.</p>
+                          <p className="text-[10px] font-mono text-text-secondary">
+                            Profiles appear here after clients submit /kyc. Admin API requires SUPABASE_SERVICE_ROLE_KEY in Vercel.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => loadAdminData()}
+                            className="mt-2 px-4 py-2 text-[10px] font-mono uppercase border border-soft-border rounded-lg hover:bg-brand-bg"
+                          >
+                            Refresh
+                          </button>
+                        </div>
+                      )}
                       {kycProfiles.map((k) => (
                         <div key={k.id} className="p-5 bg-brand-card border border-soft-border rounded space-y-4">
                           <div className="flex justify-between items-center border-b border-soft-border/70 pb-2">
