@@ -2,7 +2,10 @@
  * Fire-and-forget desk email notifications (quote / KYC).
  */
 
-export async function notifyDesk(type: "quote" | "kyc", payload: Record<string, unknown>): Promise<void> {
+export async function notifyDesk(
+  type: "quote" | "kyc" | "payment_proof",
+  payload: Record<string, unknown>
+): Promise<void> {
   try {
     await fetch("/api/desk-notify", {
       method: "POST",

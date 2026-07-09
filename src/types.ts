@@ -267,6 +267,16 @@ export type PaymentMode =
   | "Full payment after firm quote"
   | "Bank transfer only";
 
+export interface BankTransferDetails {
+  beneficiary_name: string;
+  bank_name: string;
+  iban: string;
+  swift_code: string;
+  account_number?: string;
+  reference_hint: string;
+  additional_notes?: string;
+}
+
 export interface PaymentSettings {
   payment_gateway_enabled: boolean;
   provider: PaymentProvider;
@@ -274,7 +284,8 @@ export interface PaymentSettings {
   public_payment_note: string;
   internal_payment_note: string;
   payment_link_instructions: string;
-  supported_currencies: ("AED" | "USD")[];
+  bank_transfer: BankTransferDetails;
+  supported_currencies: ("AED" | "USD" | "IQD")[];
   minimum_payment_amount: number;
   max_payment_amount_before_manual_review: number;
   require_kyc_before_payment: boolean;
@@ -287,7 +298,8 @@ export interface PublicPaymentSettings {
   payment_mode: PaymentMode;
   public_payment_note: string;
   payment_link_instructions: string;
-  supported_currencies: ("AED" | "USD")[];
+  bank_transfer: BankTransferDetails;
+  supported_currencies: ("AED" | "USD" | "IQD")[];
   require_kyc_before_payment: boolean;
 }
 

@@ -839,14 +839,25 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
     }
   };
 
-  const handleViewPaymentProof = async (orderId: string, proofName: string) => {
+  const handleViewPaymentProof = async (orderId: string, proofName: string, storagePath?: string) => {
     try {
       await dbService.auditLogs.append(
         "admin_payment_proof_view",
         currentUser?.email || "admin@pgruae.com",
         `Admin viewed payment proof "${proofName}" for Order ${orderId}.`
       );
-      alert(`[AUDITED ACCESS] Opened encrypted receipt proof file: "${proofName}" for Order ${orderId}. This action has been securely logged for central compliance auditing.`);
+      if (storagePath) {
+        const url = await dbService.storage.getPaymentProofSignedUrl(storagePath);
+        if (url) {
+          window.open(url, "_blank", "noopener,noreferrer");
+          return;
+        }
+      }
+      alert(
+        storagePath
+          ? `Could not open proof file for order ${orderId}. Check Supabase storage bucket "payment-proofs".`
+          : `[Legacy] Proof metadata only: "${proofName}" for Order ${orderId}. Re-upload may be required.`
+      );
     } catch (err) {
       console.error(err);
     }
@@ -2478,7 +2489,7 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                                   <div className="mt-2 pt-1.5 border-t border-soft-border space-y-1">
                                     <p className="text-[10px] text-emerald-400 font-bold truncate">✓ Proof: {o.payment_proof_name}</p>
                                     <button
-                                      onClick={() => handleViewPaymentProof(o.id, o.payment_proof_name)}
+                                      onClick={() => handleViewPaymentProof(o.id, o.payment_proof_name, o.payment_proof_storage_path)}
                                       className="px-2 py-0.5 bg-emerald-950/40 text-emerald-300 hover:bg-emerald-900 border border-emerald-500/30 rounded text-[9px] font-mono tracking-wider cursor-pointer"
                                     >
                                       View & Audit Proof

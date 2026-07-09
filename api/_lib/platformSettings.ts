@@ -1,4 +1,5 @@
 import { getServiceSupabase } from "./adminAuth";
+import { DEFAULT_PAYMENT_SETTINGS } from "./paymentSettings";
 
 export const SETTINGS_KEY = "pgr_admin_settings";
 
@@ -7,6 +8,7 @@ export const DEFAULT_SETTINGS: Record<string, unknown> = {
   usd_iqd_rate: 1310.0,
   exchange_rates: { USD: 1.0, AED: 3.6725, IQD: 1310.0 },
   partner_logos: [] as unknown[],
+  payment_settings: DEFAULT_PAYMENT_SETTINGS,
 };
 
 export async function loadPlatformSettings(): Promise<Record<string, unknown>> {

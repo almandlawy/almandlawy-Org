@@ -36,7 +36,13 @@ export default function PaymentSettingsAdmin({ adminEmail, onAudit }: PaymentSet
   const [msg, setMsg] = useState("");
 
   useEffect(() => {
-    dbService.paymentSettings.get().then((s) => setSettings({ ...DEFAULT_PAYMENT_SETTINGS, ...s }));
+    dbService.paymentSettings.get().then((s) =>
+      setSettings({
+        ...DEFAULT_PAYMENT_SETTINGS,
+        ...s,
+        bank_transfer: { ...DEFAULT_PAYMENT_SETTINGS.bank_transfer, ...(s.bank_transfer || {}) },
+      })
+    );
   }, []);
 
   const handleSave = async (e: React.FormEvent) => {
@@ -57,7 +63,7 @@ export default function PaymentSettingsAdmin({ adminEmail, onAudit }: PaymentSet
     }
   };
 
-  const toggleCurrency = (cur: "AED" | "USD") => {
+  const toggleCurrency = (cur: "AED" | "USD" | "IQD") => {
     setSettings((prev) => {
       const has = prev.supported_currencies.includes(cur);
       const next = has
@@ -117,7 +123,7 @@ export default function PaymentSettingsAdmin({ adminEmail, onAudit }: PaymentSet
         <div className="space-y-2">
           <label className="text-text-secondary uppercase text-[9px] font-bold">Supported currencies</label>
           <div className="flex gap-4">
-            {(["AED", "USD"] as const).map((cur) => (
+            {(["AED", "USD", "IQD"] as const).map((cur) => (
               <label key={cur} className="flex items-center gap-2 text-text-charcoal/85 cursor-pointer">
                 <input
                   type="checkbox"
@@ -182,6 +188,91 @@ export default function PaymentSettingsAdmin({ adminEmail, onAudit }: PaymentSet
             onChange={(e) => setSettings({ ...settings, payment_link_instructions: e.target.value })}
             className="w-full bg-brand-bg border border-soft-border focus:border-gold-base rounded-lg px-3 py-2 text-text-charcoal outline-none focus:border-gold-base font-sans"
           />
+        </div>
+
+        <div className="border-t border-soft-border pt-4 space-y-3">
+          <h5 className="text-sm font-serif text-text-charcoal">Bank transfer details (public)</h5>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1 sm:col-span-2">
+              <label className="text-text-secondary uppercase text-[9px] font-bold">Beneficiary name</label>
+              <input
+                value={settings.bank_transfer.beneficiary_name}
+                onChange={(e) =>
+                  setSettings({
+                    ...settings,
+                    bank_transfer: { ...settings.bank_transfer, beneficiary_name: e.target.value },
+                  })
+                }
+                className="w-full bg-brand-bg border border-soft-border rounded-lg px-3 py-2 text-text-charcoal outline-none focus:border-gold-base"
+              />
+            </div>
+            <div className="space-y-1 sm:col-span-2">
+              <label className="text-text-secondary uppercase text-[9px] font-bold">Bank name</label>
+              <input
+                value={settings.bank_transfer.bank_name}
+                onChange={(e) =>
+                  setSettings({
+                    ...settings,
+                    bank_transfer: { ...settings.bank_transfer, bank_name: e.target.value },
+                  })
+                }
+                className="w-full bg-brand-bg border border-soft-border rounded-lg px-3 py-2 text-text-charcoal outline-none focus:border-gold-base"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-text-secondary uppercase text-[9px] font-bold">IBAN</label>
+              <input
+                value={settings.bank_transfer.iban}
+                onChange={(e) =>
+                  setSettings({
+                    ...settings,
+                    bank_transfer: { ...settings.bank_transfer, iban: e.target.value },
+                  })
+                }
+                className="w-full bg-brand-bg border border-soft-border rounded-lg px-3 py-2 text-text-charcoal font-mono outline-none focus:border-gold-base"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-text-secondary uppercase text-[9px] font-bold">SWIFT</label>
+              <input
+                value={settings.bank_transfer.swift_code}
+                onChange={(e) =>
+                  setSettings({
+                    ...settings,
+                    bank_transfer: { ...settings.bank_transfer, swift_code: e.target.value },
+                  })
+                }
+                className="w-full bg-brand-bg border border-soft-border rounded-lg px-3 py-2 text-text-charcoal font-mono outline-none focus:border-gold-base"
+              />
+            </div>
+            <div className="space-y-1 sm:col-span-2">
+              <label className="text-text-secondary uppercase text-[9px] font-bold">Reference hint (shown to customer)</label>
+              <input
+                value={settings.bank_transfer.reference_hint}
+                onChange={(e) =>
+                  setSettings({
+                    ...settings,
+                    bank_transfer: { ...settings.bank_transfer, reference_hint: e.target.value },
+                  })
+                }
+                className="w-full bg-brand-bg border border-soft-border rounded-lg px-3 py-2 text-text-charcoal outline-none focus:border-gold-base"
+              />
+            </div>
+            <div className="space-y-1 sm:col-span-2">
+              <label className="text-text-secondary uppercase text-[9px] font-bold">Additional notes</label>
+              <textarea
+                rows={2}
+                value={settings.bank_transfer.additional_notes || ""}
+                onChange={(e) =>
+                  setSettings({
+                    ...settings,
+                    bank_transfer: { ...settings.bank_transfer, additional_notes: e.target.value },
+                  })
+                }
+                className="w-full bg-brand-bg border border-soft-border rounded-lg px-3 py-2 text-text-charcoal outline-none focus:border-gold-base font-sans"
+              />
+            </div>
+          </div>
         </div>
 
         <div className="space-y-2">

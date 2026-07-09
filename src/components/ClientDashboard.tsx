@@ -19,7 +19,10 @@ import { generateQuotePDF } from "../lib/pdfGenerator";
 import { formatQuoteAmount } from "../lib/quoteUtils";
 import { kycStatusLabel, canRequestQuote, normalizeKycStatus } from "../lib/kycGate";
 import { buildWhatsAppLink } from "../lib/whatsapp";
+import { notifyDesk } from "../lib/deskNotify";
+import PaymentInstructionsPanel from "./PaymentInstructionsPanel";
 import type { AppUser } from "../lib/clientAuth";
+import type { PublicPaymentSettings } from "../types";
 
 interface ClientDashboardProps {
   currentLang: "en" | "ar";
@@ -108,6 +111,7 @@ function QuoteItem({
   const isKycReq = q.status === "KYC Required";
   const isQuoteSent = q.status === "Quote Sent" && !isExpired;
   const isAccepted = q.status === "Customer Accepted";
+  const needsPayment = q.status === "Customer Accepted" || q.status === "Payment Pending";
   const isCompleted = q.status === "Completed";
   const isCancelled =
     q.status === "Cancelled" || q.status === "Rejected" || q.status === "Expired Quote" || isExpired;
@@ -181,6 +185,12 @@ function QuoteItem({
           {isAr ? "قبول السعر المؤكد" : "Accept firm quote"}
         </button>
       )}
+
+      {needsPayment && (
+        <p className={`text-[10px] text-gold-dark font-bold ${isAr ? "font-arabic" : "font-mono"}`}>
+          {isAr ? "↓ انتقل لتعليمات الدفع على اليمين" : "↓ See payment instructions on the right"}
+        </p>
+      )}
     </div>
   );
 }
@@ -198,6 +208,7 @@ export default function ClientDashboard({
   const [loading, setLoading] = useState(true);
   const [proofUploadingId, setProofUploadingId] = useState<string | null>(null);
   const [kycStatus, setKycStatus] = useState<string>("Not submitted");
+  const [paymentSettings, setPaymentSettings] = useState<PublicPaymentSettings | null>(null);
 
   const isAr = currentLang === "ar";
   const customerRef = formatCustomerRef(user.id);
@@ -208,14 +219,16 @@ export default function ClientDashboard({
 
   const loadData = async () => {
     try {
-      const [qList, oList, kyc] = await Promise.all([
+      const [qList, oList, kyc, paySettings] = await Promise.all([
         dbService.quoteRequests.listForCustomer(user.id, user.email),
         dbService.orders.list(),
         dbService.kyc.get(user.id),
+        dbService.paymentSettings.getPublic(),
       ]);
       setKycStatus(kyc?.status || "Not submitted");
       setQuotes(qList || []);
       setOrders((oList || []).filter((o: any) => o.customer_id === user.id || o.email === user.email));
+      setPaymentSettings(paySettings);
     } catch (err) {
       console.error("Failed to load customer dashboard data", err);
     } finally {
@@ -279,19 +292,34 @@ export default function ClientDashboard({
   const handleUploadPaymentProof = async (orderId: string, event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      alert(isAr ? "الحد الأقصى ١٠ ميجابايت" : "Maximum file size is 10 MB");
+      return;
+    }
     setProofUploadingId(orderId);
     try {
+      const uploaded = await dbService.storage.uploadPaymentProof(user.id, orderId, file);
       await dbService.orders.update(orderId, {
-        payment_proof_name: file.name,
-        payment_proof_size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
+        payment_proof_name: uploaded.name,
+        payment_proof_size: `${(uploaded.size / (1024 * 1024)).toFixed(2)} MB`,
+        payment_proof_storage_path: uploaded.storage_path,
         payment_proof_uploaded_at: new Date().toISOString(),
         status: "Payment Pending",
+        payment_status: "Pending",
+      });
+      void notifyDesk("payment_proof", {
+        orderId,
+        customerName: user.name,
+        email: user.email,
+        fileName: uploaded.name,
       });
       await loadData();
     } catch (err) {
       console.error("Failed to upload payment proof:", err);
+      alert(isAr ? "تعذر رفع الملف. حاول مرة أخرى أو تواصل عبر واتساب." : "Upload failed. Try again or contact us on WhatsApp.");
     } finally {
       setProofUploadingId(null);
+      event.target.value = "";
     }
   };
 
@@ -318,6 +346,40 @@ export default function ClientDashboard({
   };
 
   const latestOrder = orders.length > 0 ? orders[orders.length - 1] : null;
+
+  const paymentOrder = useMemo(() => {
+    const pending = orders.find(
+      (o) =>
+        o.status === "Customer Accepted" ||
+        o.status === "Payment Pending" ||
+        (o.payment_status === "Pending" &&
+          !["Completed", "Cancelled", "Delivered"].includes(o.status))
+    );
+    if (pending) return pending;
+    return latestOrder &&
+      (latestOrder.status === "Customer Accepted" || latestOrder.status === "Payment Pending")
+      ? latestOrder
+      : null;
+  }, [orders, latestOrder]);
+
+  const paymentFromQuote = useMemo(() => {
+    if (paymentOrder) return null;
+    const q = quotes.find((x) => x.status === "Customer Accepted" || x.status === "Payment Pending");
+    if (!q) return null;
+    return {
+      id: q.id,
+      total_amount: q.quoted_price,
+      currency: q.currency || "AED",
+      payment_link: null,
+      payment_proof_name: null,
+      payment_proof_uploaded_at: null,
+      status: q.status,
+      payment_status: "Pending",
+      _quoteOnly: true,
+    };
+  }, [quotes, paymentOrder]);
+
+  const paymentTarget = paymentOrder || paymentFromQuote;
 
   return (
     <div
@@ -500,6 +562,25 @@ export default function ClientDashboard({
           </div>
 
           <div className="space-y-6">
+            {paymentTarget ? (
+              <PaymentInstructionsPanel
+                currentLang={currentLang}
+                order={paymentTarget}
+                paymentSettings={paymentSettings}
+                proofUploading={proofUploadingId === paymentTarget.id}
+                onUploadProof={(e) => {
+                  if ((paymentTarget as { _quoteOnly?: boolean })._quoteOnly) {
+                    alert(
+                      isAr
+                        ? "سيُفعّل رفع الإثبات بعد إنشاء الطلب من المكتب. يمكنك التحويل الآن باستخدام مرجع العرض."
+                        : "Proof upload opens once the desk creates your order. You can transfer now using the quote reference."
+                    );
+                    return;
+                  }
+                  handleUploadPaymentProof(paymentTarget.id, e);
+                }}
+              />
+            ) : (
             <div className="bg-brand-card border border-soft-border rounded-xl p-5 shadow-sm space-y-4">
               <h2 className="font-serif font-bold text-text-charcoal border-b border-soft-border pb-2">
                 {isAr ? "حالة الطلب" : "Order status"}
@@ -511,8 +592,8 @@ export default function ClientDashboard({
                   </p>
                   <p className="text-[11px] text-text-secondary">
                     {isAr
-                      ? "بعد قبول عرض السعر المؤكد من المكتب، يظهر تتبع الطلب هنا."
-                      : "After you accept a desk-confirmed quote, order tracking appears here."}
+                      ? "بعد قبول عرض السعر المؤكد من المكتب، تظهر تعليمات الدفع هنا."
+                      : "After you accept a desk-confirmed quote, payment instructions appear here."}
                   </p>
                 </div>
               ) : (
@@ -535,29 +616,10 @@ export default function ClientDashboard({
                   >
                     {isAr ? "تحميل PDF العرض" : "Download quote PDF"}
                   </button>
-                  <label className="block w-full py-2 bg-brand-bg border border-dashed border-gold-base/40 rounded-lg text-center text-[10px] font-mono font-bold text-gold-dark cursor-pointer">
-                    {proofUploadingId === latestOrder.id
-                      ? isAr
-                        ? "جاري الرفع…"
-                        : "Uploading…"
-                      : latestOrder.payment_proof_name
-                        ? isAr
-                          ? "إعادة رفع إثبات الدفع"
-                          : "Re-upload payment proof"
-                        : isAr
-                          ? "رفع إثبات الدفع"
-                          : "Upload payment proof"}
-                    <input
-                      type="file"
-                      accept=".pdf,image/*"
-                      className="hidden"
-                      disabled={proofUploadingId !== null}
-                      onChange={(e) => handleUploadPaymentProof(latestOrder.id, e)}
-                    />
-                  </label>
                 </div>
               )}
             </div>
+            )}
 
             <div className="bg-brand-card border border-soft-border rounded-xl p-5 shadow-sm space-y-3">
               <h2 className="font-serif font-bold text-text-charcoal">{isAr ? "دعم المكتب" : "Desk support"}</h2>
