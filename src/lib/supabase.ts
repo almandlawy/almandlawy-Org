@@ -1599,10 +1599,18 @@ export const dbService = {
     save: async (customerId: string, profile: any) => {
       if (isLive && supabase) {
         try {
-          const { data, error } = await supabase.from("kyc_profiles").upsert({ ...profile, id: customerId }).select();
-          if (!error && data) return data[0];
+          const { data, error } = await supabase
+            .from("kyc_profiles")
+            .upsert({ ...profile, id: customerId, updated_at: new Date().toISOString() })
+            .select();
+          if (error) {
+            console.error("Failed to save KYC profile to Supabase:", error);
+            throw new Error(error.message || "KYC save failed");
+          }
+          if (data?.[0]) return data[0];
         } catch (err) {
           console.error("Failed to save KYC profile to Supabase:", err);
+          if (isProduction) throw err;
         }
       }
       const list = mockDb.get("pgr_kyc_profiles") || [];

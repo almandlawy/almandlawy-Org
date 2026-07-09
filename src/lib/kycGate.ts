@@ -7,9 +7,17 @@ import type { KYCProfile } from "../types";
 
 export type KycGateStatus = KYCProfile["status"] | "Not submitted" | undefined;
 
+/** Normalize legacy/alternate status strings from DB or older clients. */
+export function normalizeKycStatus(status: KycGateStatus): KYCProfile["status"] | "Not submitted" {
+  if (!status || status === "Not submitted") return "Not submitted";
+  if (status === "Pending") return "Pending review";
+  return status;
+}
+
 /** User may submit a quote after KYC form is submitted (desk may still review). */
 export function canRequestQuote(status: KycGateStatus): boolean {
-  return status === "Pending review" || status === "Verified";
+  const normalized = normalizeKycStatus(status);
+  return normalized === "Pending review" || normalized === "Verified";
 }
 
 export function needsKycCompletion(status: KycGateStatus): boolean {
@@ -24,6 +32,6 @@ export function kycStatusLabel(status: KycGateStatus, lang: "en" | "ar"): string
     Verified: { en: "Verified", ar: "موثّق" },
     Rejected: { en: "Rejected", ar: "مرفوض" },
   };
-  const key = status || "Not submitted";
+  const key = normalizeKycStatus(status);
   return map[key]?.[lang] ?? key;
 }

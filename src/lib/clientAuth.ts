@@ -13,6 +13,7 @@ import {
   mockDb,
   supabase,
 } from "./supabase";
+import { needsKycCompletion } from "./kycGate";
 import {
   getCanonicalSiteOrigin,
   redirectBareDomainToWww,
@@ -336,10 +337,7 @@ export async function resolvePostAuthPath(
   const quotePaths = ["/request-quote", "/iraq-bullion-quote"];
   const needsKyc =
     quotePaths.some((p) => preferredPath.startsWith(p)) &&
-    (profile?.status === "Not submitted" ||
-      !profile?.status ||
-      profile.status === "Rejected" ||
-      profile.status === "More information required");
+    needsKycCompletion(profile?.status);
 
   if (needsKyc) {
     return `/kyc?next=${encodeURIComponent(preferredPath)}`;

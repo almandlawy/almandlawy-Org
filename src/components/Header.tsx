@@ -11,6 +11,7 @@ import { dbService, mockDb } from "../lib/supabase";
 import BrandLogo from "./BrandLogo";
 import { buildWhatsAppLink } from "../lib/whatsapp";
 import { trackWhatsAppClick } from "../lib/gtag";
+import type { AppUser } from "../lib/clientAuth";
 
 interface HeaderProps {
   currentLang: "en" | "ar";
@@ -22,6 +23,7 @@ interface HeaderProps {
   onOpenQuote: () => void;
   onOpenClientDashboard: () => void;
   onOpenAdminPortal: () => void;
+  authUser?: AppUser | null;
 }
 
 const NAV_LINKS = [
@@ -41,7 +43,8 @@ export default function Header({
   onNavigate,
   onOpenQuote,
   onOpenClientDashboard,
-  onOpenAdminPortal
+  onOpenAdminPortal,
+  authUser,
 }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -128,7 +131,15 @@ export default function Header({
             className="hidden lg:flex items-center gap-1 px-2.5 py-1.5 rounded border border-soft-border text-[10px] font-mono text-text-charcoal"
           >
             <ShieldCheck size={12} className="text-gold-base" />
-            <span>{isAr ? "العملاء" : "Clients"}</span>
+            <span>
+              {authUser
+                ? isAr
+                  ? "حسابي"
+                  : "My account"
+                : isAr
+                  ? "تسجيل الدخول"
+                  : "Sign in"}
+            </span>
           </button>
 
           <button

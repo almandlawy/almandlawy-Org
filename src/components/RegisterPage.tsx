@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import Logo from "./Logo";
-import { User, Mail, Lock, Phone, Building, ArrowLeft, ArrowRight, Chrome } from "lucide-react";
+import { User, Mail, Lock, Phone, Building, ArrowLeft, ArrowRight } from "lucide-react";
 import ClientAccountStepper from "./ClientAccountStepper";
+import GoogleSignInButton from "./GoogleSignInButton";
 import {
   getLoginRedirectPath,
   signInWithGoogle,
@@ -29,24 +30,28 @@ export default function RegisterPage({ currentLang, onNavigate, onRegisterSucces
   const [info, setInfo] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const isAr = currentLang === "ar";
   const nextPath = getLoginRedirectPath();
   const kycNext = `/kyc?next=${encodeURIComponent(nextPath)}`;
+
+  const inputClass =
+    "w-full bg-brand-bg border border-soft-border focus:border-gold-base rounded-lg px-3 py-2.5 text-sm text-text-charcoal outline-none transition-colors pl-9";
+  const labelClass =
+    "text-[10px] font-mono uppercase tracking-wider text-text-secondary font-bold block mb-1";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullName || !email || !phone || !password || (accountType === "corporate" && !companyName)) {
-      setError(currentLang === "ar" ? "يرجى ملء جميع الحقول المطلوبة." : "Please fill in all required fields.");
+      setError(isAr ? "يرجى ملء جميع الحقول المطلوبة." : "Please fill in all required fields.");
       return;
     }
     if (password.length < 8) {
-      setError(
-        currentLang === "ar" ? "كلمة المرور 8 أحرف على الأقل." : "Password must be at least 8 characters."
-      );
+      setError(isAr ? "كلمة المرور 8 أحرف على الأقل." : "Password must be at least 8 characters.");
       return;
     }
     if (!consentTerms || !consentPrivacy || !consentKyc) {
       setError(
-        currentLang === "ar"
+        isAr
           ? "يجب الموافقة على الشروط والخصوصية وKYC للمتابعة."
           : "You must accept Terms, Privacy, and KYC consent to proceed."
       );
@@ -69,7 +74,7 @@ export default function RegisterPage({ currentLang, onNavigate, onRegisterSucces
       onRegisterSuccess(user);
       if (needsEmailConfirm) {
         setInfo(
-          currentLang === "ar"
+          isAr
             ? "تم إنشاء الحساب. راجع بريدك لتأكيد البريد ثم سجّل الدخول."
             : "Account created. Check your email to confirm, then sign in."
         );
@@ -88,7 +93,7 @@ export default function RegisterPage({ currentLang, onNavigate, onRegisterSucces
   const handleGoogleSignup = async () => {
     if (!consentTerms || !consentPrivacy || !consentKyc) {
       setError(
-        currentLang === "ar"
+        isAr
           ? "يرجى الموافقة على الإقرارات قبل التسجيل بـ Google."
           : "Please accept the declarations before Google sign-up."
       );
@@ -110,170 +115,132 @@ export default function RegisterPage({ currentLang, onNavigate, onRegisterSucces
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4 bg-[#070707] relative overflow-hidden font-mono text-xs">
-      <div className="absolute top-1/4 right-1/4 w-[350px] h-[350px] bg-gold-dark/5 blur-[120px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-1/4 left-1/4 w-[350px] h-[350px] bg-white/[0.01] blur-[140px] rounded-full pointer-events-none" />
+    <div
+      className="min-h-screen w-full flex items-center justify-center p-4 bg-brand-bg relative overflow-hidden"
+      dir={isAr ? "rtl" : "ltr"}
+    >
+      <div className="absolute top-1/4 right-1/4 w-[400px] h-[400px] bg-gold-base/5 blur-[140px] rounded-full pointer-events-none" />
 
       <div className="absolute top-6 left-6 right-6 flex justify-between items-center z-10">
         <button
           onClick={() => onNavigate("/login")}
-          className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors cursor-pointer uppercase tracking-wider text-[10px]"
+          className="flex items-center gap-2 text-text-secondary hover:text-text-charcoal transition-colors cursor-pointer uppercase tracking-wider text-[10px] font-mono"
         >
-          {currentLang === "ar" ? <ArrowRight size={14} /> : <ArrowLeft size={14} />}
-          <span>{currentLang === "ar" ? "العودة لتسجيل الدخول" : "Back to sign in"}</span>
+          {isAr ? <ArrowRight size={14} /> : <ArrowLeft size={14} />}
+          <span>{isAr ? "العودة لتسجيل الدخول" : "Back to sign in"}</span>
         </button>
       </div>
 
       <div className="w-full max-w-xl space-y-4 relative z-10 my-10">
-        <div className="bg-[#0d0d0e]/90 border border-white/[0.04] rounded p-4">
+        <div className="rounded-xl border border-soft-border bg-brand-card p-4 shadow-sm">
           <ClientAccountStepper currentLang={currentLang} activeStep="account" compact />
         </div>
 
-        <div className="bg-[#0d0d0e] border border-white/[0.04] rounded p-8 shadow-2xl space-y-6">
+        <div className="rounded-xl border border-soft-border bg-brand-card p-8 shadow-sm space-y-6">
           <div className="text-center space-y-3">
             <Logo className="w-12 h-12 mx-auto" showText={false} currentLang={currentLang} />
-            <h1 className="text-white font-serif text-lg tracking-wider font-bold uppercase">
-              {currentLang === "ar" ? "إنشاء حساب عميل" : "Create client account"}
+            <h1 className="text-text-charcoal font-serif text-xl tracking-wide font-bold">
+              {isAr ? "إنشاء حساب" : "Create account"}
             </h1>
-            <p className="text-gray-500 uppercase tracking-widest text-[9px]">
-              {currentLang === "ar"
-                ? "الاسم · البريد · Google — ثم KYC ثم طلب العرض"
-                : "Name · email · Google — then KYC, then quote"}
+            <p className="text-text-secondary text-[10px] font-mono uppercase tracking-widest">
+              {isAr ? "الاسم · البريد · Google — ثم KYC ثم طلب العرض" : "Name · email · Google — then KYC, then quote"}
             </p>
           </div>
 
           {error && (
-            <div className="p-3 bg-red-950/20 border border-red-900/40 text-red-400 rounded text-[10px]">
-              {error}
-            </div>
+            <div className="p-3 bg-red-50 border border-red-200 text-red-800 rounded-lg text-[11px]">{error}</div>
           )}
           {info && (
-            <div className="p-3 bg-emerald-950/20 border border-emerald-900/40 text-emerald-400 rounded text-[10px]">
+            <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-lg text-[11px]">
               {info}
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-2 bg-[#070707] p-1 rounded border border-white/5">
+          <div className="grid grid-cols-2 gap-2 bg-brand-bg p-1 rounded-lg border border-soft-border">
             <button
               type="button"
               onClick={() => setAccountType("individual")}
-              className={`py-2 rounded text-[10px] uppercase tracking-wider font-bold transition-all cursor-pointer ${
-                accountType === "individual" ? "bg-gold-gradient text-black" : "text-gray-400 hover:text-white"
+              className={`py-2 rounded-md text-[10px] uppercase tracking-wider font-bold font-mono transition-all cursor-pointer ${
+                accountType === "individual" ? "bg-gold-base text-text-charcoal" : "text-text-secondary hover:text-text-charcoal"
               }`}
             >
-              {currentLang === "ar" ? "فردي" : "Individual"}
+              {isAr ? "فردي" : "Individual"}
             </button>
             <button
               type="button"
               onClick={() => setAccountType("corporate")}
-              className={`py-2 rounded text-[10px] uppercase tracking-wider font-bold transition-all cursor-pointer ${
-                accountType === "corporate" ? "bg-gold-gradient text-black" : "text-gray-400 hover:text-white"
+              className={`py-2 rounded-md text-[10px] uppercase tracking-wider font-bold font-mono transition-all cursor-pointer ${
+                accountType === "corporate" ? "bg-gold-base text-text-charcoal" : "text-text-secondary hover:text-text-charcoal"
               }`}
             >
-              {currentLang === "ar" ? "شركة" : "Corporate"}
+              {isAr ? "شركة" : "Corporate"}
             </button>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-gray-400 uppercase tracking-wider block text-[9px]">
-                  {currentLang === "ar" ? "الاسم الكامل" : "Full name"} *
-                </label>
+                <label className={labelClass}>{isAr ? "الاسم الكامل" : "Full name"} *</label>
                 <div className="relative">
-                  <input
-                    type="text"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    className="w-full bg-[#070707] border border-white/5 focus:border-[#c5a85c]/60 rounded px-3 py-2 text-white pl-8"
-                  />
-                  <User size={13} className="text-gray-600 absolute left-2.5 top-2.5" />
+                  <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} className={inputClass} />
+                  <User size={13} className="text-text-secondary absolute left-2.5 top-3" />
                 </div>
               </div>
               <div className="space-y-1">
-                <label className="text-gray-400 uppercase tracking-wider block text-[9px]">
-                  {currentLang === "ar" ? "البريد الإلكتروني" : "Email"} *
-                </label>
+                <label className={labelClass}>{isAr ? "البريد الإلكتروني" : "Email"} *</label>
                 <div className="relative">
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-[#070707] border border-white/5 focus:border-[#c5a85c]/60 rounded px-3 py-2 text-white pl-8"
-                  />
-                  <Mail size={13} className="text-gray-600 absolute left-2.5 top-2.5" />
+                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} />
+                  <Mail size={13} className="text-text-secondary absolute left-2.5 top-3" />
                 </div>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-gray-400 uppercase tracking-wider block text-[9px]">
-                  {currentLang === "ar" ? "واتساب / هاتف" : "WhatsApp / phone"} *
-                </label>
+                <label className={labelClass}>{isAr ? "واتساب / هاتف" : "WhatsApp / phone"} *</label>
                 <div className="relative">
                   <input
                     type="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="+971 55 968 8837"
-                    className="w-full bg-[#070707] border border-white/5 focus:border-[#c5a85c]/60 rounded px-3 py-2 text-white pl-8"
+                    className={inputClass}
                   />
-                  <Phone size={13} className="text-gray-600 absolute left-2.5 top-2.5" />
+                  <Phone size={13} className="text-text-secondary absolute left-2.5 top-3" />
                 </div>
               </div>
               <div className="space-y-1">
-                <label className="text-gray-400 uppercase tracking-wider block text-[9px]">
-                  {currentLang === "ar" ? "كلمة المرور" : "Password"} *
-                </label>
+                <label className={labelClass}>{isAr ? "كلمة المرور" : "Password"} *</label>
                 <div className="relative">
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-[#070707] border border-white/5 focus:border-[#c5a85c]/60 rounded px-3 py-2 text-white pl-8"
-                  />
-                  <Lock size={13} className="text-gray-600 absolute left-2.5 top-2.5" />
+                  <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputClass} />
+                  <Lock size={13} className="text-text-secondary absolute left-2.5 top-3" />
                 </div>
               </div>
             </div>
 
             {accountType === "corporate" && (
               <div className="space-y-1">
-                <label className="text-gray-400 uppercase tracking-wider block text-[9px]">
-                  {currentLang === "ar" ? "اسم الشركة" : "Company name"} *
-                </label>
+                <label className={labelClass}>{isAr ? "اسم الشركة" : "Company name"} *</label>
                 <div className="relative">
-                  <input
-                    type="text"
-                    value={companyName}
-                    onChange={(e) => setCompanyName(e.target.value)}
-                    className="w-full bg-[#070707] border border-white/5 focus:border-[#c5a85c]/60 rounded px-3 py-2 text-white pl-8"
-                  />
-                  <Building size={13} className="text-gray-600 absolute left-2.5 top-2.5" />
+                  <input type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)} className={inputClass} />
+                  <Building size={13} className="text-text-secondary absolute left-2.5 top-3" />
                 </div>
               </div>
             )}
 
-            <div className="space-y-3 p-4 bg-[#070707] border border-white/5 rounded">
-              <label className="flex items-start gap-2.5 text-gray-400 cursor-pointer">
-                <input type="checkbox" checked={consentTerms} onChange={(e) => setConsentTerms(e.target.checked)} className="mt-0.5 accent-[#c5a85c]" />
-                <span className="text-[10px]">
-                  {currentLang === "ar" ? "أوافق على شروط الخدمة." : "I accept the terms of service."}
-                </span>
+            <div className="space-y-3 p-4 bg-brand-bg border border-soft-border rounded-lg">
+              <label className="flex items-start gap-2.5 text-text-secondary cursor-pointer">
+                <input type="checkbox" checked={consentTerms} onChange={(e) => setConsentTerms(e.target.checked)} className="mt-0.5 accent-gold-base" />
+                <span className="text-[11px]">{isAr ? "أوافق على شروط الخدمة." : "I accept the terms of service."}</span>
               </label>
-              <label className="flex items-start gap-2.5 text-gray-400 cursor-pointer">
-                <input type="checkbox" checked={consentPrivacy} onChange={(e) => setConsentPrivacy(e.target.checked)} className="mt-0.5 accent-[#c5a85c]" />
-                <span className="text-[10px]">
-                  {currentLang === "ar" ? "أوافق على سياسة الخصوصية." : "I accept the privacy policy."}
-                </span>
+              <label className="flex items-start gap-2.5 text-text-secondary cursor-pointer">
+                <input type="checkbox" checked={consentPrivacy} onChange={(e) => setConsentPrivacy(e.target.checked)} className="mt-0.5 accent-gold-base" />
+                <span className="text-[11px]">{isAr ? "أوافق على سياسة الخصوصية." : "I accept the privacy policy."}</span>
               </label>
-              <label className="flex items-start gap-2.5 text-gray-400 cursor-pointer">
-                <input type="checkbox" checked={consentKyc} onChange={(e) => setConsentKyc(e.target.checked)} className="mt-0.5 accent-[#c5a85c]" />
-                <span className="text-[10px]">
-                  {currentLang === "ar"
-                    ? "أوافق على إكمال KYC قبل طلب أي عرض سعر."
-                    : "I agree to complete KYC before requesting any quote."}
+              <label className="flex items-start gap-2.5 text-text-secondary cursor-pointer">
+                <input type="checkbox" checked={consentKyc} onChange={(e) => setConsentKyc(e.target.checked)} className="mt-0.5 accent-gold-base" />
+                <span className="text-[11px]">
+                  {isAr ? "أوافق على إكمال KYC قبل طلب أي عرض سعر." : "I agree to complete KYC before requesting any quote."}
                 </span>
               </label>
             </div>
@@ -281,42 +248,29 @@ export default function RegisterPage({ currentLang, onNavigate, onRegisterSucces
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-gold-gradient hover:opacity-90 text-black uppercase tracking-widest font-bold rounded text-[11px] disabled:opacity-60"
+              className="w-full py-3 bg-gold-base hover:bg-gold-dark text-text-charcoal uppercase tracking-widest font-mono font-bold rounded-lg text-[11px] disabled:opacity-60"
             >
-              {loading
-                ? currentLang === "ar"
-                  ? "جاري الإنشاء…"
-                  : "Creating…"
-                : currentLang === "ar"
-                  ? "إنشاء الحساب"
-                  : "Create account"}
+              {loading ? (isAr ? "جاري الإنشاء…" : "Creating…") : isAr ? "إنشاء الحساب" : "Create account"}
             </button>
           </form>
 
           <div className="relative flex py-1 items-center">
-            <div className="flex-grow border-t border-white/[0.04]" />
-            <span className="flex-shrink mx-4 text-gray-600 uppercase text-[8px]">OR</span>
-            <div className="flex-grow border-t border-white/[0.04]" />
+            <div className="flex-grow border-t border-soft-border" />
+            <span className="flex-shrink mx-4 text-text-secondary uppercase text-[8px] font-mono">{isAr ? "أو" : "OR"}</span>
+            <div className="flex-grow border-t border-soft-border" />
           </div>
 
-          <button
-            onClick={handleGoogleSignup}
-            type="button"
+          <GoogleSignInButton
+            label={isAr ? "التسجيل بـ Google" : "Sign up with Google"}
             disabled={loading}
-            className="w-full py-3 bg-white text-gray-800 hover:bg-gray-100 font-bold rounded text-[11px] flex items-center justify-center gap-2 border border-gray-200 disabled:opacity-60"
-          >
-            <Chrome size={16} />
-            {currentLang === "ar" ? "التسجيل بـ Google" : "Sign up with Google"}
-          </button>
+            onClick={handleGoogleSignup}
+          />
 
           <div className="text-center">
-            <p className="text-gray-500 text-[10px]">
-              {currentLang === "ar" ? "لديك حساب؟" : "Already registered?"}{" "}
-              <button
-                onClick={() => onNavigate("/login")}
-                className="text-[#c5a85c] font-bold hover:underline text-[9px]"
-              >
-                {currentLang === "ar" ? "تسجيل الدخول" : "Sign in"}
+            <p className="text-text-secondary text-[11px]">
+              {isAr ? "لديك حساب؟" : "Already registered?"}{" "}
+              <button onClick={() => onNavigate("/login")} className="text-gold-dark font-bold hover:underline text-[10px] font-mono">
+                {isAr ? "تسجيل الدخول" : "Sign in"}
               </button>
             </p>
           </div>
