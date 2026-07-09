@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, Suspense, lazy } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Header from "./components/Header";
 import Hero from "./components/Hero";
 import MarketReferenceStrip from "./components/MarketReferenceStrip";
@@ -20,13 +20,14 @@ import ComplianceKYCSection from "./components/ComplianceKYCSection";
 import { getRouteSeo, SEO_LANDING_PATHS } from "./lib/seoRoutes";
 import { applyPageSeo } from "./lib/seoMeta";
 import ProductDetailModal from "./components/ProductDetailModal";
-const AIConcierge = lazy(() => import("./components/AIConcierge"));
+import { lazyWithRetry } from "./lib/lazyWithRetry";
+const AIConcierge = lazyWithRetry(() => import("./components/AIConcierge"));
 import FloatingConversionBar from "./components/FloatingConversionBar";
 import QuoteReceivedPage from "./components/QuoteReceivedPage";
 import OfficeSection from "./components/OfficeSection";
 import ClientDashboardModal from "./components/ClientDashboardModal";
 import AdminPortalModal from "./components/AdminPortalModal";
-const AdminPanel = lazy(() => import("./components/AdminPanel"));
+const AdminPanel = lazyWithRetry(() => import("./components/AdminPanel"));
 import LegalOverlayModal from "./components/LegalOverlayModal";
 import Footer from "./components/Footer";
 import SeoSiteLinks from "./components/SeoSiteLinks";
@@ -54,9 +55,9 @@ import RequestQuotePage from "./components/RequestQuotePage";
 import ProductLandingPage from "./components/ProductLandingPage";
 import AllocatedStoragePage from "./components/AllocatedStoragePage";
 import SellBackPage from "./components/SellBackPage";
-const ClientDashboard = lazy(() => import("./components/ClientDashboard"));
+const ClientDashboard = lazyWithRetry(() => import("./components/ClientDashboard"));
 import MetalCalculator from "./components/MetalCalculator";
-const SEOLandingPages = lazy(() => import("./components/SEOLandingPages"));
+const SEOLandingPages = lazyWithRetry(() => import("./components/SEOLandingPages"));
 import FacebookLandingPage from "./components/FacebookLandingPage";
 import IraqBullionQuotePage from "./components/IraqBullionQuotePage";
 import AuthCallbackPage from "./components/AuthCallbackPage";
