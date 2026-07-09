@@ -1161,32 +1161,56 @@ export const dbService = {
       return mockDb.get("pgr_quote_requests");
     },
     listForCustomer: async (customerId: string, email?: string) => {
+      await ensureSupabaseReady();
       const normalizedEmail = email?.trim().toLowerCase();
       if (isLive && supabase) {
-        const deskQuotes = await supabase
+        const deskFilter = normalizedEmail
+          ? `customer_id.eq.${customerId},email.ilike.${normalizedEmail}`
+          : `customer_id.eq.${customerId}`;
+        let deskQuotes = await supabase
           .from("quote_requests")
           .select("*")
-          .or(
-            `customer_id.eq.${customerId}${normalizedEmail ? `,email.eq.${normalizedEmail}` : ""}`
-          )
+          .or(deskFilter)
           .order("created_at", { ascending: false });
-        const webQuotes = await supabase
+
+        if (deskQuotes.error?.message?.includes("customer_id")) {
+          deskQuotes = normalizedEmail
+            ? await supabase
+                .from("quote_requests")
+                .select("*")
+                .ilike("email", normalizedEmail)
+                .order("created_at", { ascending: false })
+            : { data: [], error: null };
+        }
+
+        let webQuotes = await supabase
           .from("website_quote_requests")
           .select("*")
-          .or(
-            `customer_id.eq.${customerId}${normalizedEmail ? `,email.eq.${normalizedEmail}` : ""}`
-          )
+          .or(deskFilter)
           .order("created_at", { ascending: false });
-        const merged = [
-          ...(deskQuotes.data || []),
-          ...(webQuotes.data || []),
-        ];
-        if (merged.length) {
-          return merged.sort(
-            (a, b) =>
-              new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
-          );
+
+        if (webQuotes.error?.message?.includes("customer_id")) {
+          webQuotes = normalizedEmail
+            ? await supabase
+                .from("website_quote_requests")
+                .select("*")
+                .ilike("email", normalizedEmail)
+                .order("created_at", { ascending: false })
+            : { data: [], error: null };
         }
+
+        if (deskQuotes.error) {
+          console.warn("[quoteRequests] desk list failed:", deskQuotes.error.message);
+        }
+        if (webQuotes.error) {
+          console.warn("[quoteRequests] website list failed:", webQuotes.error.message);
+        }
+
+        const merged = [...(deskQuotes.data || []), ...(webQuotes.data || [])];
+        return merged.sort(
+          (a, b) =>
+            new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+        );
       }
       const desk = (mockDb.get("pgr_quote_requests") || []).filter(
         (q: any) =>
