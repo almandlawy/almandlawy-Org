@@ -55,9 +55,77 @@ CREATE POLICY "admin_select_website_quote_requests"
 
 -- Legacy quote_requests table left unchanged if used elsewhere
 
--- 3. Supabase Auth → URL Configuration
+-- 3. Client accounts (linked to auth.users)
+CREATE TABLE IF NOT EXISTS public.customers (
+  id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  full_name text,
+  email text UNIQUE,
+  phone text,
+  company text,
+  account_type text DEFAULT 'individual',
+  avatar_url text,
+  provider text,
+  last_login timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.customers ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "customers_select_own" ON public.customers;
+CREATE POLICY "customers_select_own"
+  ON public.customers FOR SELECT TO authenticated
+  USING (auth.uid() = id);
+DROP POLICY IF EXISTS "customers_upsert_own" ON public.customers;
+CREATE POLICY "customers_upsert_own"
+  ON public.customers FOR ALL TO authenticated
+  USING (auth.uid() = id)
+  WITH CHECK (auth.uid() = id);
+
+-- 4. KYC profiles
+CREATE TABLE IF NOT EXISTS public.kyc_profiles (
+  id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  full_name text,
+  phone text,
+  whatsapp text,
+  email text,
+  country text,
+  city text,
+  nationality text,
+  dob text,
+  source_of_funds_declaration text,
+  agreement_accepted boolean DEFAULT false,
+  privacy_consent boolean DEFAULT false,
+  status text NOT NULL DEFAULT 'Not submitted',
+  documents jsonb DEFAULT '[]'::jsonb,
+  uploaded_files jsonb DEFAULT '{}'::jsonb,
+  kyc_type text DEFAULT 'individual',
+  verified_at timestamptz,
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.kyc_profiles ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "kyc_select_own" ON public.kyc_profiles;
+CREATE POLICY "kyc_select_own"
+  ON public.kyc_profiles FOR SELECT TO authenticated
+  USING (auth.uid() = id);
+DROP POLICY IF EXISTS "kyc_upsert_own" ON public.kyc_profiles;
+CREATE POLICY "kyc_upsert_own"
+  ON public.kyc_profiles FOR ALL TO authenticated
+  USING (auth.uid() = id)
+  WITH CHECK (auth.uid() = id);
+
+-- 5. Link website quotes to authenticated clients
+ALTER TABLE public.website_quote_requests
+  ADD COLUMN IF NOT EXISTS customer_id uuid REFERENCES auth.users(id);
+
+DROP POLICY IF EXISTS "client_select_own_website_quotes" ON public.website_quote_requests;
+CREATE POLICY "client_select_own_website_quotes"
+  ON public.website_quote_requests FOR SELECT TO authenticated
+  USING (customer_id = auth.uid());
+
+-- 6. Supabase Auth → URL Configuration
 -- Site URL: https://www.pgruae.com
 -- Redirect URLs:
 --   https://www.pgruae.com/auth/callback
 --   https://www.pgruae.com/admin
---   https://www.pgruae.com
+--   https://www.pgruae.com/dashboard
+--   https://www.pgruae.com/kyc

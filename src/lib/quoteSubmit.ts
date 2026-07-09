@@ -4,10 +4,12 @@
 
 import { attributionPayload } from "./attribution";
 import { trackGoogleAdsContactConversion } from "./gtag";
+import { getAccessToken } from "./clientAuth";
 
 export interface QuoteSubmitInput {
   fullName: string;
   phone: string;
+  email?: string;
   countryCity: string;
   productInterest: string;
   quantityBudget: string;
@@ -15,6 +17,7 @@ export interface QuoteSubmitInput {
   message?: string;
   source: string;
   sourceLanguage: "en" | "ar";
+  customerId?: string;
 }
 
 export interface QuoteSubmitResult {
@@ -31,9 +34,15 @@ export async function submitQuoteRequest(
     ...attributionPayload(),
   };
 
+  const token = await getAccessToken();
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
   const response = await fetch("/api/quote", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify(payload),
   });
 

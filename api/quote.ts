@@ -6,6 +6,15 @@ function getSupabaseUrl() {
   return process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "";
 }
 
+function getAnonClient() {
+  const url = getSupabaseUrl();
+  const anon = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || "";
+  if (!url || !anon) return null;
+  return createClient(url, anon, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
+
 function getServiceClient() {
   const url = getSupabaseUrl();
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
@@ -58,6 +67,23 @@ function buildMessage(body: Record<string, unknown>): string {
 }
 
 const QUOTE_TABLE = "website_quote_requests";
+
+async function resolveCustomerFromAuth(
+  req: VercelRequest
+): Promise<{ id?: string; email?: string } | null> {
+  const authHeader = req.headers.authorization;
+  if (!authHeader?.startsWith("Bearer ")) return null;
+  const token = authHeader.slice(7).trim();
+  if (!token || token.startsWith("mock-token-")) {
+    const mockId = token.replace("mock-token-", "");
+    return mockId ? { id: mockId } : null;
+  }
+  const anon = getAnonClient();
+  if (!anon) return null;
+  const { data, error } = await anon.auth.getUser(token);
+  if (error || !data.user) return null;
+  return { id: data.user.id, email: data.user.email || undefined };
+}
 
 async function tryInsertQuote(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -112,7 +138,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const inquiryId = "PGR-" + Math.floor(100000 + Math.random() * 900000);
-    const resolvedEmail = email || `whatsapp+${phone.replace(/\D/g, "").slice(-12)}@quote.pgruae.com`;
+    const authCustomer = await resolveCustomerFromAuth(req);
+    const bodyCustomerId = String(body.customerId || "").trim();
+    const customerId = authCustomer?.id || bodyCustomerId || undefined;
+    const resolvedEmail =
+      email ||
+      authCustomer?.email ||
+      `whatsapp+${phone.replace(/\D/g, "").slice(-12)}@quote.pgruae.com`;
     const message = buildMessage({
       countryCity,
       preferredContact,
@@ -128,7 +160,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       landing_page: body.landing_page,
     });
 
-    const baseRow = {
+    const baseRow: Record<string, unknown> = {
       name,
       email: resolvedEmail,
       phone,
@@ -137,9 +169,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       product_category: productCategory,
       weight_preference: quantityBudget,
       message,
-      status: "New Request",
-      created_at: new Date().toISOString()
+      status: customerId ? "Desk Review" : "New Request",
+      created_at: new Date().toISOString(),
     };
+    if (customerId) {
+      baseRow.customer_id = customerId;
+    }
 
     const service = getServiceClient();
     let persisted = false;

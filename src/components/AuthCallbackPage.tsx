@@ -1,10 +1,11 @@
 /**
- * OAuth callback — exchanges PKCE code and returns user to /admin.
+ * OAuth callback — exchanges PKCE code and redirects to client destination.
  */
 
 import React, { useEffect, useState } from "react";
 import { RefreshCw, ShieldAlert } from "lucide-react";
 import { ensureSupabaseReady, supabase } from "../lib/supabase";
+import { mapSupabaseUser, persistAppUser, resolvePostAuthPath, upsertCustomerProfile, ensureKycStub } from "../lib/clientAuth";
 
 export default function AuthCallbackPage() {
   const [error, setError] = useState("");
@@ -24,7 +25,7 @@ export default function AuthCallbackPage() {
       try {
         const params = new URLSearchParams(window.location.search);
         const code = params.get("code");
-        const next = params.get("next") || "/admin";
+        const next = params.get("next") || "/dashboard";
 
         if (code) {
           const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
@@ -39,8 +40,14 @@ export default function AuthCallbackPage() {
           throw new Error("No session after OAuth callback.");
         }
 
-        window.history.replaceState({}, document.title, next);
-        window.location.assign(next);
+        const user = mapSupabaseUser(session.user);
+        persistAppUser(user);
+        await upsertCustomerProfile(user);
+        await ensureKycStub(user);
+
+        const destination = await resolvePostAuthPath(next);
+        window.history.replaceState({}, document.title, destination);
+        window.location.assign(destination);
       } catch (err: unknown) {
         console.error("[AuthCallback] OAuth failed:", err);
         if (!cancelled) {
@@ -64,17 +71,17 @@ export default function AuthCallbackPage() {
             <h1 className="text-lg font-serif text-text-charcoal">Sign-in could not be completed</h1>
             <p className="text-sm text-text-secondary">{error}</p>
             <a
-              href="/admin"
+              href="/login"
               className="inline-block mt-2 px-5 py-2.5 bg-gold-base hover:bg-gold-dark text-text-charcoal text-xs font-mono font-bold uppercase tracking-widest rounded-lg"
             >
-              Back to admin
+              Back to sign in
             </a>
           </>
         ) : (
           <>
             <RefreshCw className="animate-spin text-gold-base mx-auto" size={36} />
             <h1 className="text-lg font-serif text-text-charcoal">Completing sign-in…</h1>
-            <p className="text-sm text-text-secondary">Redirecting to PGR UAE admin.</p>
+            <p className="text-sm text-text-secondary">Redirecting to your PGR UAE account.</p>
           </>
         )}
       </div>

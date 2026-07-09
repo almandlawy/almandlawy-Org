@@ -1169,6 +1169,55 @@ export const dbService = {
       }
       return mockDb.get("pgr_quote_requests");
     },
+    listForCustomer: async (customerId: string, email?: string) => {
+      const normalizedEmail = email?.trim().toLowerCase();
+      if (isLive && supabase) {
+        const deskQuotes = await supabase
+          .from("quote_requests")
+          .select("*")
+          .or(
+            `customer_id.eq.${customerId}${normalizedEmail ? `,email.eq.${normalizedEmail}` : ""}`
+          )
+          .order("created_at", { ascending: false });
+        const webQuotes = await supabase
+          .from("website_quote_requests")
+          .select("*")
+          .or(
+            `customer_id.eq.${customerId}${normalizedEmail ? `,email.eq.${normalizedEmail}` : ""}`
+          )
+          .order("created_at", { ascending: false });
+        const merged = [
+          ...(deskQuotes.data || []),
+          ...(webQuotes.data || []),
+        ];
+        if (merged.length) {
+          return merged.sort(
+            (a, b) =>
+              new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+          );
+        }
+      }
+      const desk = (mockDb.get("pgr_quote_requests") || []).filter(
+        (q: any) =>
+          q.customer_id === customerId ||
+          (normalizedEmail && String(q.email || "").toLowerCase() === normalizedEmail)
+      );
+      const web = (mockDb.get("pgr_website_quote_requests") || []).filter(
+        (q: any) =>
+          q.customer_id === customerId ||
+          (normalizedEmail && String(q.email || "").toLowerCase() === normalizedEmail)
+      );
+      return [...desk, ...web].sort(
+        (a, b) =>
+          new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+      );
+    },
+    saveWebsiteQuoteLocal: async (row: Record<string, unknown>) => {
+      const list = mockDb.get("pgr_website_quote_requests") || [];
+      list.unshift(row);
+      mockDb.set("pgr_website_quote_requests", list);
+      return row;
+    },
     create: async (request: any) => {
       if (isLive && supabase) {
         const { data, error } = await supabase.from("quote_requests").insert(request).select();
