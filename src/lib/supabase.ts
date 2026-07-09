@@ -1227,15 +1227,28 @@ export const dbService = {
       };
 
       if (isLive && supabase) {
-        const { data, error } = await supabase
-          .from("website_quote_requests")
-          .insert(row)
-          .select();
-        if (error) {
-          console.error("[quoteRequests] website_quote_requests insert failed:", error);
-          throw new Error(error.message || "Quote save failed");
+        const attempts: Record<string, unknown>[] = [row];
+        const withoutInquiry = { ...row };
+        delete withoutInquiry.inquiry_id;
+        attempts.push(withoutInquiry);
+        const withoutCustomer = { ...withoutInquiry };
+        delete withoutCustomer.customer_id;
+        attempts.push(withoutCustomer);
+
+        let lastError: string | undefined;
+        for (const attempt of attempts) {
+          const { data, error } = await supabase
+            .from("website_quote_requests")
+            .insert(attempt)
+            .select();
+          if (!error) {
+            return { inquiryId, row: data?.[0] || attempt };
+          }
+          lastError = error.message || "Quote save failed";
+          console.warn("[quoteRequests] insert attempt failed:", lastError, attempt);
         }
-        return { inquiryId, row: data?.[0] || row };
+        console.error("[quoteRequests] website_quote_requests insert failed:", lastError);
+        throw new Error(lastError || "Quote save failed");
       }
 
       const list = mockDb.get("pgr_website_quote_requests") || [];
