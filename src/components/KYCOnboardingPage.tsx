@@ -266,24 +266,14 @@ export default function KYCOnboardingPage({ currentLang, onNavigate }: KYCOnboar
       {schemaReady === false && (
         <div className="p-4 rounded-lg border border-amber-300 bg-amber-50 text-amber-950 text-sm space-y-2">
           <p className="font-bold">
-            {isAr ? "إعداد قاعدة البيانات مطلوب" : "Database setup required"}
+            {isAr ? "تعذر الاتصال بجدول KYC" : "Could not reach KYC table"}
           </p>
-          <p>
-            {isAr
-              ? "جدول KYC غير موجود في Supabase. افتح Supabase → SQL Editor وشغّل الملف:"
-              : "The KYC table is missing in Supabase. Open Supabase → SQL Editor and run:"}
-          </p>
-          <code className="block text-xs bg-white/80 border border-amber-200 rounded px-2 py-1 font-mono">
-            scripts/kyc-repair-columns.sql
-          </code>
           <p className="text-[11px]">
-            {isAr
-              ? "بعد التشغيل، نفّذ أيضاً: NOTIFY pgrst, 'reload schema';"
-              : "After running, also execute: NOTIFY pgrst, 'reload schema';"}
+            {schemaReason ||
+              (isAr
+                ? "تحقق من صلاحيات RLS في Supabase لجدول kyc_profiles"
+                : "Check RLS policies on kyc_profiles in Supabase")}
           </p>
-          {schemaReason && (
-            <p className="text-[11px] text-amber-800 font-mono">{schemaReason}</p>
-          )}
         </div>
       )}
 

@@ -20,7 +20,6 @@ import {
   dailyReferenceAedPerGram,
 } from "./metalReferenceSpots";
 import { getCanonicalSiteOrigin } from "./siteOrigin";
-import { fetchKycProfileViaApi, saveKycProfileViaApi } from "./kycApi";
 
 // 1. Fetch environment variables safely (client-side only using import.meta.env)
 const buildTimeSupabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL || "";
@@ -1571,28 +1570,35 @@ export const dbService = {
 
   kyc: {
     get: async (customerId: string) => {
-      if (isProduction) {
-        try {
-          return await fetchKycProfileViaApi(customerId);
-        } catch (err) {
-          console.warn("KYC API get failed, trying direct Supabase:", err);
-          if (isLive && supabase) {
-            const { data, error } = await supabase
-              .from("kyc_profiles")
-              .select("*")
-              .eq("id", customerId)
-              .maybeSingle();
-            if (!error) return data || undefined;
-          }
-          throw err;
-        }
-      }
       if (isLive && supabase) {
-        try {
-          const { data, error } = await supabase.from("kyc_profiles").select("*").eq("id", customerId).maybeSingle();
-          if (!error && data) return data;
-        } catch (err) {
-          console.error("Failed to fetch KYC profile from Supabase:", err);
+        const { data, error } = await supabase
+          .from("kyc_profiles")
+          .select("*")
+          .eq("id", customerId)
+          .maybeSingle();
+        if (error) {
+          console.error("Failed to fetch KYC profile from Supabase:", error);
+          throw new Error(error.message || "KYC load failed");
+        }
+        if (data) return data;
+        if (isProduction) {
+          return {
+            id: customerId,
+            full_name: "",
+            phone: "",
+            whatsapp: "",
+            email: "",
+            country: "",
+            city: "",
+            nationality: "",
+            dob: "",
+            source_of_funds_declaration: "",
+            agreement_accepted: false,
+            privacy_consent: false,
+            status: "Not submitted",
+            documents: [],
+            uploaded_files: {},
+          };
         }
       }
       const list = mockDb.get("pgr_kyc_profiles") || [];
@@ -1614,44 +1620,40 @@ export const dbService = {
       };
     },
     save: async (customerId: string, profile: any) => {
-      if (isProduction) {
-        try {
-          return await saveKycProfileViaApi({ ...profile, id: customerId });
-        } catch (err) {
-          console.warn("KYC API save failed, trying direct Supabase:", err);
-          // fall through to direct client save below
-        }
-      }
       if (isLive && supabase) {
-        try {
-          const existing = await dbService.kyc.get(customerId);
-          let mergedUploaded = { ...(existing?.uploaded_files || {}) };
-          if (profile.uploaded_files !== undefined) {
-            for (const [key, val] of Object.entries(profile.uploaded_files)) {
-              if (val === null) delete mergedUploaded[key];
-              else mergedUploaded[key] = val;
-            }
-          }
-
-          const { uploaded_files: _uf, ...profileRest } = profile;
-          const { data, error } = await supabase
-            .from("kyc_profiles")
-            .upsert({
-              ...profileRest,
-              id: customerId,
-              uploaded_files: mergedUploaded,
-              updated_at: new Date().toISOString(),
-            })
-            .select();
-          if (error) {
-            console.error("Failed to save KYC profile to Supabase:", error);
-            throw new Error(error.message || "KYC save failed");
-          }
-          if (data?.[0]) return data[0];
-        } catch (err) {
-          console.error("Failed to save KYC profile to Supabase:", err);
-          if (isProduction) throw err;
+        const { data: existingRow, error: readError } = await supabase
+          .from("kyc_profiles")
+          .select("uploaded_files")
+          .eq("id", customerId)
+          .maybeSingle();
+        if (readError) {
+          throw new Error(readError.message || "KYC read failed");
         }
+
+        let mergedUploaded = { ...((existingRow?.uploaded_files as Record<string, unknown>) || {}) };
+        if (profile.uploaded_files !== undefined) {
+          for (const [key, val] of Object.entries(profile.uploaded_files)) {
+            if (val === null) delete mergedUploaded[key];
+            else mergedUploaded[key] = val;
+          }
+        }
+
+        const { uploaded_files: _uf, ...profileRest } = profile;
+        const { data, error } = await supabase
+          .from("kyc_profiles")
+          .upsert({
+            ...profileRest,
+            id: customerId,
+            uploaded_files: mergedUploaded,
+            updated_at: new Date().toISOString(),
+          })
+          .select();
+        if (error) {
+          console.error("Failed to save KYC profile to Supabase:", error);
+          throw new Error(error.message || "KYC save failed");
+        }
+        if (data?.[0]) return data[0];
+        return { ...profileRest, id: customerId, uploaded_files: mergedUploaded };
       }
       const list = mockDb.get("pgr_kyc_profiles") || [];
       const index = list.findIndex((p: any) => p.id === customerId);

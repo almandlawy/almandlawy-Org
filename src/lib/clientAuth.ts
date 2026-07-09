@@ -168,8 +168,19 @@ export async function upsertCustomerProfile(user: AppUser): Promise<void> {
 }
 
 export async function ensureKycStub(user: AppUser): Promise<void> {
-  const existing = await dbService.kyc.get(user.id);
-  if (existing) return;
+  await ensureSupabaseReady();
+  if (isLive && supabase) {
+    const { data } = await supabase
+      .from("kyc_profiles")
+      .select("id")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (data) return;
+  } else {
+    const existing = mockDb.get("pgr_kyc_profiles")?.find((p: { id: string }) => p.id === user.id);
+    if (existing) return;
+  }
+
   await dbService.kyc.save(user.id, {
     id: user.id,
     full_name: user.name,

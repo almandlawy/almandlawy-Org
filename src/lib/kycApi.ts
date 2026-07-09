@@ -1,80 +1,30 @@
 /**
- * KYC API client — uses server service role (production) for reliable persistence.
+ * KYC API client — schema check via browser Supabase (API route unreliable on Vercel).
  * @license SPDX-License-Identifier: Apache-2.0
  */
 
-import { getAccessToken } from "./clientAuth";
-
-async function authHeaders(): Promise<Record<string, string>> {
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
-  const token = await getAccessToken();
-  if (token) headers.Authorization = `Bearer ${token}`;
-  return headers;
-}
+import { ensureSupabaseReady, isLive, supabase } from "./supabase";
 
 export interface KycSchemaStatus {
   ready: boolean;
   reason?: string;
 }
 
+/** Verify kyc_profiles is reachable from the logged-in client session. */
 export async function checkKycSchemaReady(): Promise<KycSchemaStatus> {
-  try {
-    const res = await fetch("/api/kyc?check=schema");
-    const data = await res.json().catch(() => ({}));
-    return { ready: Boolean(data.ready), reason: data.reason };
-  } catch {
-    return { ready: false, reason: "Could not reach KYC API" };
+  await ensureSupabaseReady();
+  if (!isLive || !supabase) {
+    return { ready: true };
   }
-}
+  const { error } = await supabase
+    .from("kyc_profiles")
+    .select("id, status, documents, uploaded_files, updated_at")
+    .limit(1);
+  if (!error) return { ready: true };
 
-export async function fetchKycProfileViaApi(customerId: string): Promise<any | null> {
-  const headers = await authHeaders();
-  const res = await fetch("/api/kyc", { headers });
-  const data = await res.json().catch(() => ({}));
-
-  if (res.status === 401) return null;
-
-  if (!res.ok) {
-    const details = String(data.details || data.error || res.status);
-    const err = new Error(details);
-    (err as Error & { schemaMissing?: boolean }).schemaMissing = Boolean(data.schemaMissing);
-    throw err;
+  const msg = error.message || "KYC table unreachable";
+  if (msg.toLowerCase().includes("column")) {
+    return { ready: false, reason: "kyc_profiles missing columns — run scripts/kyc-repair-columns.sql" };
   }
-
-  if (data.profile) return data.profile;
-
-  return {
-    id: customerId,
-    full_name: "",
-    phone: "",
-    whatsapp: "",
-    email: "",
-    country: "",
-    city: "",
-    nationality: "",
-    dob: "",
-    source_of_funds_declaration: "",
-    agreement_accepted: false,
-    privacy_consent: false,
-    status: "Not submitted",
-    documents: [],
-    uploaded_files: {},
-  };
-}
-
-export async function saveKycProfileViaApi(profile: Record<string, unknown>): Promise<any> {
-  const headers = await authHeaders();
-  const res = await fetch("/api/kyc", {
-    method: "POST",
-    headers,
-    body: JSON.stringify(profile),
-  });
-  const data = await res.json().catch(() => ({}));
-
-  if (!res.ok) {
-    const details = String(data.details || data.error || res.status);
-    throw new Error(details);
-  }
-
-  return data.profile;
+  return { ready: false, reason: msg };
 }
