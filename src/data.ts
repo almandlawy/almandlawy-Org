@@ -170,7 +170,7 @@ export const PRODUCTS: Product[] = [
     image_url: productPosterUrl("07-silver-bar-500g.webp"),
     premium_multiplier: 1.19,
     iraq_popular: true,
-    iraq_offer_rank: 1
+    iraq_offer_rank: 2
   },
   {
     id: "pgr-silver-1kg",
@@ -193,7 +193,7 @@ export const PRODUCTS: Product[] = [
     image_url: productPosterUrl("08-silver-bar-1kg.webp"),
     premium_multiplier: 1.15,
     iraq_popular: true,
-    iraq_offer_rank: 2
+    iraq_offer_rank: 1
   },
   {
     id: "pgr-mint-bars-coins",

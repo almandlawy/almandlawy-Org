@@ -28,10 +28,12 @@ export function PartnerLogoTile({
   partner,
   isAr,
   className = "",
+  variant = "card",
 }: {
   partner: PartnerPublic;
   isAr?: boolean;
   className?: string;
+  variant?: "card" | "strip";
 }) {
   const src = normalizeLogoUrl(partner.logo_url || "");
   const [failed, setFailed] = useState(!looksLikeImageUrl(src));
@@ -41,19 +43,25 @@ export function PartnerLogoTile({
   }, [src]);
 
   const showImage = src && !failed;
+  const isStrip = variant === "strip";
 
   return (
     <div
-      className={`flex flex-col items-center justify-center p-5 rounded-xl border border-champagne bg-brand-card shadow-premium min-h-[110px] gap-2 ${className}`}
+      className={`flex flex-col items-center justify-center rounded-xl border border-champagne bg-brand-bg shadow-premium gap-2 ${
+        isStrip ? "p-3 min-h-[108px]" : "p-5 min-h-[110px] bg-brand-card"
+      } ${className}`}
     >
       {showImage ? (
         <img
           src={src}
           alt={partner.name}
-          className="max-h-14 sm:max-h-16 max-w-[85%] object-contain"
-          loading="lazy"
+          className={
+            isStrip
+              ? "h-12 w-full max-w-[120px] object-contain"
+              : "max-h-14 sm:max-h-16 max-w-[85%] object-contain"
+          }
+          loading={isStrip ? "eager" : "lazy"}
           decoding="async"
-          referrerPolicy="no-referrer"
           onError={() => setFailed(true)}
         />
       ) : (
@@ -77,8 +85,12 @@ export function PartnerLogoTile({
           ) : null}
         </div>
       )}
-      <span className="text-[9px] font-mono text-text-secondary uppercase text-center">
-        {partner.category}
+      <span
+        className={`text-[9px] text-text-secondary text-center line-clamp-1 ${
+          isAr ? "font-arabic" : "font-mono uppercase"
+        }`}
+      >
+        {partner.name}
       </span>
     </div>
   );

@@ -12,9 +12,7 @@ import TrustBar from "./components/TrustBar";
 import ProductShowroom from "./components/ProductShowroom";
 import IraqSilverOffers from "./components/IraqSilverOffers";
 import AboutQuoteDeskSection from "./components/AboutQuoteDeskSection";
-import DeskServicesSection from "./components/DeskServicesSection";
 import TrustedPartnersSection from "./components/TrustedPartnersSection";
-import QuoteDeskProofSection from "./components/QuoteDeskProofSection";
 import HomepageFAQ from "./components/HomepageFAQ";
 import CrawlableSeoBlock from "./components/CrawlableSeoBlock";
 import ComplianceKYCSection from "./components/ComplianceKYCSection";
@@ -47,7 +45,7 @@ import {
   REFERENCE_PLATINUM_USD_OZ,
   REFERENCE_PALLADIUM_USD_OZ,
 } from "./lib/metalReferenceSpots";
-import { DebugPanel } from "./components/DebugPanel";
+import { resolvePath } from "./lib/pathRedirects";
 
 // Imported new high-end compliance and desk components
 import LoginPage from "./components/LoginPage";
@@ -79,7 +77,9 @@ import { needsKycCompletion } from "./lib/kycGate";
 export default function App() {
   const [currentLang, setCurrentLang] = useState<"en" | "ar">("ar");
   const [selectedCurrency, setSelectedCurrency] = useState<string>("IQD");
-  const [currentPath, setCurrentPath] = useState<string>(window.location.pathname);
+  const [currentPath, setCurrentPath] = useState<string>(() =>
+    resolvePath(window.location.pathname)
+  );
 
   // Pre-calculated default reference spot rates for flawless client experience
   const getInitialRates = (): LiveMarketRates => {
@@ -133,8 +133,23 @@ export default function App() {
 
   // Programmatic custom router
   const navigateTo = (path: string) => {
-    window.history.pushState(null, "", path);
-    setCurrentPath(path.split("?")[0]);
+    const raw = path.split("?")[0];
+    if (raw === "/contact") {
+      window.history.pushState(null, "", "/");
+      setCurrentPath("/");
+      scrollToTop();
+      setTimeout(() => scrollToSection("contact"), 120);
+      return;
+    }
+    const resolved = resolvePath(raw);
+    const query = path.includes("?") ? path.slice(path.indexOf("?")) : "";
+    const full = resolved + query;
+    if (resolved !== raw) {
+      window.history.replaceState(null, "", full);
+    } else {
+      window.history.pushState(null, "", full);
+    }
+    setCurrentPath(resolved);
     scrollToTop();
   };
 
@@ -182,6 +197,22 @@ export default function App() {
       </Suspense>
     ) : null;
 
+  // Apply canonical redirects on direct URL load / back-forward
+  useEffect(() => {
+    const raw = window.location.pathname;
+    const resolved = resolvePath(raw);
+    if (resolved !== raw) {
+      const query = window.location.search;
+      window.history.replaceState(null, "", resolved + query);
+      setCurrentPath(resolved);
+    }
+    if (raw === "/contact") {
+      window.history.replaceState(null, "", "/");
+      setCurrentPath("/");
+      setTimeout(() => scrollToSection("contact"), 200);
+    }
+  }, []);
+
   // Capture UTM / gclid on first landing for quote attribution
   useEffect(() => {
     captureAttributionFromUrl(window.location.search, window.location.pathname);
@@ -225,7 +256,16 @@ export default function App() {
   // Pathname routing for compliance & legal policies and full pages
   useEffect(() => {
     const handleLocation = () => {
-      const path = window.location.pathname;
+      const raw = window.location.pathname;
+      const path = resolvePath(raw);
+      if (path !== raw) {
+        window.history.replaceState(null, "", path + window.location.search);
+      }
+      if (raw === "/contact") {
+        setCurrentPath("/");
+        setTimeout(() => scrollToSection("contact"), 120);
+        return;
+      }
       setCurrentPath(path);
       const pathMap: Record<string, string> = {
         "/terms": "terms",
@@ -522,7 +562,6 @@ export default function App() {
     "/request-quote",
     "/quote-received",
     "/faq",
-    "/contact",
   ] as const;
   if ((standaloneDeskPaths as readonly string[]).includes(currentPath)) {
     return (
@@ -565,7 +604,6 @@ export default function App() {
               <PricingDisclaimer currentLang={currentLang} />
             </div>
           )}
-          {currentPath === "/contact" && <OfficeSection currentLang={currentLang} sectionId="contact" />}
         </div>
         <Footer
           currentLang={currentLang}
@@ -884,6 +922,8 @@ export default function App() {
         onOpenQuote={navigateToQuote}
       />
 
+      <TrustedPartnersSection currentLang={currentLang} />
+
       <ProductShowroom
         currentLang={currentLang}
         rates={rates}
@@ -895,19 +935,10 @@ export default function App() {
 
       <HowFirmQuotesWork currentLang={currentLang} />
 
-      <QuoteDeskProofSection currentLang={currentLang} />
-
       <AboutQuoteDeskSection
         currentLang={currentLang}
         onNavigate={navigateTo}
       />
-
-      <DeskServicesSection
-        currentLang={currentLang}
-        onNavigate={navigateTo}
-      />
-
-      <TrustedPartnersSection currentLang={currentLang} />
 
       <ComplianceKYCSection
         currentLang={currentLang}

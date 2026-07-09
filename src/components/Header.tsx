@@ -50,6 +50,7 @@ const NAV_LINKS: {
   label_ar: string;
   icon: React.ElementType;
   group: NavGroup;
+  path?: string;
 }[] = [
   { id: "hero", label_en: "Home", label_ar: "الرئيسية", icon: Home, group: "main" },
   { id: "catalog", label_en: "Catalog", label_ar: "الكتالوج", icon: LayoutGrid, group: "main" },
@@ -57,7 +58,7 @@ const NAV_LINKS: {
   { id: "market", label_en: "Market Watch", label_ar: "مراقبة السوق", icon: TrendingUp, group: "more" },
   { id: "how-quotes-work", label_en: "How It Works", label_ar: "كيف يعمل", icon: CircleHelp, group: "more" },
   { id: "about", label_en: "About Us", label_ar: "من نحن", icon: Building2, group: "more" },
-  { id: "desk-services", label_en: "Services", label_ar: "الخدمات", icon: Briefcase, group: "more" },
+  { id: "desk-services", label_en: "Services", label_ar: "الخدمات", icon: Briefcase, group: "more", path: "/bullion-desk-dubai" },
   { id: "contact", label_en: "Contact", label_ar: "اتصل بنا", icon: Mail, group: "more" },
 ];
 
@@ -106,7 +107,11 @@ export default function Header({
 
   const closeMenu = () => setMobileMenuOpen(false);
 
-  const handleNav = (id: string) => {
+  const handleNav = (id: string, path?: string) => {
+    if (path) {
+      handleRoute(path);
+      return;
+    }
     onNavigate(id);
     closeMenu();
   };
@@ -143,7 +148,7 @@ export default function Header({
             <button
               key={link.id}
               type="button"
-              onClick={() => handleNav(link.id)}
+              onClick={() => handleNav(link.id, link.path)}
               className={`hover:text-gold-dark text-text-charcoal transition-colors cursor-pointer ${
                 isAr ? "font-arabic text-sm normal-case tracking-normal" : ""
               }`}
@@ -359,7 +364,7 @@ export default function Header({
                     <button
                       key={link.id}
                       type="button"
-                      onClick={() => handleNav(link.id)}
+                      onClick={() => handleNav(link.id, link.path)}
                       className={`flex items-center gap-3 w-full py-3 px-3 rounded-lg text-sm text-text-charcoal hover:bg-brand-section transition-colors text-start ${
                         isAr ? "font-arabic" : ""
                       }`}
@@ -384,7 +389,7 @@ export default function Header({
                     <button
                       key={link.id}
                       type="button"
-                      onClick={() => handleNav(link.id)}
+                      onClick={() => handleNav(link.id, link.path)}
                       className={`flex items-center gap-3 w-full py-3 px-3 rounded-lg text-sm text-text-charcoal hover:bg-brand-section transition-colors text-start ${
                         isAr ? "font-arabic" : ""
                       }`}

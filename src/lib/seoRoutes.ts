@@ -16,19 +16,12 @@ export interface RouteSeo {
 }
 
 export const SEO_LANDING_PATHS = [
-  "/buy-gold-bars-dubai",
-  "/buy-silver-bars-dubai",
   "/gold-rate-dubai-today",
   "/silver-rate-dubai-today",
-  "/sell-gold-dubai",
   "/bullion-desk-dubai",
-  "/allocated-storage-dubai",
   "/24k-gold-bars-uae",
   "/silver-bars-iraq",
-  "/sam-palm-silver-iraq",
   "/gold-bars-baghdad",
-  "/silver-bars-erbil",
-  "/bullion-desk-iraq",
 ] as const;
 
 export const NOINDEX_PATHS = new Set([
