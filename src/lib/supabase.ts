@@ -1204,10 +1204,44 @@ export const dbService = {
       );
     },
     saveWebsiteQuoteLocal: async (row: Record<string, unknown>) => {
+      if (isLive && supabase) {
+        const { data, error } = await supabase
+          .from("website_quote_requests")
+          .upsert(row)
+          .select();
+        if (error) throw new Error(error.message);
+        return data?.[0] || row;
+      }
       const list = mockDb.get("pgr_website_quote_requests") || [];
       list.unshift(row);
       mockDb.set("pgr_website_quote_requests", list);
       return row;
+    },
+    createWebsiteQuote: async (payload: Record<string, unknown>) => {
+      const inquiryId = `PGR-${Math.floor(100000 + Math.random() * 900000)}`;
+      const row = {
+        id: inquiryId,
+        inquiry_id: inquiryId,
+        created_at: new Date().toISOString(),
+        ...payload,
+      };
+
+      if (isLive && supabase) {
+        const { data, error } = await supabase
+          .from("website_quote_requests")
+          .insert(row)
+          .select();
+        if (error) {
+          console.error("[quoteRequests] website_quote_requests insert failed:", error);
+          throw new Error(error.message || "Quote save failed");
+        }
+        return { inquiryId, row: data?.[0] || row };
+      }
+
+      const list = mockDb.get("pgr_website_quote_requests") || [];
+      list.unshift(row);
+      mockDb.set("pgr_website_quote_requests", list);
+      return { inquiryId, row };
     },
     create: async (request: any) => {
       if (isLive && supabase) {

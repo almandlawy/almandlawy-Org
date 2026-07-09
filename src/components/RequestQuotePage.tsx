@@ -163,35 +163,21 @@ export default function RequestQuotePage({ currentLang, onNavigate }: RequestQuo
     setLoading(true);
     setError("");
 
-    const result = await submitQuoteRequest({
-      fullName: fullName.trim(),
-      phone: phone.trim(),
-      email: accountUser?.email,
-      countryCity: countryCity.trim(),
-      productInterest,
-      quantityBudget: quantityBudget.trim(),
-      preferredContact,
-      message: message.trim(),
-      source: "website_request_quote_page",
-      sourceLanguage: currentLang,
-      customerId: accountUser?.id,
-    });
-
-    if (result.success && accountUser && result.inquiryId) {
-      await dbService.quoteRequests.saveWebsiteQuoteLocal({
-        id: result.inquiryId,
-        customer_id: accountUser.id,
-        email: accountUser.email,
-        name: fullName.trim(),
-        phone: phone.trim(),
-        product_category: productInterest,
-        weight_preference: quantityBudget.trim(),
-        status: "Desk Review",
-        created_at: new Date().toISOString(),
-      });
-    }
-
     try {
+      const result = await submitQuoteRequest({
+        fullName: fullName.trim(),
+        phone: phone.trim(),
+        email: accountUser?.email,
+        countryCity: countryCity.trim(),
+        productInterest,
+        quantityBudget: quantityBudget.trim(),
+        preferredContact,
+        message: message.trim(),
+        source: "website_request_quote_page",
+        sourceLanguage: currentLang,
+        customerId: accountUser?.id,
+      });
+
       if (result.success) {
         const ref = result.inquiryId || "";
         onNavigate(`/quote-received${ref ? `?ref=${encodeURIComponent(ref)}` : ""}`);
