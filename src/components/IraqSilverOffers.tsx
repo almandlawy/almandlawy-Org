@@ -111,18 +111,20 @@ export default function IraqSilverOffers({
             className="text-3xl sm:text-4xl font-serif tracking-tight text-text-charcoal font-medium"
           >
             {isAr
-              ? "سبائك PALM و SAM — الأكثر مبيعاً في العراق"
-              : "PALM & SAM Silver — Iraq's Bestsellers"}
+              ? "سبيكة PALM ١ كيلو — الأكثر طلباً للعراق · ثم SAM"
+              : "PALM 1kg — Iraq's #1 Request · then SAM"}
           </motion.h2>
           <motion.p custom={2} variants={headerItem} className="text-sm text-text-secondary leading-relaxed">
             {isAr
-              ? "أسعار استرشادية واقعية مبنية على سوق دبي الحالي مع علاوات المصافي الإماراتية. SAM ٥٠٠ جرام وPALM ١ كيلو الأكثر طلباً لتوصيل بغداد وأربيل والبصرة."
-              : "Realistic indicative prices based on current Dubai bullion market rates with UAE refinery premiums. SAM 500g and PALM 1kg are the top-requested weights for Baghdad, Erbil, and Basra delivery."}
+              ? "فضة PALM ١ كيلو الأفضل للمشترين العراقيين بالجملة. أسعار استرشادية من سوق دبي مع علاوات المصافي الإماراتية."
+              : "PALM 1kg is the top-requested weight for Iraqi bulk buyers. Indicative Dubai desk pricing with UAE refinery premiums."}
           </motion.p>
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {offerProducts.map((product, index) => {
+          {[...offerProducts]
+            .sort((a, b) => (a.iraq_offer_rank || 99) - (b.iraq_offer_rank || 99))
+            .map((product, index) => {
             const indicativePrice = calculateIndicativePrice(
               product,
               rates,

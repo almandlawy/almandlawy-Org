@@ -78,9 +78,9 @@ export function formatIndicativePrice(
   });
 }
 
-/** Iraq-market silver offers — SAM & PALM, ordered by local demand */
+/** Iraq-market silver offers — PALM 1kg first, then SAM */
 export const IRAQ_SILVER_OFFER_IDS = [
-  "pgr-silver-500g",
   "pgr-silver-1kg",
+  "pgr-silver-500g",
   "pgr-silver-1oz-100g",
 ] as const;

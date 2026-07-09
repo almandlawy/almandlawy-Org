@@ -5,7 +5,15 @@
       "has": [{ "type": "host", "value": "pgruae.com" }],
       "destination": "https://www.pgruae.com/:path*",
       "permanent": true
-    }
+    },
+    { "source": "/sam-palm-silver-iraq", "destination": "/silver-bars-iraq", "permanent": true },
+    { "source": "/silver-bars-erbil", "destination": "/silver-bars-iraq", "permanent": true },
+    { "source": "/allocated-storage-dubai", "destination": "/allocated-storage", "permanent": true },
+    { "source": "/sell-gold-dubai", "destination": "/sell-back", "permanent": true },
+    { "source": "/buy-silver-bars-dubai", "destination": "/silver-bars", "permanent": true },
+    { "source": "/buy-gold-bars-dubai", "destination": "/gold-bars", "permanent": true },
+    { "source": "/bullion-desk-iraq", "destination": "/iraq-bullion-quote", "permanent": true },
+    { "source": "/contact", "destination": "/", "permanent": true }
   ],
   "rewrites": [
     {
