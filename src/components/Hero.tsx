@@ -113,7 +113,7 @@ export default function Hero({
     <section
       ref={sectionRef}
       id="hero"
-      className="relative w-full bg-brand-bg border-b border-soft-border overflow-hidden"
+      className="relative w-full bg-brand-bg border-b border-soft-border overflow-hidden pt-[52px] sm:pt-[56px] lg:pt-0"
       style={{ direction: isAr ? "rtl" : "ltr" }}
     >
       <div className="grid grid-cols-1 lg:grid-cols-2 min-h-0 lg:min-h-[min(88vh,860px)]">
@@ -127,10 +127,18 @@ export default function Hero({
           <div className="mb-6 hero-reveal">
             <BrandLogo variant="emblem" className="h-12 w-12 md:h-14 md:w-14 mb-4" />
             <div className="flex flex-wrap items-center gap-2">
-              <span className="px-3 py-1 rounded-full bg-brand-card border border-champagne text-[10px] font-mono uppercase tracking-[0.2em] text-gold-dark font-bold">
+              <span
+                className={`px-3 py-1 rounded-full bg-brand-card border border-champagne text-[11px] text-gold-dark font-bold ${
+                  isAr ? "font-arabic" : "latin-brand-tight font-mono"
+                }`}
+              >
                 {isAr ? "دبي → العراق" : "Dubai → Iraq"}
               </span>
-              <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-secondary">
+              <span
+                className={`text-[11px] text-text-secondary ${
+                  isAr ? "font-arabic" : "latin-brand-tight font-mono"
+                }`}
+              >
                 {isAr ? "مكتب عروض السبائك" : "Bullion Quote Desk"}
               </span>
             </div>
@@ -160,7 +168,11 @@ export default function Hero({
 
           {/* Featured product — not the page H1 */}
           <div className="hero-reveal mt-6 rounded-lg border border-champagne/80 bg-brand-card/60 p-4 max-w-lg">
-            <p className="text-[10px] font-mono uppercase tracking-[0.28em] text-olive-accent font-bold mb-1">
+            <p
+              className={`text-[11px] text-olive-accent font-bold mb-1 ${
+                isAr ? "font-arabic" : "latin-brand-tight font-mono"
+              }`}
+            >
               {isAr ? "المنتج المميز" : "Featured Product"}
             </p>
             <h2 className="text-lg sm:text-xl font-serif text-text-charcoal font-medium">
@@ -183,7 +195,9 @@ export default function Hero({
               {SPEC_CHIPS.map((chip) => (
                 <span
                   key={chip.en}
-                  className="px-2.5 py-1 rounded-md border border-champagne/60 bg-brand-bg text-[9px] font-mono uppercase tracking-wider text-text-secondary"
+                  className={`px-2.5 py-1 rounded-md border border-champagne/60 bg-brand-bg text-[10px] text-text-secondary ${
+                    isAr ? "font-arabic" : "latin-brand-tight font-mono"
+                  }`}
                 >
                   {isAr ? chip.ar : chip.en}
                 </span>
@@ -195,7 +209,9 @@ export default function Hero({
             <button
               type="button"
               onClick={onOpenQuote}
-              className="flex-1 min-h-[48px] px-6 py-3.5 bg-gold-base hover:bg-gold-dark text-text-charcoal font-mono text-[11px] font-bold uppercase tracking-widest rounded-md shadow-premium transition-colors"
+              className={`flex-1 min-h-[48px] px-6 py-3.5 bg-gold-base hover:bg-gold-dark text-text-charcoal font-bold rounded-md shadow-premium transition-colors text-[12px] ${
+                isAr ? "font-arabic" : "latin-brand-tight font-mono"
+              }`}
             >
               {isAr ? "طلب عرض سعر معتمد" : "Request Firm Quote"}
             </button>
@@ -204,7 +220,9 @@ export default function Hero({
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => trackWhatsAppClick("hero_whatsapp")}
-              className="flex-1 min-h-[48px] px-6 py-3.5 border border-emerald-600/25 bg-brand-card hover:bg-emerald-600 hover:text-white text-text-charcoal font-mono text-[11px] font-bold uppercase tracking-widest rounded-md transition-colors flex items-center justify-center gap-2"
+              className={`flex-1 min-h-[48px] px-6 py-3.5 border border-emerald-600/25 bg-brand-card hover:bg-emerald-600 hover:text-white text-text-charcoal font-bold rounded-md transition-colors flex items-center justify-center gap-2 text-[12px] ${
+                isAr ? "font-arabic" : "latin-brand-tight font-mono"
+              }`}
             >
               <Phone size={14} />
               {isAr ? "واتساب مباشر" : "WhatsApp"}
@@ -253,13 +271,13 @@ export default function Hero({
           </div>
         </div>
 
-        {/* Video column */}
-        <div className="hero-video-col relative order-1 lg:order-2 min-h-[40vh] sm:min-h-[46vh] lg:min-h-full bg-[#141816]">
+        {/* Video column — mobile crop tuned for PALM bar visibility */}
+        <div className="hero-video-col relative order-1 lg:order-2 min-h-[44vh] sm:min-h-[48vh] lg:min-h-full bg-[#141816]">
           {showPoster ? (
             <img
               src={VIDEO_POSTER}
               alt={isAr ? "سبيكة فضة PALM ١ كيلو" : "PALM Silver 1kg bar"}
-              className="absolute inset-0 h-full w-full object-cover object-[center_38%]"
+              className="absolute inset-0 h-full w-full object-cover object-center max-lg:object-[center_58%] lg:object-[center_38%]"
               loading="eager"
               decoding="async"
               onError={(e) => {
@@ -269,7 +287,7 @@ export default function Hero({
           ) : (
             <video
               ref={videoRef}
-              className="absolute inset-0 h-full w-full object-cover object-[center_38%]"
+              className="absolute inset-0 h-full w-full object-cover object-center max-lg:object-[center_58%] lg:object-[center_38%]"
               autoPlay
               muted
               loop
@@ -304,7 +322,11 @@ export default function Hero({
 
           <div className={`absolute bottom-5 sm:bottom-7 ${isAr ? "left-5 sm:left-7" : "right-5 sm:right-7"}`}>
             <div className="rounded-md border border-white/15 bg-black/45 backdrop-blur-md px-4 py-2.5 shadow-lg">
-              <p className="text-[9px] font-mono uppercase tracking-[0.22em] text-champagne/90">
+              <p
+                className={`text-[10px] text-champagne/90 ${
+                  isAr ? "font-arabic" : "latin-brand-tight font-mono"
+                }`}
+              >
                 {isAr ? "الأكثر طلباً للعراق" : "Iraq Bestseller"}
               </p>
               <p className="text-sm font-serif text-white font-medium mt-0.5">PALM · 1kg · 999.9</p>

@@ -135,8 +135,8 @@ export default function Header({
       id="pgr-global-header"
       style={{ direction: isAr ? "rtl" : "ltr" }}
     >
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-8 py-2.5 sm:py-3.5 flex justify-between items-center gap-2 sm:gap-4">
-        <BrandLogo variant="header" currentLang={currentLang} onClick={() => handleNav("hero")} />
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-8 py-2 sm:py-3 flex justify-between items-center gap-2 sm:gap-4 min-h-[52px] sm:min-h-[56px]">
+        <BrandLogo variant="header" currentLang={currentLang} onClick={() => handleNav("hero")} className="min-w-0" />
 
         <nav className="hidden xl:flex items-center gap-5 text-[11px] uppercase tracking-widest text-text-secondary font-semibold">
           {NAV_LINKS.map((link) => (
@@ -212,47 +212,39 @@ export default function Header({
             <span>{isAr ? "واتساب" : "WhatsApp Desk"}</span>
           </a>
 
-          {/* Mobile quick actions — always visible below xl */}
-          <div className="flex xl:hidden items-center gap-1">
+          {/* Mobile quick actions — compact icon row */}
+          <div className="flex xl:hidden items-center gap-0.5 shrink-0">
             <button
               type="button"
               onClick={onOpenClientDashboard}
-              className={`flex flex-col items-center justify-center min-w-[44px] min-h-[44px] rounded-xl transition-colors ${
-                authUser
-                  ? "bg-gold-base/20 text-gold-dark"
-                  : "text-text-charcoal hover:bg-brand-section"
+              className={`flex items-center justify-center w-10 h-10 rounded-lg transition-colors ${
+                authUser ? "bg-gold-base/20 text-gold-dark" : "text-text-charcoal hover:bg-brand-section"
               }`}
               aria-label={accountLabel}
+              title={accountLabel}
             >
-              <AccountIcon size={20} strokeWidth={authUser ? 2.25 : 2} />
-              <span className="text-[8px] font-mono font-bold mt-0.5 leading-none">
-                {authUser ? (isAr ? "حسابي" : "Account") : isAr ? "دخول" : "Login"}
-              </span>
+              <AccountIcon size={18} strokeWidth={authUser ? 2.25 : 2} />
             </button>
 
             <button
               type="button"
               onClick={onOpenQuote}
-              className="flex flex-col items-center justify-center min-w-[44px] min-h-[44px] rounded-xl text-text-charcoal hover:bg-gold-base/15 transition-colors"
+              className="flex items-center justify-center w-10 h-10 rounded-lg text-gold-dark hover:bg-gold-base/15 transition-colors"
               aria-label={isAr ? "طلب عرض سعر" : "Request quote"}
+              title={isAr ? "طلب عرض" : "Quote"}
             >
-              <FileText size={20} className="text-gold-dark" />
-              <span className="text-[8px] font-mono font-bold mt-0.5 leading-none text-gold-dark">
-                {isAr ? "عرض" : "Quote"}
-              </span>
+              <FileText size={18} />
             </button>
 
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="flex flex-col items-center justify-center min-w-[44px] min-h-[44px] rounded-xl text-text-charcoal hover:bg-brand-section transition-colors"
+              className="flex items-center justify-center w-10 h-10 rounded-lg text-text-charcoal hover:bg-brand-section transition-colors"
               aria-label={isAr ? "القائمة" : "Menu"}
               aria-expanded={mobileMenuOpen}
+              title={isAr ? "قائمة" : "Menu"}
             >
-              {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
-              <span className="text-[8px] font-mono font-bold mt-0.5 leading-none">
-                {isAr ? "قائمة" : "Menu"}
-              </span>
+              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
           </div>
         </div>
@@ -357,7 +349,7 @@ export default function Header({
 
             {/* Main navigation */}
             <div>
-              <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-text-secondary font-bold mb-2 px-1">
+              <p className={`text-[9px] font-bold mb-2 px-1 ${isAr ? "font-arabic text-text-secondary" : "latin-brand-tight font-mono text-text-secondary"}`}>
                 {isAr ? "الأقسام الرئيسية" : "Main sections"}
               </p>
               <div className="grid grid-cols-1 gap-1">
@@ -382,7 +374,7 @@ export default function Header({
 
             {/* More navigation */}
             <div>
-              <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-text-secondary font-bold mb-2 px-1">
+              <p className={`text-[9px] font-bold mb-2 px-1 ${isAr ? "font-arabic text-text-secondary" : "latin-brand-tight font-mono text-text-secondary"}`}>
                 {isAr ? "اكتشف المزيد" : "Discover more"}
               </p>
               <div className="grid grid-cols-1 gap-1">

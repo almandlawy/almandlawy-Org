@@ -830,7 +830,7 @@ export default function App() {
 
   // ROOT / HOMEPAGE LAYOUT
   return (
-    <div className={`min-h-screen text-text-charcoal bg-brand-bg selection:bg-gold-base selection:text-black relative pb-[5.75rem] md:pb-0 ${
+    <div className={`min-h-screen text-text-charcoal bg-brand-bg selection:bg-gold-base selection:text-black relative pb-[4.75rem] md:pb-0 ${
       currentLang === "ar" ? "font-arabic" : "font-sans"
     }`} id="pgr-root-container">
 
