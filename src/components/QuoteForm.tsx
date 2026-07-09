@@ -8,6 +8,8 @@ import { X, CheckCircle, Mail, Phone, Users, Landmark, FileText } from "lucide-r
 import { dbService } from "../lib/supabase";
 import { PRODUCTS } from "../data";
 import { resolvePublicCatalog } from "../lib/productCatalog";
+import PricingDisclaimer from "./PricingDisclaimer";
+import { trackGoogleAdsContactConversion } from "../lib/gtag";
 
 interface QuoteFormProps {
   currentLang: "en" | "ar";
@@ -114,6 +116,7 @@ export default function QuoteForm({ currentLang, prefilledProduct, onClose }: Qu
           inquiryId: data.inquiryId,
           message: data.message
         });
+        trackGoogleAdsContactConversion();
       } else {
         throw new Error(data.error || "Failed to process bespoke quotation.");
       }
@@ -398,6 +401,8 @@ export default function QuoteForm({ currentLang, prefilledProduct, onClose }: Qu
                     </span>
                   </label>
                 </div>
+
+                <PricingDisclaimer currentLang={currentLang} />
 
                 {/* Error Banner */}
                 {errorMessage && (

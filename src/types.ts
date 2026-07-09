@@ -16,6 +16,7 @@ export interface MetalPriceData {
     EUR: CurrencyPrice;
     GBP: CurrencyPrice;
     SAR: CurrencyPrice;
+    IQD?: CurrencyPrice;
   };
 }
 
@@ -27,6 +28,10 @@ export interface LiveMarketRates {
   source_status?: "live" | "cached" | "fallback" | "reference";
   updated_at?: string;
   cache_timestamp?: string;
+  /** USD/IQD from admin settings or price API */
+  usd_iqd?: number;
+  /** USD/AED from admin settings or price API */
+  usd_aed?: number;
 }
 
 export type MetalCategory =
@@ -71,6 +76,15 @@ export interface Product {
   stock_status?: "In Stock" | "Out of Stock" | "Pre-order";
   certificate_url?: string;
   published?: boolean;
+  /** Highlighted for Iraq retail demand (Palm / SAM silver) */
+  iraq_popular?: boolean;
+  /** Lower number = higher priority in Iraq offers section */
+  iraq_offer_rank?: number;
+  /** Internal desk inventory (admin only — StakTrakr-inspired) */
+  storage_location?: string;
+  lot_reference?: string;
+  qty_on_hand?: number;
+  inventory_notes?: string;
 }
 
 export interface ChatMessage {
@@ -215,5 +229,65 @@ export interface QuoteSignaturePayload {
   expiresAt: string;
   status: string;
   createdAt: string;
+}
+
+export type PartnerLogoCategory =
+  | "Bank"
+  | "Payment Gateway"
+  | "Logistics"
+  | "Security Delivery"
+  | "Compliance"
+  | "Market Data"
+  | "Other";
+
+export interface PartnerLogo {
+  id: string;
+  name: string;
+  category: PartnerLogoCategory;
+  logo_url: string;
+  website_url?: string;
+  public_display_enabled: boolean;
+  display_order: number;
+  internal_note?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export type PaymentProvider =
+  | "N-Genius / Network International"
+  | "PayTabs"
+  | "Amazon Payment Services"
+  | "Stripe"
+  | "Manual Bank Transfer"
+  | "Other";
+
+export type PaymentMode =
+  | "Payment Link after firm quote"
+  | "Deposit after firm quote"
+  | "Full payment after firm quote"
+  | "Bank transfer only";
+
+export interface PaymentSettings {
+  payment_gateway_enabled: boolean;
+  provider: PaymentProvider;
+  payment_mode: PaymentMode;
+  public_payment_note: string;
+  internal_payment_note: string;
+  payment_link_instructions: string;
+  supported_currencies: ("AED" | "USD")[];
+  minimum_payment_amount: number;
+  max_payment_amount_before_manual_review: number;
+  require_kyc_before_payment: boolean;
+}
+
+/** Public-safe subset — never expose internal notes or gateway secrets */
+export interface PublicPaymentSettings {
+  payment_gateway_enabled: boolean;
+  provider: PaymentProvider;
+  payment_mode: PaymentMode;
+  public_payment_note: string;
+  payment_link_instructions: string;
+  supported_currencies: ("AED" | "USD")[];
+  require_kyc_before_payment: boolean;
 }
 

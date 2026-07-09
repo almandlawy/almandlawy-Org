@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { REFERENCE_METAL_SPOTS } from '../src/lib/metalReferenceSpots';
+import { resolveFxRates } from './_lib/fxRates';
 
 const METAL_SPOTS = { ...REFERENCE_METAL_SPOTS };
 
@@ -8,10 +9,31 @@ const EXCHANGE_RATES = {
   USD: 1.0,
   EUR: 0.9250,
   GBP: 0.7850,
-  SAR: 3.7505
+  SAR: 3.7505,
+  IQD: 1310.0
 };
 
 const OUNCE_TO_GRAM = 31.1034768;
+
+/** In-memory cache — protects free-tier API quotas on Vercel (default 5 min). */
+const PRICE_CACHE_TTL_MS = Number(process.env.LIVE_PRICE_CACHE_TTL_MS) || 5 * 60 * 1000;
+let priceApiCache: { payload: Record<string, unknown>; timestamp: number } | null = null;
+
+function withCacheMeta(
+  payload: Record<string, unknown>,
+  fromCache: boolean,
+  cacheTimestamp?: number
+): Record<string, unknown> {
+  if (!fromCache) return payload;
+  const originalStatus = payload.source_status;
+  return {
+    ...payload,
+    source_status: originalStatus === "live" ? "cached" : originalStatus,
+    cache_timestamp: cacheTimestamp
+      ? new Date(cacheTimestamp).toISOString()
+      : new Date().toISOString(),
+  };
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Set CORS headers for serverless environment
@@ -25,6 +47,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
+  }
+
+  const isDebug = req.query && (req.query.debug === "1" || req.query.debug === "true");
+  const forceRefresh = req.query && (req.query.refresh === "1" || req.query.refresh === "true");
+
+  if (
+    !isDebug &&
+    !forceRefresh &&
+    priceApiCache &&
+    Date.now() - priceApiCache.timestamp < PRICE_CACHE_TTL_MS
+  ) {
+    return res.status(200).json(
+      withCacheMeta(priceApiCache.payload, true, priceApiCache.timestamp)
+    );
   }
 
   try {
@@ -42,8 +78,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const has_api_key = !!apiKey;
     const is_live_configured = has_api_key;
-
-    const isDebug = req.query && (req.query.debug === "1" || req.query.debug === "true");
 
     let raw_success: boolean | null = null;
     let raw_rates_keys: string[] | null = null;
@@ -372,7 +406,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    const usdaed = EXCHANGE_RATES.AED;
+    const fxRates = await resolveFxRates();
+    const usdaed = fxRates.AED;
+    const usdiqd = fxRates.IQD;
 
     let finalProvider = providerName;
     let finalProviderEnv = providerEnv || "metalpriceapi";
@@ -403,6 +439,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         platinum_usd_per_oz: null,
         palladium_usd_per_oz: null,
         usd_aed: usdaed,
+        usd_iqd: usdiqd,
         updated_at: new Date().toISOString(),
         has_api_key,
         provider_attempted,
@@ -447,7 +484,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         currencies: {} as Record<string, { ounce: number; gram: number }>
       };
 
-      Object.entries(EXCHANGE_RATES).forEach(([currency, rate]) => {
+      Object.entries(fxRates).forEach(([currency, rate]) => {
         const ouncePrice = spotUsd * rate;
         const gramPrice = ouncePrice / OUNCE_TO_GRAM;
 
@@ -471,6 +508,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       platinum_usd_per_oz: currentSpots.platinum,
       palladium_usd_per_oz: currentSpots.palladium,
       usd_aed: usdaed,
+      usd_iqd: usdiqd,
       updated_at: new Date().toISOString(),
       
       // Safe non-secret debug fields
@@ -492,6 +530,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       responsePayload.raw_rates = rawRatesObj;
     }
 
+    priceApiCache = { payload: responsePayload, timestamp: Date.now() };
     return res.status(200).json(responsePayload);
 
   } catch (err: any) {

@@ -6,6 +6,9 @@
 import React, { useState, useEffect } from "react";
 import { Send, MapPin, Phone, Mail, ShieldAlert, Award, Globe, MessageSquare, ShieldCheck, Terminal } from "lucide-react";
 import { dbService } from "../lib/supabase";
+import BrandLogo from "./BrandLogo";
+import { LEGAL_POLICY_LINKS } from "../lib/legalLinks";
+import { FACEBOOK_PAGE_URL } from "../lib/facebookLinks";
 
 interface FooterProps {
   currentLang: "en" | "ar";
@@ -51,99 +54,87 @@ export default function Footer({
   };
 
   return (
-    <footer className="bg-[#F7F4ED] border-t border-[#E8DEC9] pt-20 pb-8 text-xs font-mono text-[#5E564D]" id="office" style={{ direction: currentLang === "ar" ? "rtl" : "ltr" }}>
+    <footer className="bg-brand-bg border-t border-champagne pt-16 pb-8 text-xs font-mono text-text-secondary" id="site-footer" style={{ direction: currentLang === "ar" ? "rtl" : "ltr" }}>
       <div className="max-w-7xl mx-auto px-4 md:px-8 space-y-16">
         
         {/* Upper Grid - Branding, Navigation, Newsletter */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
           
           {/* Corporate Profile Column */}
           <div className="space-y-4">
-            <div className="flex flex-col">
-              <span className="text-xl font-serif font-bold tracking-[0.2em] text-[#1F1A17]">
-                PGR <span className="text-[#C6A15B]">UAE</span>
-              </span>
-              <span className="text-[9px] uppercase tracking-[0.4em] text-[#A47C36] mt-1 font-mono font-bold">
-                Precious Metals & Bullion Quote Desk
-              </span>
-            </div>
-            <p className="text-[#5E564D] text-[11px] leading-relaxed font-bold">
+            <BrandLogo variant="footer" currentLang={currentLang} />
+            <p className="text-text-secondary text-[11px] leading-relaxed font-bold">
               {currentLang === "ar"
                 ? "مؤسسة بي جي آر لتجارة المعادن الثمينة ومقرها دبي. نوفر عروض أسعار وحلول تخزين مخصصة للسبائك للمؤسسات وصناديق الاستثمار وكبار الشخصيات بأعلى معايير الأمان السويسري."
-                : "PGR UAE is an internationally accredited physical gold and silver wholesale bullion house and purchase inquiry platform headquartered in Dubai, partnering with elite Swiss and global refineries."}
+                : "PGR UAE is an internationally accredited physical gold and silver bullion desk headquartered in Dubai, sourcing through accredited international refineries."}
             </p>
             <div className="flex flex-col gap-2 pt-2 text-[11px]">
+              <a
+                href={FACEBOOK_PAGE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-gold-dark text-text-charcoal transition-colors flex items-center gap-1.5 font-mono font-bold"
+              >
+                <Globe size={12} className="text-gold-base" />
+                <span>{currentLang === "ar" ? "صفحة فيسبوك الرسمية" : "Official Facebook Page"}</span>
+              </a>
               <button 
                 onClick={onOpenClientDashboard} 
-                className="hover:text-[#A47C36] text-[#1F1A17] transition-colors flex items-center gap-1.5 cursor-pointer text-left font-mono font-bold"
+                className="hover:text-gold-dark text-text-charcoal transition-colors flex items-center gap-1.5 cursor-pointer text-left font-mono font-bold"
               >
-                <ShieldCheck size={12} className="text-[#C6A15B]" />
+                <ShieldCheck size={12} className="text-gold-base" />
                 <span>{currentLang === "ar" ? "ديوان كبار العملاء الرقمي" : "Secure Client Desk"}</span>
               </button>
               <button 
                 onClick={onOpenAdminPortal} 
-                className="hover:text-[#A47C36] text-[#5E564D] transition-colors flex items-center gap-1.5 cursor-pointer text-left font-mono font-bold"
+                className="hover:text-gold-dark text-text-secondary transition-colors flex items-center gap-1.5 cursor-pointer text-left font-mono font-bold"
               >
-                <Terminal size={12} className="text-[#C6A15B]" />
+                <Terminal size={12} className="text-gold-base" />
                 <span>{currentLang === "ar" ? "ديوان الإدارة والتحكم" : "Admin Portal Desk"}</span>
               </button>
               <button 
                 onClick={onOpenAdminPortal} 
-                className="hover:text-[#A47C36] transition-colors flex items-center gap-1.5 cursor-pointer text-left font-mono font-extrabold text-[#1F1A17] border border-[#E8DEC9] bg-white shadow-sm px-2.5 py-1.5 rounded mt-1 transition-all"
+                className="hover:text-gold-dark transition-colors flex items-center gap-1.5 cursor-pointer text-left font-mono font-extrabold text-text-charcoal border border-soft-border bg-brand-card shadow-sm px-2.5 py-1.5 rounded mt-1 transition-all"
                 id="footer-admin-login-btn"
               >
-                <Terminal size={11} className="text-[#C6A15B]" />
+                <Terminal size={11} className="text-gold-base" />
                 <span>{currentLang === "ar" ? "دخول الإدارة" : "Admin Login"}</span>
               </button>
             </div>
           </div>
 
-          {/* Sourcing & Products Column */}
+          {/* Quick links — mockup direction */}
           <div className="space-y-4">
-            <h4 className="text-xs uppercase tracking-widest text-[#1F1A17] font-bold">
-              {currentLang === "ar" ? "المنتجات والخدمات" : "Bullion Solutions"}
+            <h4 className="text-xs uppercase tracking-widest text-text-charcoal font-bold">
+              {currentLang === "ar" ? "روابط سريعة" : "Quick Links"}
             </h4>
-            <ul className="space-y-2.5 text-[11px] text-[#5E564D] font-bold">
-              <li><button onClick={() => onNavigate("catalog")} className="hover:text-[#A47C36] transition-colors cursor-pointer text-left">{currentLang === "ar" ? "سبائك الذهب المصكوكة" : "Minted Gold Bars (1g - 1kg)"}</button></li>
-              <li><button onClick={() => onNavigate("catalog")} className="hover:text-[#A47C36] transition-colors cursor-pointer text-left">{currentLang === "ar" ? "مسكوكات الذهب والفضة الاستثمارية" : "Investment Gold Coins"}</button></li>
-              <li><button onClick={() => onNavigate("catalog")} className="hover:text-[#A47C36] transition-colors cursor-pointer text-left">{currentLang === "ar" ? "سبائك الفضة الصب والصبابة" : "Cast Silver Bullion (1kg)"}</button></li>
-              <li><button onClick={onOpenQuote} className="hover:text-[#A47C36] transition-colors cursor-pointer text-left">{currentLang === "ar" ? "تصدير وتجارة الجملة الدولية" : "Wholesale Institutional Contracts"}</button></li>
-              <li><button onClick={onOpenAIChat} className="hover:text-[#A47C36] transition-colors cursor-pointer text-left">{currentLang === "ar" ? "ديوان المستشار المالي الرقمي" : "Bespoke Portfolio Hedging"}</button></li>
+            <ul className="space-y-2.5 text-[11px] text-text-secondary font-bold">
+              <li><a href="/#about" className="hover:text-gold-dark transition-colors">{currentLang === "ar" ? "من نحن" : "About Us"}</a></li>
+              <li><a href="/terms" className="hover:text-gold-dark transition-colors">{currentLang === "ar" ? "الشروط والأحكام" : "Terms & Conditions"}</a></li>
+              <li><a href="/privacy-policy" className="hover:text-gold-dark transition-colors">{currentLang === "ar" ? "سياسة الخصوصية" : "Privacy Policy"}</a></li>
+              <li><a href="/#contact" className="hover:text-gold-dark transition-colors">{currentLang === "ar" ? "اتصل بنا" : "Contact Us"}</a></li>
+              <li><a href="/#catalog" className="hover:text-gold-dark transition-colors">{currentLang === "ar" ? "فئات السبائك" : "Bullion Categories"}</a></li>
+              <li><a href="/faq" className="hover:text-gold-dark transition-colors">{currentLang === "ar" ? "الأسئلة الشائعة" : "FAQ"}</a></li>
+              <li><a href="/pricing-disclaimer" className="hover:text-gold-dark transition-colors">{currentLang === "ar" ? "إخلاء التسعير" : "Pricing Disclaimer"}</a></li>
+              <li><a href="/kyc-aml-policy" className="hover:text-gold-dark transition-colors">{currentLang === "ar" ? "اعرف عميلك" : "KYC & AML"}</a></li>
+              <li><a href="/delivery-collection-policy" className="hover:text-gold-dark transition-colors">{currentLang === "ar" ? "التوصيل" : "Delivery Policy"}</a></li>
+              <li><a href="/refund-cancellation-policy" className="hover:text-gold-dark transition-colors">{currentLang === "ar" ? "الاسترداد" : "Refund Policy"}</a></li>
+              <li><a href="/request-quote" className="hover:text-gold-dark transition-colors">{currentLang === "ar" ? "طلب عرض سعر" : "Request Quote"}</a></li>
             </ul>
-          </div>
-
-          {/* Secure Logistic Terms Column */}
-          <div className="space-y-4">
-            <h4 className="text-xs uppercase tracking-widest text-[#1F1A17] font-bold">
-              {currentLang === "ar" ? "اللوائح والسياسات والامتثال" : "Compliance, Policies & Trust"}
-            </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-x-2 gap-y-1.5 text-[11px] text-[#5E564D] font-bold">
-              <button onClick={() => onOpenLegalDoc("terms")} className="hover:text-[#A47C36] transition-colors cursor-pointer text-left">{currentLang === "ar" ? "شروط الخدمة والأحكام" : "Terms of Service"}</button>
-              <button onClick={() => onOpenLegalDoc("privacy")} className="hover:text-[#A47C36] transition-colors cursor-pointer text-left">{currentLang === "ar" ? "سياسة الخصوصية" : "Privacy Policy"}</button>
-              <button onClick={() => onOpenLegalDoc("aml")} className="hover:text-[#A47C36] transition-colors cursor-pointer text-left">{currentLang === "ar" ? "سياسة الامتثال ومكافحة غسيل الأموال" : "KYC & AML Policy"}</button>
-              <button onClick={() => onOpenLegalDoc("pricing")} className="hover:text-[#A47C36] transition-colors cursor-pointer text-left">{currentLang === "ar" ? "إخلاء مسؤولية الأسعار" : "Pricing Disclaimer"}</button>
-              <button onClick={() => onOpenLegalDoc("refund")} className="hover:text-[#A47C36] transition-colors cursor-pointer text-left">{currentLang === "ar" ? "سياسة الإلغاء والاسترداد" : "Refund & Cancellation"}</button>
-              <button onClick={() => onOpenLegalDoc("delivery")} className="hover:text-[#A47C36] transition-colors cursor-pointer text-left">{currentLang === "ar" ? "سياسة التوصيل والاستلام" : "Delivery & Collection"}</button>
-              <button onClick={() => onOpenLegalDoc("storage")} className="hover:text-[#A47C36] transition-colors cursor-pointer text-left">{currentLang === "ar" ? "شروط التخزين المخصص" : "Allocated Storage Terms"}</button>
-              <button onClick={() => onOpenLegalDoc("sellback")} className="hover:text-[#A47C36] transition-colors cursor-pointer text-left">{currentLang === "ar" ? "سياسة إعادة الشراء" : "Sell-Back Quote Policy"}</button>
-              <button onClick={() => onOpenLegalDoc("risk")} className="hover:text-[#A47C36] transition-colors cursor-pointer text-left">{currentLang === "ar" ? "الإفصاح عن المخاطر" : "Risk Disclosure"}</button>
-              <button onClick={() => onOpenLegalDoc("cookie")} className="hover:text-[#A47C36] transition-colors cursor-pointer text-left">{currentLang === "ar" ? "سياسة ملفات الارتباط" : "Cookie Policy"}</button>
-              <button onClick={() => onOpenLegalDoc("compliance")} className="hover:text-[#A47C36] transition-colors cursor-pointer text-left font-bold text-[#A47C36]">{currentLang === "ar" ? "الامتثال والشفافية" : "Compliance & Trust"}</button>
-            </div>
           </div>
 
           {/* Newsletter Column */}
           <div className="space-y-4">
-            <h4 className="text-xs uppercase tracking-widest text-[#1F1A17] font-bold">
+            <h4 className="text-xs uppercase tracking-widest text-text-charcoal font-bold">
               {currentLang === "ar" ? "النشرة الإخبارية الفاخرة" : "Market Intelligence"}
             </h4>
-            <p className="text-[11px] leading-relaxed text-[#5E564D] font-bold">
+            <p className="text-[11px] leading-relaxed text-text-secondary font-bold">
               {currentLang === "ar"
                 ? "اشترك لتلقي تقارير سوق الذهب الحرة الأسبوعية وتقلبات الأسعار الاسترشادية مباشرة من دبي."
                 : "Subscribe to receive direct weekly gold bullion intelligence briefs and private wholesale pricing allotments."}
             </p>
             {isSubscribed ? (
-              <div className="p-2.5 bg-[#DCE8DF] text-[#556B5D] border border-[#556B5D]/20 rounded-sm text-[11px] font-bold">
+              <div className="p-2.5 bg-soft-success text-olive-accent border border-olive-accent/20 rounded-sm text-[11px] font-bold">
                 {currentLang === "ar" ? "شكراً لاشتراكك في قائمة النخبة." : "Thank you for joining our private circular."}
               </div>
             ) : (
@@ -154,11 +145,11 @@ export default function Footer({
                   placeholder={currentLang === "ar" ? "بريدك الإلكتروني الراقي" : "Enter executive email..."}
                   value={emailInput}
                   onChange={(e) => setEmailInput(e.target.value)}
-                  className="bg-white border border-[#E8DEC9] focus:border-[#C6A15B] rounded-sm px-3 py-2 text-[#1F1A17] outline-none flex-1 text-[11px] shadow-sm font-sans font-medium"
+                  className="bg-brand-card border border-soft-border focus:border-[#C6A15B] rounded-sm px-3 py-2 text-text-charcoal outline-none flex-1 text-[11px] shadow-sm font-sans font-medium"
                 />
                 <button
                   type="submit"
-                  className="p-2 bg-[#C6A15B] hover:bg-[#A47C36] text-[#1F1A17] hover:text-white transition-colors rounded-sm cursor-pointer shadow-sm"
+                  className="p-2 bg-gold-base hover:bg-gold-dark text-text-charcoal hover:text-white transition-colors rounded-sm cursor-pointer shadow-sm"
                 >
                   <Send size={12} />
                 </button>
@@ -166,18 +157,54 @@ export default function Footer({
             )}
           </div>
 
+          {/* Policies section closes upper grid */}
+        </div>
+
+        <div className="space-y-4 pt-4 border-t border-soft-border/60">
+          <h4 className="text-xs uppercase tracking-widest text-text-charcoal font-bold">
+            {currentLang === "ar" ? "السياسات والإفصاحات" : "Policies & Disclosures"}
+          </h4>
+          <p className="text-[10px] text-text-secondary font-bold leading-relaxed max-w-3xl">
+            {currentLang === "ar"
+              ? "جميع السياسات القانونية والإفصاحات التنظيمية لمعاملات السبائك المادية."
+              : "Legal policies and regulatory disclosures for physical bullion desk transactions."}
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-2 text-[11px] font-bold">
+            {LEGAL_POLICY_LINKS.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                className="text-text-secondary hover:text-gold-dark transition-colors py-1 border-b border-soft-border/40 hover:border-gold-base/40"
+              >
+                {currentLang === "ar" ? link.labelAr : link.labelEn}
+              </a>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-3 pt-1 text-[10px] font-mono uppercase tracking-wider">
+            <a href="/faq" className="text-gold-dark hover:text-gold-base font-bold">
+              {currentLang === "ar" ? "الأسئلة الشائعة" : "FAQ"}
+            </a>
+            <span className="text-champagne">|</span>
+            <a href="/request-quote" className="text-text-secondary hover:text-gold-dark">
+              {currentLang === "ar" ? "طلب عرض سعر" : "Request Quote"}
+            </a>
+            <span className="text-champagne">|</span>
+            <a href="/sitemap.xml" className="text-text-secondary hover:text-gold-dark">
+              {currentLang === "ar" ? "خريطة الموقع" : "Sitemap"}
+            </a>
+          </div>
         </div>
 
         {/* Middle Section - Physical Dubai Location coordinates */}
-        <div className="border-t border-b border-[#E8DEC9] py-8 grid grid-cols-1 md:grid-cols-3 gap-6 text-[11px] items-center">
+        <div className="border-t border-b border-soft-border py-8 grid grid-cols-1 md:grid-cols-3 gap-6 text-[11px] items-center">
           {/* Map address */}
           <div className="flex items-center gap-3">
-            <div className="h-8 w-8 bg-white rounded-full border border-[#E8DEC9] shadow-sm flex items-center justify-center text-[#C6A15B]">
+            <div className="h-8 w-8 bg-brand-card rounded-full border border-soft-border shadow-sm flex items-center justify-center text-gold-base">
               <MapPin size={12} />
             </div>
             <div>
-              <span className="text-[#1F1A17] block font-extrabold">{currentLang === "ar" ? "مقر دبي الرئيسي" : "Dubai Head Office"}</span>
-              <span className="text-[#5E564D] font-bold">
+              <span className="text-text-charcoal block font-extrabold">{currentLang === "ar" ? "مقر دبي الرئيسي" : "Dubai Head Office"}</span>
+              <span className="text-text-secondary font-bold">
                 {currentLang === "ar" 
                   ? (settings?.office_address_ar || "برج الماس، منطقة التداول الحرة، دبي مارينا، دبي، الإمارات العربية المتحدة")
                   : (settings?.office_address_en || "Almas Tower, West Trade Zone, Dubai Marina, Dubai, UAE")}
@@ -187,12 +214,12 @@ export default function Footer({
 
           {/* Trade Phone */}
           <div className="flex items-center gap-3">
-            <div className="h-8 w-8 bg-white rounded-full border border-[#E8DEC9] shadow-sm flex items-center justify-center text-[#C6A15B]">
+            <div className="h-8 w-8 bg-brand-card rounded-full border border-soft-border shadow-sm flex items-center justify-center text-gold-base">
               <Phone size={12} />
             </div>
             <div>
-              <span className="text-[#1F1A17] block font-extrabold">{currentLang === "ar" ? "مكتب التداول الهاتفي" : "Desk Direct Hotline"}</span>
-              <span className="text-[#5E564D] font-bold">
+              <span className="text-text-charcoal block font-extrabold">{currentLang === "ar" ? "مكتب التداول الهاتفي" : "Desk Direct Hotline"}</span>
+              <span className="text-text-secondary font-bold">
                 {settings?.trade_phone || "+971 4 445 8888"} • {settings?.whatsapp_hotline || "+971 55 968 8837"}
               </span>
             </div>
@@ -200,12 +227,12 @@ export default function Footer({
 
           {/* Desk Email */}
           <div className="flex items-center gap-3">
-            <div className="h-8 w-8 bg-white rounded-full border border-[#E8DEC9] shadow-sm flex items-center justify-center text-[#C6A15B]">
+            <div className="h-8 w-8 bg-brand-card rounded-full border border-soft-border shadow-sm flex items-center justify-center text-gold-base">
               <Mail size={12} />
             </div>
             <div>
-              <span className="text-[#1F1A17] block font-extrabold">{currentLang === "ar" ? "الاتصال الإلكتروني" : "Electronic Sourcing"}</span>
-              <span className="text-[#5E564D] font-bold">
+              <span className="text-text-charcoal block font-extrabold">{currentLang === "ar" ? "الاتصال الإلكتروني" : "Electronic Sourcing"}</span>
+              <span className="text-text-secondary font-bold">
                 {settings?.desk_email || "desk@pgruae.com"} • trade@pgruae.com
               </span>
             </div>
@@ -213,30 +240,40 @@ export default function Footer({
         </div>
 
         {/* Lower Section - Regulatory Disclaimer & Trademarks */}
-        <div className="space-y-6 pt-6 border-t border-[#E8DEC9]">
-          <div className="p-4 bg-white border border-[#E8DEC9] shadow-sm rounded-sm text-[10px] leading-relaxed text-[#5E564D] space-y-3 font-bold">
+        <div className="space-y-6 pt-6 border-t border-soft-border">
+          <div className="p-4 bg-brand-card border border-soft-border shadow-sm rounded-sm text-[10px] leading-relaxed text-text-secondary space-y-3 font-bold">
             <p>
-              <strong className="text-[#1F1A17] font-extrabold">English Compliance Wording:</strong><br />
+              <strong className="text-text-charcoal font-extrabold">English Compliance Wording:</strong><br />
               PGR UAE provides indicative precious metals pricing and quote request services for physical bullion inquiries. Prices shown are indicative market references only and may change without notice. Final availability, premiums, VAT/tax treatment, payment, delivery, storage, and settlement terms are confirmed by PGR UAE before any transaction. PGR UAE does not provide financial, investment, tax, or legal advice. Firm quote confirmed by PGR UAE desk. Subject to market movement and compliance review.
             </p>
             <p className="text-right font-bold" style={{ direction: "rtl" }}>
-              <strong className="text-[#1F1A17] font-extrabold">الامتثال القانوني (العربية):</strong><br />
+              <strong className="text-text-charcoal font-extrabold">الامتثال القانوني (العربية):</strong><br />
               توفر PGR UAE أسعاراً إرشادية وخدمة طلب عروض أسعار للاستفسارات المتعلقة بالسبائك والمعادن الثمينة الفعلية. الأسعار المعروضة مؤشرات سوقية فقط وقد تتغير دون إشعار. يتم تأكيد التوفر، الهامش، المعاملة الضريبية، الدفع، التسليم، التخزين، وشروط التسوية من قبل PGR UAE قبل أي عملية. لا تقدم PGR UAE نصائح مالية أو استثمارية أو ضريبية أو قانونية ولا تضمن أداء السوق.
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-[10px] text-[#5E564D] font-bold">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-[10px] text-text-secondary font-bold">
             <div>
               © 2026 PGR UAE Precious Metals & Bullion Quote Desk (pgruae.com). Licensed by Jebel Ali and Dubai Commodities Regulatory Division. All rights reserved.
             </div>
-            <div className="flex gap-4">
-              <button onClick={() => onOpenLegalDoc("terms")} className="hover:text-[#A47C36] transition-colors cursor-pointer">{currentLang === "ar" ? "الشروط والأحكام" : "Terms & Conditions"}</button>
-              <span>•</span>
-              <button onClick={() => onOpenLegalDoc("privacy")} className="hover:text-[#A47C36] transition-colors cursor-pointer">{currentLang === "ar" ? "سياسة الخصوصية" : "Privacy Policy"}</button>
-              <span>•</span>
-              <button onClick={() => onOpenLegalDoc("compliance")} className="hover:text-[#A47C36] transition-colors cursor-pointer">{currentLang === "ar" ? "ديوان الامتثال" : "Compliance Desk"}</button>
-              <span>•</span>
-              <span>UAE VAT Law No. 8</span>
+            <div className="flex flex-wrap justify-center sm:justify-end gap-x-3 gap-y-1">
+              {LEGAL_POLICY_LINKS.filter((l) => l.group === "core").map((link) => (
+                <a key={link.href} href={link.href} className="hover:text-gold-dark transition-colors">
+                  {currentLang === "ar" ? link.labelAr : link.labelEn}
+                </a>
+              ))}
+              <span className="hidden sm:inline text-champagne">•</span>
+              <a href="/pricing-disclaimer" className="hover:text-gold-dark transition-colors">
+                {currentLang === "ar" ? "إخلاء التسعير" : "Pricing"}
+              </a>
+              <span className="hidden sm:inline text-champagne">•</span>
+              <a href="/risk-disclosure" className="hover:text-gold-dark transition-colors">
+                {currentLang === "ar" ? "المخاطر" : "Risk"}
+              </a>
+              <span className="hidden sm:inline text-champagne">•</span>
+              <a href="/sitemap.xml" className="hover:text-gold-dark transition-colors">
+                {currentLang === "ar" ? "خريطة الموقع" : "Sitemap"}
+              </a>
             </div>
           </div>
         </div>

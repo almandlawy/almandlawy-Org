@@ -1,0 +1,161 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ * Compact live market reference — indicative only, IQD/AED/USD.
+ */
+
+import React, { useMemo } from "react";
+import { RefreshCw } from "lucide-react";
+import { LiveMarketRates } from "../types";
+import { getPriceStatusLabel } from "../lib/indicativePricing";
+import { getSpotDeltas } from "../lib/marketPriceDelta";
+import MarketPriceCard from "./MarketPriceCard";
+
+const STRIP_CURRENCIES = ["IQD", "AED", "USD"] as const;
+type StripCurrency = (typeof STRIP_CURRENCIES)[number];
+
+function resolveStripCurrency(selected: string): StripCurrency {
+  if (selected === "USD" || selected === "AED" || selected === "IQD") {
+    return selected;
+  }
+  return "IQD";
+}
+
+interface MarketReferenceStripProps {
+  currentLang: "en" | "ar";
+  rates: LiveMarketRates | null;
+  selectedCurrency: string;
+  onChangeCurrency: (currency: string) => void;
+  onRefresh: () => void;
+  isRefreshing: boolean;
+}
+
+export default function MarketReferenceStrip({
+  currentLang,
+  rates,
+  selectedCurrency,
+  onChangeCurrency,
+  onRefresh,
+  isRefreshing,
+}: MarketReferenceStripProps) {
+  const isAr = currentLang === "ar";
+  const cur = resolveStripCurrency(selectedCurrency);
+
+  const goldOz = rates?.gold?.currencies?.[cur]?.ounce;
+  const silverOz = rates?.silver?.currencies?.[cur]?.ounce;
+  const goldGram = rates?.gold?.currencies?.[cur]?.gram;
+  const silverGram = rates?.silver?.currencies?.[cur]?.gram;
+  const sourceStatus = rates?.source_status;
+  const isLiveFeed = sourceStatus === "live" || sourceStatus === "cached";
+  const priceStatusLabel = getPriceStatusLabel(sourceStatus, isAr ? "ar" : "en");
+
+  const deltas = useMemo(
+    () => getSpotDeltas(rates?.gold?.spot_usd_oz, rates?.silver?.spot_usd_oz),
+    [rates?.gold?.spot_usd_oz, rates?.silver?.spot_usd_oz, rates?.updated_at]
+  );
+
+  const formatPrice = (value: number) => {
+    const maxFrac = cur === "IQD" ? 0 : 2;
+    return value.toLocaleString(undefined, { maximumFractionDigits: maxFrac });
+  };
+
+  const lastUpdated = rates?.updated_at || rates?.cache_timestamp;
+  const formattedTime = lastUpdated
+    ? new Date(lastUpdated).toLocaleString(isAr ? "ar-AE" : "en-AE", {
+        hour: "2-digit",
+        minute: "2-digit",
+        day: "numeric",
+        month: "short",
+      })
+    : null;
+
+  return (
+    <section
+      id="market"
+      className="bg-panel-dark border-y border-champagne/20"
+      style={{ direction: isAr ? "rtl" : "ltr" }}
+    >
+      <div className="max-w-7xl mx-auto px-4 md:px-8 py-5">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-5">
+          <div className="flex-1 space-y-4">
+            <p className="text-[10px] font-mono uppercase tracking-[0.24em] text-gold-base font-bold flex flex-wrap items-center gap-2">
+              <span>{isAr ? "مرجع السوق المباشر" : "Live Market Reference"}</span>
+              {isLiveFeed && (
+                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 normal-case tracking-normal text-[9px]">
+                  <span className="desk-live-dot" />
+                  {isAr ? "مباشر · تجريبي" : "Live · trial"}
+                </span>
+              )}
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <MarketPriceCard
+                label={isAr ? "مرجع الذهب" : "Gold reference"}
+                ouncePrice={goldOz}
+                gramPrice={goldGram}
+                currency={cur}
+                delta={deltas.gold}
+                isAr={isAr}
+                formatPrice={formatPrice}
+              />
+              <MarketPriceCard
+                label={isAr ? "مرجع الفضة" : "Silver reference"}
+                ouncePrice={silverOz}
+                gramPrice={silverGram}
+                currency={cur}
+                delta={deltas.silver}
+                isAr={isAr}
+                formatPrice={formatPrice}
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 text-[10px] font-mono shrink-0">
+            {formattedTime && (
+              <span className="text-panel-muted">
+                {isAr ? "آخر تحديث:" : "Last updated:"} {formattedTime}
+              </span>
+            )}
+            <span className="text-panel-muted hidden sm:inline">·</span>
+            <span className="text-panel-muted">{isAr ? "العملة:" : "Currency:"}</span>
+            {STRIP_CURRENCIES.map((c) => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => onChangeCurrency(c)}
+                className={`px-2.5 py-1 rounded font-bold border transition-colors ${
+                  cur === c
+                    ? "bg-gold-base text-text-charcoal border-gold-base"
+                    : "text-champagne border-champagne/30 hover:border-gold-base"
+                }`}
+              >
+                {c}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={onRefresh}
+              className={`p-1.5 rounded border border-champagne/30 text-champagne hover:text-gold-base ${isRefreshing ? "animate-spin" : ""}`}
+              aria-label="Refresh"
+            >
+              <RefreshCw size={12} />
+            </button>
+          </div>
+        </div>
+
+        <p className="mt-4 text-[11px] font-sans text-champagne/85 leading-relaxed max-w-4xl border-t border-champagne/10 pt-4">
+          <span className="block mb-1 text-[10px] font-mono uppercase tracking-wider text-champagne/70">
+            {priceStatusLabel}
+            {deltas.gold || deltas.silver
+              ? isAr
+                ? " · التغيّر مقارنة بمرجع الجلسة (24 ساعة)"
+                : " · Change vs session reference (24h)"
+              : ""}
+          </span>
+          {isAr
+            ? "مرجع سوقي استرشادي فقط. السعر النهائي والهامش والتوفر وشروط التسليم يؤكدها مكتب PGR UAE."
+            : "Market reference only. Final price, premium, availability and delivery terms are confirmed by the PGR UAE desk."}
+        </p>
+      </div>
+    </section>
+  );
+}

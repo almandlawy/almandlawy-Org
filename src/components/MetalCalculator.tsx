@@ -6,12 +6,8 @@
 import React, { useState, useEffect } from "react";
 import { Sparkles, ArrowRight, HelpCircle, Shield, RefreshCw, Calculator, MessageSquare, Info, CheckCircle } from "lucide-react";
 import { LiveMarketRates } from "../types";
-import {
-  REFERENCE_GOLD_USD_OZ,
-  REFERENCE_SILVER_USD_OZ,
-  REFERENCE_PLATINUM_USD_OZ,
-  REFERENCE_PALLADIUM_USD_OZ,
-} from "../lib/metalReferenceSpots";
+import PricingDisclaimer from "./PricingDisclaimer";
+import { getSpotUsdOz, getFxRate, OUNCE_TO_GRAM } from "../lib/marketReference";
 
 interface MetalCalculatorProps {
   currentLang: "en" | "ar";
@@ -37,27 +33,9 @@ export default function MetalCalculator({
   const [purity, setPurity] = useState<string>("24K"); // Default 24K
   const [customPremium, setCustomPremium] = useState<number>(2.0); // Default premium 2.0%
 
-  // Reference spots for calculation
-  const getMetalSpotUsdOz = () => {
-    const defaultSpots = {
-      gold: REFERENCE_GOLD_USD_OZ,
-      silver: REFERENCE_SILVER_USD_OZ,
-    };
-    if (!rates) return defaultSpots[metalType];
-    const spot = rates[metalType]?.spot_usd_oz;
-    return spot && spot > 0 ? spot : defaultSpots[metalType];
-  };
+  const getMetalSpotUsdOz = () => getSpotUsdOz(metalType, rates);
 
-  const getExchangeRate = () => {
-    const ratesMap: Record<string, number> = {
-      USD: 1.0,
-      AED: 3.6725,
-      EUR: 0.925,
-      GBP: 0.785,
-      SAR: 3.7505
-    };
-    return ratesMap[selectedCurrency] || 1.0;
-  };
+  const getExchangeRate = () => getFxRate(selectedCurrency, rates);
 
   // Metal purities catalog based on requirements: 24K, 22K, 21K, 18K, 999.9, 999, 925
   const goldPurities = [
@@ -161,19 +139,19 @@ export default function MetalCalculator({
   };
 
   return (
-    <div className="bg-white border border-[#E8DEC9] rounded-lg p-6 md:p-8 space-y-6 shadow-sm relative overflow-hidden" id="metals-calculator-component" style={{ direction: isAr ? "rtl" : "ltr" }}>
+    <div className="bg-white border border-soft-border rounded-lg p-6 md:p-8 space-y-6 shadow-sm relative overflow-hidden" id="metals-calculator-component" style={{ direction: isAr ? "rtl" : "ltr" }}>
       
       {/* Header section */}
-      <div className="flex justify-between items-start border-b border-[#E8DEC9] pb-4">
+      <div className="flex justify-between items-start border-b border-soft-border pb-4">
         <div className="space-y-1">
-          <span className="text-[#A47C36] font-mono uppercase text-[10px] tracking-widest font-bold flex items-center gap-1.5">
+          <span className="text-gold-dark font-mono uppercase text-[10px] tracking-widest font-bold flex items-center gap-1.5">
             <Calculator size={12} />
             {isAr ? "حاسبة تقدير أسعار المعادن الثمينة المباشرة" : "Live Precious Metals Estimator"}
           </span>
-          <h3 className="text-lg md:text-xl font-serif text-[#1F1A17] tracking-wide font-medium">
+          <h3 className="text-lg md:text-xl font-serif text-text-charcoal tracking-wide font-medium">
             {isAr ? "ديوان الحساب الذكي المباشر" : "Interactive Bullion Quote Calculator"}
           </h3>
-          <p className="text-xs text-[#5E564D] font-sans">
+          <p className="text-xs text-text-secondary font-sans">
             {isAr 
               ? "احسب التكلفة التقديرية للسبائك والعملات والطلبات بناء على أسعار البورصة الحرة وعلاوات دبي المنافسة." 
               : "Perform real-time indicative valuation for gold and silver based on live spot rates and customizable premium rates."}
@@ -182,7 +160,7 @@ export default function MetalCalculator({
         {onClose && (
           <button 
             onClick={onClose}
-            className="text-[#5E564D] hover:text-[#1F1A17] p-1 rounded hover:bg-[#FAF9F5] cursor-pointer text-lg font-bold"
+            className="text-text-secondary hover:text-text-charcoal p-1 rounded hover:bg-brand-bg cursor-pointer text-lg font-bold"
           >
             &times;
           </button>
@@ -194,7 +172,7 @@ export default function MetalCalculator({
         <div className="lg:col-span-7 space-y-5">
           {/* Metal Selector */}
           <div className="space-y-2">
-            <label className="text-[10px] uppercase tracking-widest text-[#5E564D] font-mono font-bold block">
+            <label className="text-[10px] uppercase tracking-widest text-text-secondary font-mono font-bold block">
               {isAr ? "١. اختر نوع المعدن الثمين" : "1. Select Precious Metal"}
             </label>
             <div className="grid grid-cols-2 gap-3">
@@ -203,11 +181,11 @@ export default function MetalCalculator({
                 onClick={() => setMetalType("gold")}
                 className={`py-3 px-4 rounded border font-serif text-xs md:text-sm tracking-wide transition-all cursor-pointer flex items-center justify-center gap-2 ${
                   metalType === "gold"
-                    ? "bg-[#FFFDF8] border-[#C6A15B] text-[#A47C36] font-bold shadow-sm"
-                    : "bg-[#FAF9F5] border-[#E8DEC9] text-[#5E564D] hover:text-[#1F1A17] hover:border-[#C6A15B]/30"
+                    ? "bg-brand-section border-[#C6A15B] text-gold-dark font-bold shadow-sm"
+                    : "bg-brand-bg border-soft-border text-text-secondary hover:text-text-charcoal hover:border-[#C6A15B]/30"
                 }`}
               >
-                <div className={`h-2.5 w-2.5 rounded-full ${metalType === "gold" ? "bg-[#C6A15B]" : "bg-[#FAF9F5]"}`} />
+                <div className={`h-2.5 w-2.5 rounded-full ${metalType === "gold" ? "bg-gold-base" : "bg-brand-bg"}`} />
                 <span>{isAr ? "سبائك ومسكوكات الذهب" : "Gold Bars & Coins"}</span>
               </button>
               <button
@@ -215,11 +193,11 @@ export default function MetalCalculator({
                 onClick={() => setMetalType("silver")}
                 className={`py-3 px-4 rounded border font-serif text-xs md:text-sm tracking-wide transition-all cursor-pointer flex items-center justify-center gap-2 ${
                   metalType === "silver"
-                    ? "bg-[#FFFDF8] border-[#A47C36] text-[#1F1A17] font-bold shadow-sm"
-                    : "bg-[#FAF9F5] border-[#E8DEC9] text-[#5E564D] hover:text-[#1F1A17] hover:border-[#C6A15B]/30"
+                    ? "bg-brand-section border-[#A47C36] text-text-charcoal font-bold shadow-sm"
+                    : "bg-brand-bg border-soft-border text-text-secondary hover:text-text-charcoal hover:border-[#C6A15B]/30"
                 }`}
               >
-                <div className={`h-2.5 w-2.5 rounded-full ${metalType === "silver" ? "bg-[#5E564D]" : "bg-[#FAF9F5]"}`} />
+                <div className={`h-2.5 w-2.5 rounded-full ${metalType === "silver" ? "bg-[#5E564D]" : "bg-brand-bg"}`} />
                 <span>{isAr ? "سبائك ومسكوكات الفضة" : "Silver Bars & Coins"}</span>
               </button>
             </div>
@@ -228,17 +206,17 @@ export default function MetalCalculator({
           {/* Weight Controls */}
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <label className="text-[10px] uppercase tracking-widest text-[#5E564D] font-mono font-bold block">
+              <label className="text-[10px] uppercase tracking-widest text-text-secondary font-mono font-bold block">
                 {isAr ? "٢. حدد الوزن والوحدة" : "2. Enter Material Weight & Unit"}
               </label>
-              <div className="flex bg-[#FAF9F5] rounded border border-[#E8DEC9] p-0.5">
+              <div className="flex bg-brand-bg rounded border border-soft-border p-0.5">
                 {(["g", "kg", "oz", "tola"] as const).map((unit) => (
                   <button
                     key={unit}
                     type="button"
                     onClick={() => setWeightUnit(unit)}
                     className={`px-2.5 py-1 text-[10px] font-mono rounded-sm cursor-pointer uppercase ${
-                      weightUnit === unit ? "bg-[#C6A15B] text-[#1F1A17] font-bold" : "text-[#5E564D] hover:text-[#1F1A17]"
+                      weightUnit === unit ? "bg-gold-base text-text-charcoal font-bold" : "text-text-secondary hover:text-text-charcoal"
                     }`}
                   >
                     {unit}
@@ -256,10 +234,10 @@ export default function MetalCalculator({
                   const val = parseFloat(e.target.value);
                   setWeight(isNaN(val) ? 0 : val);
                 }}
-                className="w-full bg-white border border-[#E8DEC9] focus:border-[#C6A15B] focus:outline-none rounded py-3.5 px-4 text-[#1F1A17] text-sm md:text-base font-semibold"
+                className="w-full bg-white border border-soft-border focus:border-[#C6A15B] focus:outline-none rounded py-3.5 px-4 text-text-charcoal text-sm md:text-base font-semibold"
                 placeholder={isAr ? "أدخل كمية الوزن" : "Enter weight quantity"}
               />
-              <span className={`absolute ${isAr ? "left-4" : "right-4"} top-1/2 -translate-y-1/2 text-xs font-mono text-[#5E564D] uppercase font-bold`}>
+              <span className={`absolute ${isAr ? "left-4" : "right-4"} top-1/2 -translate-y-1/2 text-xs font-mono text-text-secondary uppercase font-bold`}>
                 {weightUnit === "g" ? (isAr ? "جرام" : "g") : weightUnit === "kg" ? (isAr ? "كيلوغرام" : "kg") : weightUnit === "oz" ? (isAr ? "أونصة تروي" : "oz t") : (isAr ? "تولا" : "tola")}
               </span>
             </div>
@@ -267,7 +245,7 @@ export default function MetalCalculator({
 
           {/* Purity & Karat Selection */}
           <div className="space-y-2">
-            <label className="text-[10px] uppercase tracking-widest text-[#5E564D] font-mono font-bold block">
+            <label className="text-[10px] uppercase tracking-widest text-text-secondary font-mono font-bold block">
               {isAr ? "٣. اختر عيار أو نقاوة المعدن" : "3. Choose Purity / Karat"}
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -278,8 +256,8 @@ export default function MetalCalculator({
                   onClick={() => setPurity(pur.key)}
                   className={`py-3 px-3.5 rounded border text-left flex items-center justify-between transition-all cursor-pointer font-sans ${
                     purity === pur.key
-                      ? "bg-[#FFFDF8] border-[#C6A15B] text-[#1F1A17] font-semibold"
-                      : "bg-[#FAF9F5] border-[#E8DEC9] text-[#5E564D] hover:text-[#1F1A17]"
+                      ? "bg-brand-section border-[#C6A15B] text-text-charcoal font-semibold"
+                      : "bg-brand-bg border-soft-border text-text-secondary hover:text-text-charcoal"
                   }`}
                   style={{ direction: isAr ? "rtl" : "ltr" }}
                 >
@@ -291,12 +269,12 @@ export default function MetalCalculator({
           </div>
 
           {/* Custom Premium Slider */}
-          <div className="space-y-2 bg-[#FFFDF8] border border-[#E8DEC9] p-4 rounded">
+          <div className="space-y-2 bg-brand-section border border-soft-border p-4 rounded">
             <div className="flex justify-between items-center text-[10px] font-mono">
-              <span className="uppercase tracking-widest text-[#5E564D] font-bold">
+              <span className="uppercase tracking-widest text-text-secondary font-bold">
                 {isAr ? "٤. هامش المصنعية والعمولة" : "4. Premium / Desk Commission"}
               </span>
-              <span className="text-[#A47C36] font-bold">{customPremium.toFixed(1)}%</span>
+              <span className="text-gold-dark font-bold">{customPremium.toFixed(1)}%</span>
             </div>
             <input
               type="range"
@@ -307,11 +285,11 @@ export default function MetalCalculator({
               onChange={(e) => setCustomPremium(parseFloat(e.target.value))}
               className="w-full accent-[#C6A15B] bg-[#E8DEC9] h-1.5 rounded-sm appearance-none cursor-pointer"
             />
-            <div className="flex justify-between text-[9px] font-mono text-[#5E564D]">
+            <div className="flex justify-between text-[9px] font-mono text-text-secondary">
               <span>{isAr ? "أدنى هامش (٠.٥٪)" : "Min Premium (0.5%)"}</span>
               <span>{isAr ? "هامش عالي (١٥٪)" : "High Premium (15.0%)"}</span>
             </div>
-            <p className="text-[10px] text-[#5E564D] font-sans pt-1 leading-normal">
+            <p className="text-[10px] text-text-secondary font-sans pt-1 leading-normal">
               {isAr
                 ? "* يشمل هذا الهامش رسوم صب المصنع والتحقق والشحن المؤمن والتسليم في دبي."
                 : "* This covers refiner minting charges, assay validation, secured vaulting, and physical Dubai desk collection logistics."}
@@ -320,61 +298,51 @@ export default function MetalCalculator({
         </div>
 
         {/* Right column: Results & Actions */}
-        <div className="lg:col-span-5 flex flex-col justify-between bg-[#FAF9F5] border border-[#E8DEC9] rounded p-6 space-y-6 relative shadow-inner">
+        <div className="lg:col-span-5 flex flex-col justify-between bg-brand-bg border border-soft-border rounded p-6 space-y-6 relative shadow-inner">
           <div className="space-y-4">
-            <span className="text-[10px] font-mono uppercase tracking-widest text-[#5E564D] font-bold block border-b border-[#E8DEC9] pb-2">
+            <span className="text-[10px] font-mono uppercase tracking-widest text-text-secondary font-bold block border-b border-soft-border pb-2">
               {isAr ? "النتيجة والتقدير المباشر" : "Indicative Quote Breakdown"}
             </span>
 
             {/* Price Calculations */}
             <div className="space-y-4 font-mono">
               <div className="flex justify-between items-center text-xs">
-                <span className="text-[#5E564D]">{isAr ? "وزن السبيكة الإجمالي:" : "Calculated Weight:"}</span>
-                <span className="text-[#1F1A17] font-semibold">{calc.weightGrams} {isAr ? "جرام" : "grams"}</span>
+                <span className="text-text-secondary">{isAr ? "وزن السبيكة الإجمالي:" : "Calculated Weight:"}</span>
+                <span className="text-text-charcoal font-semibold">{calc.weightGrams} {isAr ? "جرام" : "grams"}</span>
               </div>
               <div className="flex justify-between items-center text-xs">
-                <span className="text-[#5E564D]">{isAr ? "العيار المحدد:" : "Selected Purity:"}</span>
-                <span className="text-[#1F1A17] font-semibold">{purity}</span>
+                <span className="text-text-secondary">{isAr ? "العيار المحدد:" : "Selected Purity:"}</span>
+                <span className="text-text-charcoal font-semibold">{purity}</span>
               </div>
               <div className="flex justify-between items-center text-xs">
-                <span className="text-[#5E564D]">{isAr ? "سعر البورصة الصافي:" : "Base Spot Melt Value:"}</span>
-                <span className="text-[#1F1A17] font-semibold">
+                <span className="text-text-secondary">{isAr ? "سعر البورصة الصافي:" : "Base Spot Melt Value:"}</span>
+                <span className="text-text-charcoal font-semibold">
                   {calc.baseSpotValue.toLocaleString()} {selectedCurrency}
                 </span>
               </div>
-              <div className="flex justify-between items-center text-xs text-[#A47C36]">
-                <span className="text-[#5E564D]">{isAr ? "قيمة الهامش المضافة:" : "Premium Amount:"}</span>
+              <div className="flex justify-between items-center text-xs text-gold-dark">
+                <span className="text-text-secondary">{isAr ? "قيمة الهامش المضافة:" : "Premium Amount:"}</span>
                 <span className="font-bold">
                   +{calc.premiumAmount.toLocaleString()} {selectedCurrency}
                 </span>
               </div>
 
-              <div className="border-t border-[#E8DEC9] pt-4 space-y-2">
-                <div className="text-[10px] text-[#5E564D] uppercase tracking-widest block font-bold">
+              <div className="border-t border-soft-border pt-4 space-y-2">
+                <div className="text-[10px] text-text-secondary uppercase tracking-widest block font-bold">
                   {isAr ? "السعر الإجمالي الاسترشادي" : "Total Indicative Quote"}
                 </div>
                 <div className="flex items-baseline gap-1.5">
-                  <span className="text-2xl md:text-3xl font-serif text-[#A47C36] font-bold tracking-tight">
+                  <span className="text-2xl md:text-3xl font-serif text-gold-dark font-bold tracking-tight">
                     {calc.finalEstimatedValue.toLocaleString()}
                   </span>
-                  <span className="text-xs text-[#5E564D] font-bold">{selectedCurrency}</span>
+                  <span className="text-xs text-text-secondary font-bold">{selectedCurrency}</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="space-y-4 pt-4 border-t border-[#E8DEC9]">
-            {/* Compliance warning */}
-            <div className="bg-[#FFFDF8] border border-[#E8DEC9] rounded p-4 space-y-1.5 text-[10px] font-sans leading-relaxed text-[#5E564D] shadow-sm">
-              <span className="font-bold text-[#A47C36] uppercase tracking-wider block">
-                ⚠️ {isAr ? "تنبيه هام ومراجعة امتثال" : "MANDATORY REGULATORY DISCLOSURE"}
-              </span>
-              <span>
-                {isAr
-                  ? "الأسعار استرشادية لغرض التخطيط فقط. لا يمكن تأكيد السعر النهائي وحجز العقد الفوري إلا عبر إصدار تسعير معتمد من ديوان PGR UAE، مع إتمام مراجعة التحقق من الهوية كواجب أمني وطني."
-                  : "Estimations are based on fluctuating market feeds and include estimated refiner margins. Final binding contract pricing must be confirmed on our quote desk, subject to mandatory KYC compliance."}
-              </span>
-            </div>
+          <div className="space-y-4 pt-4 border-t border-soft-border">
+            <PricingDisclaimer currentLang={currentLang} />
 
             {/* Direct Call To Action buttons */}
             <div className="flex flex-col gap-2.5 font-mono">
@@ -382,7 +350,7 @@ export default function MetalCalculator({
               <button
                 type="button"
                 onClick={handleInquirySubmit}
-                className="w-full py-3 bg-[#C6A15B] hover:bg-[#A47C36] text-[#1F1A17] hover:text-white font-bold uppercase tracking-wider text-[11px] rounded transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm"
+                className="w-full py-3 bg-gold-base hover:bg-gold-dark text-text-charcoal hover:text-white font-bold uppercase tracking-wider text-[11px] rounded transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm"
               >
                 <Calculator size={14} />
                 <span>{isAr ? "تثبيت وطلب عرض سعر رسمي" : "Request Official Quote Contract"}</span>
@@ -393,9 +361,9 @@ export default function MetalCalculator({
                 href={`https://wa.me/971559688837?text=${getWhatsAppMessage()}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full py-3 bg-transparent hover:bg-[#DCE8DF] border border-[#556B5D] text-[#556B5D] font-bold uppercase tracking-wider text-[11px] rounded transition-all flex items-center justify-center gap-2"
+                className="w-full py-3 bg-transparent hover:bg-[#DCE8DF] border border-[#556B5D] text-olive-accent font-bold uppercase tracking-wider text-[11px] rounded transition-all flex items-center justify-center gap-2"
               >
-                <MessageSquare size={14} className="text-[#556B5D]" />
+                <MessageSquare size={14} className="text-olive-accent" />
                 <span>{isAr ? "تأكيد فوري عبر الواتساب" : "Confirm Instant Desk Price"}</span>
               </a>
             </div>

@@ -151,7 +151,7 @@ export default function LiveMarket({
     return rates[metal].currencies[cur] || { ounce: 0, gram: 0 };
   };
 
-  const currencies = ["AED", "USD", "EUR", "GBP", "SAR"];
+  const currencies = ["IQD", "AED", "USD", "EUR", "GBP", "SAR"];
 
   return (
     <section className="py-24 px-4 md:px-8 border-t border-soft-border bg-brand-bg relative" id="market" style={{ direction: currentLang === "ar" ? "rtl" : "ltr" }}>

@@ -7,3 +7,4 @@ coverage/
 .env*
 !.env.example
 data/pgr-server-settings.json
+public/videos/pgr-bullion-collection-source.mp4

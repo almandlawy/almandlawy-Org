@@ -78,7 +78,7 @@ export default function LoginPage({ currentLang, onNavigate, onLoginSuccess }: L
         
         {/* Logo and Greeting Header */}
         <div className="flex flex-col items-center text-center space-y-4">
-          <Logo className="w-14 h-14" showText={false} />
+          <Logo className="w-14 h-14" showText={false} currentLang={currentLang} />
           <div className="space-y-1">
             <h1 className="text-white font-serif text-lg tracking-wider font-bold uppercase">
               {currentLang === "ar" ? "ديوان تسعير المعادن الثمينة" : "PGR UAE Precious Metals"}

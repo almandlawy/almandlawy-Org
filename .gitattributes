@@ -1,4 +1,6 @@
 *.webp binary
+*.mp4 binary
+*.webm binary
 *.png binary
 *.jpg binary
 *.jpeg binary
