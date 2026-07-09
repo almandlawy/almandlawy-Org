@@ -33,7 +33,7 @@ import SeoSiteLinks from "./components/SeoSiteLinks";
 import { LiveMarketRates, Product } from "./types";
 import { WHY_US_ITEMS, BRANDS } from "./data";
 import { Shield, Sparkles, Building, Truck, Landmark, Award } from "lucide-react";
-import { isLive, supabase, mockDb, ensureSupabaseReady } from "./lib/supabase";
+import { isLive, supabase, mockDb, ensureSupabaseReady, dbService } from "./lib/supabase";
 import { trackPageView, trackQuoteFormStart } from "./lib/gtag";
 import { captureAttributionFromUrl, appendAttributionToPath } from "./lib/attribution";
 import { scrollToSection, scrollToTop } from "./lib/scrollNav";
@@ -61,6 +61,17 @@ import FacebookLandingPage from "./components/FacebookLandingPage";
 import IraqBullionQuotePage from "./components/IraqBullionQuotePage";
 import AuthCallbackPage from "./components/AuthCallbackPage";
 import PricingDisclaimer from "./components/PricingDisclaimer";
+import KYCOnboardingPage from "./components/KYCOnboardingPage";
+import {
+  getCurrentUser,
+  mapSupabaseUser,
+  persistAppUser,
+  signOut,
+  upsertCustomerProfile,
+  ensureKycStub,
+  type AppUser,
+} from "./lib/clientAuth";
+import { needsKycCompletion } from "./lib/kycGate";
 
 export default function App() {
   const [currentLang, setCurrentLang] = useState<"en" | "ar">("ar");
@@ -105,6 +116,8 @@ export default function App() {
 
   const [rates, setRates] = useState<LiveMarketRates | null>(getInitialRates());
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [authUser, setAuthUser] = useState<AppUser | null>(null);
+  const [authReady, setAuthReady] = useState(false);
 
   // Modal / Drawer / Overlay States
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -123,22 +136,29 @@ export default function App() {
   };
 
   const navigateToQuote = (prefill?: Product | string) => {
-    trackQuoteFormStart(typeof prefill === "object" ? prefill.id : String(prefill || "general"));
-    if (prefill && typeof prefill === "object") {
-      const name = currentLang === "ar" ? prefill.name_ar : prefill.name_en;
-      const params = new URLSearchParams({ product: prefill.id, name });
-      navigateTo(appendAttributionToPath(`/request-quote?${params.toString()}`));
-      return;
-    }
-    if (typeof prefill === "string" && prefill.trim()) {
-      navigateTo(
-        appendAttributionToPath(
-          `/request-quote?${new URLSearchParams({ name: prefill }).toString()}`
-        )
-      );
-      return;
-    }
-    navigateTo(appendAttributionToPath("/request-quote"));
+    void (async () => {
+      let quotePath = "/request-quote";
+      if (prefill && typeof prefill === "object") {
+        const name = currentLang === "ar" ? prefill.name_ar : prefill.name_en;
+        quotePath = `/request-quote?${new URLSearchParams({ product: prefill.id, name }).toString()}`;
+      } else if (typeof prefill === "string" && prefill.trim()) {
+        quotePath = `/request-quote?${new URLSearchParams({ name: prefill }).toString()}`;
+      }
+      quotePath = appendAttributionToPath(quotePath);
+
+      const user = await getCurrentUser();
+      if (!user) {
+        navigateTo(`/login?next=${encodeURIComponent(quotePath)}`);
+        return;
+      }
+      const kyc = await dbService.kyc.get(user.id);
+      if (needsKycCompletion(kyc?.status)) {
+        navigateTo(`/kyc?next=${encodeURIComponent(quotePath)}`);
+        return;
+      }
+      trackQuoteFormStart(typeof prefill === "object" ? prefill.id : String(prefill || "general"));
+      navigateTo(quotePath);
+    })();
   };
 
   const renderConversionFab = () => (
@@ -160,6 +180,13 @@ export default function App() {
     captureAttributionFromUrl(window.location.search, window.location.pathname);
   }, []);
 
+  useEffect(() => {
+    getCurrentUser().then((u) => {
+      setAuthUser(u);
+      setAuthReady(true);
+    });
+  }, [currentPath]);
+
   // Listen for Supabase Authentication changes
   useEffect(() => {
     let subscription: { unsubscribe: () => void } | undefined;
@@ -178,6 +205,7 @@ export default function App() {
           await handleUserLogin(session.user);
         } else if (event === "SIGNED_OUT") {
           mockDb.auth.logout();
+          setAuthUser(null);
         }
       });
       subscription = data.subscription;
@@ -227,50 +255,13 @@ export default function App() {
   }, [currentPath, currentLang]);
 
   const handleUserLogin = async (supabaseUser: any) => {
-    const email = supabaseUser.email;
-    const fullName = supabaseUser.user_metadata?.full_name || supabaseUser.email?.split("@")[0] || "Accredited Investor";
-    const avatarUrl = supabaseUser.user_metadata?.avatar_url || "";
-    
-    // Store user session in mockDb.auth so standard pages load it instantly
-    const mappedUser = {
-      id: supabaseUser.id,
-      email: email,
-      name: fullName,
-      role: email === "almandlawy112@gmail.com" ? "admin" : "customer",
-      created_at: supabaseUser.created_at || new Date().toISOString()
-    };
-    mockDb.auth.setUser(mappedUser);
+    const user = mapSupabaseUser(supabaseUser);
+    persistAppUser(user);
+    setAuthUser(user);
 
-    // Save/update user profile in supabase 'customers' table as requested!
     try {
-      const { data: existingCustomer } = await supabase!
-        .from("customers")
-        .select("*")
-        .eq("email", email)
-        .single();
-
-      const customerProfile = {
-        id: supabaseUser.id,
-        full_name: fullName,
-        email: email,
-        avatar_url: avatarUrl,
-        provider: supabaseUser.app_metadata?.provider || "google",
-        last_login: new Date().toISOString()
-      };
-
-      if (existingCustomer) {
-        await supabase!
-          .from("customers")
-          .update(customerProfile)
-          .eq("id", supabaseUser.id);
-      } else {
-        await supabase!
-          .from("customers")
-          .insert({
-            ...customerProfile,
-            created_at: new Date().toISOString()
-          });
-      }
+      await upsertCustomerProfile(user);
+      await ensureKycStub(user);
     } catch (err) {
       console.error("Failed to upsert customer profile to Supabase:", err);
     }
@@ -359,7 +350,7 @@ export default function App() {
         currentLang={currentLang} 
         onNavigate={navigateTo} 
         onLoginSuccess={(u) => {
-          mockDb.auth.setUser(u);
+          setAuthUser(u);
           navigateTo("/dashboard");
         }} 
       />
@@ -372,8 +363,7 @@ export default function App() {
         currentLang={currentLang} 
         onNavigate={navigateTo} 
         onRegisterSuccess={(u) => {
-          mockDb.auth.setUser(u);
-          navigateTo("/dashboard");
+          setAuthUser(u);
         }} 
       />
     );
@@ -601,17 +591,80 @@ export default function App() {
     );
   }
 
+  if (currentPath === "/kyc") {
+    return (
+      <div
+        className={`min-h-screen text-text-charcoal bg-brand-bg ${
+          currentLang === "ar" ? "font-arabic" : "font-sans"
+        }`}
+      >
+        <Header
+          currentLang={currentLang}
+          toggleLanguage={toggleLanguage}
+          rates={rates}
+          selectedCurrency={selectedCurrency}
+          onNavigate={(sec) => {
+            navigateTo("/");
+            setTimeout(() => handleScrollToSection(sec), 100);
+          }}
+          onOpenAIChat={() => setIsAIChatOpen(true)}
+          onOpenQuote={() => navigateToQuote()}
+          onOpenClientDashboard={() => navigateTo("/dashboard")}
+          onOpenAdminPortal={() => navigateTo("/admin")}
+        />
+        <div className="max-w-7xl mx-auto py-24 px-4 md:px-8">
+          <KYCOnboardingPage currentLang={currentLang} onNavigate={navigateTo} />
+        </div>
+        <Footer
+          currentLang={currentLang}
+          onNavigate={(sec) => {
+            navigateTo("/");
+            setTimeout(() => handleScrollToSection(sec), 100);
+          }}
+          onOpenAIChat={() => setIsAIChatOpen(true)}
+          onOpenQuote={() => navigateToQuote()}
+          onOpenLegalDoc={(docId) => {
+            const rMap: Record<string, string> = {
+              terms: "/terms",
+              privacy: "/privacy-policy",
+              aml: "/kyc-aml-policy",
+              pricing: "/pricing-disclaimer",
+              refund: "/refund-cancellation-policy",
+              delivery: "/delivery-collection-policy",
+              storage: "/allocated-storage-terms",
+              sellback: "/sell-back-policy",
+              risk: "/risk-disclosure",
+              cookie: "/cookie-policy",
+              compliance: "/compliance",
+            };
+            const p = rMap[docId] || "/";
+            window.history.pushState(null, "", p);
+            setActiveLegalDoc(docId);
+          }}
+          onOpenClientDashboard={() => navigateTo("/dashboard")}
+          onOpenAdminPortal={() => navigateTo("/admin")}
+        />
+      </div>
+    );
+  }
+
   if (currentPath === "/dashboard") {
-    const currentUser = mockDb.auth.getUser();
-    if (!currentUser) {
+    if (!authReady) {
       return (
-        <LoginPage 
-          currentLang={currentLang} 
-          onNavigate={navigateTo} 
+        <div className="min-h-screen bg-brand-bg flex items-center justify-center text-text-secondary text-sm">
+          {currentLang === "ar" ? "جاري التحميل…" : "Loading…"}
+        </div>
+      );
+    }
+    if (!authUser) {
+      return (
+        <LoginPage
+          currentLang={currentLang}
+          onNavigate={navigateTo}
           onLoginSuccess={(u) => {
-            mockDb.auth.setUser(u);
+            setAuthUser(u);
             navigateTo("/dashboard");
-          }} 
+          }}
         />
       );
     }
@@ -619,9 +672,10 @@ export default function App() {
       <Suspense fallback={<div className="min-h-screen bg-brand-bg" aria-busy="true" />}>
         <ClientDashboard
           currentLang={currentLang}
-          user={currentUser}
-          onLogout={() => {
-            mockDb.auth.logout();
+          user={authUser}
+          onLogout={async () => {
+            await signOut();
+            setAuthUser(null);
             navigateTo("/");
           }}
           onNavigate={navigateTo}

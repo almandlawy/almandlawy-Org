@@ -7,6 +7,7 @@ import {
 import { dbService } from "../lib/supabase";
 import { generateQuotePDF } from "../lib/pdfGenerator";
 import { formatQuoteAmount } from "../lib/quoteUtils";
+import { kycStatusLabel, canRequestQuote } from "../lib/kycGate";
 
 interface ClientDashboardProps {
   currentLang: "en" | "ar";
@@ -188,6 +189,8 @@ export default function ClientDashboard({ currentLang, user, onLogout, onNavigat
   const [kycUploadingForQuoteId, setKycUploadingForQuoteId] = useState<string | null>(null);
   const [proofUploadingId, setProofUploadingId] = useState<string | null>(null);
 
+  const [kycStatus, setKycStatus] = useState<string>("Not submitted");
+
   const handleUploadPaymentProof = async (orderId: string, event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -237,10 +240,16 @@ export default function ClientDashboard({ currentLang, user, onLogout, onNavigat
 
   const loadData = async () => {
     try {
-      const qList = await dbService.quoteRequests.list();
+      const qList = await dbService.quoteRequests.listForCustomer(user.id, user.email);
       const oList = await dbService.orders.list();
+      const kyc = await dbService.kyc.get(user.id);
+      setKycStatus(kyc?.status || "Not submitted");
       setQuotes(qList || []);
-      setOrders(oList || []);
+      setOrders(
+        (oList || []).filter(
+          (o: any) => o.customer_id === user.id || o.email === user.email
+        )
+      );
     } catch (err) {
       console.error("Failed to load customer dashboard data", err);
     } finally {
@@ -250,7 +259,7 @@ export default function ClientDashboard({ currentLang, user, onLogout, onNavigat
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [user.id, user.email]);
 
   const handleClientAcceptQuote = async (quoteId: string) => {
     const q = quotes.find((x: any) => x.id === quoteId);
@@ -265,18 +274,8 @@ export default function ClientDashboard({ currentLang, user, onLogout, onNavigat
     }
   };
 
-  const handleClientUploadKYC = async (quoteId: string) => {
-    setKycUploadingForQuoteId(quoteId);
-    setTimeout(async () => {
-      try {
-        await dbService.quoteRequests.updateStatus(quoteId, "KYC Under Review");
-        setKycUploadingForQuoteId(null);
-        loadData();
-      } catch (err) {
-        console.error("Failed to update KYC status:", err);
-        setKycUploadingForQuoteId(null);
-      }
-    }, 1500);
+  const handleClientUploadKYC = async (_quoteId: string) => {
+    onNavigate("/kyc?next=/dashboard");
   };
 
   // Live metal price calculations
@@ -368,6 +367,19 @@ export default function ClientDashboard({ currentLang, user, onLogout, onNavigat
             </h2>
             <p className="text-text-secondary text-[10px] uppercase tracking-wider mt-0.5 font-bold">
               {isAr ? "أهلاً بك في ديوان عملاء PGR UAE المخصص للسبائك." : "Welcome to your PGR UAE Client Dashboard."}
+            </p>
+            <p className="text-text-secondary text-[10px] mt-1">
+              {isAr ? "حالة KYC:" : "KYC:"}{" "}
+              <strong className="text-olive-accent">{kycStatusLabel(kycStatus as any, currentLang)}</strong>
+              {!canRequestQuote(kycStatus as any) && (
+                <button
+                  type="button"
+                  onClick={() => onNavigate("/kyc?next=/dashboard")}
+                  className="ml-2 text-gold-dark underline"
+                >
+                  {isAr ? "إكمال الملف" : "Complete profile"}
+                </button>
+              )}
             </p>
           </div>
           

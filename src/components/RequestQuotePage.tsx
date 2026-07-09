@@ -12,9 +12,13 @@ import {
   MessageCircle
 } from "lucide-react";
 import PricingDisclaimer from "./PricingDisclaimer";
+import ClientAccountStepper from "./ClientAccountStepper";
 import { trackWhatsAppClick } from "../lib/gtag";
 import { buildWhatsAppLink } from "../lib/whatsapp";
 import { QUOTE_PRODUCT_OPTIONS, submitQuoteRequest } from "../lib/quoteSubmit";
+import { getCurrentUser, type AppUser } from "../lib/clientAuth";
+import { canRequestQuote } from "../lib/kycGate";
+import { dbService } from "../lib/supabase";
 
 const PRODUCT_OPTIONS = QUOTE_PRODUCT_OPTIONS;
 
@@ -92,6 +96,35 @@ export default function RequestQuotePage({ currentLang, onNavigate }: RequestQuo
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [authChecking, setAuthChecking] = useState(true);
+  const [accountUser, setAccountUser] = useState<AppUser | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const user = await getCurrentUser();
+      if (cancelled) return;
+      if (!user) {
+        const next = encodeURIComponent(
+          `/request-quote${window.location.search || ""}`
+        );
+        onNavigate(`/login?next=${next}`);
+        return;
+      }
+      const kyc = await dbService.kyc.get(user.id);
+      if (!canRequestQuote(kyc?.status)) {
+        onNavigate(`/kyc?next=${encodeURIComponent(`/request-quote${window.location.search || ""}`)}`);
+        return;
+      }
+      setAccountUser(user);
+      setFullName((prev) => prev || user.name);
+      setPhone((prev) => prev || user.phone || "");
+      setAuthChecking(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [onNavigate]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -133,6 +166,7 @@ export default function RequestQuotePage({ currentLang, onNavigate }: RequestQuo
     const result = await submitQuoteRequest({
       fullName: fullName.trim(),
       phone: phone.trim(),
+      email: accountUser?.email,
       countryCity: countryCity.trim(),
       productInterest,
       quantityBudget: quantityBudget.trim(),
@@ -140,7 +174,22 @@ export default function RequestQuotePage({ currentLang, onNavigate }: RequestQuo
       message: message.trim(),
       source: "website_request_quote_page",
       sourceLanguage: currentLang,
+      customerId: accountUser?.id,
     });
+
+    if (result.success && accountUser && result.inquiryId) {
+      await dbService.quoteRequests.saveWebsiteQuoteLocal({
+        id: result.inquiryId,
+        customer_id: accountUser.id,
+        email: accountUser.email,
+        name: fullName.trim(),
+        phone: phone.trim(),
+        product_category: productInterest,
+        weight_preference: quantityBudget.trim(),
+        status: "Desk Review",
+        created_at: new Date().toISOString(),
+      });
+    }
 
     try {
       if (result.success) {
@@ -163,8 +212,17 @@ export default function RequestQuotePage({ currentLang, onNavigate }: RequestQuo
     }
   };
 
+  if (authChecking) {
+    return (
+      <div className="max-w-2xl mx-auto py-16 text-center text-text-secondary text-sm">
+        {isAr ? "جاري التحقق من حسابك وملف KYC…" : "Verifying your account and KYC profile…"}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8 max-w-2xl mx-auto" style={{ direction: isAr ? "rtl" : "ltr" }}>
+      <ClientAccountStepper currentLang={currentLang} activeStep="quote" kycComplete />
       <button
         type="button"
         onClick={() => onNavigate("/")}
