@@ -31,12 +31,21 @@ import LegalOverlayModal from "./components/LegalOverlayModal";
 import Footer from "./components/Footer";
 import SeoSiteLinks from "./components/SeoSiteLinks";
 import { LiveMarketRates, Product } from "./types";
+import { WHY_US_ITEMS, BRANDS } from "./data";
+import { Shield, Sparkles, Building, Truck, Landmark, Award } from "lucide-react";
 import { isLive, supabase, mockDb, ensureSupabaseReady } from "./lib/supabase";
 import { trackPageView, trackQuoteFormStart } from "./lib/gtag";
 import { captureAttributionFromUrl, appendAttributionToPath } from "./lib/attribution";
 import { scrollToSection, scrollToTop } from "./lib/scrollNav";
 import { buildDefaultExchangeRates, setLiveFxFromPriceApi } from "./lib/fxRatesClient";
 import { OUNCE_TO_GRAM } from "./lib/marketReference";
+import {
+  REFERENCE_GOLD_USD_OZ,
+  REFERENCE_SILVER_USD_OZ,
+  REFERENCE_PLATINUM_USD_OZ,
+  REFERENCE_PALLADIUM_USD_OZ,
+} from "./lib/metalReferenceSpots";
+import { DebugPanel } from "./components/DebugPanel";
 
 // Imported new high-end compliance and desk components
 import LoginPage from "./components/LoginPage";
@@ -61,10 +70,10 @@ export default function App() {
   // Pre-calculated default reference spot rates for flawless client experience
   const getInitialRates = (): LiveMarketRates => {
     const defaultSpots = {
-      gold: 4120.50,
-      silver: 58.00,
-      platinum: 1080.00,
-      palladium: 1120.00
+      gold: REFERENCE_GOLD_USD_OZ,
+      silver: REFERENCE_SILVER_USD_OZ,
+      platinum: REFERENCE_PLATINUM_USD_OZ,
+      palladium: REFERENCE_PALLADIUM_USD_OZ,
     };
 
     const exchangeRates = buildDefaultExchangeRates();

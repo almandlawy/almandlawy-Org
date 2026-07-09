@@ -4,6 +4,10 @@
  */
 
 import { Product } from "./types";
+import {
+  REFERENCE_GOLD_AED_PER_GRAM,
+  REFERENCE_SILVER_AED_PER_GRAM,
+} from "./lib/metalReferenceSpots";
 import { productPosterUrl } from "./lib/productImages";
 
 export const BRANDS = [
@@ -262,8 +266,8 @@ export const WHY_US_ITEMS = [
 
 /** Default daily pricing control values for admin panel */
 export const DEFAULT_DAILY_PRICING = {
-  gold_daily_reference_price: 486.50,
-  silver_daily_reference_price: 6.85,
+  gold_daily_reference_price: REFERENCE_GOLD_AED_PER_GRAM,
+  silver_daily_reference_price: REFERENCE_SILVER_AED_PER_GRAM,
   currency: "AED" as const,
   unit: "per_gram" as const,
   manual_pricing_enabled: false,

@@ -6,6 +6,10 @@
 import React from "react";
 import { TrendingUp, Sparkles, RefreshCw, Layers, DollarSign } from "lucide-react";
 import { LiveMarketRates } from "../types";
+import {
+  REFERENCE_GOLD_USD_OZ,
+  REFERENCE_SILVER_USD_OZ,
+} from "../lib/metalReferenceSpots";
 
 interface LiveMarketProps {
   currentLang: "en" | "ar";
@@ -28,8 +32,8 @@ export default function LiveMarket({
 }: LiveMarketProps) {
   // We keep a history of the last 15 prices for each metal to draw stunning dynamic glowing SVG sparklines!
   const [history, setHistory] = React.useState<Record<string, number[]>>({
-    gold: [2360, 2362, 2361, 2364, 2363, 2366, 2365, 2364, 2367, 2365, 2366, 2364, 2365, 2366, 2365.4],
-    silver: [55, 56, 57, 57.5, 58, 58.2, 58, 57.8, 58.1, 58, 58.3, 58, 57.9, 58, 58.2, 58],
+    gold: [4040, 4042, 4041, 4044, 4043, 4046, 4045, 4044, 4047, 4045, 4046, 4044, 4045, 4046, REFERENCE_GOLD_USD_OZ],
+    silver: [55.7, 55.8, 55.75, 55.82, 55.8, 55.85, 55.83, 55.84, 55.89, 55.86, 55.87, 55.82, 55.85, 55.88, REFERENCE_SILVER_USD_OZ],
     platinum: [960, 962, 961, 963, 962, 965, 964, 963, 966, 964, 965, 963, 964, 966, 965.2],
     palladium: [1005, 1008, 1006, 1010, 1009, 1012, 1011, 1010, 1013, 1011, 1012, 1010, 1011, 1013, 1012.1]
   });

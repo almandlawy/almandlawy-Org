@@ -9,15 +9,22 @@ import {
   getAedPerUsd,
   getIqdPerUsd,
 } from "./fxRatesClient";
+import {
+  REFERENCE_GOLD_USD_OZ,
+  REFERENCE_SILVER_USD_OZ,
+  REFERENCE_PLATINUM_USD_OZ,
+  REFERENCE_PALLADIUM_USD_OZ,
+  OUNCE_TO_GRAM,
+} from "./metalReferenceSpots";
 
-export const OUNCE_TO_GRAM = 31.1034768;
+export { OUNCE_TO_GRAM };
 export const GRAMS_PER_KG = 1000;
 
 export const DEFAULT_SPOT_USD_OZ = {
-  gold: 4120.5,
-  silver: 58.0,
-  platinum: 1080.0,
-  palladium: 1120.0,
+  gold: REFERENCE_GOLD_USD_OZ,
+  silver: REFERENCE_SILVER_USD_OZ,
+  platinum: REFERENCE_PLATINUM_USD_OZ,
+  palladium: REFERENCE_PALLADIUM_USD_OZ,
 } as const;
 
 export const DEFAULT_FX_TO_USD = buildDefaultExchangeRates();

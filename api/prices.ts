@@ -1,13 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { REFERENCE_METAL_SPOTS } from '../src/lib/metalReferenceSpots';
 import { resolveFxRates } from './_lib/fxRates';
 
-// Removed old hardcoded 2350 values, replaced with realistic 2026 market reference prices
-const METAL_SPOTS = {
-  gold: 4120.50,
-  silver: 58.00,
-  platinum: 1080.00,
-  palladium: 1120.00
-};
+const METAL_SPOTS = { ...REFERENCE_METAL_SPOTS };
 
 const EXCHANGE_RATES = {
   AED: 3.6725,
