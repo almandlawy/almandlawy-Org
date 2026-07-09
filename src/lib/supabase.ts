@@ -20,6 +20,7 @@ import {
   dailyReferenceAedPerGram,
 } from "./metalReferenceSpots";
 import { getCanonicalSiteOrigin } from "./siteOrigin";
+import { fetchKycProfileViaApi, saveKycProfileViaApi } from "./kycApi";
 
 // 1. Fetch environment variables safely (client-side only using import.meta.env)
 const buildTimeSupabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL || "";
@@ -1570,6 +1571,14 @@ export const dbService = {
 
   kyc: {
     get: async (customerId: string) => {
+      if (isProduction) {
+        try {
+          return await fetchKycProfileViaApi(customerId);
+        } catch (err) {
+          console.error("KYC API get failed:", err);
+          throw err;
+        }
+      }
       if (isLive && supabase) {
         try {
           const { data, error } = await supabase.from("kyc_profiles").select("*").eq("id", customerId).maybeSingle();
@@ -1597,6 +1606,9 @@ export const dbService = {
       };
     },
     save: async (customerId: string, profile: any) => {
+      if (isProduction) {
+        return saveKycProfileViaApi({ ...profile, id: customerId });
+      }
       if (isLive && supabase) {
         try {
           const existing = await dbService.kyc.get(customerId);

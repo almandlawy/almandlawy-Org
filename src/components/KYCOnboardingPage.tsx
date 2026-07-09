@@ -16,6 +16,7 @@ import { dbService } from "../lib/supabase";
 import { getCurrentUser, getLoginRedirectPath, type AppUser } from "../lib/clientAuth";
 import { canRequestQuote, kycStatusLabel } from "../lib/kycGate";
 import { friendlyKycDbError } from "../lib/kycDocuments";
+import { checkKycSchemaReady } from "../lib/kycApi";
 
 interface KYCOnboardingPageProps {
   currentLang: "en" | "ar";
@@ -38,6 +39,8 @@ export default function KYCOnboardingPage({ currentLang, onNavigate }: KYCOnboar
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [existingStatus, setExistingStatus] = useState<string>("Not submitted");
+  const [schemaReady, setSchemaReady] = useState<boolean | null>(null);
+  const [schemaReason, setSchemaReason] = useState("");
 
   const [kycType, setKycType] = useState<"individual" | "company">("individual");
   const [fullName, setFullName] = useState("");
@@ -72,31 +75,46 @@ export default function KYCOnboardingPage({ currentLang, onNavigate }: KYCOnboar
       if (cancelled) return;
       setUser(u);
 
-      const profile = await dbService.kyc.get(u.id);
-      if (profile) {
-        setExistingStatus(profile.status || "Not submitted");
-        setFullName(profile.full_name || u.name);
-        setEmail(profile.email || u.email);
-        setPhone(profile.phone || u.phone || "");
-        setWhatsapp(profile.whatsapp || u.phone || "");
-        setCountry(profile.country || "Iraq");
-        setCity(profile.city || "Baghdad");
-        setNationality(profile.nationality || "Iraqi");
-        setDob(profile.dob || "");
-        setIdType(profile.documents?.[0]?.type || ID_TYPES_INDIVIDUAL[0]);
-        setIdNumber(profile.documents?.[0]?.number || "");
-        setSourceOfFunds(profile.source_of_funds_declaration || "");
-        setAgreeTerms(Boolean(profile.agreement_accepted));
-        setAgreePrivacy(Boolean(profile.privacy_consent));
-        setKycType(profile.kyc_type === "company" ? "company" : "individual");
-        if (canRequestQuote(profile.status)) {
-          // Already submitted — allow skip to quote
+      const schema = await checkKycSchemaReady();
+      if (cancelled) return;
+      setSchemaReady(schema.ready);
+      setSchemaReason(schema.reason || "");
+
+      try {
+        const profile = await dbService.kyc.get(u.id);
+        if (cancelled) return;
+        if (profile) {
+          setExistingStatus(profile.status || "Not submitted");
+          setFullName(profile.full_name || u.name);
+          setEmail(profile.email || u.email);
+          setPhone(profile.phone || u.phone || "");
+          setWhatsapp(profile.whatsapp || u.phone || "");
+          setCountry(profile.country || "Iraq");
+          setCity(profile.city || "Baghdad");
+          setNationality(profile.nationality || "Iraqi");
+          setDob(profile.dob || "");
+          setIdType(profile.documents?.[0]?.type || ID_TYPES_INDIVIDUAL[0]);
+          setIdNumber(profile.documents?.[0]?.number || "");
+          setSourceOfFunds(profile.source_of_funds_declaration || "");
+          setAgreeTerms(Boolean(profile.agreement_accepted));
+          setAgreePrivacy(Boolean(profile.privacy_consent));
+          setKycType(profile.kyc_type === "company" ? "company" : "individual");
+        } else {
+          setFullName(u.name);
+          setEmail(u.email);
+          setPhone(u.phone || "");
+          setWhatsapp(u.phone || "");
         }
-      } else {
-        setFullName(u.name);
-        setEmail(u.email);
-        setPhone(u.phone || "");
-        setWhatsapp(u.phone || "");
+      } catch (loadErr: unknown) {
+        if (!cancelled) {
+          const msg = loadErr instanceof Error ? loadErr.message : "Load failed";
+          setError(friendlyKycDbError(msg, currentLang));
+          setSchemaReady(false);
+          setFullName(u.name);
+          setEmail(u.email);
+          setPhone(u.phone || "");
+          setWhatsapp(u.phone || "");
+        }
       }
       setLoading(false);
     })();
@@ -235,6 +253,25 @@ export default function KYCOnboardingPage({ currentLang, onNavigate }: KYCOnboar
             : "Complete your basic details to request a quote. Passport and document uploads are optional — you can add them later in My Documents."}
         </p>
       </header>
+
+      {schemaReady === false && (
+        <div className="p-4 rounded-lg border border-amber-300 bg-amber-50 text-amber-950 text-sm space-y-2">
+          <p className="font-bold">
+            {isAr ? "إعداد قاعدة البيانات مطلوب" : "Database setup required"}
+          </p>
+          <p>
+            {isAr
+              ? "جدول KYC غير موجود في Supabase. افتح Supabase → SQL Editor وشغّل الملف:"
+              : "The KYC table is missing in Supabase. Open Supabase → SQL Editor and run:"}
+          </p>
+          <code className="block text-xs bg-white/80 border border-amber-200 rounded px-2 py-1 font-mono">
+            scripts/kyc-minimal-setup.sql
+          </code>
+          {schemaReason && (
+            <p className="text-[11px] text-amber-800 font-mono">{schemaReason}</p>
+          )}
+        </div>
+      )}
 
       {error && (
         <div className="p-4 rounded-lg border border-red-200 bg-red-50 text-red-800 text-sm flex gap-2">
@@ -398,7 +435,7 @@ export default function KYCOnboardingPage({ currentLang, onNavigate }: KYCOnboar
 
         <button
           type="submit"
-          disabled={submitting || success}
+          disabled={submitting || success || schemaReady === false}
           className="w-full py-3.5 bg-gold-base hover:bg-gold-dark disabled:opacity-60 text-text-charcoal font-mono text-xs font-bold uppercase tracking-widest rounded-lg transition-colors"
         >
           {submitting
