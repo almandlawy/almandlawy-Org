@@ -4,7 +4,7 @@
 
 import { attributionPayload } from "./attribution";
 import { trackGoogleAdsContactConversion } from "./gtag";
-import { dbService } from "./supabase";
+import { dbService, ensureSupabaseReady } from "./supabase";
 
 export interface QuoteSubmitInput {
   fullName: string;
@@ -99,6 +99,7 @@ export async function submitQuoteRequest(
   };
 
   try {
+    await ensureSupabaseReady();
     const { inquiryId } = await dbService.quoteRequests.createWebsiteQuote(row);
     trackGoogleAdsContactConversion();
     return { success: true, inquiryId };
