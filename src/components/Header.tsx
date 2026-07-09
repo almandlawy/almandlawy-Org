@@ -1,12 +1,31 @@
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
- * Luxury desk header — mockup navigation & CTAs.
+ * Luxury desk header — responsive navigation & CTAs.
  */
 
 import React, { useState, useEffect } from "react";
-import { Globe, Phone, FileText, Menu, X, ShieldCheck, Terminal } from "lucide-react";
-import { LiveMarketRates } from "../types";
+import {
+  Globe,
+  Phone,
+  FileText,
+  Menu,
+  X,
+  User,
+  LogIn,
+  Terminal,
+  Home,
+  LayoutGrid,
+  Star,
+  TrendingUp,
+  CircleHelp,
+  Building2,
+  Briefcase,
+  Mail,
+  FolderOpen,
+  UserPlus,
+  LayoutDashboard,
+} from "lucide-react";
 import { dbService, mockDb } from "../lib/supabase";
 import BrandLogo from "./BrandLogo";
 import { buildWhatsAppLink } from "../lib/whatsapp";
@@ -16,25 +35,30 @@ import type { AppUser } from "../lib/clientAuth";
 interface HeaderProps {
   currentLang: "en" | "ar";
   toggleLanguage: () => void;
-  rates: LiveMarketRates | null;
-  selectedCurrency: string;
   onNavigate: (section: string) => void;
-  onOpenAIChat: () => void;
   onOpenQuote: () => void;
   onOpenClientDashboard: () => void;
   onOpenAdminPortal: () => void;
   authUser?: AppUser | null;
 }
 
-const NAV_LINKS = [
-  { id: "hero", label_en: "Home", label_ar: "الرئيسية" },
-  { id: "catalog", label_en: "Catalog", label_ar: "الكتالوج" },
-  { id: "iraq-silver-offers", label_en: "Iraq Silver", label_ar: "فضة العراق" },
-  { id: "market", label_en: "Market Watch", label_ar: "مراقبة السوق" },
-  { id: "how-quotes-work", label_en: "How It Works", label_ar: "كيف يعمل" },
-  { id: "about", label_en: "About Us", label_ar: "من نحن" },
-  { id: "desk-services", label_en: "Services", label_ar: "الخدمات" },
-  { id: "contact", label_en: "Contact", label_ar: "اتصل بنا" }
+type NavGroup = "main" | "more";
+
+const NAV_LINKS: {
+  id: string;
+  label_en: string;
+  label_ar: string;
+  icon: React.ElementType;
+  group: NavGroup;
+}[] = [
+  { id: "hero", label_en: "Home", label_ar: "الرئيسية", icon: Home, group: "main" },
+  { id: "catalog", label_en: "Catalog", label_ar: "الكتالوج", icon: LayoutGrid, group: "main" },
+  { id: "iraq-silver-offers", label_en: "Iraq Silver", label_ar: "فضة العراق", icon: Star, group: "main" },
+  { id: "market", label_en: "Market Watch", label_ar: "مراقبة السوق", icon: TrendingUp, group: "more" },
+  { id: "how-quotes-work", label_en: "How It Works", label_ar: "كيف يعمل", icon: CircleHelp, group: "more" },
+  { id: "about", label_en: "About Us", label_ar: "من نحن", icon: Building2, group: "more" },
+  { id: "desk-services", label_en: "Services", label_ar: "الخدمات", icon: Briefcase, group: "more" },
+  { id: "contact", label_en: "Contact", label_ar: "اتصل بنا", icon: Mail, group: "more" },
 ];
 
 export default function Header({
@@ -65,16 +89,45 @@ export default function Header({
     checkAdmin();
   }, []);
 
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [mobileMenuOpen]);
+
   const isAr = currentLang === "ar";
   const waMsg = isAr
     ? "مرحباً، أريد التواصل مع PGR UAE."
     : "Hello, I would like to contact the PGR UAE desk.";
   const waLink = buildWhatsAppLink(waMsg);
 
+  const closeMenu = () => setMobileMenuOpen(false);
+
   const handleNav = (id: string) => {
     onNavigate(id);
-    setMobileMenuOpen(false);
+    closeMenu();
   };
+
+  const handleRoute = (path: string) => {
+    onNavigate(path);
+    closeMenu();
+  };
+
+  const accountLabel = authUser
+    ? isAr
+      ? "حسابي"
+      : "My account"
+    : isAr
+      ? "دخول"
+      : "Sign in";
+
+  const mainLinks = NAV_LINKS.filter((l) => l.group === "main");
+  const moreLinks = NAV_LINKS.filter((l) => l.group === "more");
+
+  const AccountIcon = authUser ? User : LogIn;
 
   return (
     <header
@@ -82,10 +135,10 @@ export default function Header({
       id="pgr-global-header"
       style={{ direction: isAr ? "rtl" : "ltr" }}
     >
-      <div className="max-w-7xl mx-auto px-4 md:px-8 py-3.5 flex justify-between items-center gap-4">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-8 py-2.5 sm:py-3.5 flex justify-between items-center gap-2 sm:gap-4">
         <BrandLogo variant="header" currentLang={currentLang} onClick={() => handleNav("hero")} />
 
-        <nav className="hidden xl:flex items-center gap-6 text-[11px] uppercase tracking-widest text-text-secondary font-semibold">
+        <nav className="hidden xl:flex items-center gap-5 text-[11px] uppercase tracking-widest text-text-secondary font-semibold">
           {NAV_LINKS.map((link) => (
             <button
               key={link.id}
@@ -100,12 +153,12 @@ export default function Header({
           ))}
         </nav>
 
-        <div className="flex items-center gap-2 md:gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
           {isAdmin && (
             <button
               type="button"
               onClick={onOpenAdminPortal}
-              className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded border border-gold-base/40 text-[10px] text-text-charcoal font-mono uppercase"
+              className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-gold-base/40 text-[10px] text-text-charcoal font-mono uppercase"
               id="header-admin-portal-btn"
             >
               <Terminal size={12} className="text-gold-base" />
@@ -116,7 +169,7 @@ export default function Header({
           <button
             type="button"
             onClick={toggleLanguage}
-            className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded border border-soft-border text-[11px] text-text-charcoal"
+            className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-soft-border text-[11px] text-text-charcoal hover:bg-brand-section transition-colors"
             title={isAr ? "English" : "العربية"}
           >
             <Globe size={12} className="text-gold-base" />
@@ -125,27 +178,24 @@ export default function Header({
             </span>
           </button>
 
+          {/* Desktop account */}
           <button
             type="button"
             onClick={onOpenClientDashboard}
-            className="hidden lg:flex items-center gap-1 px-2.5 py-1.5 rounded border border-soft-border text-[10px] font-mono text-text-charcoal"
+            className={`hidden lg:flex items-center gap-2 px-3 py-2 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider transition-colors ${
+              authUser
+                ? "bg-gold-base/15 border border-gold-base/50 text-text-charcoal hover:bg-gold-base/25"
+                : "border border-soft-border text-text-charcoal hover:bg-brand-section"
+            }`}
           >
-            <ShieldCheck size={12} className="text-gold-base" />
-            <span>
-              {authUser
-                ? isAr
-                  ? "حسابي"
-                  : "My account"
-                : isAr
-                  ? "تسجيل الدخول"
-                  : "Sign in"}
-            </span>
+            <AccountIcon size={14} className="text-gold-dark shrink-0" />
+            <span>{accountLabel}</span>
           </button>
 
           <button
             type="button"
             onClick={onOpenQuote}
-            className="hidden md:flex items-center gap-1.5 px-3.5 py-2 text-[10px] tracking-widest uppercase font-bold text-text-charcoal bg-gold-base hover:bg-gold-dark rounded transition-colors"
+            className="hidden md:flex items-center gap-1.5 px-3.5 py-2 text-[10px] tracking-widest uppercase font-bold text-text-charcoal bg-gold-base hover:bg-gold-dark rounded-lg transition-colors"
           >
             <FileText size={12} />
             <span>{isAr ? "طلب عرض سعر" : "Request Firm Quote"}</span>
@@ -156,57 +206,231 @@ export default function Header({
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => trackWhatsAppClick("header_whatsapp")}
-            className="hidden sm:flex items-center gap-1.5 px-3 py-2 text-[10px] tracking-widest uppercase font-bold text-brand-bg bg-panel-dark hover:bg-panel-charcoal rounded border border-champagne/20 transition-colors"
+            className="hidden sm:flex items-center gap-1.5 px-3 py-2 text-[10px] tracking-widest uppercase font-bold text-brand-bg bg-panel-dark hover:bg-panel-charcoal rounded-lg border border-champagne/20 transition-colors"
           >
             <Phone size={12} />
             <span>{isAr ? "واتساب" : "WhatsApp Desk"}</span>
           </a>
 
-          <button
-            type="button"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="xl:hidden p-2 rounded text-text-charcoal hover:bg-brand-section"
-            aria-label="Menu"
-          >
-            {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
-          </button>
+          {/* Mobile quick actions — always visible below xl */}
+          <div className="flex xl:hidden items-center gap-1">
+            <button
+              type="button"
+              onClick={onOpenClientDashboard}
+              className={`flex flex-col items-center justify-center min-w-[44px] min-h-[44px] rounded-xl transition-colors ${
+                authUser
+                  ? "bg-gold-base/20 text-gold-dark"
+                  : "text-text-charcoal hover:bg-brand-section"
+              }`}
+              aria-label={accountLabel}
+            >
+              <AccountIcon size={20} strokeWidth={authUser ? 2.25 : 2} />
+              <span className="text-[8px] font-mono font-bold mt-0.5 leading-none">
+                {authUser ? (isAr ? "حسابي" : "Account") : isAr ? "دخول" : "Login"}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={onOpenQuote}
+              className="flex flex-col items-center justify-center min-w-[44px] min-h-[44px] rounded-xl text-text-charcoal hover:bg-gold-base/15 transition-colors"
+              aria-label={isAr ? "طلب عرض سعر" : "Request quote"}
+            >
+              <FileText size={20} className="text-gold-dark" />
+              <span className="text-[8px] font-mono font-bold mt-0.5 leading-none text-gold-dark">
+                {isAr ? "عرض" : "Quote"}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="flex flex-col items-center justify-center min-w-[44px] min-h-[44px] rounded-xl text-text-charcoal hover:bg-brand-section transition-colors"
+              aria-label={isAr ? "القائمة" : "Menu"}
+              aria-expanded={mobileMenuOpen}
+            >
+              {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+              <span className="text-[8px] font-mono font-bold mt-0.5 leading-none">
+                {isAr ? "قائمة" : "Menu"}
+              </span>
+            </button>
+          </div>
         </div>
       </div>
 
       {mobileMenuOpen && (
-        <div className="xl:hidden border-t border-champagne bg-brand-bg px-4 py-5 space-y-3">
-          {NAV_LINKS.map((link) => (
-            <button
-              key={link.id}
-              type="button"
-              onClick={() => handleNav(link.id)}
-              className={`block w-full py-2.5 text-sm uppercase tracking-widest text-text-charcoal hover:text-gold-dark border-b border-soft-border/60 text-left ${
-                isAr ? "font-arabic normal-case tracking-normal" : ""
-              }`}
-            >
-              {isAr ? link.label_ar : link.label_en}
-            </button>
-          ))}
-          <div className="grid grid-cols-1 gap-2 pt-3">
-            <button
-              type="button"
-              onClick={() => {
-                onOpenQuote();
-                setMobileMenuOpen(false);
-              }}
-              className="w-full py-3 bg-gold-base text-text-charcoal font-mono text-xs font-bold uppercase rounded"
-            >
-              {isAr ? "طلب عرض سعر معتمد" : "Request Firm Quote"}
-            </button>
-            <a
-              href={waLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => trackWhatsAppClick("header_mobile_whatsapp")}
-              className="w-full py-3 bg-panel-dark text-brand-bg font-mono text-xs font-bold uppercase rounded text-center"
-            >
-              {isAr ? "واتساب" : "WhatsApp"}
-            </a>
+        <div className="xl:hidden border-t border-champagne bg-brand-bg max-h-[calc(100dvh-4.5rem)] overflow-y-auto overscroll-contain">
+          <div className="px-4 py-4 space-y-4">
+            {/* Account card */}
+            <div className="rounded-xl border border-soft-border bg-brand-card p-4 shadow-sm">
+              {authUser ? (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-full bg-gold-base/20 flex items-center justify-center shrink-0">
+                      <User size={20} className="text-gold-dark" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-serif font-bold text-text-charcoal truncate">
+                        {isAr ? `مرحباً، ${authUser.name}` : `Welcome, ${authUser.name}`}
+                      </p>
+                      <p className="text-[10px] text-text-secondary font-mono truncate">{authUser.email}</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onOpenClientDashboard();
+                        closeMenu();
+                      }}
+                      className="flex items-center justify-center gap-2 py-2.5 rounded-lg bg-gold-base/15 border border-gold-base/40 text-[10px] font-mono font-bold uppercase text-text-charcoal"
+                    >
+                      <LayoutDashboard size={14} />
+                      {isAr ? "لوحة التحكم" : "Dashboard"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRoute("/my-documents")}
+                      className="flex items-center justify-center gap-2 py-2.5 rounded-lg border border-soft-border text-[10px] font-mono font-bold uppercase text-text-charcoal hover:bg-brand-section"
+                    >
+                      <FolderOpen size={14} />
+                      {isAr ? "مستنداتي" : "Documents"}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-sm text-text-secondary">
+                    {isAr
+                      ? "سجّل دخولك لمتابعة KYC وطلبات عروض الأسعار."
+                      : "Sign in to track KYC and your quote requests."}
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleRoute("/login")}
+                      className="flex items-center justify-center gap-2 py-3 rounded-lg bg-panel-dark text-brand-bg text-[10px] font-mono font-bold uppercase"
+                    >
+                      <LogIn size={14} />
+                      {isAr ? "تسجيل الدخول" : "Sign in"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRoute("/register")}
+                      className="flex items-center justify-center gap-2 py-3 rounded-lg bg-gold-base text-text-charcoal text-[10px] font-mono font-bold uppercase"
+                    >
+                      <UserPlus size={14} />
+                      {isAr ? "إنشاء حساب" : "Register"}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Quick CTAs */}
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  onOpenQuote();
+                  closeMenu();
+                }}
+                className="flex items-center justify-center gap-2 py-3.5 bg-gold-base text-text-charcoal font-mono text-[10px] font-bold uppercase rounded-xl"
+              >
+                <FileText size={16} />
+                {isAr ? "طلب عرض سعر" : "Request Quote"}
+              </button>
+              <a
+                href={waLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => {
+                  trackWhatsAppClick("header_mobile_whatsapp");
+                  closeMenu();
+                }}
+                className="flex items-center justify-center gap-2 py-3.5 bg-emerald-600 text-white font-mono text-[10px] font-bold uppercase rounded-xl"
+              >
+                <Phone size={16} />
+                {isAr ? "واتساب" : "WhatsApp"}
+              </a>
+            </div>
+
+            {/* Main navigation */}
+            <div>
+              <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-text-secondary font-bold mb-2 px-1">
+                {isAr ? "الأقسام الرئيسية" : "Main sections"}
+              </p>
+              <div className="grid grid-cols-1 gap-1">
+                {mainLinks.map((link) => {
+                  const Icon = link.icon;
+                  return (
+                    <button
+                      key={link.id}
+                      type="button"
+                      onClick={() => handleNav(link.id)}
+                      className={`flex items-center gap-3 w-full py-3 px-3 rounded-lg text-sm text-text-charcoal hover:bg-brand-section transition-colors text-start ${
+                        isAr ? "font-arabic" : ""
+                      }`}
+                    >
+                      <Icon size={18} className="text-gold-dark shrink-0" />
+                      {isAr ? link.label_ar : link.label_en}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* More navigation */}
+            <div>
+              <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-text-secondary font-bold mb-2 px-1">
+                {isAr ? "اكتشف المزيد" : "Discover more"}
+              </p>
+              <div className="grid grid-cols-1 gap-1">
+                {moreLinks.map((link) => {
+                  const Icon = link.icon;
+                  return (
+                    <button
+                      key={link.id}
+                      type="button"
+                      onClick={() => handleNav(link.id)}
+                      className={`flex items-center gap-3 w-full py-3 px-3 rounded-lg text-sm text-text-charcoal hover:bg-brand-section transition-colors text-start ${
+                        isAr ? "font-arabic" : ""
+                      }`}
+                    >
+                      <Icon size={18} className="text-gold-dark shrink-0" />
+                      {isAr ? link.label_ar : link.label_en}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Settings row */}
+            <div className="flex flex-wrap gap-2 pt-2 border-t border-soft-border/60">
+              <button
+                type="button"
+                onClick={() => {
+                  toggleLanguage();
+                }}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-soft-border text-[10px] font-mono font-bold uppercase text-text-charcoal hover:bg-brand-section"
+              >
+                <Globe size={14} className="text-gold-base" />
+                {isAr ? "English" : "العربية"}
+              </button>
+              {isAdmin && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onOpenAdminPortal();
+                    closeMenu();
+                  }}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gold-base/40 text-[10px] font-mono font-bold uppercase text-text-charcoal"
+                >
+                  <Terminal size={14} className="text-gold-base" />
+                  {isAr ? "الإدارة" : "Admin"}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}

@@ -40,6 +40,10 @@
     white-space: nowrap;
     border-width: 0;
   }
+
+  .safe-area-pb {
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
 }
 
 body {
