@@ -83,7 +83,10 @@ function QuoteItem({
     return () => clearInterval(interval);
   }, [q.status, q.expires_at, q.id, loadData]);
 
-  const isNew = q.status === "New Request" || q.status === "Pending";
+  const isNew =
+    q.status === "New Request" ||
+    q.status === "Pending" ||
+    q.status === "Desk Review";
   const isKycReq = q.status === "KYC Required";
   const isQuoteSent = q.status === "Quote Sent" && !isExpired;
   const isAccepted = q.status === "Customer Accepted";
@@ -211,7 +214,13 @@ export default function ClientDashboard({
     [quotes]
   );
   const pendingDeskQuotes = useMemo(
-    () => quotes.filter((q) => q.status === "New Request" || q.status === "Pending"),
+    () =>
+      quotes.filter(
+        (q) =>
+          q.status === "New Request" ||
+          q.status === "Pending" ||
+          q.status === "Desk Review"
+      ),
     [quotes]
   );
   const quotesAwaitingAction = useMemo(

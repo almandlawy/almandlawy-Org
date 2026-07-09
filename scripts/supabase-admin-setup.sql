@@ -120,7 +120,10 @@ ALTER TABLE public.website_quote_requests
 DROP POLICY IF EXISTS "client_select_own_website_quotes" ON public.website_quote_requests;
 CREATE POLICY "client_select_own_website_quotes"
   ON public.website_quote_requests FOR SELECT TO authenticated
-  USING (customer_id = auth.uid());
+  USING (
+    customer_id = auth.uid()
+    OR lower(email) = lower(auth.jwt() ->> 'email')
+  );
 
 -- 6. Supabase Auth → URL Configuration
 -- Site URL: https://www.pgruae.com
