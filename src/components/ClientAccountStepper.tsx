@@ -68,7 +68,7 @@ export default function ClientAccountStepper({
                   <Icon size={16} />
                 </div>
                 <span
-                  className={`text-[9px] sm:text-[10px] font-mono uppercase tracking-wider text-center truncate w-full ${
+                  className={`text-[10px] sm:text-[11px] font-mono uppercase tracking-wider text-center truncate w-full ${
                     current ? "text-text-charcoal font-bold" : "text-text-secondary"
                   }`}
                 >

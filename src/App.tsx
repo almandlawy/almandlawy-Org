@@ -137,6 +137,8 @@ export default function App() {
     scrollToTop();
   };
 
+  const openAccount = () => navigateTo(authUser ? "/dashboard" : "/login");
+
   const navigateToQuote = (prefill?: Product | string) => {
     void (async () => {
       let quotePath = "/request-quote";
@@ -167,6 +169,8 @@ export default function App() {
     <FloatingConversionBar
       currentLang={currentLang}
       onOpenQuote={() => navigateToQuote()}
+      onOpenAccount={openAccount}
+      isLoggedIn={Boolean(authUser)}
     />
   );
 
@@ -387,7 +391,7 @@ export default function App() {
           }}
           onOpenAIChat={() => setIsAIChatOpen(true)}
           onOpenQuote={() => navigateToQuote()}
-          onOpenClientDashboard={() => navigateTo("/dashboard")}
+          onOpenClientDashboard={openAccount}
           onOpenAdminPortal={() => navigateTo("/admin")}
           authUser={authUser}
         />
@@ -425,7 +429,7 @@ export default function App() {
             window.history.pushState(null, "", p);
             setActiveLegalDoc(docId);
           }}
-          onOpenClientDashboard={() => navigateTo("/dashboard")}
+          onOpenClientDashboard={openAccount}
           onOpenAdminPortal={() => navigateTo("/admin")}
           authUser={authUser}
         />
@@ -451,7 +455,7 @@ export default function App() {
           }}
           onOpenAIChat={() => setIsAIChatOpen(true)}
           onOpenQuote={() => navigateToQuote()}
-          onOpenClientDashboard={() => navigateTo("/dashboard")}
+          onOpenClientDashboard={openAccount}
           onOpenAdminPortal={() => navigateTo("/admin")}
           authUser={authUser}
         />
@@ -493,7 +497,7 @@ export default function App() {
             window.history.pushState(null, "", p);
             setActiveLegalDoc(docId);
           }}
-          onOpenClientDashboard={() => navigateTo("/dashboard")}
+          onOpenClientDashboard={openAccount}
           onOpenAdminPortal={() => navigateTo("/admin")}
           authUser={authUser}
         />
@@ -537,7 +541,7 @@ export default function App() {
           }}
           onOpenAIChat={() => setIsAIChatOpen(true)}
           onOpenQuote={() => navigateToQuote()}
-          onOpenClientDashboard={() => navigateTo("/dashboard")}
+          onOpenClientDashboard={openAccount}
           onOpenAdminPortal={() => navigateTo("/admin")}
           authUser={authUser}
         />
@@ -588,7 +592,7 @@ export default function App() {
             window.history.pushState(null, "", p);
             setActiveLegalDoc(docId);
           }}
-          onOpenClientDashboard={() => navigateTo("/dashboard")}
+          onOpenClientDashboard={openAccount}
           onOpenAdminPortal={() => navigateTo("/admin")}
           authUser={authUser}
         />
@@ -617,7 +621,7 @@ export default function App() {
           }}
           onOpenAIChat={() => setIsAIChatOpen(true)}
           onOpenQuote={() => navigateToQuote()}
-          onOpenClientDashboard={() => navigateTo("/dashboard")}
+          onOpenClientDashboard={openAccount}
           onOpenAdminPortal={() => navigateTo("/admin")}
           authUser={authUser}
         />
@@ -650,7 +654,7 @@ export default function App() {
             window.history.pushState(null, "", p);
             setActiveLegalDoc(docId);
           }}
-          onOpenClientDashboard={() => navigateTo("/dashboard")}
+          onOpenClientDashboard={openAccount}
           onOpenAdminPortal={() => navigateTo("/admin")}
           authUser={authUser}
         />
@@ -676,7 +680,7 @@ export default function App() {
           }}
           onOpenAIChat={() => setIsAIChatOpen(true)}
           onOpenQuote={() => navigateToQuote()}
-          onOpenClientDashboard={() => navigateTo("/dashboard")}
+          onOpenClientDashboard={openAccount}
           onOpenAdminPortal={() => navigateTo("/admin")}
           authUser={authUser}
         />
@@ -709,7 +713,7 @@ export default function App() {
             window.history.pushState(null, "", p);
             setActiveLegalDoc(docId);
           }}
-          onOpenClientDashboard={() => navigateTo("/dashboard")}
+          onOpenClientDashboard={openAccount}
           onOpenAdminPortal={() => navigateTo("/admin")}
           authUser={authUser}
         />
@@ -772,7 +776,7 @@ export default function App() {
           }}
           onOpenAIChat={() => setIsAIChatOpen(true)}
           onOpenQuote={() => navigateToQuote()}
-          onOpenClientDashboard={() => navigateTo("/dashboard")}
+          onOpenClientDashboard={openAccount}
           onOpenAdminPortal={() => navigateTo("/admin")}
           authUser={authUser}
         />
@@ -813,7 +817,7 @@ export default function App() {
             window.history.pushState(null, "", p);
             setActiveLegalDoc(docId);
           }}
-          onOpenClientDashboard={() => navigateTo("/dashboard")}
+          onOpenClientDashboard={openAccount}
           onOpenAdminPortal={() => navigateTo("/admin")}
           authUser={authUser}
         />
@@ -825,7 +829,7 @@ export default function App() {
 
   // ROOT / HOMEPAGE LAYOUT
   return (
-    <div className={`min-h-screen text-text-charcoal bg-brand-bg selection:bg-gold-base selection:text-black relative pb-[4.5rem] md:pb-0 ${
+    <div className={`min-h-screen text-text-charcoal bg-brand-bg selection:bg-gold-base selection:text-black relative pb-[5.75rem] md:pb-0 ${
       currentLang === "ar" ? "font-arabic" : "font-sans"
     }`} id="pgr-root-container">
 
@@ -837,7 +841,7 @@ export default function App() {
         onNavigate={handleScrollToSection}
         onOpenAIChat={() => setIsAIChatOpen(true)}
         onOpenQuote={() => navigateToQuote()}
-        onOpenClientDashboard={() => navigateTo("/dashboard")}
+        onOpenClientDashboard={openAccount}
         onOpenAdminPortal={() => navigateTo("/admin")}
         authUser={authUser}
       />
@@ -947,7 +951,7 @@ export default function App() {
           window.history.pushState(null, "", p);
           setActiveLegalDoc(docId);
         }}
-        onOpenClientDashboard={() => navigateTo("/dashboard")}
+        onOpenClientDashboard={openAccount}
         onOpenAdminPortal={() => navigateTo("/admin")}
         authUser={authUser}
       />
