@@ -1,4 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
+import { isChunkLoadError } from "../lib/lazyWithRetry";
 
 interface Props {
   children: ReactNode;
@@ -25,6 +26,16 @@ export default class ErrorBoundary extends React.Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("Uncaught exception captured by ErrorBoundary:", error, errorInfo);
+    if (isChunkLoadError(error)) {
+      try {
+        if (!sessionStorage.getItem("pgr_chunk_reload_attempted")) {
+          sessionStorage.setItem("pgr_chunk_reload_attempted", "1");
+          window.location.reload();
+        }
+      } catch {
+        window.location.reload();
+      }
+    }
   }
 
   public render() {

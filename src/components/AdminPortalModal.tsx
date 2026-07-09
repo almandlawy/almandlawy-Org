@@ -4,9 +4,10 @@
  * AdminPortalModal.tsx - Delegate wrapper for AdminPanel
  */
 
-import React, { Suspense, lazy } from "react";
+import React, { Suspense } from "react";
+import { lazyWithRetry } from "../lib/lazyWithRetry";
 
-const AdminPanel = lazy(() => import("./AdminPanel"));
+const AdminPanel = lazyWithRetry(() => import("./AdminPanel"));
 
 interface AdminPortalModalProps {
   currentLang: "en" | "ar";
