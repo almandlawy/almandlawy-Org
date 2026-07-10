@@ -2562,8 +2562,8 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                       </p>
                       <p className="text-[10px] font-mono text-text-secondary leading-relaxed max-w-lg mx-auto">
                         {isAr
-                          ? "شغّل scripts/customers-admin-sync.sql في Supabase لمزامنة auth.users → customers. تأكد من SUPABASE_SERVICE_ROLE_KEY على Vercel."
-                          : "Run scripts/customers-admin-sync.sql in Supabase to sync auth.users → customers. Ensure SUPABASE_SERVICE_ROLE_KEY is set on Vercel."}
+                          ? "معظم زوار العراق يضغطون واتساب مباشرة — هذا لا يُنشئ حساباً. شغّل scripts/customers-admin-sync.sql في Supabase ثم أعد النشر على Vercel. تحقق من /api/health"
+                          : "Most Iraq visitors use WhatsApp directly — that does not create an account. Run scripts/customers-admin-sync.sql in Supabase, then redeploy Vercel. Check /api/health"}
                       </p>
                     </div>
                   ) : (

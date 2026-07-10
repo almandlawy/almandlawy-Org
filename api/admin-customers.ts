@@ -1,41 +1,34 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createClient } from "@supabase/supabase-js";
-import { getServiceSupabase } from "./_lib/adminAuth";
-
-function getSupabaseUrl() {
-  return process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "";
-}
-
-function getAnonKey() {
-  return process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || "";
-}
 
 const BOOTSTRAP_ADMINS = ["almandlawy112@gmail.com", "admin@pgruae.com"];
 
+function env() {
+  return {
+    url: process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "",
+    anon: process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || "",
+    service: process.env.SUPABASE_SERVICE_ROLE_KEY || "",
+  };
+}
+
 async function requireAdmin(req: VercelRequest): Promise<string | null> {
   const token = req.headers.authorization?.replace(/^Bearer\s+/i, "").trim();
-  const url = getSupabaseUrl();
-  const anonKey = getAnonKey();
-  if (!token || !url || !anonKey) return null;
+  const { url, anon, service: serviceKey } = env();
+  if (!token || !url || !anon) return null;
 
-  const userClient = createClient(url, anonKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
+  const userClient = createClient(url, anon, { auth: { persistSession: false, autoRefreshToken: false } });
   const { data, error } = await userClient.auth.getUser(token);
   const email = data.user?.email?.trim().toLowerCase();
   if (error || !email) return null;
-
   if (BOOTSTRAP_ADMINS.includes(email)) return email;
 
-  const service = getServiceSupabase();
-  if (!service) return null;
-
+  if (!serviceKey) return null;
+  const service = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
   const { data: adminRow } = await service
     .from("admin_users")
     .select("email, is_active")
     .eq("email", email)
     .maybeSingle();
-
   return adminRow && adminRow.is_active !== false ? email : null;
 }
 
@@ -77,26 +70,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
 
   const adminEmail = await requireAdmin(req);
-  if (!adminEmail) return res.status(403).json({ error: "Admin access required" });
+  if (!adminEmail) return res.status(403).json({ error: "Admin access required", customers: [] });
 
-  const service = getServiceSupabase();
-  if (!service) {
+  const { url, service: serviceKey } = env();
+  if (!url || !serviceKey) {
     return res.status(503).json({
-      error: "Supabase service role not configured",
-      hint: "Set SUPABASE_SERVICE_ROLE_KEY on Vercel",
+      error: "SUPABASE_SERVICE_ROLE_KEY not configured",
       customers: [],
     });
   }
 
   try {
+    const service = createClient(url, serviceKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+
     const [{ data: customerRows, error: customersError }, { data: kycRows }] = await Promise.all([
       service.from("customers").select("*").order("created_at", { ascending: false }),
       service.from("kyc_profiles").select("id, status, full_name, email"),
     ]);
 
     if (customersError) {
-      console.error("[api/admin-customers] customers query failed:", customersError);
-      return res.status(500).json({ error: customersError.message, code: customersError.code });
+      return res.status(500).json({ error: customersError.message, code: customersError.code, customers: [] });
     }
 
     const kycById = new Map((kycRows || []).map((k) => [k.id, k]));
@@ -112,32 +107,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    const { data: authData, error: authError } = await service.auth.admin.listUsers({
-      page: 1,
-      perPage: 1000,
-    });
-
+    const { data: authData, error: authError } = await service.auth.admin.listUsers({ page: 1, perPage: 1000 });
     if (!authError && authData?.users?.length) {
       for (const u of authData.users) {
         const email = u.email?.toLowerCase() || "";
         if (!email || BOOTSTRAP_ADMINS.includes(email)) continue;
-
         const fromAuth = mapAuthUser(u, kycById);
         const existing = merged.get(u.id);
-        if (!existing) {
-          merged.set(u.id, fromAuth);
-        } else {
-          merged.set(u.id, {
-            ...fromAuth,
-            ...existing,
-            full_name: existing.full_name || fromAuth.full_name,
-            phone: existing.phone || fromAuth.phone,
-            company: existing.company || fromAuth.company,
-            kyc_status: existing.kyc_status || fromAuth.kyc_status,
-            kyc_full_name: existing.kyc_full_name || fromAuth.kyc_full_name,
-            _source: "merged",
-          });
-        }
+        merged.set(
+          u.id,
+          existing
+            ? {
+                ...fromAuth,
+                ...existing,
+                full_name: existing.full_name || fromAuth.full_name,
+                phone: existing.phone || fromAuth.phone,
+                kyc_status: existing.kyc_status || fromAuth.kyc_status,
+                _source: "merged",
+              }
+            : fromAuth
+        );
       }
     }
 
@@ -150,7 +139,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json({ customers, count: customers.length });
   } catch (err: unknown) {
     const details = err instanceof Error ? err.message : "Unknown error";
-    console.error("[api/admin-customers] error:", details);
-    return res.status(500).json({ error: details });
+    console.error("[api/admin-customers]", details);
+    return res.status(500).json({ error: details, customers: [] });
   }
 }

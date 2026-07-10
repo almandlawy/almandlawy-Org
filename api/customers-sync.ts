@@ -1,8 +1,26 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getServiceClient, resolveClientUser } from "./_lib/clientUser";
+import { createClient } from "@supabase/supabase-js";
 
-const CUSTOMERS_TABLE = "customers";
-const KYC_TABLE = "kyc_profiles";
+function env() {
+  return {
+    url: process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "",
+    anon: process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || "",
+    service: process.env.SUPABASE_SERVICE_ROLE_KEY || "",
+  };
+}
+
+async function resolveUser(req: VercelRequest) {
+  const token = req.headers.authorization?.replace(/^Bearer\s+/i, "").trim();
+  const { url, anon } = env();
+  if (!token || !url || !anon) return null;
+  const client = createClient(url, anon, { auth: { persistSession: false, autoRefreshToken: false } });
+  const { data, error } = await client.auth.getUser(token);
+  if (error || !data.user?.id) return null;
+  return { id: data.user.id, email: data.user.email || undefined };
+}
+
+const CUSTOMERS = "customers";
+const KYC = "kyc_profiles";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -12,21 +30,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-  const user = await resolveClientUser(req);
-  if (!user?.id) return res.status(401).json({ error: "Authentication required" });
-
-  const service = getServiceClient();
-  if (!service) {
-    return res.status(503).json({
-      error: "Server sync unavailable",
-      hint: "Set SUPABASE_SERVICE_ROLE_KEY on Vercel",
-    });
-  }
-
   try {
+    const user = await resolveUser(req);
+    if (!user?.id) return res.status(401).json({ error: "Authentication required" });
+
+    const { url, service: serviceKey } = env();
+    if (!url || !serviceKey) {
+      return res.status(503).json({ error: "SUPABASE_SERVICE_ROLE_KEY not configured on Vercel" });
+    }
+
+    const service = createClient(url, serviceKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+
     const body = (req.body || {}) as Record<string, unknown>;
     const now = new Date().toISOString();
-
     const row = {
       id: user.id,
       email: String(body.email || user.email || "").trim() || null,
@@ -40,24 +58,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     };
 
     const { data: customer, error: customerError } = await service
-      .from(CUSTOMERS_TABLE)
+      .from(CUSTOMERS)
       .upsert(row, { onConflict: "id" })
       .select()
       .maybeSingle();
 
     if (customerError) {
-      console.error("[api/customers-sync] upsert failed:", customerError);
       return res.status(500).json({ error: customerError.message, code: customerError.code });
     }
 
-    const { data: existingKyc } = await service
-      .from(KYC_TABLE)
-      .select("id")
-      .eq("id", user.id)
-      .maybeSingle();
-
+    const { data: existingKyc } = await service.from(KYC).select("id").eq("id", user.id).maybeSingle();
     if (!existingKyc) {
-      const { error: kycError } = await service.from(KYC_TABLE).upsert(
+      await service.from(KYC).upsert(
         {
           id: user.id,
           full_name: row.full_name || "",
@@ -77,15 +89,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         },
         { onConflict: "id" }
       );
-      if (kycError) {
-        console.warn("[api/customers-sync] kyc stub failed:", kycError.message);
-      }
     }
 
     return res.status(200).json({ success: true, customer });
   } catch (err: unknown) {
     const details = err instanceof Error ? err.message : "Unknown error";
-    console.error("[api/customers-sync] error:", details);
+    console.error("[api/customers-sync]", details);
     return res.status(500).json({ error: details });
   }
 }
