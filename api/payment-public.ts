@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { loadPlatformSettings } from "./_lib/platformSettings";
-import { paymentSettingsFromPlatform, toPublicPaymentSettings } from "./_lib/paymentSettings";
+import { paymentSettingsFromPlatform, toPublicPaymentSettings, DEFAULT_PAYMENT_SETTINGS } from "./_lib/paymentSettings";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -17,6 +17,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (err: unknown) {
     const details = err instanceof Error ? err.message : "Unknown error";
     console.error("[api/payment-public] error:", details);
-    return res.status(500).json({ error: details });
+    return res.status(200).json(toPublicPaymentSettings(DEFAULT_PAYMENT_SETTINGS));
   }
 }

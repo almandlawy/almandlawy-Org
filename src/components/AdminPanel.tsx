@@ -409,12 +409,13 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
     setLoading(true);
     try {
       const [
-        pList, qList, oList, kList, dList, ptList, exRates, bbList, hList, sObj, certs, blogList, auditList
+        pList, qList, oList, kList, cList, dList, ptList, exRates, bbList, hList, sObj, certs, blogList, auditList
       ] = await Promise.all([
         dbService.products.list("admin"),
         fetchAdminQuotes(),
         dbService.orders.list(),
         dbService.kyc.listAll(),
+        dbService.customers.listAll(),
         dbService.iraqDelivery.list(),
         dbService.pickupPoints.list(),
         dbService.exchangeRates.get(),
@@ -430,6 +431,7 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
       if (qList) setQuotes(qList);
       if (oList) setOrders(oList);
       if (kList) setKycProfiles(kList);
+      if (cList) setCustomers(cList);
       if (dList) setIraqDeliveries(dList);
       if (ptList) setPickupPoints(ptList);
       if (exRates) setExchangeRates(exRates);
@@ -1088,7 +1090,7 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
 
   const stats = {
     totalVolumeUSD: orders.reduce((sum, o) => sum + (o.total_amount || 0), 0) + holdings.reduce((sum, h) => sum + (h.current_market_value_usd || 0), 0),
-    activeCustomersCount: kycProfiles.filter(k => k.status === "Verified").length + 5,
+    activeCustomersCount: customers.length || kycProfiles.length,
     pendingQuotesCount: quotes.filter(
       (q) =>
         q.status === "Pending" ||
@@ -2537,25 +2539,112 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
               {/* 5. SECTION: CUSTOMERS */}
               {activeSection === "customers" && (
                 <div className="space-y-6">
-                  <div>
-                    <h4 className="text-lg font-serif text-text-charcoal">Customer Account Directories</h4>
-                    <p className="text-xs text-text-secondary font-mono uppercase">Client profiles, registered product allocations, and total balances</p>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <h4 className="text-lg font-serif text-text-charcoal">Customer Account Directories</h4>
+                      <p className="text-xs text-text-secondary font-mono uppercase">
+                        Registered client profiles — {customers.length} {isAr ? "حساب" : "account(s)"}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => loadAdminData()}
+                      className="px-4 py-2 text-[10px] font-mono uppercase border border-soft-border rounded-lg hover:bg-brand-bg"
+                    >
+                      {isAr ? "تحديث" : "Refresh"}
+                    </button>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
-                    {holdings.map((h, i) => (
-                      <div key={i} className="p-5 bg-brand-card border border-soft-border rounded space-y-3">
-                        <div className="flex justify-between items-center border-b border-soft-border/70 pb-2">
-                          <span className="text-text-charcoal font-serif text-sm">Customer Account ID: <span className="text-gold-base">{h.customer_id}</span></span>
-                          <span className="px-2 py-0.5 rounded bg-green-950/30 text-green-400 font-bold">ACTIVE DEPOSITS</span>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 text-text-secondary">
-                          <div>Metal Allocation: <span className="text-text-charcoal font-bold">{h.weight_grams}g of {h.metal?.toUpperCase()}</span></div>
-                          <div>Value: <span className="text-gold-light font-bold">${h.current_market_value_usd?.toLocaleString()}</span></div>
-                        </div>
+                  {customers.length === 0 ? (
+                    <div className="p-6 bg-brand-card border border-soft-border rounded text-center space-y-2">
+                      <p className="text-text-secondary text-sm">
+                        {isAr ? "لا توجد حسابات مسجّلة ظاهرة بعد." : "No registered customer accounts loaded yet."}
+                      </p>
+                      <p className="text-[10px] font-mono text-text-secondary leading-relaxed max-w-lg mx-auto">
+                        {isAr
+                          ? "شغّل scripts/customers-admin-sync.sql في Supabase لمزامنة auth.users → customers. تأكد من SUPABASE_SERVICE_ROLE_KEY على Vercel."
+                          : "Run scripts/customers-admin-sync.sql in Supabase to sync auth.users → customers. Ensure SUPABASE_SERVICE_ROLE_KEY is set on Vercel."}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto border border-soft-border rounded-lg">
+                      <table className="w-full text-left font-mono text-[11px]">
+                        <thead className="bg-brand-section text-text-secondary uppercase text-[9px]">
+                          <tr>
+                            <th className="p-3">{isAr ? "الاسم" : "Name"}</th>
+                            <th className="p-3">{isAr ? "البريد" : "Email"}</th>
+                            <th className="p-3">{isAr ? "الهاتف" : "Phone"}</th>
+                            <th className="p-3">{isAr ? "النوع" : "Type"}</th>
+                            <th className="p-3">KYC</th>
+                            <th className="p-3">{isAr ? "التسجيل" : "Registered"}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {customers.map((c) => (
+                            <tr key={c.id} className="border-t border-soft-border/70 hover:bg-brand-bg/50">
+                              <td className="p-3 text-text-charcoal font-serif">{c.kyc_full_name || c.full_name || "—"}</td>
+                              <td className="p-3 text-text-secondary">{c.email || "—"}</td>
+                              <td className="p-3 text-text-secondary">{c.phone || "—"}</td>
+                              <td className="p-3 uppercase text-gold-dark">{c.account_type || "individual"}</td>
+                              <td className="p-3">
+                                <span
+                                  className={`px-2 py-0.5 rounded text-[9px] font-bold ${
+                                    c.kyc_status === "Verified"
+                                      ? "bg-green-950/40 text-green-400"
+                                      : c.kyc_status === "Rejected"
+                                        ? "bg-red-950/40 text-red-400"
+                                        : "bg-amber-950/40 text-amber-400"
+                                  }`}
+                                >
+                                  {c.kyc_status || "Not submitted"}
+                                </span>
+                              </td>
+                              <td className="p-3 text-text-secondary">
+                                {c.created_at ? new Date(c.created_at).toLocaleDateString() : "—"}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  {holdings.length > 0 && (
+                    <div className="space-y-3 border-t border-soft-border pt-6">
+                      <h5 className="text-sm font-serif text-text-charcoal">
+                        {isAr ? "ودائع المعادن المخصصة" : "Allocated metal deposits"}
+                      </h5>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
+                        {holdings.map((h, i) => (
+                          <div key={i} className="p-5 bg-brand-card border border-soft-border rounded space-y-3">
+                            <div className="flex justify-between items-center border-b border-soft-border/70 pb-2">
+                              <span className="text-text-charcoal font-serif text-sm">
+                                {isAr ? "معرّف العميل:" : "Customer ID:"}{" "}
+                                <span className="text-gold-base">{h.customer_id}</span>
+                              </span>
+                              <span className="px-2 py-0.5 rounded bg-green-950/30 text-green-400 font-bold">
+                                {isAr ? "ودائع نشطة" : "ACTIVE DEPOSITS"}
+                              </span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 text-text-secondary">
+                              <div>
+                                {isAr ? "التخصيص:" : "Allocation:"}{" "}
+                                <span className="text-text-charcoal font-bold">
+                                  {h.weight_grams}g {h.metal?.toUpperCase()}
+                                </span>
+                              </div>
+                              <div>
+                                {isAr ? "القيمة:" : "Value:"}{" "}
+                                <span className="text-gold-light font-bold">
+                                  ${h.current_market_value_usd?.toLocaleString()}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  )}
                 </div>
               )}
 
