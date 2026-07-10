@@ -5,6 +5,8 @@
 
 import React from "react";
 import { MapPin, Clock, Mail, Phone, Shield } from "lucide-react";
+import { buildWhatsAppLink, defaultDeskMessage } from "../lib/whatsapp";
+import { trackWhatsAppClick } from "../lib/gtag";
 
 interface AboutQuoteDeskSectionProps {
   currentLang: "en" | "ar";
@@ -58,9 +60,20 @@ export default function AboutQuoteDeskSection({ currentLang, onNavigate }: About
               </li>
               <li className="flex gap-3">
                 <Phone size={15} className="text-gold-dark shrink-0 mt-0.5" />
-                <a href="tel:+971559688837" className="text-text-charcoal hover:text-gold-dark font-mono font-bold">
-                  +971 55 968 8837
-                </a>
+                <div className="flex flex-col gap-1">
+                  <a href="tel:+971559688837" className="text-text-charcoal hover:text-gold-dark font-mono font-bold">
+                    +971 55 968 8837
+                  </a>
+                  <a
+                    href={buildWhatsAppLink(defaultDeskMessage(currentLang))}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => trackWhatsAppClick("about_desk_whatsapp")}
+                    className="text-[11px] text-emerald-700 hover:text-emerald-600 font-mono font-bold"
+                  >
+                    {isAr ? "واتساب مباشر" : "WhatsApp desk"}
+                  </a>
+                </div>
               </li>
               <li className="flex gap-3">
                 <Mail size={15} className="text-gold-dark shrink-0 mt-0.5" />

@@ -4,7 +4,9 @@
  */
 
 import React from "react";
-import { Phone, Package, FileText, Shield, FileCheck } from "lucide-react";
+import { Phone, Package, FileText, Shield, FileCheck, MessageCircle } from "lucide-react";
+import { buildWhatsAppLink, defaultDeskMessage } from "../lib/whatsapp";
+import { trackWhatsAppClick } from "../lib/gtag";
 
 interface TrustBarProps {
   currentLang: "en" | "ar";
@@ -37,12 +39,24 @@ export default function TrustBar({ currentLang, phone = "+971 55 968 8837" }: Tr
               </span>
               <div className="min-w-0">
                 {key === "phone" ? (
-                  <a
-                    href="tel:+971559688837"
-                    className="text-[11px] font-mono font-bold text-text-charcoal hover:text-gold-dark transition-colors block truncate"
-                  >
-                    {phone}
-                  </a>
+                  <div className="flex flex-col gap-0.5">
+                    <a
+                      href="tel:+971559688837"
+                      className="text-[11px] font-mono font-bold text-text-charcoal hover:text-gold-dark transition-colors block truncate"
+                    >
+                      {phone}
+                    </a>
+                    <a
+                      href={buildWhatsAppLink(defaultDeskMessage(currentLang))}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => trackWhatsAppClick("trust_bar_whatsapp")}
+                      className="text-[10px] font-mono text-emerald-700 hover:text-emerald-600 flex items-center gap-1"
+                    >
+                      <MessageCircle size={11} />
+                      {isAr ? "واتساب" : "WhatsApp"}
+                    </a>
+                  </div>
                 ) : (
                   <p className="text-[11px] font-sans font-bold text-text-charcoal leading-snug">
                     {isAr ? ar : en}

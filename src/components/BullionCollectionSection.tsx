@@ -6,12 +6,12 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { FileText, Phone } from "lucide-react";
+import { buildWhatsAppLink } from "../lib/whatsapp";
+import { trackWhatsAppClick } from "../lib/gtag";
 
 const VIDEO_MP4 = "/videos/pgr-bullion-collection.mp4";
 const VIDEO_WEBM = "/videos/pgr-bullion-collection.webm";
 const VIDEO_POSTER = "/videos/pgr-bullion-collection-poster.webp";
-
-const WHATSAPP_BASE = "https://wa.me/971559688837";
 
 interface BullionCollectionSectionProps {
   currentLang: "en" | "ar";
@@ -71,7 +71,7 @@ export default function BullionCollectionSection({
   const waMsg = isAr
     ? "مرحباً، أريد التواصل مع ديوان PGR UAE بخصوص مجموعة السبائك."
     : "Hello, I would like to contact the PGR UAE desk about the bullion collection.";
-  const waLink = `${WHATSAPP_BASE}?text=${encodeURIComponent(waMsg)}`;
+  const waLink = buildWhatsAppLink(waMsg);
 
   return (
     <section
@@ -118,6 +118,7 @@ export default function BullionCollectionSection({
               href={waLink}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackWhatsAppClick("bullion_collection_whatsapp")}
               className="w-full sm:flex-1 py-3.5 bg-[#25D366] hover:bg-[#128C7E] text-white font-mono text-xs font-bold uppercase tracking-widest rounded flex items-center justify-center gap-2 transition-colors"
             >
               <Phone size={14} />

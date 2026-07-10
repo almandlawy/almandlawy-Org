@@ -17,6 +17,8 @@ import {
   formatIndicativePrice,
   getPriceStatusLabel,
 } from "../lib/indicativePricing";
+import { buildWhatsAppLink } from "../lib/whatsapp";
+import { trackWhatsAppClick } from "../lib/gtag";
 
 interface ProductDetailModalProps {
   currentLang: "en" | "ar";
@@ -78,11 +80,11 @@ export default function ProductDetailModal({
   const showPrice = canShowIndicativePrice(rates?.source_status) && indicativePrice;
 
   const pName = isAr ? activeProduct.name_ar : activeProduct.name_en;
-  const waLink = `https://wa.me/971559688837?text=${encodeURIComponent(
+  const waLink = buildWhatsAppLink(
     isAr
       ? `مرحباً، أريد عرض سعر معتمد لـ: ${pName}`
       : `Hello, I need a firm quote for: ${pName}`
-  )}`;
+  );
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto" style={{ direction: isAr ? "rtl" : "ltr" }}>
@@ -201,6 +203,7 @@ export default function ProductDetailModal({
                   href={waLink}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => trackWhatsAppClick(`product_detail_modal_${activeProduct.id}`)}
                   className="w-full py-3.5 border border-gold-base text-text-charcoal hover:bg-gold-base/10 font-mono text-xs font-bold uppercase tracking-widest rounded flex items-center justify-center gap-2"
                 >
                   <Phone size={14} />

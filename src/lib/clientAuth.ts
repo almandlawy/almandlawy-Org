@@ -145,25 +145,54 @@ export function getLoginRedirectPath(): string {
   return "/dashboard";
 }
 
-export async function upsertCustomerProfile(user: AppUser): Promise<void> {
+export async function upsertCustomerProfile(user: AppUser, provider = "email"): Promise<void> {
   if (!isLive || !supabase) return;
-  try {
-    const profile = {
-      id: user.id,
-      full_name: user.name,
-      email: user.email,
-      phone: user.phone || null,
-      company: user.company || null,
-      account_type: user.accountType || "individual",
-      provider: "email",
-      last_login: new Date().toISOString(),
-    };
-    await supabase.from("customers").upsert(
-      { ...profile, created_at: user.created_at || new Date().toISOString() },
-      { onConflict: "id" }
-    );
-  } catch (err) {
-    console.warn("[clientAuth] customers upsert skipped:", err);
+
+  const token = await getAccessToken();
+  if (token) {
+    try {
+      const res = await fetch("/api/customers-sync", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          full_name: user.name,
+          email: user.email,
+          phone: user.phone || null,
+          company: user.company || null,
+          account_type: user.accountType || "individual",
+          provider,
+          created_at: user.created_at || new Date().toISOString(),
+        }),
+      });
+      if (res.ok) return;
+      console.warn("[clientAuth] server customer sync failed:", res.status, await res.text().catch(() => ""));
+    } catch (err) {
+      console.warn("[clientAuth] server customer sync error:", err);
+    }
+  }
+
+  const { data: sessionData } = await supabase.auth.getSession();
+  if (!sessionData.session) return;
+
+  const profile = {
+    id: user.id,
+    full_name: user.name,
+    email: user.email,
+    phone: user.phone || null,
+    company: user.company || null,
+    account_type: user.accountType || "individual",
+    provider,
+    last_login: new Date().toISOString(),
+  };
+  const { error } = await supabase.from("customers").upsert(
+    { ...profile, created_at: user.created_at || new Date().toISOString() },
+    { onConflict: "id" }
+  );
+  if (error) {
+    console.warn("[clientAuth] customers upsert failed:", error.message);
   }
 }
 
@@ -212,7 +241,12 @@ export async function signInWithEmail(email: string, password: string): Promise<
     if (!data.user) throw new Error("Sign-in failed.");
     const user = mapSupabaseUser(data.user);
     persistAppUser(user);
-    await upsertCustomerProfile(user);
+    await upsertCustomerProfile(user, "email");
+    try {
+      await ensureKycStub(user);
+    } catch (err) {
+      console.warn("[clientAuth] KYC stub deferred on sign-in:", err);
+    }
     return user;
   }
 
@@ -267,9 +301,13 @@ export async function signUpWithEmail(
 
     if (data.session) {
       persistAppUser(user);
+      await upsertCustomerProfile(user, "email");
+      try {
+        await ensureKycStub(user);
+      } catch (err) {
+        console.warn("[clientAuth] KYC stub deferred on signup:", err);
+      }
     }
-    await upsertCustomerProfile(user);
-    await ensureKycStub(user);
 
     return { user, needsEmailConfirm: !data.session };
   }

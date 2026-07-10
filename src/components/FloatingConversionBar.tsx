@@ -38,7 +38,7 @@ export default function FloatingConversionBar({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      onClick={() => trackWhatsAppClick(trackingSource)}
+      onClick={() => trackWhatsAppClick("floating_fab_mobile")}
       className="mobile-cta-btn bg-emerald-600 hover:bg-emerald-500 text-white latin-brand-tight"
       aria-label={isAr ? "واتساب" : "WhatsApp"}
     >
@@ -95,7 +95,7 @@ export default function FloatingConversionBar({
         href={href}
         target="_blank"
         rel="noopener noreferrer"
-        onClick={() => trackWhatsAppClick(trackingSource)}
+        onClick={() => trackWhatsAppClick("floating_fab_desktop")}
         aria-label={isAr ? "تواصل مع PGR UAE عبر واتساب" : "Contact PGR UAE on WhatsApp"}
         className="hidden md:flex fixed bottom-6 end-6 z-40 h-12 w-12 bg-emerald-500 hover:bg-emerald-400 text-white rounded-full items-center justify-center shadow-[0_4px_20px_rgba(16,185,129,0.3)] hover:scale-105 transition-all"
         title={isAr ? "واتساب" : "WhatsApp"}
