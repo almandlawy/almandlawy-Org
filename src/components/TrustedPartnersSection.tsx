@@ -1,7 +1,7 @@
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
- * Trusted partners — visible logo strip on mobile (horizontal scroll).
+ * Trusted partners — unified grid on all devices (no mobile-only hide).
  */
 
 import React, { useEffect, useState } from "react";
@@ -24,14 +24,29 @@ const PLACEHOLDER_CHANNELS = [
 export default function TrustedPartnersSection({ currentLang }: TrustedPartnersSectionProps) {
   const isAr = currentLang === "ar";
   const [partners, setPartners] = useState<Omit<PartnerLogo, "internal_note">[]>([]);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    dbService.partnerLogos.listPublic().then(setPartners).catch(() => setPartners([]));
+    let cancelled = false;
+    dbService.partnerLogos
+      .listPublic()
+      .then((list) => {
+        if (!cancelled) {
+          setPartners(list);
+          setLoaded(true);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setLoaded(true);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (
     <section
-      className="py-10 md:py-14 px-4 md:px-8 bg-brand-card border-y border-soft-border"
+      className="py-10 md:py-12 px-4 md:px-8 bg-brand-card border-y border-soft-border"
       id="trusted-network"
       style={{ direction: isAr ? "rtl" : "ltr" }}
     >
@@ -49,37 +64,27 @@ export default function TrustedPartnersSection({ currentLang }: TrustedPartnersS
           </h2>
         </header>
 
-        {partners.length > 0 ? (
-          <>
-            {/* Mobile — horizontal scroll strip (logos always visible) */}
-            <div
-              className="flex md:hidden gap-3 overflow-x-auto pb-1 -mx-1 px-1 snap-x snap-mandatory scrollbar-thin"
-              aria-label={isAr ? "شعارات الشركاء" : "Partner logos"}
-            >
-              {partners.map((partner) => (
-                <PartnerLogoTile
-                  key={partner.id}
-                  partner={partner}
-                  isAr={isAr}
-                  variant="strip"
-                  className="snap-start shrink-0 w-[42vw] max-w-[160px]"
-                />
-              ))}
-            </div>
-
-            {/* Desktop — grid */}
-            <div className="hidden md:grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-              {partners.map((partner) => (
-                <PartnerLogoTile key={partner.id} partner={partner} isAr={isAr} />
-              ))}
-            </div>
-          </>
+        {!loaded ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            {[1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className="h-[120px] rounded-xl bg-brand-bg border border-soft-border animate-pulse"
+              />
+            ))}
+          </div>
+        ) : partners.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            {partners.map((partner) => (
+              <PartnerLogoTile key={partner.id} partner={partner} isAr={isAr} />
+            ))}
+          </div>
         ) : (
-          <div className="flex gap-3 overflow-x-auto md:grid md:grid-cols-4 md:overflow-visible pb-1 md:pb-0">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {PLACEHOLDER_CHANNELS.map(({ icon: Icon, en, ar }) => (
               <div
                 key={en}
-                className="flex flex-col items-center justify-center p-4 rounded-xl border border-champagne bg-brand-bg min-h-[100px] min-w-[120px] shrink-0 md:min-w-0 gap-2"
+                className="flex flex-col items-center justify-center p-4 rounded-xl border border-champagne bg-brand-bg min-h-[100px] gap-2"
               >
                 <div className="h-9 w-9 rounded-full bg-gold-base/10 border border-gold-base/30 flex items-center justify-center text-gold-dark">
                   <Icon size={16} />

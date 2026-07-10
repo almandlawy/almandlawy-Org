@@ -62,6 +62,7 @@ export function PartnerLogoTile({
           }
           loading={isStrip ? "eager" : "lazy"}
           decoding="async"
+          referrerPolicy="no-referrer"
           onError={() => setFailed(true)}
         />
       ) : (
