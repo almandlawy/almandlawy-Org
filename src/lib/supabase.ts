@@ -1679,6 +1679,46 @@ export const dbService = {
     }
   },
 
+  customers: {
+    listAll: async () => {
+      if (isLive) {
+        try {
+          const headers = await getAdminAuthHeaders();
+          const res = await fetch("/api/admin-customers", { headers });
+          if (res.ok) {
+            const json = await res.json();
+            if (Array.isArray(json.customers)) return json.customers;
+          } else {
+            console.warn("[customers] admin list failed:", res.status, await res.text().catch(() => ""));
+          }
+        } catch (err) {
+          console.error("Failed to list customers via admin API:", err);
+        }
+      }
+      if (isLive && supabase) {
+        try {
+          const { data, error } = await supabase
+            .from("customers")
+            .select("*")
+            .order("created_at", { ascending: false });
+          if (!error && data) return data;
+        } catch (err) {
+          console.error("Failed to list customers from Supabase:", err);
+        }
+      }
+      const kycList = mockDb.get("pgr_kyc_profiles") || [];
+      return kycList.map((k: { id: string; full_name?: string; email?: string; phone?: string; status?: string }) => ({
+        id: k.id,
+        full_name: k.full_name,
+        email: k.email,
+        phone: k.phone,
+        kyc_status: k.status || "Not submitted",
+        account_type: "individual",
+        created_at: new Date().toISOString(),
+      }));
+    },
+  },
+
   kyc: {
     get: async (customerId: string) => {
       if (isLive && supabase) {
