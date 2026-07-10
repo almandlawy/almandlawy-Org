@@ -13,6 +13,7 @@ import ProductShowroom from "./components/ProductShowroom";
 import IraqSilverOffers from "./components/IraqSilverOffers";
 import AboutQuoteDeskSection from "./components/AboutQuoteDeskSection";
 import TrustedPartnersSection from "./components/TrustedPartnersSection";
+import PartnerLogosBar from "./components/PartnerLogosBar";
 import HomepageFAQ from "./components/HomepageFAQ";
 import CrawlableSeoBlock from "./components/CrawlableSeoBlock";
 import ComplianceKYCSection from "./components/ComplianceKYCSection";
@@ -904,6 +905,8 @@ export default function App() {
       />
 
       <TrustBar currentLang={currentLang} />
+
+      <PartnerLogosBar currentLang={currentLang} />
 
       <MarketReferenceStrip
         currentLang={currentLang}

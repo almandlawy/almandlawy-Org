@@ -60,7 +60,9 @@ export default function PartnerLogosAdmin({ adminEmail, onAudit }: PartnerLogosA
         `Partner logos updated by ${adminEmail}. Count: ${sorted.length}. Public: ${sorted.filter((p) => p.public_display_enabled).length}`
       );
       setPartners(sorted);
-      setMsg("Partner logos saved.");
+      setMsg(
+        "Partner logos saved. Re-open the site on your phone — logos publish to public CDN for all visitors."
+      );
     } catch {
       setMsg("Save failed.");
     } finally {

@@ -20,6 +20,12 @@ import {
   dailyReferenceAedPerGram,
 } from "./metalReferenceSpots";
 import { getCanonicalSiteOrigin } from "./siteOrigin";
+import {
+  fetchPublicPartnerLogos,
+  filterPublic,
+  PUBLIC_JSON_PATH,
+  STORAGE_BUCKET,
+} from "./partnerLogosPublic";
 
 // 1. Fetch environment variables safely (client-side only using import.meta.env)
 const buildTimeSupabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL || "";
@@ -2210,42 +2216,91 @@ export const dbService = {
       return mockDb.get("pgr_partner_logos") || [];
     },
     listPublic: async (): Promise<Omit<PartnerLogo, "internal_note">[]> => {
-      try {
-        const res = await fetch("/api/partners");
-        if (res.ok) {
+      await ensureSupabaseReady();
+      const supabaseUrl = buildTimeSupabaseUrl;
+
+      return fetchPublicPartnerLogos({
+        supabaseUrl,
+        fetchApi: async () => {
+          const res = await fetch("/api/partners", { cache: "no-store" });
+          if (!res.ok) return [];
           const data = await res.json();
           return Array.isArray(data.partners) ? data.partners : [];
+        },
+        fetchDb: async () => {
+          if (!supabase) return [];
+          const { data, error } = await supabase.rpc("get_public_partner_logos");
+          if (error) {
+            console.warn("[partners] RPC failed:", error.message);
+            return [];
+          }
+          const rows = Array.isArray(data) ? data : [];
+          return filterPublic(rows);
+        },
+        localFallback: () => {
+          const all: PartnerLogo[] = mockDb.get("pgr_partner_logos") || [];
+          return all
+            .filter((p) => p.public_display_enabled && p.logo_url)
+            .sort((a, b) => a.display_order - b.display_order)
+            .map(({ internal_note: _n, ...rest }) => rest);
+        },
+      });
+    },
+    publishPublicJson: async (partners: PartnerLogo[]): Promise<boolean> => {
+      await ensureSupabaseReady();
+      const publicList = filterPublic(partners);
+      const body = JSON.stringify({
+        partners: publicList,
+        updated_at: new Date().toISOString(),
+      });
+
+      if (isLive && supabase) {
+        try {
+          const file = new Blob([body], { type: "application/json" });
+          const { error } = await supabase.storage
+            .from(STORAGE_BUCKET)
+            .upload(PUBLIC_JSON_PATH, file, {
+              upsert: true,
+              contentType: "application/json",
+              cacheControl: "120",
+            });
+          if (error) {
+            console.warn("[partners] storage publish failed:", error.message);
+            return false;
+          }
+          return true;
+        } catch (err) {
+          console.warn("[partners] storage publish error:", err);
+          return false;
         }
-      } catch (err) {
-        console.warn("Could not fetch public partner logos", err);
       }
-      const all: PartnerLogo[] = mockDb.get("pgr_partner_logos") || [];
-      return all
-        .filter((p) => p.public_display_enabled && p.logo_url)
-        .sort((a, b) => a.display_order - b.display_order)
-        .map(({ internal_note: _n, ...rest }) => rest);
+      return false;
     },
     saveAll: async (partners: PartnerLogo[], adminEmail: string): Promise<PartnerLogo[]> => {
       mockDb.set("pgr_partner_logos", partners);
+      let saved = partners;
       try {
         const headers = await getAdminAuthHeaders();
         const res = await fetch("/api/admin/partners", {
           method: "PUT",
           headers: { ...headers, "X-PGR-Admin-Email": adminEmail },
-          body: JSON.stringify({ partners })
+          body: JSON.stringify({ partners }),
         });
         if (res.ok) {
           const data = await res.json();
           if (Array.isArray(data.partners)) {
+            saved = data.partners;
             mockDb.set("pgr_partner_logos", data.partners);
-            return data.partners;
           }
         }
       } catch (err) {
         console.warn("Failed to sync partner logos with server", err);
       }
-      return partners;
-    }
+
+      // Always publish to public CDN JSON — fixes mobile visitors when API/DB unavailable
+      await dbService.partnerLogos.publishPublicJson(saved);
+      return saved;
+    },
   },
 
   paymentSettings: {
@@ -2264,7 +2319,27 @@ export const dbService = {
         console.warn("Could not fetch payment settings from server", err);
       }
       const settings = mockDb.get("pgr_settings") || {};
-      return { ...DEFAULT_PAYMENT_SETTINGS, ...(settings.payment_settings || {}) };
+      const ps = { ...DEFAULT_PAYMENT_SETTINGS, ...(settings.payment_settings || {}) };
+      return {
+        ...ps,
+        bank_transfer: { ...DEFAULT_PAYMENT_SETTINGS.bank_transfer, ...(ps.bank_transfer || {}) },
+        desk_payment_methods: {
+          ...DEFAULT_PAYMENT_SETTINGS.desk_payment_methods,
+          ...(ps.desk_payment_methods || {}),
+          zain_cash: {
+            ...DEFAULT_PAYMENT_SETTINGS.desk_payment_methods.zain_cash,
+            ...(ps.desk_payment_methods?.zain_cash || {}),
+          },
+          superqi: {
+            ...DEFAULT_PAYMENT_SETTINGS.desk_payment_methods.superqi,
+            ...(ps.desk_payment_methods?.superqi || {}),
+          },
+          usdt: {
+            ...DEFAULT_PAYMENT_SETTINGS.desk_payment_methods.usdt,
+            ...(ps.desk_payment_methods?.usdt || {}),
+          },
+        },
+      };
     },
     getPublic: async (): Promise<PublicPaymentSettings> => {
       try {
@@ -2284,6 +2359,22 @@ export const dbService = {
         public_payment_note: ps.public_payment_note,
         payment_link_instructions: ps.payment_link_instructions,
         bank_transfer: { ...DEFAULT_PAYMENT_SETTINGS.bank_transfer, ...(ps.bank_transfer || {}) },
+        desk_payment_methods: {
+          ...DEFAULT_PAYMENT_SETTINGS.desk_payment_methods,
+          ...(ps.desk_payment_methods || {}),
+          zain_cash: {
+            ...DEFAULT_PAYMENT_SETTINGS.desk_payment_methods.zain_cash,
+            ...(ps.desk_payment_methods?.zain_cash || {}),
+          },
+          superqi: {
+            ...DEFAULT_PAYMENT_SETTINGS.desk_payment_methods.superqi,
+            ...(ps.desk_payment_methods?.superqi || {}),
+          },
+          usdt: {
+            ...DEFAULT_PAYMENT_SETTINGS.desk_payment_methods.usdt,
+            ...(ps.desk_payment_methods?.usdt || {}),
+          },
+        },
         supported_currencies: ps.supported_currencies,
         require_kyc_before_payment: ps.require_kyc_before_payment,
       };

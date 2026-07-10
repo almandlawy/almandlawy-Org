@@ -187,9 +187,13 @@ function QuoteItem({
       )}
 
       {needsPayment && (
-        <p className={`text-[10px] text-gold-dark font-bold ${isAr ? "font-arabic" : "font-mono"}`}>
-          {isAr ? "↓ انتقل لتعليمات الدفع على اليمين" : "↓ See payment instructions on the right"}
-        </p>
+        <button
+          type="button"
+          onClick={() => document.getElementById("payment-instructions")?.scrollIntoView({ behavior: "smooth" })}
+          className={`w-full py-2 bg-gold-base/15 border border-gold-base/40 rounded-lg text-[10px] text-gold-dark font-bold ${isAr ? "font-arabic" : "font-mono uppercase"}`}
+        >
+          {isAr ? "↓ تعليمات الدفع (بنك · زين كاش · سوبر كي · USDT)" : "↓ Payment — bank · Zain Cash · SuperQi · USDT"}
+        </button>
       )}
     </div>
   );
@@ -498,8 +502,27 @@ export default function ClientDashboard({
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 bg-brand-card border border-soft-border rounded-xl p-5 shadow-sm space-y-4">
+        {paymentTarget && (
+          <PaymentInstructionsPanel
+            currentLang={currentLang}
+            order={paymentTarget}
+            paymentSettings={paymentSettings}
+            proofUploading={proofUploadingId === paymentTarget.id}
+            onUploadProof={(e) => {
+              if ((paymentTarget as { _quoteOnly?: boolean })._quoteOnly) {
+                alert(
+                  isAr
+                    ? "سيُفعّل رفع الإثبات بعد إنشاء الطلب من المكتب. يمكنك التحويل الآن باستخدام مرجع العرض."
+                    : "Proof upload opens once the desk creates your order. You can transfer now using the quote reference."
+                );
+                return;
+              }
+              handleUploadPaymentProof(paymentTarget.id, e);
+            }}
+          />
+        )}
+
+        <div className="bg-brand-card border border-soft-border rounded-xl p-5 shadow-sm space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-soft-border pb-3">
               <h2 className="font-serif font-bold text-text-charcoal">
                 {isAr ? "طلبات عروض الأسعار" : "Your quote requests"}
@@ -557,88 +580,67 @@ export default function ClientDashboard({
               onClick={onRequestQuote}
               className="w-full py-2.5 bg-gold-base hover:bg-gold-dark text-text-charcoal rounded-lg font-mono font-bold text-[10px] uppercase tracking-wider"
             >
-              {isAr ? "طلب عرض سعر جديد" : "New quote request"}
-            </button>
+            {isAr ? "طلب عرض سعر جديد" : "New quote request"}
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-brand-card border border-soft-border rounded-xl p-5 shadow-sm space-y-4">
+            <h2 className="font-serif font-bold text-text-charcoal border-b border-soft-border pb-2">
+              {isAr ? "حالة الطلب" : "Order status"}
+            </h2>
+            {!latestOrder ? (
+              <div className="space-y-3">
+                <p className="text-text-secondary text-sm">
+                  {isAr ? "لا توجد طلبات نشطة بعد." : "No active orders yet."}
+                </p>
+                <p className="text-[11px] text-text-secondary">
+                  {isAr
+                    ? "بعد قبول عرض السعر المؤكد، تظهر تعليمات الدفع في أعلى الصفحة."
+                    : "After you accept a desk-confirmed quote, payment instructions appear at the top of this page."}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div>
+                  <p className="font-serif font-bold text-text-charcoal">
+                    {latestOrder.items?.[0]?.product_name || (isAr ? "سبائك" : "Bullion")}
+                  </p>
+                  <p className="text-[10px] font-mono text-text-secondary">Ref: {latestOrder.id}</p>
+                  <p className="text-[11px] text-gold-dark font-mono font-bold mt-1">
+                    {latestOrder.status}
+                    {latestOrder.total_amount != null &&
+                      ` · ${latestOrder.currency || "AED"} ${Number(latestOrder.total_amount).toLocaleString()}`}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleDownloadPDF(latestOrder)}
+                  className="w-full py-2 border border-soft-border hover:border-gold-base rounded-lg text-[10px] font-mono font-bold uppercase"
+                >
+                  {isAr ? "تحميل PDF العرض" : "Download quote PDF"}
+                </button>
+              </div>
+            )}
           </div>
 
-          <div className="space-y-6">
-            {paymentTarget ? (
-              <PaymentInstructionsPanel
-                currentLang={currentLang}
-                order={paymentTarget}
-                paymentSettings={paymentSettings}
-                proofUploading={proofUploadingId === paymentTarget.id}
-                onUploadProof={(e) => {
-                  if ((paymentTarget as { _quoteOnly?: boolean })._quoteOnly) {
-                    alert(
-                      isAr
-                        ? "سيُفعّل رفع الإثبات بعد إنشاء الطلب من المكتب. يمكنك التحويل الآن باستخدام مرجع العرض."
-                        : "Proof upload opens once the desk creates your order. You can transfer now using the quote reference."
-                    );
-                    return;
-                  }
-                  handleUploadPaymentProof(paymentTarget.id, e);
-                }}
-              />
-            ) : (
-            <div className="bg-brand-card border border-soft-border rounded-xl p-5 shadow-sm space-y-4">
-              <h2 className="font-serif font-bold text-text-charcoal border-b border-soft-border pb-2">
-                {isAr ? "حالة الطلب" : "Order status"}
-              </h2>
-              {!latestOrder ? (
-                <div className="space-y-3">
-                  <p className="text-text-secondary text-sm">
-                    {isAr ? "لا توجد طلبات نشطة بعد." : "No active orders yet."}
-                  </p>
-                  <p className="text-[11px] text-text-secondary">
-                    {isAr
-                      ? "بعد قبول عرض السعر المؤكد من المكتب، تظهر تعليمات الدفع هنا."
-                      : "After you accept a desk-confirmed quote, payment instructions appear here."}
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <div>
-                    <p className="font-serif font-bold text-text-charcoal">
-                      {latestOrder.items?.[0]?.product_name || (isAr ? "سبائك" : "Bullion")}
-                    </p>
-                    <p className="text-[10px] font-mono text-text-secondary">Ref: {latestOrder.id}</p>
-                    <p className="text-[11px] text-gold-dark font-mono font-bold mt-1">
-                      {latestOrder.status}
-                      {latestOrder.total_amount != null &&
-                        ` · ${latestOrder.currency || "AED"} ${Number(latestOrder.total_amount).toLocaleString()}`}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleDownloadPDF(latestOrder)}
-                    className="w-full py-2 border border-soft-border hover:border-gold-base rounded-lg text-[10px] font-mono font-bold uppercase"
-                  >
-                    {isAr ? "تحميل PDF العرض" : "Download quote PDF"}
-                  </button>
-                </div>
-              )}
-            </div>
-            )}
-
-            <div className="bg-brand-card border border-soft-border rounded-xl p-5 shadow-sm space-y-3">
-              <h2 className="font-serif font-bold text-text-charcoal">{isAr ? "دعم المكتب" : "Desk support"}</h2>
-              <p className="text-[11px] text-text-secondary leading-relaxed">
-                {isAr
-                  ? "للاستفسار عن عروض الأسعار أو حالة الطلب، تواصل مع مكتب PGR UAE عبر واتساب."
-                  : "For quote or order questions, contact the PGR UAE desk on WhatsApp."}
-              </p>
-              <a
-                href={waLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 w-full py-2.5 bg-olive-accent hover:opacity-90 text-white rounded-lg text-[10px] font-mono font-bold uppercase"
-              >
-                <Phone size={12} />
-                WhatsApp
-              </a>
-              <p className="text-[10px] text-text-secondary font-mono">desk@pgruae.com</p>
-            </div>
+          <div className="bg-brand-card border border-soft-border rounded-xl p-5 shadow-sm space-y-3">
+            <h2 className="font-serif font-bold text-text-charcoal">{isAr ? "دعم المكتب" : "Desk support"}</h2>
+            <p className="text-[11px] text-text-secondary leading-relaxed">
+              {isAr
+                ? "للاستفسار عن عروض الأسعار أو حالة الطلب أو طرق الدفع، تواصل مع مكتب PGR UAE عبر واتساب."
+                : "For quotes, orders, or payment help, contact the PGR UAE desk on WhatsApp."}
+            </p>
+            <a
+              href={waLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 w-full py-2.5 bg-olive-accent hover:opacity-90 text-white rounded-lg text-[10px] font-mono font-bold uppercase"
+            >
+              <Phone size={12} />
+              WhatsApp
+            </a>
+            <p className="text-[10px] text-text-secondary font-mono">desk@pgruae.com</p>
           </div>
         </div>
 
