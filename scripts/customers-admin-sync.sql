@@ -90,3 +90,44 @@ ON CONFLICT (id) DO UPDATE SET
   full_name = COALESCE(EXCLUDED.full_name, customers.full_name),
   phone = COALESCE(EXCLUDED.phone, customers.phone),
   last_login = EXCLUDED.last_login;
+
+-- 4. Admin RPC fallback (works from browser when Vercel API is down)
+CREATE OR REPLACE FUNCTION public.get_admin_customer_directory()
+RETURNS TABLE (
+  id uuid,
+  full_name text,
+  email text,
+  phone text,
+  company text,
+  account_type text,
+  provider text,
+  created_at timestamptz,
+  last_login timestamptz,
+  kyc_status text
+)
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT
+    c.id,
+    COALESCE(k.full_name, c.full_name) AS full_name,
+    c.email,
+    c.phone,
+    c.company,
+    c.account_type,
+    c.provider,
+    c.created_at,
+    c.last_login,
+    COALESCE(k.status, 'Not submitted') AS kyc_status
+  FROM public.customers c
+  LEFT JOIN public.kyc_profiles k ON k.id = c.id
+  WHERE EXISTS (
+    SELECT 1 FROM public.admin_users au
+    WHERE lower(au.email) = lower(auth.jwt() ->> 'email')
+      AND au.is_active = true
+  )
+  ORDER BY c.created_at DESC NULLS LAST;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.get_admin_customer_directory() TO authenticated;

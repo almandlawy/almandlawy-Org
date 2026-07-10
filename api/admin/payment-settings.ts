@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { requireAdminEmail } from "./_lib/adminAuth";
-import { loadPlatformSettings, savePlatformSettings } from "./_lib/platformSettings";
-import { mergePaymentSettings, paymentSettingsFromPlatform } from "./_lib/paymentSettings";
+import { requireAdminEmail } from "../_lib/adminAuth";
+import { loadPlatformSettings, savePlatformSettings } from "../_lib/platformSettings";
+import { mergePaymentSettings, paymentSettingsFromPlatform } from "../_lib/paymentSettings";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Access-Control-Allow-Origin", "*");

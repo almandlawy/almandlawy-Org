@@ -1697,11 +1697,22 @@ export const dbService = {
       }
       if (isLive && supabase) {
         try {
+          const { data: rpcData, error: rpcError } = await supabase.rpc("get_admin_customer_directory");
+          if (!rpcError && Array.isArray(rpcData) && rpcData.length > 0) {
+            return rpcData.map((c: Record<string, unknown>) => ({
+              ...c,
+              kyc_full_name: c.full_name,
+            }));
+          }
+        } catch (err) {
+          console.warn("[customers] RPC fallback failed:", err);
+        }
+        try {
           const { data, error } = await supabase
             .from("customers")
             .select("*")
             .order("created_at", { ascending: false });
-          if (!error && data) return data;
+          if (!error && data?.length) return data;
         } catch (err) {
           console.error("Failed to list customers from Supabase:", err);
         }
