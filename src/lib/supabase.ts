@@ -2153,6 +2153,43 @@ export const dbService = {
       }
       return null;
     },
+
+    uploadPaymentProof: async (
+      userId: string,
+      orderId: string,
+      file: File
+    ): Promise<{ storage_path: string; name: string; size: number; mime_type: string }> => {
+      const fileExt = file.name.split(".").pop() || "bin";
+      const storagePath = `${userId}/${orderId}_${Date.now()}.${fileExt}`;
+
+      if (isLive && supabase) {
+        const { error: uploadError } = await supabase.storage
+          .from("payment-proofs")
+          .upload(storagePath, file, { upsert: true, contentType: file.type || undefined });
+
+        if (uploadError) {
+          throw new Error(uploadError.message);
+        }
+      }
+
+      return {
+        storage_path: storagePath,
+        name: file.name,
+        size: file.size,
+        mime_type: file.type || "application/octet-stream",
+      };
+    },
+
+    getPaymentProofSignedUrl: async (storagePath: string, expiresIn = 3600): Promise<string | null> => {
+      if (isLive && supabase) {
+        const { data, error } = await supabase.storage
+          .from("payment-proofs")
+          .createSignedUrl(storagePath, expiresIn);
+        if (error || !data?.signedUrl) return null;
+        return data.signedUrl;
+      }
+      return null;
+    },
   },
 
   partnerLogos: {
@@ -2246,8 +2283,9 @@ export const dbService = {
         payment_mode: ps.payment_mode,
         public_payment_note: ps.public_payment_note,
         payment_link_instructions: ps.payment_link_instructions,
+        bank_transfer: { ...DEFAULT_PAYMENT_SETTINGS.bank_transfer, ...(ps.bank_transfer || {}) },
         supported_currencies: ps.supported_currencies,
-        require_kyc_before_payment: ps.require_kyc_before_payment
+        require_kyc_before_payment: ps.require_kyc_before_payment,
       };
     },
     update: async (paymentSettings: PaymentSettings, adminEmail: string): Promise<PaymentSettings> => {

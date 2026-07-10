@@ -278,17 +278,28 @@ export const DEFAULT_DAILY_PRICING = {
 };
 
 /** Default payment gateway settings — no secrets stored client-side */
+export const DEFAULT_BANK_TRANSFER = {
+  beneficiary_name: "PGR UAE Precious Metals LLC",
+  bank_name: "Emirates NBD Bank PJSC, Dubai Marina Branch",
+  iban: "AE83 0260 0000 1209 8903 1721",
+  swift_code: "EBILAEAD",
+  account_number: "",
+  reference_hint: "Include your quote/order reference in the wire description.",
+  additional_notes: "AED/USD multi-currency account. Payment clears within 1–2 UAE business days.",
+};
+
 export const DEFAULT_PAYMENT_SETTINGS = {
   payment_gateway_enabled: false,
   provider: "Manual Bank Transfer" as const,
   payment_mode: "Bank transfer only" as const,
   public_payment_note:
-    "Payment is arranged only after your firm quote is accepted. PGR UAE desk will issue a payment link or bank transfer instructions. Subject to compliance review.",
+    "Payment is arranged only after your firm quote is accepted. Transfer to the PGR UAE desk account below, then upload your payment proof.",
   internal_payment_note:
     "Gateway API keys must be set in server environment variables only. Never expose secrets to the client bundle.",
   payment_link_instructions:
-    "After quote acceptance, the desk will send a secure payment link or UAE bank transfer details. Upload payment proof if paying by bank transfer.",
-  supported_currencies: ["AED", "USD"] as ("AED" | "USD")[],
+    "After accepting your firm quote, transfer the total amount to the bank details below. Use your order reference in the transfer description, then upload a screenshot or PDF receipt.",
+  bank_transfer: { ...DEFAULT_BANK_TRANSFER },
+  supported_currencies: ["AED", "USD", "IQD"] as ("AED" | "USD" | "IQD")[],
   minimum_payment_amount: 1000,
   max_payment_amount_before_manual_review: 250000,
   require_kyc_before_payment: true

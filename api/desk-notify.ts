@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { notifyDeskNewQuote } from "./_lib/quoteNotify";
 import { notifyDeskNewKyc } from "./_lib/kycNotify";
+import { notifyDeskPaymentProof } from "./_lib/paymentProofNotify";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -42,7 +43,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ success: true, ...result });
     }
 
-    return res.status(400).json({ error: "Invalid type. Use quote or kyc." });
+    if (type === "payment_proof") {
+      const result = await notifyDeskPaymentProof({
+        orderId: String(body.orderId || ""),
+        customerName: String(body.customerName || ""),
+        email: String(body.email || ""),
+        fileName: String(body.fileName || ""),
+      });
+      return res.status(200).json({ success: true, ...result });
+    }
+
+    return res.status(400).json({ error: "Invalid type. Use quote, kyc, or payment_proof." });
   } catch (err: unknown) {
     const details = err instanceof Error ? err.message : "Unknown error";
     console.error("[api/desk-notify] error:", details);
