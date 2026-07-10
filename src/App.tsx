@@ -308,10 +308,15 @@ export default function App() {
     setAuthUser(user);
 
     try {
-      await upsertCustomerProfile(user);
-      await ensureKycStub(user);
+      const provider = (supabaseUser.app_metadata?.provider as string) || "email";
+      await upsertCustomerProfile(user, provider);
+      try {
+        await ensureKycStub(user);
+      } catch (kycErr) {
+        console.warn("KYC stub deferred on session:", kycErr);
+      }
     } catch (err) {
-      console.error("Failed to upsert customer profile to Supabase:", err);
+      console.error("Failed to sync customer profile:", err);
     }
   };
 

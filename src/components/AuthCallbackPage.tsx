@@ -13,6 +13,7 @@ import {
   ensureKycStub,
 } from "../lib/clientAuth";
 import { getCanonicalSiteOrigin, isBareProductionDomain } from "../lib/siteOrigin";
+import { trackSignUp } from "../lib/gtag";
 
 export default function AuthCallbackPage() {
   const [error, setError] = useState("");
@@ -63,8 +64,14 @@ export default function AuthCallbackPage() {
 
         const user = mapSupabaseUser(session.user);
         persistAppUser(user);
-        await upsertCustomerProfile(user);
-        await ensureKycStub(user);
+        const provider = (session.user.app_metadata?.provider as string) || "google";
+        await upsertCustomerProfile(user, provider);
+        try {
+          await ensureKycStub(user);
+        } catch (err) {
+          console.warn("[AuthCallback] KYC stub deferred:", err);
+        }
+        trackSignUp(provider === "google" ? "google" : "email");
 
         const destination = await resolvePostAuthPath(next);
         window.history.replaceState({}, document.title, destination);

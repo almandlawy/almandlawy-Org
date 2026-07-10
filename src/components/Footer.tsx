@@ -9,6 +9,8 @@ import { dbService } from "../lib/supabase";
 import BrandLogo from "./BrandLogo";
 import { LEGAL_POLICY_LINKS } from "../lib/legalLinks";
 import { FACEBOOK_PAGE_URL } from "../lib/facebookLinks";
+import { buildWhatsAppLink, defaultDeskMessage } from "../lib/whatsapp";
+import { trackWhatsAppClick } from "../lib/gtag";
 import type { AppUser } from "../lib/clientAuth";
 
 interface FooterProps {
@@ -231,7 +233,16 @@ export default function Footer({
             <div>
               <span className="text-text-charcoal block font-extrabold">{currentLang === "ar" ? "مكتب التداول الهاتفي" : "Desk Direct Hotline"}</span>
               <span className="text-text-secondary font-bold">
-                {settings?.trade_phone || "+971 4 445 8888"} • {settings?.whatsapp_hotline || "+971 55 968 8837"}
+                {settings?.trade_phone || "+971 4 445 8888"} •{" "}
+                <a
+                  href={buildWhatsAppLink(defaultDeskMessage(currentLang))}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => trackWhatsAppClick("footer_whatsapp")}
+                  className="text-emerald-700 hover:text-emerald-600 hover:underline"
+                >
+                  {settings?.whatsapp_hotline || "+971 55 968 8837"}
+                </a>
               </span>
             </div>
           </div>

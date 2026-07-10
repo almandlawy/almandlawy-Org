@@ -20,6 +20,7 @@ import { formatQuoteAmount } from "../lib/quoteUtils";
 import { kycStatusLabel, canRequestQuote, normalizeKycStatus } from "../lib/kycGate";
 import { buildWhatsAppLink } from "../lib/whatsapp";
 import { notifyDesk } from "../lib/deskNotify";
+import { trackWhatsAppClick } from "../lib/gtag";
 import PaymentInstructionsPanel from "./PaymentInstructionsPanel";
 import type { AppUser } from "../lib/clientAuth";
 import type { PublicPaymentSettings } from "../types";
@@ -635,6 +636,7 @@ export default function ClientDashboard({
               href={waLink}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackWhatsAppClick("client_dashboard_whatsapp")}
               className="flex items-center justify-center gap-2 w-full py-2.5 bg-olive-accent hover:opacity-90 text-white rounded-lg text-[10px] font-mono font-bold uppercase"
             >
               <Phone size={12} />

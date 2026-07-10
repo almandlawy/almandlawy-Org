@@ -8,6 +8,7 @@ import { MapPin, Clock, Phone, Mail, MessageSquare, ShieldCheck, ExternalLink } 
 import { dbService } from "../lib/supabase";
 import { DUBAI_OFFICE_PHOTOS } from "../lib/officeImages";
 import { trackWhatsAppClick } from "../lib/gtag";
+import { buildWhatsAppLink, defaultDeskMessage } from "../lib/whatsapp";
 
 interface OfficeSectionProps {
   currentLang: "en" | "ar";
@@ -39,7 +40,6 @@ export default function OfficeSection({ currentLang, sectionId = "office" }: Off
   const phone = settings?.trade_phone || "+971 4 445 8888";
   const email = settings?.desk_email || "desk@pgruae.com";
   const whatsapp = settings?.whatsapp_hotline || "+971559688837";
-  const whatsappCleaned = whatsapp.replace(/[^0-9]/g, "");
   const regNo = settings?.dmcc_reg_no || "890317";
 
   const officeDetails = {
@@ -120,7 +120,7 @@ export default function OfficeSection({ currentLang, sectionId = "office" }: Off
                   <h4 className="text-xs font-mono text-text-secondary uppercase tracking-widest font-bold">{officeDetails.phoneLabel}</h4>
                   <p className="text-sm text-text-charcoal font-mono font-bold">{officeDetails.phoneValue}</p>
                   <a 
-                    href={`https://wa.me/${whatsappCleaned}`} 
+                    href={buildWhatsAppLink(defaultDeskMessage(currentLang))} 
                     target="_blank" 
                     rel="noopener noreferrer"
                     onClick={() => trackWhatsAppClick("office_section_whatsapp")}

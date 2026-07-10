@@ -23,6 +23,15 @@ export function trackPageView(path: string): void {
   window.gtag("config", GOOGLE_ADS_ID, { page_path: path });
 }
 
+/** Track account registration (GA4 sign_up). */
+export function trackSignUp(method: "email" | "google"): void {
+  if (typeof window === "undefined" || typeof window.gtag !== "function") return;
+  window.gtag("event", "sign_up", {
+    send_to: GA4_MEASUREMENT_ID,
+    method,
+  });
+}
+
 /** Track WhatsApp CTA clicks (micro-conversion for desk engagement). */
 export function trackWhatsAppClick(source: string): void {
   if (typeof window === "undefined" || typeof window.gtag !== "function") return;

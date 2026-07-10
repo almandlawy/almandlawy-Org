@@ -8,6 +8,8 @@ import { Sparkles, ArrowRight, HelpCircle, Shield, RefreshCw, Calculator, Messag
 import { LiveMarketRates } from "../types";
 import PricingDisclaimer from "./PricingDisclaimer";
 import { getSpotUsdOz, getFxRate, OUNCE_TO_GRAM } from "../lib/marketReference";
+import { buildWhatsAppLink } from "../lib/whatsapp";
+import { trackWhatsAppClick } from "../lib/gtag";
 
 interface MetalCalculatorProps {
   currentLang: "en" | "ar";
@@ -129,8 +131,10 @@ export default function MetalCalculator({
         `• Indicative Total: ${calc.finalEstimatedValue.toLocaleString()} ${selectedCurrency}\n` +
         `I would like to request an official quote contract and proceed with the verification desk.`;
         
-    return encodeURIComponent(text);
+    return text;
   };
+
+  const waHref = buildWhatsAppLink(getWhatsAppMessage());
 
   const handleInquirySubmit = () => {
     const metalLabel = metalType === "gold" ? "Gold" : "Silver";
@@ -358,9 +362,10 @@ export default function MetalCalculator({
 
               {/* WhatsApp Quote button */}
               <a
-                href={`https://wa.me/971559688837?text=${getWhatsAppMessage()}`}
+                href={waHref}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => trackWhatsAppClick("metal_calculator_whatsapp")}
                 className="w-full py-3 bg-transparent hover:bg-[#DCE8DF] border border-[#556B5D] text-olive-accent font-bold uppercase tracking-wider text-[11px] rounded transition-all flex items-center justify-center gap-2"
               >
                 <MessageSquare size={14} className="text-olive-accent" />

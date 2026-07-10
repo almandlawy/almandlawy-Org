@@ -3,6 +3,7 @@ import Logo from "./Logo";
 import { User, Mail, Lock, Phone, Building, ArrowLeft, ArrowRight } from "lucide-react";
 import ClientAccountStepper from "./ClientAccountStepper";
 import GoogleSignInButton from "./GoogleSignInButton";
+import { trackSignUp } from "../lib/gtag";
 import {
   getLoginRedirectPath,
   signInWithGoogle,
@@ -69,7 +70,6 @@ export default function RegisterPage({ currentLang, onNavigate, onRegisterSucces
         accountType,
         company: accountType === "corporate" ? companyName : undefined,
       });
-      onRegisterSuccess(user);
       if (needsEmailConfirm) {
         setInfo(
           isAr
@@ -79,6 +79,8 @@ export default function RegisterPage({ currentLang, onNavigate, onRegisterSucces
         onNavigate(`/login?next=${encodeURIComponent(kycNext)}`);
         return;
       }
+      onRegisterSuccess(user);
+      trackSignUp("email");
       onNavigate(kycNext);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Registration failed";

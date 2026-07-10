@@ -16,8 +16,7 @@ async function requireAdmin(req: VercelRequest): Promise<string | null> {
   const token = req.headers.authorization?.replace(/^Bearer\s+/i, "").trim();
   const url = getSupabaseUrl();
   const anonKey = getAnonKey();
-  const service = getServiceSupabase();
-  if (!token || !url || !anonKey || !service) return null;
+  if (!token || !url || !anonKey) return null;
 
   const userClient = createClient(url, anonKey, {
     auth: { persistSession: false, autoRefreshToken: false },
@@ -28,6 +27,9 @@ async function requireAdmin(req: VercelRequest): Promise<string | null> {
 
   if (BOOTSTRAP_ADMINS.includes(email)) return email;
 
+  const service = getServiceSupabase();
+  if (!service) return null;
+
   const { data: adminRow } = await service
     .from("admin_users")
     .select("email, is_active")
@@ -35,6 +37,35 @@ async function requireAdmin(req: VercelRequest): Promise<string | null> {
     .maybeSingle();
 
   return adminRow && adminRow.is_active !== false ? email : null;
+}
+
+function mapAuthUser(
+  u: {
+    id: string;
+    email?: string;
+    created_at?: string;
+    last_sign_in_at?: string;
+    user_metadata?: Record<string, unknown>;
+    app_metadata?: Record<string, unknown>;
+  },
+  kycById: Map<string, { status?: string; full_name?: string }>
+) {
+  const meta = u.user_metadata || {};
+  const kyc = kycById.get(u.id);
+  return {
+    id: u.id,
+    full_name: (meta.full_name as string) || (meta.name as string) || u.email?.split("@")[0] || "Client",
+    email: u.email,
+    phone: (meta.phone as string) || null,
+    company: (meta.company as string) || null,
+    account_type: (meta.account_type as string) || "individual",
+    provider: (u.app_metadata?.provider as string) || "email",
+    created_at: u.created_at,
+    last_login: u.last_sign_in_at || null,
+    kyc_status: kyc?.status || "Not submitted",
+    kyc_full_name: kyc?.full_name || (meta.full_name as string) || null,
+    _source: "auth.users",
+  };
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -58,61 +89,63 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { data: customerRows, error: customersError } = await service
-      .from("customers")
-      .select("*")
-      .order("created_at", { ascending: false });
+    const [{ data: customerRows, error: customersError }, { data: kycRows }] = await Promise.all([
+      service.from("customers").select("*").order("created_at", { ascending: false }),
+      service.from("kyc_profiles").select("id, status, full_name, email"),
+    ]);
 
     if (customersError) {
       console.error("[api/admin-customers] customers query failed:", customersError);
       return res.status(500).json({ error: customersError.message, code: customersError.code });
     }
 
-    const { data: kycRows } = await service.from("kyc_profiles").select("id, status, full_name, email");
-
     const kycById = new Map((kycRows || []).map((k) => [k.id, k]));
+    const merged = new Map<string, Record<string, unknown>>();
 
-    let customers = (customerRows || []).map((c) => {
+    for (const c of customerRows || []) {
       const kyc = kycById.get(c.id);
-      return {
+      merged.set(c.id, {
         ...c,
         kyc_status: kyc?.status || "Not submitted",
         kyc_full_name: kyc?.full_name || c.full_name,
-      };
+        _source: "customers",
+      });
+    }
+
+    const { data: authData, error: authError } = await service.auth.admin.listUsers({
+      page: 1,
+      perPage: 1000,
     });
 
-    if (customers.length === 0) {
-      const { data: authData, error: authError } = await service.auth.admin.listUsers({
-        page: 1,
-        perPage: 200,
-      });
+    if (!authError && authData?.users?.length) {
+      for (const u of authData.users) {
+        const email = u.email?.toLowerCase() || "";
+        if (!email || BOOTSTRAP_ADMINS.includes(email)) continue;
 
-      if (!authError && authData?.users?.length) {
-        customers = authData.users
-          .filter((u) => {
-            const email = u.email?.toLowerCase() || "";
-            return email && !BOOTSTRAP_ADMINS.includes(email);
-          })
-          .map((u) => {
-            const meta = u.user_metadata || {};
-            const kyc = kycById.get(u.id);
-            return {
-              id: u.id,
-              full_name: meta.full_name || meta.name || u.email?.split("@")[0] || "Client",
-              email: u.email,
-              phone: meta.phone || null,
-              company: meta.company || null,
-              account_type: meta.account_type || "individual",
-              provider: u.app_metadata?.provider || "email",
-              created_at: u.created_at,
-              last_login: u.last_sign_in_at || null,
-              kyc_status: kyc?.status || "Not submitted",
-              kyc_full_name: kyc?.full_name || meta.full_name || null,
-              _source: "auth.users",
-            };
+        const fromAuth = mapAuthUser(u, kycById);
+        const existing = merged.get(u.id);
+        if (!existing) {
+          merged.set(u.id, fromAuth);
+        } else {
+          merged.set(u.id, {
+            ...fromAuth,
+            ...existing,
+            full_name: existing.full_name || fromAuth.full_name,
+            phone: existing.phone || fromAuth.phone,
+            company: existing.company || fromAuth.company,
+            kyc_status: existing.kyc_status || fromAuth.kyc_status,
+            kyc_full_name: existing.kyc_full_name || fromAuth.kyc_full_name,
+            _source: "merged",
           });
+        }
       }
     }
+
+    const customers = Array.from(merged.values()).sort((a, b) => {
+      const ta = new Date(String(a.created_at || 0)).getTime();
+      const tb = new Date(String(b.created_at || 0)).getTime();
+      return tb - ta;
+    });
 
     return res.status(200).json({ customers, count: customers.length });
   } catch (err: unknown) {
