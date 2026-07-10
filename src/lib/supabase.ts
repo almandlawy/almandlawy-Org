@@ -2319,7 +2319,27 @@ export const dbService = {
         console.warn("Could not fetch payment settings from server", err);
       }
       const settings = mockDb.get("pgr_settings") || {};
-      return { ...DEFAULT_PAYMENT_SETTINGS, ...(settings.payment_settings || {}) };
+      const ps = { ...DEFAULT_PAYMENT_SETTINGS, ...(settings.payment_settings || {}) };
+      return {
+        ...ps,
+        bank_transfer: { ...DEFAULT_PAYMENT_SETTINGS.bank_transfer, ...(ps.bank_transfer || {}) },
+        desk_payment_methods: {
+          ...DEFAULT_PAYMENT_SETTINGS.desk_payment_methods,
+          ...(ps.desk_payment_methods || {}),
+          zain_cash: {
+            ...DEFAULT_PAYMENT_SETTINGS.desk_payment_methods.zain_cash,
+            ...(ps.desk_payment_methods?.zain_cash || {}),
+          },
+          superqi: {
+            ...DEFAULT_PAYMENT_SETTINGS.desk_payment_methods.superqi,
+            ...(ps.desk_payment_methods?.superqi || {}),
+          },
+          usdt: {
+            ...DEFAULT_PAYMENT_SETTINGS.desk_payment_methods.usdt,
+            ...(ps.desk_payment_methods?.usdt || {}),
+          },
+        },
+      };
     },
     getPublic: async (): Promise<PublicPaymentSettings> => {
       try {
@@ -2339,6 +2359,22 @@ export const dbService = {
         public_payment_note: ps.public_payment_note,
         payment_link_instructions: ps.payment_link_instructions,
         bank_transfer: { ...DEFAULT_PAYMENT_SETTINGS.bank_transfer, ...(ps.bank_transfer || {}) },
+        desk_payment_methods: {
+          ...DEFAULT_PAYMENT_SETTINGS.desk_payment_methods,
+          ...(ps.desk_payment_methods || {}),
+          zain_cash: {
+            ...DEFAULT_PAYMENT_SETTINGS.desk_payment_methods.zain_cash,
+            ...(ps.desk_payment_methods?.zain_cash || {}),
+          },
+          superqi: {
+            ...DEFAULT_PAYMENT_SETTINGS.desk_payment_methods.superqi,
+            ...(ps.desk_payment_methods?.superqi || {}),
+          },
+          usdt: {
+            ...DEFAULT_PAYMENT_SETTINGS.desk_payment_methods.usdt,
+            ...(ps.desk_payment_methods?.usdt || {}),
+          },
+        },
         supported_currencies: ps.supported_currencies,
         require_kyc_before_payment: ps.require_kyc_before_payment,
       };

@@ -9,6 +9,7 @@ import {
   REFERENCE_SILVER_AED_PER_GRAM,
 } from "./lib/metalReferenceSpots";
 import { productPosterUrl } from "./lib/productImages";
+import { DEFAULT_DESK_PAYMENT_METHODS } from "./lib/deskPaymentMethods";
 
 export const BRANDS = [
   { name: "PALM Gold Refinery", origin: "United Arab Emirates", description: "UAE-accredited refinery producing investment-grade cast silver and gold bullion — highly sought after in the Iraq market." },
@@ -293,13 +294,14 @@ export const DEFAULT_PAYMENT_SETTINGS = {
   provider: "Manual Bank Transfer" as const,
   payment_mode: "Bank transfer only" as const,
   public_payment_note:
-    "Payment is arranged only after your firm quote is accepted. Transfer to the PGR UAE desk account below, then upload your payment proof.",
+    "بعد قبول عرض السعر المؤكد، يمكنك الدفع عبر: تحويل بنكي، زين كاش، سوبر كي، أو USDT (TRC20). ارفع إثبات الدفع من لوحة حسابك.",
   internal_payment_note:
     "Gateway API keys must be set in server environment variables only. Never expose secrets to the client bundle.",
   payment_link_instructions:
-    "After accepting your firm quote, transfer the total amount to the bank details below. Use your order reference in the transfer description, then upload a screenshot or PDF receipt.",
+    "اختر طريقة الدفع المناسبة (تحويل بنكي · زين كاش · سوبر كي · USDT). أرسل المبلغ المؤكد مع مرجع الطلب، ثم ارفع صورة الإيصال.",
   bank_transfer: { ...DEFAULT_BANK_TRANSFER },
-  supported_currencies: ["AED", "USD", "IQD"] as ("AED" | "USD" | "IQD")[],
+  desk_payment_methods: DEFAULT_DESK_PAYMENT_METHODS,
+  supported_currencies: ["AED", "USD", "IQD", "USDT"] as ("AED" | "USD" | "IQD" | "USDT")[],
   minimum_payment_amount: 1000,
   max_payment_amount_before_manual_review: 250000,
   require_kyc_before_payment: true

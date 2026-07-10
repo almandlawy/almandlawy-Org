@@ -277,6 +277,23 @@ export interface BankTransferDetails {
   additional_notes?: string;
 }
 
+export interface WalletPaymentMethod {
+  enabled: boolean;
+  wallet_label_en: string;
+  wallet_label_ar: string;
+  wallet_id: string;
+  instructions_en: string;
+  instructions_ar: string;
+  network?: string;
+}
+
+export interface DeskPaymentMethods {
+  bank_transfer: { enabled: boolean };
+  zain_cash: WalletPaymentMethod;
+  superqi: WalletPaymentMethod;
+  usdt: WalletPaymentMethod;
+}
+
 export interface PaymentSettings {
   payment_gateway_enabled: boolean;
   provider: PaymentProvider;
@@ -285,7 +302,8 @@ export interface PaymentSettings {
   internal_payment_note: string;
   payment_link_instructions: string;
   bank_transfer: BankTransferDetails;
-  supported_currencies: ("AED" | "USD" | "IQD")[];
+  desk_payment_methods: DeskPaymentMethods;
+  supported_currencies: ("AED" | "USD" | "IQD" | "USDT")[];
   minimum_payment_amount: number;
   max_payment_amount_before_manual_review: number;
   require_kyc_before_payment: boolean;
@@ -299,7 +317,8 @@ export interface PublicPaymentSettings {
   public_payment_note: string;
   payment_link_instructions: string;
   bank_transfer: BankTransferDetails;
-  supported_currencies: ("AED" | "USD" | "IQD")[];
+  desk_payment_methods: DeskPaymentMethods;
+  supported_currencies: ("AED" | "USD" | "IQD" | "USDT")[];
   require_kyc_before_payment: boolean;
 }
 

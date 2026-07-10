@@ -5,7 +5,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Save } from "lucide-react";
-import { PaymentSettings, PaymentProvider, PaymentMode } from "../../types";
+import { PaymentSettings, PaymentProvider, PaymentMode, WalletPaymentMethod } from "../../types";
 import { DEFAULT_PAYMENT_SETTINGS } from "../../data";
 import { dbService } from "../../lib/supabase";
 
@@ -41,6 +41,22 @@ export default function PaymentSettingsAdmin({ adminEmail, onAudit }: PaymentSet
         ...DEFAULT_PAYMENT_SETTINGS,
         ...s,
         bank_transfer: { ...DEFAULT_PAYMENT_SETTINGS.bank_transfer, ...(s.bank_transfer || {}) },
+        desk_payment_methods: {
+          ...DEFAULT_PAYMENT_SETTINGS.desk_payment_methods,
+          ...(s.desk_payment_methods || {}),
+          zain_cash: {
+            ...DEFAULT_PAYMENT_SETTINGS.desk_payment_methods.zain_cash,
+            ...(s.desk_payment_methods?.zain_cash || {}),
+          },
+          superqi: {
+            ...DEFAULT_PAYMENT_SETTINGS.desk_payment_methods.superqi,
+            ...(s.desk_payment_methods?.superqi || {}),
+          },
+          usdt: {
+            ...DEFAULT_PAYMENT_SETTINGS.desk_payment_methods.usdt,
+            ...(s.desk_payment_methods?.usdt || {}),
+          },
+        },
       })
     );
   }, []);
@@ -63,7 +79,7 @@ export default function PaymentSettingsAdmin({ adminEmail, onAudit }: PaymentSet
     }
   };
 
-  const toggleCurrency = (cur: "AED" | "USD" | "IQD") => {
+  const toggleCurrency = (cur: "AED" | "USD" | "IQD" | "USDT") => {
     setSettings((prev) => {
       const has = prev.supported_currencies.includes(cur);
       const next = has
@@ -123,7 +139,7 @@ export default function PaymentSettingsAdmin({ adminEmail, onAudit }: PaymentSet
         <div className="space-y-2">
           <label className="text-text-secondary uppercase text-[9px] font-bold">Supported currencies</label>
           <div className="flex gap-4">
-            {(["AED", "USD", "IQD"] as const).map((cur) => (
+            {(["AED", "USD", "IQD", "USDT"] as const).map((cur) => (
               <label key={cur} className="flex items-center gap-2 text-text-charcoal/85 cursor-pointer">
                 <input
                   type="checkbox"
@@ -273,6 +289,113 @@ export default function PaymentSettingsAdmin({ adminEmail, onAudit }: PaymentSet
               />
             </div>
           </div>
+        </div>
+
+        <div className="border-t border-soft-border pt-4 space-y-4">
+          <h5 className="text-sm font-serif text-text-charcoal">Iraq desk wallets (public)</h5>
+          <p className="text-[10px] text-text-secondary">
+            Zain Cash, SuperQi, and USDT details shown to customers after quote acceptance.
+          </p>
+          {(
+            [
+              ["zain_cash", "Zain Cash"],
+              ["superqi", "SuperQi"],
+              ["usdt", "USDT"],
+            ] as const
+          ).map(([key, title]) => {
+            const wallet = settings.desk_payment_methods[key] as WalletPaymentMethod;
+            return (
+              <div key={key} className="p-4 bg-brand-bg rounded-lg border border-soft-border space-y-3">
+                <label className="flex items-center gap-3 text-text-charcoal/85 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={wallet.enabled}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        desk_payment_methods: {
+                          ...settings.desk_payment_methods,
+                          [key]: { ...wallet, enabled: e.target.checked },
+                        },
+                      })
+                    }
+                    className="accent-gold-base h-4 w-4"
+                  />
+                  <span className="font-bold">{title} enabled</span>
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-text-secondary uppercase text-[9px] font-bold">Wallet ID / address</label>
+                    <input
+                      value={wallet.wallet_id}
+                      onChange={(e) =>
+                        setSettings({
+                          ...settings,
+                          desk_payment_methods: {
+                            ...settings.desk_payment_methods,
+                            [key]: { ...wallet, wallet_id: e.target.value },
+                          },
+                        })
+                      }
+                      className="w-full bg-brand-card border border-soft-border rounded-lg px-3 py-2 text-text-charcoal font-mono outline-none focus:border-gold-base"
+                    />
+                  </div>
+                  {key === "usdt" && (
+                    <div className="space-y-1">
+                      <label className="text-text-secondary uppercase text-[9px] font-bold">Network</label>
+                      <input
+                        value={wallet.network || ""}
+                        onChange={(e) =>
+                          setSettings({
+                            ...settings,
+                            desk_payment_methods: {
+                              ...settings.desk_payment_methods,
+                              [key]: { ...wallet, network: e.target.value },
+                            },
+                          })
+                        }
+                        className="w-full bg-brand-card border border-soft-border rounded-lg px-3 py-2 text-text-charcoal outline-none focus:border-gold-base"
+                      />
+                    </div>
+                  )}
+                  <div className="space-y-1 sm:col-span-2">
+                    <label className="text-text-secondary uppercase text-[9px] font-bold">Instructions (EN)</label>
+                    <textarea
+                      rows={2}
+                      value={wallet.instructions_en}
+                      onChange={(e) =>
+                        setSettings({
+                          ...settings,
+                          desk_payment_methods: {
+                            ...settings.desk_payment_methods,
+                            [key]: { ...wallet, instructions_en: e.target.value },
+                          },
+                        })
+                      }
+                      className="w-full bg-brand-card border border-soft-border rounded-lg px-3 py-2 text-text-charcoal outline-none focus:border-gold-base font-sans"
+                    />
+                  </div>
+                  <div className="space-y-1 sm:col-span-2">
+                    <label className="text-text-secondary uppercase text-[9px] font-bold">Instructions (AR)</label>
+                    <textarea
+                      rows={2}
+                      value={wallet.instructions_ar}
+                      onChange={(e) =>
+                        setSettings({
+                          ...settings,
+                          desk_payment_methods: {
+                            ...settings.desk_payment_methods,
+                            [key]: { ...wallet, instructions_ar: e.target.value },
+                          },
+                        })
+                      }
+                      className="w-full bg-brand-card border border-soft-border rounded-lg px-3 py-2 text-text-charcoal outline-none focus:border-gold-base font-sans"
+                    />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         <div className="space-y-2">

@@ -1,11 +1,16 @@
 /**
- * Payment instructions + bank transfer proof upload — post quote acceptance.
+ * Payment instructions — bank transfer, Zain Cash, SuperQi, USDT + proof upload.
  * @license SPDX-License-Identifier: Apache-2.0
  */
 
 import React from "react";
-import { Building2, Copy, CheckCircle, Upload, ExternalLink } from "lucide-react";
+import { Building2, Copy, CheckCircle, Upload, ExternalLink, Smartphone, Coins } from "lucide-react";
 import type { PublicPaymentSettings } from "../types";
+import {
+  DEFAULT_DESK_PAYMENT_METHODS,
+  PAYMENT_METHOD_LABELS,
+  type PaymentMethodId,
+} from "../lib/deskPaymentMethods";
 
 interface PaymentInstructionsPanelProps {
   currentLang: "en" | "ar";
@@ -61,11 +66,33 @@ export default function PaymentInstructionsPanel({
   onUploadProof,
 }: PaymentInstructionsPanelProps) {
   const isAr = currentLang === "ar";
+  const desk = paymentSettings?.desk_payment_methods || DEFAULT_DESK_PAYMENT_METHODS;
   const bank = paymentSettings?.bank_transfer;
+
+  const enabledMethods = React.useMemo(() => {
+    const list: PaymentMethodId[] = [];
+    if (desk.bank_transfer?.enabled !== false) list.push("bank");
+    if (desk.zain_cash?.enabled) list.push("zain_cash");
+    if (desk.superqi?.enabled) list.push("superqi");
+    if (desk.usdt?.enabled) list.push("usdt");
+    return list.length ? list : (["bank"] as PaymentMethodId[]);
+  }, [desk]);
+
+  const [activeMethod, setActiveMethod] = React.useState<PaymentMethodId>("bank");
+  React.useEffect(() => {
+    if (!enabledMethods.includes(activeMethod)) {
+      setActiveMethod(enabledMethods[0]);
+    }
+  }, [enabledMethods, activeMethod]);
+
   const amount =
     order.total_amount != null
       ? `${order.currency || "AED"} ${Number(order.total_amount).toLocaleString()}`
       : null;
+
+  const methodIntro = isAr
+    ? "طرق الدفع المتاحة: تحويل بنكي · زين كاش · سوبر كي · USDT"
+    : "Available: Bank transfer · Zain Cash · SuperQi · USDT";
 
   return (
     <div
@@ -74,17 +101,20 @@ export default function PaymentInstructionsPanel({
     >
       <div className="flex items-start gap-3">
         <div className="h-10 w-10 rounded-full bg-gold-base/15 border border-gold-base/30 flex items-center justify-center shrink-0">
-          <Building2 size={18} className="text-gold-dark" />
+          <Coins size={18} className="text-gold-dark" />
         </div>
         <div>
           <h3 className={`text-base font-serif font-bold text-text-charcoal ${isAr ? "font-arabic" : ""}`}>
-            {isAr ? "تعليمات الدفع — تحويل بنكي" : "Payment Instructions — Bank Transfer"}
+            {isAr ? "تعليمات الدفع" : "Payment instructions"}
           </h3>
+          <p className={`text-[11px] text-gold-dark font-bold mt-1 ${isAr ? "font-arabic" : "font-mono"}`}>
+            {methodIntro}
+          </p>
           <p className="text-[11px] text-text-secondary mt-1 leading-relaxed">
             {paymentSettings?.payment_link_instructions ||
               (isAr
-                ? "حوّل المبلغ ثم ارفع إثبات الدفع."
-                : "Transfer the amount, then upload your payment proof.")}
+                ? "اختر طريقة الدفع، أرسل المبلغ، ثم ارفع إثبات الدفع."
+                : "Choose a method, send the amount, then upload proof.")}
           </p>
         </div>
       </div>
@@ -100,18 +130,46 @@ export default function PaymentInstructionsPanel({
 
       <div className="rounded-lg bg-brand-bg border border-soft-border px-4 py-2">
         <p className="text-[9px] text-text-secondary font-mono mb-1">
-          {isAr ? "مرجع التحويل" : "Transfer reference"}
+          {isAr ? "مرجع الطلب / التحويل" : "Order / transfer reference"}
         </p>
         <p className="text-sm font-mono font-bold text-text-charcoal">{order.id}</p>
-        {bank?.reference_hint && (
+        {bank?.reference_hint && activeMethod === "bank" && (
           <p className={`text-[10px] text-text-secondary mt-1 ${isAr ? "font-arabic" : ""}`}>
             {bank.reference_hint}
           </p>
         )}
       </div>
 
-      {bank && (
+      <div className="flex flex-wrap gap-1.5">
+        {enabledMethods.map((id) => {
+          const label = PAYMENT_METHOD_LABELS[id];
+          const active = activeMethod === id;
+          return (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setActiveMethod(id)}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-[10px] font-mono font-bold border transition-colors ${
+                active
+                  ? "bg-gold-base text-text-charcoal border-gold-base"
+                  : "bg-brand-bg text-text-secondary border-soft-border hover:border-gold-base/50"
+              }`}
+            >
+              <span>{label.icon}</span>
+              <span className={isAr ? "font-arabic" : ""}>{isAr ? label.ar : label.en}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {activeMethod === "bank" && bank && (
         <div className="rounded-lg bg-brand-card border border-soft-border px-4 py-2 space-y-0">
+          <div className="flex items-center gap-2 pb-2 mb-1 border-b border-soft-border/60">
+            <Building2 size={14} className="text-gold-dark" />
+            <span className={`text-[10px] font-mono font-bold text-text-charcoal ${isAr ? "font-arabic" : ""}`}>
+              {isAr ? "تحويل بنكي (AED / USD)" : "Bank transfer (AED / USD)"}
+            </span>
+          </div>
           <CopyField label={isAr ? "المستفيد" : "Beneficiary"} value={bank.beneficiary_name} isAr={isAr} />
           <CopyField label={isAr ? "البنك" : "Bank"} value={bank.bank_name} isAr={isAr} />
           <CopyField label="IBAN" value={bank.iban} isAr={isAr} />
@@ -121,6 +179,68 @@ export default function PaymentInstructionsPanel({
               {bank.additional_notes}
             </p>
           )}
+        </div>
+      )}
+
+      {activeMethod === "zain_cash" && desk.zain_cash && (
+        <div className="rounded-lg bg-brand-card border border-soft-border px-4 py-3 space-y-2">
+          <div className="flex items-center gap-2">
+            <Smartphone size={14} className="text-gold-dark" />
+            <span className={`text-[10px] font-mono font-bold text-text-charcoal ${isAr ? "font-arabic" : ""}`}>
+              {isAr ? desk.zain_cash.wallet_label_ar : desk.zain_cash.wallet_label_en}
+            </span>
+          </div>
+          <CopyField
+            label={isAr ? "رقم المحفظة" : "Wallet number"}
+            value={desk.zain_cash.wallet_id}
+            isAr={isAr}
+          />
+          <p className={`text-[10px] text-text-secondary leading-relaxed ${isAr ? "font-arabic" : ""}`}>
+            {isAr ? desk.zain_cash.instructions_ar : desk.zain_cash.instructions_en}
+          </p>
+        </div>
+      )}
+
+      {activeMethod === "superqi" && desk.superqi && (
+        <div className="rounded-lg bg-brand-card border border-soft-border px-4 py-3 space-y-2">
+          <div className="flex items-center gap-2">
+            <Smartphone size={14} className="text-gold-dark" />
+            <span className={`text-[10px] font-mono font-bold text-text-charcoal ${isAr ? "font-arabic" : ""}`}>
+              {isAr ? desk.superqi.wallet_label_ar : desk.superqi.wallet_label_en}
+            </span>
+          </div>
+          <CopyField
+            label={isAr ? "رقم المحفظة / الحساب" : "Wallet / account ID"}
+            value={desk.superqi.wallet_id}
+            isAr={isAr}
+          />
+          <p className={`text-[10px] text-text-secondary leading-relaxed ${isAr ? "font-arabic" : ""}`}>
+            {isAr ? desk.superqi.instructions_ar : desk.superqi.instructions_en}
+          </p>
+        </div>
+      )}
+
+      {activeMethod === "usdt" && desk.usdt && (
+        <div className="rounded-lg bg-brand-card border border-soft-border px-4 py-3 space-y-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Coins size={14} className="text-gold-dark" />
+            <span className={`text-[10px] font-mono font-bold text-text-charcoal ${isAr ? "font-arabic" : ""}`}>
+              {isAr ? desk.usdt.wallet_label_ar : desk.usdt.wallet_label_en}
+            </span>
+            {desk.usdt.network && (
+              <span className="text-[9px] font-mono bg-brand-bg border border-soft-border px-2 py-0.5 rounded">
+                {desk.usdt.network}
+              </span>
+            )}
+          </div>
+          <CopyField
+            label={isAr ? "عنوان المحفظة" : "Wallet address"}
+            value={desk.usdt.wallet_id}
+            isAr={isAr}
+          />
+          <p className={`text-[10px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed ${isAr ? "font-arabic" : ""}`}>
+            {isAr ? desk.usdt.instructions_ar : desk.usdt.instructions_en}
+          </p>
         </div>
       )}
 
@@ -137,7 +257,7 @@ export default function PaymentInstructionsPanel({
       )}
 
       <label className="block w-full py-3 bg-brand-bg border-2 border-dashed border-gold-base/50 rounded-lg text-center cursor-pointer hover:bg-gold-base/5 transition-colors">
-        <span className="flex items-center justify-center gap-2 text-[10px] font-mono font-bold text-gold-dark">
+        <span className={`flex items-center justify-center gap-2 text-[10px] font-mono font-bold text-gold-dark ${isAr ? "font-arabic" : ""}`}>
           <Upload size={14} />
           {proofUploading
             ? isAr
@@ -148,8 +268,8 @@ export default function PaymentInstructionsPanel({
                 ? `تم الرفع: ${order.payment_proof_name} — إعادة الرفع`
                 : `Uploaded: ${order.payment_proof_name} — re-upload`
               : isAr
-                ? "رفع إثبات التحويل (PDF أو صورة)"
-                : "Upload transfer proof (PDF or image)"}
+                ? "رفع إثبات الدفع (PDF أو صورة)"
+                : "Upload payment proof (PDF or image)"}
         </span>
         <input
           type="file"
