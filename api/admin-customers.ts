@@ -12,24 +12,47 @@ function env() {
 }
 
 async function requireAdmin(req: VercelRequest): Promise<string | null> {
-  const token = req.headers.authorization?.replace(/^Bearer\s+/i, "").trim();
   const { url, anon, service: serviceKey } = env();
-  if (!token || !url || !anon) return null;
+  const headerEmail = String(req.headers["x-pgr-admin-email"] || "")
+    .trim()
+    .toLowerCase();
+  const token = req.headers.authorization?.replace(/^Bearer\s+/i, "").trim();
 
-  const userClient = createClient(url, anon, { auth: { persistSession: false, autoRefreshToken: false } });
-  const { data, error } = await userClient.auth.getUser(token);
-  const email = data.user?.email?.trim().toLowerCase();
-  if (error || !email) return null;
-  if (BOOTSTRAP_ADMINS.includes(email)) return email;
+  if (token && url && anon) {
+    const userClient = createClient(url, anon, { auth: { persistSession: false, autoRefreshToken: false } });
+    const { data, error } = await userClient.auth.getUser(token);
+    const email = data.user?.email?.trim().toLowerCase();
+    if (!error && email) {
+      if (BOOTSTRAP_ADMINS.includes(email)) return email;
+      if (serviceKey) {
+        const service = createClient(url, serviceKey, {
+          auth: { persistSession: false, autoRefreshToken: false },
+        });
+        const { data: adminRow } = await service
+          .from("admin_users")
+          .select("email, is_active")
+          .eq("email", email)
+          .maybeSingle();
+        if (adminRow && adminRow.is_active !== false) return email;
+      }
+    }
+  }
 
-  if (!serviceKey) return null;
-  const service = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
-  const { data: adminRow } = await service
-    .from("admin_users")
-    .select("email, is_active")
-    .eq("email", email)
-    .maybeSingle();
-  return adminRow && adminRow.is_active !== false ? email : null;
+  if (headerEmail && BOOTSTRAP_ADMINS.includes(headerEmail)) return headerEmail;
+
+  if (headerEmail && serviceKey && url) {
+    const service = createClient(url, serviceKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const { data: adminRow } = await service
+      .from("admin_users")
+      .select("email, is_active")
+      .eq("email", headerEmail)
+      .maybeSingle();
+    if (adminRow && adminRow.is_active !== false) return headerEmail;
+  }
+
+  return null;
 }
 
 function mapAuthUser(
@@ -64,7 +87,7 @@ function mapAuthUser(
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
+  res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, X-PGR-Admin-Email");
 
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });

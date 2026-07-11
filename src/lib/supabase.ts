@@ -976,7 +976,11 @@ function getAdminRequestHeaders(): Record<string, string> {
 export async function getAdminAuthHeaders(): Promise<Record<string, string>> {
   const headers = getAdminRequestHeaders();
   if (isLive && supabase) {
-    const { data: { session } } = await supabase.auth.getSession();
+    let { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) {
+      await supabase.auth.refreshSession().catch(() => {});
+      ({ data: { session } } = await supabase.auth.getSession());
+    }
     if (session?.access_token) {
       headers.Authorization = `Bearer ${session.access_token}`;
     }
@@ -1685,11 +1689,10 @@ export const dbService = {
         try {
           const headers = await getAdminAuthHeaders();
           const res = await fetch("/api/admin-customers", { headers });
-          if (res.ok) {
-            const json = await res.json();
-            if (Array.isArray(json.customers)) return json.customers;
-          } else {
-            console.warn("[customers] admin list failed:", res.status, await res.text().catch(() => ""));
+          const json = await res.json().catch(() => ({}));
+          if (res.ok && Array.isArray(json.customers)) return json.customers;
+          if (!res.ok) {
+            console.warn("[customers] admin list failed:", res.status, json);
           }
         } catch (err) {
           console.error("Failed to list customers via admin API:", err);
@@ -1698,11 +1701,14 @@ export const dbService = {
       if (isLive && supabase) {
         try {
           const { data: rpcData, error: rpcError } = await supabase.rpc("get_admin_customer_directory");
-          if (!rpcError && Array.isArray(rpcData) && rpcData.length > 0) {
+          if (!rpcError && Array.isArray(rpcData)) {
             return rpcData.map((c: Record<string, unknown>) => ({
               ...c,
               kyc_full_name: c.full_name,
             }));
+          }
+          if (rpcError) {
+            console.warn("[customers] RPC:", rpcError.message);
           }
         } catch (err) {
           console.warn("[customers] RPC fallback failed:", err);
@@ -1712,7 +1718,8 @@ export const dbService = {
             .from("customers")
             .select("*")
             .order("created_at", { ascending: false });
-          if (!error && data?.length) return data;
+          if (!error && Array.isArray(data)) return data;
+          if (error) console.warn("[customers] direct select:", error.message);
         } catch (err) {
           console.error("Failed to list customers from Supabase:", err);
         }

@@ -81,6 +81,7 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
   const [quotes, setQuotes] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [customers, setCustomers] = useState<any[]>([]);
+  const [customerDbStats, setCustomerDbStats] = useState<{ auth_users_count?: number; customers_count?: number } | null>(null);
   const [kycProfiles, setKycProfiles] = useState<any[]>([]);
   // Secure KYC private audit logs and dossier viewer states
   const [dossierAuditLogs, setDossierAuditLogs] = useState<any[]>([
@@ -432,6 +433,18 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
       if (oList) setOrders(oList);
       if (kList) setKycProfiles(kList);
       if (cList) setCustomers(cList);
+      try {
+        const healthRes = await fetch("/api/health");
+        if (healthRes.ok) {
+          const health = await healthRes.json();
+          setCustomerDbStats({
+            auth_users_count: health.auth_users_count,
+            customers_count: health.customers_count,
+          });
+        }
+      } catch {
+        /* optional diagnostic */
+      }
       if (dList) setIraqDeliveries(dList);
       if (ptList) setPickupPoints(ptList);
       if (exRates) setExchangeRates(exRates);
@@ -2556,14 +2569,21 @@ export default function AdminPanel({ currentLang = "ar", onClose, isModal = fals
                   </div>
 
                   {customers.length === 0 ? (
-                    <div className="p-6 bg-brand-card border border-soft-border rounded text-center space-y-2">
+                    <div className="p-6 bg-brand-card border border-soft-border rounded text-center space-y-3">
                       <p className="text-text-secondary text-sm">
-                        {isAr ? "لا توجد حسابات مسجّلة ظاهرة بعد." : "No registered customer accounts loaded yet."}
+                        {isAr ? "لا توجد حسابات ظاهرة في الجدول بعد." : "No accounts visible in the table yet."}
                       </p>
+                      {customerDbStats && (customerDbStats.customers_count ?? 0) > 0 && (
+                        <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-900 text-sm font-mono">
+                          {isAr
+                            ? `✅ قاعدة البيانات فيها ${customerDbStats.customers_count} حساب مسجّل — اضغط تحديث أو أعد تسجيل الدخول للأدمن.`
+                            : `✅ Database has ${customerDbStats.customers_count} registered account(s) — click Refresh or sign in to admin again.`}
+                        </div>
+                      )}
                       <p className="text-[10px] font-mono text-text-secondary leading-relaxed max-w-lg mx-auto">
                         {isAr
-                          ? "معظم زوار العراق يضغطون واتساب مباشرة — هذا لا يُنشئ حساباً. شغّل scripts/customers-admin-sync.sql في Supabase ثم أعد النشر على Vercel. تحقق من /api/health"
-                          : "Most Iraq visitors use WhatsApp directly — that does not create an account. Run scripts/customers-admin-sync.sql in Supabase, then redeploy Vercel. Check /api/health"}
+                          ? "معظم زوار العراق يضغطون واتساب مباشرة — هذا لا يُنشئ حساباً. إذا لم تظهر الحسابات: شغّل scripts/customers-admin-sync.sql في Supabase."
+                          : "Most Iraq visitors use WhatsApp directly — that does not create an account. If accounts still missing: run scripts/customers-admin-sync.sql in Supabase."}
                       </p>
                     </div>
                   ) : (
