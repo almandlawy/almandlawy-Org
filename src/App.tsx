@@ -11,6 +11,7 @@ import HowFirmQuotesWork from "./components/HowFirmQuotesWork";
 import TrustBar from "./components/TrustBar";
 import ProductShowroom from "./components/ProductShowroom";
 import IraqSilverOffers from "./components/IraqSilverOffers";
+import PalmSilverPremiumSection from "./components/PalmSilverPremiumSection";
 import AboutQuoteDeskSection from "./components/AboutQuoteDeskSection";
 import TrustedPartnersSection from "./components/TrustedPartnersSection";
 import PartnerLogosBar from "./components/PartnerLogosBar";
@@ -920,6 +921,14 @@ export default function App() {
         onChangeCurrency={setSelectedCurrency}
         onRefresh={fetchRates}
         isRefreshing={isRefreshing}
+      />
+
+      <PalmSilverPremiumSection
+        currentLang={currentLang}
+        rates={rates}
+        selectedCurrency={selectedCurrency}
+        onSelectProduct={setSelectedProduct}
+        onOpenQuote={navigateToQuote}
       />
 
       <IraqSilverOffers

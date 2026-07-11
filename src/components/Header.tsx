@@ -16,6 +16,7 @@ import {
   Terminal,
   Home,
   LayoutGrid,
+  Sparkles,
   Star,
   TrendingUp,
   CircleHelp,
@@ -54,7 +55,8 @@ const NAV_LINKS: {
 }[] = [
   { id: "hero", label_en: "Home", label_ar: "الرئيسية", icon: Home, group: "main" },
   { id: "catalog", label_en: "Catalog", label_ar: "الكتالوج", icon: LayoutGrid, group: "main" },
-  { id: "iraq-silver-offers", label_en: "Iraq Silver", label_ar: "فضة العراق", icon: Star, group: "main" },
+  { id: "palm-silver-premium", label_en: "PALM 1kg", label_ar: "PALM ١ كيلو", icon: Sparkles, group: "main" },
+  { id: "iraq-silver-offers", label_en: "Iraq Silver", label_ar: "فضة العراق", icon: Star, group: "more" },
   { id: "market", label_en: "Market Watch", label_ar: "مراقبة السوق", icon: TrendingUp, group: "more" },
   { id: "how-quotes-work", label_en: "How It Works", label_ar: "كيف يعمل", icon: CircleHelp, group: "more" },
   { id: "about", label_en: "About Us", label_ar: "من نحن", icon: Building2, group: "more" },
